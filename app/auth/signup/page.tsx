@@ -338,6 +338,8 @@ export default function SignUpPage() {
               if (result?.error) {
                 setError(result.error)
                 setIsGoogleLoading(false)
+              } else if (result?.url) {
+                window.location.href = result.url
               }
             }}>
               <Button 

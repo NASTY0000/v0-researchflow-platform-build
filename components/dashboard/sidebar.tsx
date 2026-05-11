@@ -49,7 +49,7 @@ const mainNavItems = [
   },
   {
     title: 'Find Collaborators',
-    href: '/collaborators',
+    href: '/matches',
     icon: Users,
   },
   {

@@ -11,7 +11,7 @@ export async function signUp(formData: FormData) {
   const password = formData.get('password') as string
   const fullName = formData.get('fullName') as string
 
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
@@ -23,6 +23,19 @@ export async function signUp(formData: FormData) {
 
   if (error) {
     return { error: error.message }
+  }
+
+  // Check if user was auto-confirmed (email confirmation disabled in Supabase)
+  // or if the session exists (meaning they can proceed without OTP)
+  if (data?.session) {
+    // User is auto-confirmed, redirect to onboarding
+    revalidatePath('/', 'layout')
+    redirect('/onboarding')
+  }
+
+  // Check if user already exists
+  if (data?.user?.identities?.length === 0) {
+    return { error: 'An account with this email already exists. Please sign in instead.' }
   }
 
   return { success: true, email, message: 'Verification code sent to your email' }
@@ -104,14 +117,14 @@ export async function signInWithGoogle() {
   })
 
   if (error) {
-    return { error: error.message }
+    return { error: error.message, url: null }
   }
 
   if (data.url) {
-    redirect(data.url)
+    return { url: data.url, error: null }
   }
 
-  return { error: 'Failed to initiate Google sign-in' }
+  return { error: 'Failed to initiate Google sign-in', url: null }
 }
 
 export async function getUser() {
