@@ -55,11 +55,18 @@ interface Column {
 }
 
 const COLUMNS: Column[] = [
-  { id: "todo", title: "To Do", color: "bg-muted" },
-  { id: "in_progress", title: "In Progress", color: "bg-primary/20" },
-  { id: "review", title: "Review", color: "bg-yellow-500/20" },
-  { id: "done", title: "Done", color: "bg-green-500/20" },
+  { id: "todo", title: "To Do", color: "border-t-[#A855F7]" },
+  { id: "in_progress", title: "In Progress", color: "border-t-[#06B6D4]" },
+  { id: "review", title: "Review", color: "border-t-[#F59E0B]" },
+  { id: "done", title: "Done", color: "border-t-[#22C55E]" },
 ]
+
+const COLUMN_ACCENT: Record<string, string> = {
+  todo: '#A855F7',
+  in_progress: '#06B6D4',
+  review: '#F59E0B',
+  done: '#22C55E',
+}
 
 const PRIORITIES = [
   { value: "low", label: "Low", color: "text-muted-foreground" },
@@ -272,12 +279,14 @@ export function KanbanBoard({ projectId, teamId, tasks: initialTasks }: KanbanBo
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, column.id)}
           >
-            <div className={`p-3 rounded-lg ${column.color}`}>
+            <div className={`p-3 rounded-xl border-t-2 ${column.color}`}
+              style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(139,92,246,0.15)', borderTopColor: COLUMN_ACCENT[column.id], borderTopWidth: '2px' }}>
               <div className="flex items-center justify-between">
-                <h3 className="font-medium">{column.title}</h3>
-                <Badge variant="outline" className="bg-background">
+                <h3 className="font-medium text-sm" style={{ color: COLUMN_ACCENT[column.id] }}>{column.title}</h3>
+                <span className="text-xs px-2 py-0.5 rounded-full font-medium"
+                  style={{ background: `${COLUMN_ACCENT[column.id]}18`, color: COLUMN_ACCENT[column.id], border: `1px solid ${COLUMN_ACCENT[column.id]}30` }}>
                   {getTasksByColumn(column.id).length}
-                </Badge>
+                </span>
               </div>
             </div>
 
@@ -287,7 +296,10 @@ export function KanbanBoard({ projectId, teamId, tasks: initialTasks }: KanbanBo
                   key={task.id}
                   draggable
                   onDragStart={() => handleDragStart(task)}
-                  className="cursor-grab active:cursor-grabbing hover:border-primary/50 transition-colors"
+                  className="cursor-grab active:cursor-grabbing transition-all duration-200"
+                  style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(139,92,246,0.15)', borderRadius: '12px' }}
+                  onMouseOver={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(168,85,247,0.4)'; (e.currentTarget as HTMLDivElement).style.boxShadow = '0 0 20px rgba(124,58,237,0.15)' }}
+                  onMouseOut={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(139,92,246,0.15)'; (e.currentTarget as HTMLDivElement).style.boxShadow = 'none' }}
                 >
                   <CardContent className="p-3 space-y-2">
                     <div className="flex items-start justify-between gap-2">
@@ -354,7 +366,8 @@ export function KanbanBoard({ projectId, teamId, tasks: initialTasks }: KanbanBo
               ))}
 
               {getTasksByColumn(column.id).length === 0 && (
-                <div className="h-32 border-2 border-dashed border-border rounded-lg flex items-center justify-center text-muted-foreground text-sm">
+                <div className="h-32 rounded-xl flex items-center justify-center text-sm"
+                  style={{ border: '2px dashed rgba(139,92,246,0.2)', color: '#7C6A9C' }}>
                   Drop tasks here
                 </div>
               )}

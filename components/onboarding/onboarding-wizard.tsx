@@ -193,48 +193,50 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#05010F' }}>
       {/* Header */}
-      <header className="border-b border-border/50 bg-card/50 backdrop-blur-xl">
+      <header style={{ borderBottom: '1px solid rgba(139,92,246,0.12)', backgroundColor: 'rgba(5,1,15,0.9)', backdropFilter: 'blur(20px)' }}>
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', boxShadow: '0 0 16px rgba(124,58,237,0.4)' }}>
               <Sparkles className="w-5 h-5 text-white" />
             </div>
-            <span className="text-xl font-bold font-heading">ResearchFlow</span>
+            <span className="text-xl font-bold font-heading gradient-text-cyan">ResearchFlow</span>
           </div>
-          <div className="text-sm text-muted-foreground">
+          <div className="text-sm" style={{ color: '#7C6A9C' }}>
             Step {step} of {STEPS.length}
           </div>
         </div>
       </header>
 
       {/* Progress */}
-      <div className="bg-card/50">
+      <div style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(139,92,246,0.12)' }}>
         <div className="max-w-4xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between mb-4">
             {STEPS.map((s, index) => (
               <div key={s.id} className="flex items-center">
                 <div 
-                  className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
-                    step >= s.id 
-                      ? 'bg-primary text-primary-foreground' 
-                      : 'bg-muted text-muted-foreground'
-                  }`}
+                  className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300"
+                  style={step >= s.id
+                    ? { background: 'linear-gradient(135deg,#7C3AED,#A855F7)', color: '#F3F0FF', boxShadow: '0 0 14px rgba(124,58,237,0.4)' }
+                    : { background: 'rgba(255,255,255,0.05)', color: '#7C6A9C', border: '1px solid rgba(139,92,246,0.2)' }
+                  }
                 >
                   <s.icon className="w-5 h-5" />
                 </div>
                 {index < STEPS.length - 1 && (
                   <div 
-                    className={`hidden sm:block w-16 lg:w-24 h-1 mx-2 rounded ${
-                      step > s.id ? 'bg-primary' : 'bg-muted'
-                    }`}
+                    className="hidden sm:block w-16 lg:w-24 h-0.5 mx-2 rounded transition-all duration-300"
+                    style={{ background: step > s.id ? 'linear-gradient(90deg,#7C3AED,#A855F7)' : 'rgba(255,255,255,0.06)' }}
                   />
                 )}
               </div>
             ))}
           </div>
-          <Progress value={progress} className="h-2" />
+          {/* Custom progress bar */}
+          <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+            <div className="h-full rounded-full transition-all duration-500" style={{ width: `${progress}%`, background: 'linear-gradient(90deg,#7C3AED,#06B6D4)', boxShadow: '2px 0 8px rgba(124,58,237,0.5)' }} />
+          </div>
         </div>
       </div>
 
@@ -343,14 +345,14 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
                         key={role.value}
                         type="button"
                         onClick={() => toggleRole(role.value)}
-                        className={`w-full p-4 rounded-lg border text-left transition-colors ${
-                          roles.includes(role.value)
-                            ? 'border-primary bg-primary/10'
-                            : 'border-border hover:border-primary/50'
-                        }`}
+                        className="w-full p-4 rounded-xl text-left transition-all duration-200"
+                        style={roles.includes(role.value)
+                          ? { background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(168,85,247,0.5)', boxShadow: '0 0 16px rgba(124,58,237,0.15)' }
+                          : { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(139,92,246,0.2)' }
+                        }
                       >
-                        <div className="font-medium">{role.label}</div>
-                        <div className="text-sm text-muted-foreground">{role.description}</div>
+                        <div className="font-medium" style={{ color: roles.includes(role.value) ? '#C084FC' : '#F3F0FF' }}>{role.label}</div>
+                        <div className="text-sm mt-0.5" style={{ color: '#7C6A9C' }}>{role.description}</div>
                       </button>
                     ))}
                   </div>

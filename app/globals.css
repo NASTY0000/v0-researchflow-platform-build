@@ -3,92 +3,61 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* ResearchFlow Design System - Dark Mode Default */
-/* Primary: #4F8EF7 (Blue), Accent: #C084FC (Purple) */
-
 :root {
-  /* Light mode - rarely used, dark is default */
-  --background: oklch(0.98 0 0);
-  --foreground: oklch(0.15 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.15 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.15 0 0);
-  --primary: oklch(0.62 0.18 250); /* #4F8EF7 */
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.95 0 0);
-  --secondary-foreground: oklch(0.15 0 0);
-  --muted: oklch(0.95 0 0);
-  --muted-foreground: oklch(0.45 0 0);
-  --accent: oklch(0.7 0.18 300); /* #C084FC */
-  --accent-foreground: oklch(1 0 0);
-  --destructive: oklch(0.55 0.22 25);
-  --destructive-foreground: oklch(1 0 0);
-  --border: oklch(0.9 0 0);
-  --input: oklch(0.9 0 0);
-  --ring: oklch(0.62 0.18 250);
-  --chart-1: oklch(0.62 0.18 250);
-  --chart-2: oklch(0.7 0.18 300);
-  --chart-3: oklch(0.65 0.2 145);
-  --chart-4: oklch(0.75 0.15 60);
-  --chart-5: oklch(0.6 0.2 30);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.98 0 0);
-  --sidebar-foreground: oklch(0.15 0 0);
-  --sidebar-primary: oklch(0.62 0.18 250);
-  --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.95 0 0);
-  --sidebar-accent-foreground: oklch(0.15 0 0);
-  --sidebar-border: oklch(0.9 0 0);
-  --sidebar-ring: oklch(0.62 0.18 250);
-}
+  /* Deep-space color system */
+  --background: #05010F;
+  --foreground: #F3F0FF;
+  --card: rgba(255,255,255,0.03);
+  --card-foreground: #F3F0FF;
+  --popover: #0D0720;
+  --popover-foreground: #F3F0FF;
+  --primary: #7C3AED;
+  --primary-foreground: #F3F0FF;
+  --secondary: rgba(255,255,255,0.06);
+  --secondary-foreground: #F3F0FF;
+  --muted: rgba(255,255,255,0.05);
+  --muted-foreground: #7C6A9C;
+  --accent: #A855F7;
+  --accent-foreground: #F3F0FF;
+  --destructive: #EF4444;
+  --destructive-foreground: #F3F0FF;
+  --border: rgba(139,92,246,0.15);
+  --input: rgba(255,255,255,0.06);
+  --ring: #7C3AED;
+  --radius: 0.75rem;
 
-.dark {
-  /* Dark mode - ResearchFlow default theme */
-  --background: oklch(0.13 0.01 260); /* Deep dark blue-tinted */
-  --foreground: oklch(0.95 0 0);
-  --card: oklch(0.17 0.01 260);
-  --card-foreground: oklch(0.95 0 0);
-  --popover: oklch(0.17 0.01 260);
-  --popover-foreground: oklch(0.95 0 0);
-  --primary: oklch(0.62 0.18 250); /* #4F8EF7 */
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.22 0.01 260);
-  --secondary-foreground: oklch(0.95 0 0);
-  --muted: oklch(0.22 0.01 260);
-  --muted-foreground: oklch(0.65 0 0);
-  --accent: oklch(0.7 0.18 300); /* #C084FC */
-  --accent-foreground: oklch(1 0 0);
-  --destructive: oklch(0.5 0.2 25);
-  --destructive-foreground: oklch(0.95 0 0);
-  --border: oklch(0.28 0.01 260);
-  --input: oklch(0.22 0.01 260);
-  --ring: oklch(0.62 0.18 250);
-  --chart-1: oklch(0.62 0.18 250);
-  --chart-2: oklch(0.7 0.18 300);
-  --chart-3: oklch(0.65 0.2 145);
-  --chart-4: oklch(0.75 0.15 60);
-  --chart-5: oklch(0.6 0.2 30);
-  --sidebar: oklch(0.1 0.01 260);
-  --sidebar-foreground: oklch(0.95 0 0);
-  --sidebar-primary: oklch(0.62 0.18 250);
-  --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.22 0.01 260);
-  --sidebar-accent-foreground: oklch(0.95 0 0);
-  --sidebar-border: oklch(0.28 0.01 260);
-  --sidebar-ring: oklch(0.62 0.18 250);
-  
-  /* Success/Warning colors */
-  --success: oklch(0.65 0.2 145);
-  --success-foreground: oklch(1 0 0);
-  --warning: oklch(0.75 0.15 60);
-  --warning-foreground: oklch(0.15 0 0);
+  /* Sidebar tokens */
+  --sidebar: rgba(5,1,15,0.95);
+  --sidebar-foreground: #F3F0FF;
+  --sidebar-primary: #7C3AED;
+  --sidebar-primary-foreground: #F3F0FF;
+  --sidebar-accent: rgba(124,58,237,0.12);
+  --sidebar-accent-foreground: #F3F0FF;
+  --sidebar-border: rgba(139,92,246,0.12);
+  --sidebar-ring: #7C3AED;
+
+  /* Extended palette */
+  --glow: #C084FC;
+  --cyan: #06B6D4;
+  --purple-soft: #A855F7;
+  --text-muted: #7C6A9C;
+  --surface: rgba(255,255,255,0.03);
+  --surface-hover: rgba(255,255,255,0.06);
+  --border-bright: rgba(168,85,247,0.5);
+
+  /* Chart */
+  --chart-1: #7C3AED;
+  --chart-2: #A855F7;
+  --chart-3: #06B6D4;
+  --chart-4: #C084FC;
+  --chart-5: #818CF8;
 }
 
 @theme inline {
-  --font-sans: 'DM Sans', 'Geist', sans-serif;
-  --font-heading: 'Syne', 'DM Sans', sans-serif;
+  --font-sans: 'DM Sans', sans-serif;
+  --font-heading: 'Syne', sans-serif;
   --font-mono: 'Geist Mono', monospace;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -133,25 +102,248 @@
   }
   body {
     @apply bg-background text-foreground;
+    background-color: #05010F;
+    background-image:
+      radial-gradient(ellipse at 30% 40%, rgba(124,58,237,0.12), transparent 60%),
+      radial-gradient(ellipse at 80% 10%, rgba(168,85,247,0.08), transparent 50%);
   }
 }
 
-/* Custom utility classes for ResearchFlow */
+/* =============================================
+   UTILITY CLASSES
+   ============================================= */
 @layer utilities {
+
+  /* Gradient fills */
   .gradient-primary {
-    background: linear-gradient(135deg, oklch(0.62 0.18 250) 0%, oklch(0.7 0.18 300) 100%);
+    background: linear-gradient(135deg, #7C3AED 0%, #A855F7 100%);
   }
-  
+  .gradient-hero {
+    background: linear-gradient(135deg, #1E0533 0%, #050118 100%);
+  }
+
+  /* Gradient text – purple to cyan */
   .gradient-text {
-    background: linear-gradient(135deg, oklch(0.62 0.18 250) 0%, oklch(0.7 0.18 300) 100%);
+    background: linear-gradient(135deg, #C084FC 0%, #818CF8 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
-  
-  .glass {
-    background: oklch(0.17 0.01 260 / 0.8);
-    backdrop-filter: blur(12px);
-    border: 1px solid oklch(0.28 0.01 260 / 0.5);
+  .gradient-text-cyan {
+    background: linear-gradient(135deg, #A855F7 0%, #06B6D4 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
+
+  /* Glass card surface */
+  .glass {
+    background: rgba(255,255,255,0.03);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(139,92,246,0.15);
+    border-radius: 16px;
+  }
+  .glass:hover {
+    border-color: rgba(168,85,247,0.5);
+    box-shadow: 0 0 30px rgba(124,58,237,0.2);
+  }
+
+  /* Glow effects */
+  .glow-primary {
+    box-shadow: 0 0 20px rgba(124,58,237,0.4);
+  }
+  .glow-sm {
+    box-shadow: 0 0 12px rgba(124,58,237,0.3);
+  }
+
+  /* Section label style */
+  .label-section {
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  /* Match score pill */
+  .match-pill {
+    background: rgba(124,58,237,0.15);
+    border: 1px solid rgba(168,85,247,0.3);
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 11px;
+  }
+  .match-pill-high {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  /* Stat number gradient */
+  .stat-number {
+    background: linear-gradient(135deg, #C084FC, #818CF8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+  }
+
+  /* Noise texture overlay */
+  .noise::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    border-radius: inherit;
+  }
+}
+
+/* =============================================
+   ANIMATIONS
+   ============================================= */
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 8px rgba(168,85,247,0.3); }
+  50% { box-shadow: 0 0 20px rgba(168,85,247,0.7); }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+.animate-fade-in {
+  animation: fade-in 0.3s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+/* Stagger helpers */
+.stagger-1 { animation-delay: 50ms; }
+.stagger-2 { animation-delay: 100ms; }
+.stagger-3 { animation-delay: 150ms; }
+.stagger-4 { animation-delay: 200ms; }
+
+/* =============================================
+   COMPONENT OVERRIDES
+   ============================================= */
+
+/* Cards */
+.card, [data-slot="card"] {
+  background: rgba(255,255,255,0.03) !important;
+  border: 1px solid rgba(139,92,246,0.15) !important;
+  border-radius: 16px !important;
+  backdrop-filter: blur(12px);
+  transition: border-color 200ms cubic-bezier(0.4,0,0.2,1),
+              box-shadow 200ms cubic-bezier(0.4,0,0.2,1);
+}
+.card:hover, [data-slot="card"]:hover {
+  border-color: rgba(168,85,247,0.35) !important;
+  box-shadow: 0 0 30px rgba(124,58,237,0.15);
+}
+
+/* Buttons – primary */
+[data-slot="button"][class*="bg-primary"],
+button.bg-primary {
+  background: linear-gradient(135deg, #7C3AED, #A855F7) !important;
+  box-shadow: 0 0 20px rgba(124,58,237,0.35);
+  border: none !important;
+  transition: all 200ms cubic-bezier(0.4,0,0.2,1);
+}
+[data-slot="button"][class*="bg-primary"]:hover,
+button.bg-primary:hover {
+  box-shadow: 0 0 32px rgba(124,58,237,0.6);
+  transform: scale(1.02);
+}
+
+/* Inputs */
+input, textarea, [data-slot="input"], [data-slot="textarea"] {
+  background: rgba(255,255,255,0.05) !important;
+  border-color: rgba(139,92,246,0.2) !important;
+  color: #F3F0FF !important;
+  transition: border-color 200ms ease;
+}
+input:focus, textarea:focus {
+  border-color: rgba(168,85,247,0.6) !important;
+  box-shadow: 0 0 0 2px rgba(124,58,237,0.2) !important;
+  outline: none !important;
+}
+input::placeholder, textarea::placeholder {
+  color: #7C6A9C !important;
+}
+
+/* Select triggers */
+[data-slot="select-trigger"] {
+  background: rgba(255,255,255,0.05) !important;
+  border-color: rgba(139,92,246,0.2) !important;
+  color: #F3F0FF !important;
+}
+[data-slot="select-content"] {
+  background: #0D0720 !important;
+  border-color: rgba(139,92,246,0.25) !important;
+}
+[data-slot="select-item"]:hover,
+[data-slot="select-item"][data-highlighted] {
+  background: rgba(124,58,237,0.2) !important;
+}
+
+/* Popover / Dropdown */
+[data-slot="dropdown-menu-content"],
+[data-slot="popover-content"] {
+  background: #0D0720 !important;
+  border-color: rgba(139,92,246,0.25) !important;
+  backdrop-filter: blur(20px);
+}
+[data-slot="dropdown-menu-item"]:hover,
+[data-slot="dropdown-menu-item"]:focus {
+  background: rgba(124,58,237,0.15) !important;
+}
+
+/* Progress bar */
+[data-slot="progress"] {
+  background: rgba(255,255,255,0.06) !important;
+}
+[data-slot="progress"] > div {
+  background: linear-gradient(90deg, #7C3AED, #06B6D4) !important;
+}
+
+/* Badges */
+[data-slot="badge"] {
+  border-radius: 20px !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+}
+
+/* Tabs */
+[data-slot="tabs-list"] {
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid rgba(139,92,246,0.15) !important;
+}
+[data-slot="tabs-trigger"][data-state="active"] {
+  background: rgba(124,58,237,0.25) !important;
+  color: #F3F0FF !important;
+}
+
+/* Dialog */
+[data-slot="dialog-content"] {
+  background: #0D0720 !important;
+  border: 1px solid rgba(139,92,246,0.25) !important;
+  backdrop-filter: blur(20px);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(139,92,246,0.3);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(168,85,247,0.5);
 }

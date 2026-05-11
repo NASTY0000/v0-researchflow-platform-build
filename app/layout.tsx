@@ -5,12 +5,14 @@ import './globals.css'
 
 const dmSans = DM_Sans({ 
   subsets: ['latin'],
-  variable: '--font-dm-sans',
+  weight: ['400', '500'],
+  variable: '--font-sans',
 })
 
 const syne = Syne({ 
   subsets: ['latin'],
-  variable: '--font-syne',
+  weight: ['700', '800'],
+  variable: '--font-heading',
 })
 
 export const metadata: Metadata = {
@@ -26,7 +28,7 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: '#4F8EF7',
+  themeColor: '#7C3AED',
   width: 'device-width',
   initialScale: 1,
 }
@@ -37,8 +39,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="dark bg-background">
-      <body className={`${dmSans.variable} ${syne.variable} font-sans antialiased`}>
+    <html lang="en" className="dark" style={{ backgroundColor: '#05010F' }}>
+      <body className={`${dmSans.variable} ${syne.variable} font-sans antialiased`} style={{ backgroundColor: '#05010F' }}>
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>

@@ -29,13 +29,13 @@ export function DashboardHeader({ profile, unreadCount }: DashboardHeaderProps) 
   }
 
   return (
-    <header className="flex h-16 shrink-0 items-center justify-between border-b border-border/50 px-4 gap-4">
+    <header className="flex h-16 shrink-0 items-center justify-between px-4 gap-4" style={{ borderBottom: '1px solid rgba(139,92,246,0.12)', backgroundColor: 'rgba(5,1,15,0.8)', backdropFilter: 'blur(20px)' }}>
       <div className="flex items-center gap-2">
         <SidebarTrigger className="-ml-1" />
         <Separator orientation="vertical" className="mr-2 h-4" />
         
         {/* Search placeholder */}
-        <Button variant="outline" className="hidden sm:flex items-center gap-2 text-muted-foreground w-64 justify-start">
+        <Button variant="outline" className="hidden sm:flex items-center gap-2 w-64 justify-start" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(139,92,246,0.2)', color: '#7C6A9C', borderRadius: '8px' }}>
           <Search className="h-4 w-4" />
           <span className="text-sm">Search...</span>
           <kbd className="ml-auto pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
@@ -48,7 +48,7 @@ export function DashboardHeader({ profile, unreadCount }: DashboardHeaderProps) 
         {/* Quick actions */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button size="sm" className="gap-1">
+            <Button size="sm" className="gap-1" style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none', boxShadow: '0 0 14px rgba(124,58,237,0.3)', borderRadius: '8px' }}>
               <Plus className="h-4 w-4" />
               <span className="hidden sm:inline">New</span>
             </Button>

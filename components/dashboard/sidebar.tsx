@@ -101,12 +101,12 @@ export function DashboardSidebar({ profile }: DashboardSidebarProps) {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link href="/dashboard">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg gradient-primary text-white">
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg text-white" style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', boxShadow: '0 0 14px rgba(124,58,237,0.45)' }}>
                   <Sparkles className="size-4" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold font-heading">ResearchFlow</span>
-                  <span className="truncate text-xs text-muted-foreground">Collaborate & Discover</span>
+                  <span className="truncate font-semibold font-heading gradient-text-cyan">ResearchFlow</span>
+                  <span className="truncate text-xs" style={{ color: '#7C6A9C' }}>Collaborate & Discover</span>
                 </div>
               </Link>
             </SidebarMenuButton>
