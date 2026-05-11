@@ -38,7 +38,7 @@ export async function signUp(formData: FormData) {
     return { error: 'An account with this email already exists. Please sign in instead.' }
   }
 
-  return { success: true, email, message: 'Verification code sent to your email' }
+  return { success: true, email, requiresVerification: true, message: 'Verification code sent to your email' }
 }
 
 export async function verifyOtp(email: string, token: string) {

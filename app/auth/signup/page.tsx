@@ -1,13 +1,14 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Loader2, Mail, Lock, User, Sparkles, ArrowLeft } from 'lucide-react'
+import { Loader2, Mail, Lock, User, Sparkles, ArrowLeft, CheckCircle } from 'lucide-react'
 import { signUp, signInWithGoogle, verifyOtp, resendOtp } from '@/lib/actions/auth'
 
 function GoogleIcon({ className }: { className?: string }) {
@@ -22,8 +23,10 @@ function GoogleIcon({ className }: { className?: string }) {
 }
 
 export default function SignUpPage() {
+  const router = useRouter()
   const [error, setError] = useState<string | null>(null)
-  const [step, setStep] = useState<'signup' | 'verify'>('signup')
+  const [success, setSuccess] = useState<string | null>(null)
+  const [step, setStep] = useState<'signup' | 'verify' | 'success'>('signup')
   const [email, setEmail] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
@@ -40,10 +43,20 @@ export default function SignUpPage() {
     if (result?.error) {
       setError(result.error)
       setIsLoading(false)
-    } else if (result?.success && result?.email) {
-      setEmail(result.email)
-      setStep('verify')
-      setIsLoading(false)
+    } else if (result?.success) {
+      if (result?.requiresVerification && result?.email) {
+        // Email confirmation is enabled, show OTP screen
+        setEmail(result.email)
+        setStep('verify')
+        setIsLoading(false)
+      } else {
+        // User was auto-confirmed or redirected
+        setStep('success')
+        setSuccess('Account created successfully! Redirecting...')
+        setTimeout(() => {
+          router.push('/onboarding')
+        }, 1500)
+      }
     }
   }
 
@@ -75,19 +88,20 @@ export default function SignUpPage() {
     
     if (result?.error) {
       setError(result.error)
+    } else {
+      setSuccess('Verification code resent!')
+      setTimeout(() => setSuccess(null), 3000)
     }
     setIsResending(false)
   }
 
   function handleOtpChange(index: number, value: string) {
-    // Only allow digits
     if (value && !/^\d$/.test(value)) return
     
     const newDigits = [...otpDigits]
     newDigits[index] = value
     setOtpDigits(newDigits)
     
-    // Auto-focus next input
     if (value && index < 5) {
       const nextInput = document.getElementById(`otp-${index + 1}`)
       nextInput?.focus()
@@ -95,7 +109,6 @@ export default function SignUpPage() {
   }
 
   function handleOtpKeyDown(index: number, e: React.KeyboardEvent<HTMLInputElement>) {
-    // Handle backspace - move to previous input
     if (e.key === 'Backspace' && !otpDigits[index] && index > 0) {
       const prevInput = document.getElementById(`otp-${index - 1}`)
       prevInput?.focus()
@@ -112,11 +125,33 @@ export default function SignUpPage() {
       }
       setOtpDigits(newDigits)
       
-      // Focus the last filled input or the next empty one
       const focusIndex = Math.min(pastedData.length, 5)
       const input = document.getElementById(`otp-${focusIndex}`)
       input?.focus()
     }
+  }
+
+  // Success Screen
+  if (step === 'success') {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-1/4 -left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl" />
+          <div className="absolute bottom-1/4 -right-1/4 w-96 h-96 bg-accent/20 rounded-full blur-3xl" />
+        </div>
+
+        <Card className="w-full max-w-md border-border/50 bg-card/80 backdrop-blur-sm">
+          <CardContent className="pt-6 text-center">
+            <div className="mx-auto w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center mb-4">
+              <CheckCircle className="w-8 h-8 text-green-500" />
+            </div>
+            <h2 className="text-2xl font-bold mb-2">Account Created!</h2>
+            <p className="text-muted-foreground">{success}</p>
+            <Loader2 className="w-6 h-6 animate-spin mx-auto mt-4 text-primary" />
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   // OTP Verification Screen
@@ -153,6 +188,12 @@ export default function SignUpPage() {
               {error && (
                 <Alert variant="destructive">
                   <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+              
+              {success && (
+                <Alert>
+                  <AlertDescription>{success}</AlertDescription>
                 </Alert>
               )}
 
@@ -226,14 +267,12 @@ export default function SignUpPage() {
   // Sign Up Form
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-background">
-      {/* Background gradient */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 -left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl" />
         <div className="absolute bottom-1/4 -right-1/4 w-96 h-96 bg-accent/20 rounded-full blur-3xl" />
       </div>
 
       <div className="w-full max-w-md relative">
-        {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2">
             <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
@@ -274,21 +313,18 @@ export default function SignUpPage() {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="email">University Email</Label>
+                <Label htmlFor="email">Email</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     id="email"
                     name="email"
                     type="email"
-                    placeholder="you@university.edu"
+                    placeholder="you@example.com"
                     required
                     className="pl-10"
                   />
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Use your university email for verification
-                </p>
               </div>
 
               <div className="space-y-2">
