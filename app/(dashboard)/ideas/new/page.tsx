@@ -1,0 +1,386 @@
+"use client"
+
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import Link from "next/link"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Label } from "@/components/ui/label"
+import { Badge } from "@/components/ui/badge"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { ArrowLeft, Lightbulb, X, Plus, Loader2 } from "lucide-react"
+import { createClient } from "@/lib/supabase/client"
+
+const RESEARCH_AREAS = [
+  "Computer Science",
+  "Data Science",
+  "Artificial Intelligence",
+  "Machine Learning",
+  "Biotechnology",
+  "Environmental Science",
+  "Public Health",
+  "Economics",
+  "Social Sciences",
+  "Engineering",
+  "Mathematics",
+  "Physics",
+  "Chemistry",
+  "Medicine",
+  "Agriculture",
+  "Education",
+  "Other",
+]
+
+const ROLES = [
+  "Data Scientist",
+  "Software Developer",
+  "Research Assistant",
+  "Statistical Analyst",
+  "Lab Technician",
+  "Project Manager",
+  "Technical Writer",
+  "Domain Expert",
+  "Designer",
+  "Other",
+]
+
+const COLLABORATION_TYPES = [
+  { value: "open", label: "Open Collaboration", description: "Anyone can request to join" },
+  { value: "invite_only", label: "Invite Only", description: "You select who can join" },
+  { value: "team_based", label: "Team Based", description: "Looking for a complete team" },
+]
+
+export default function NewIdeaPage() {
+  const router = useRouter()
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  // Form state
+  const [title, setTitle] = useState("")
+  const [description, setDescription] = useState("")
+  const [researchArea, setResearchArea] = useState("")
+  const [collaborationType, setCollaborationType] = useState("open")
+  const [estimatedDuration, setEstimatedDuration] = useState("")
+  const [tags, setTags] = useState<string[]>([])
+  const [tagInput, setTagInput] = useState("")
+  const [rolesNeeded, setRolesNeeded] = useState<string[]>([])
+  const [skillsNeeded, setSkillsNeeded] = useState<string[]>([])
+  const [skillInput, setSkillInput] = useState("")
+
+  function addTag() {
+    if (tagInput.trim() && !tags.includes(tagInput.trim()) && tags.length < 5) {
+      setTags([...tags, tagInput.trim()])
+      setTagInput("")
+    }
+  }
+
+  function removeTag(tag: string) {
+    setTags(tags.filter((t) => t !== tag))
+  }
+
+  function addSkill() {
+    if (skillInput.trim() && !skillsNeeded.includes(skillInput.trim()) && skillsNeeded.length < 10) {
+      setSkillsNeeded([...skillsNeeded, skillInput.trim()])
+      setSkillInput("")
+    }
+  }
+
+  function removeSkill(skill: string) {
+    setSkillsNeeded(skillsNeeded.filter((s) => s !== skill))
+  }
+
+  function toggleRole(role: string) {
+    if (rolesNeeded.includes(role)) {
+      setRolesNeeded(rolesNeeded.filter((r) => r !== role))
+    } else if (rolesNeeded.length < 5) {
+      setRolesNeeded([...rolesNeeded, role])
+    }
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setError(null)
+
+    if (!title.trim() || !description.trim() || !researchArea) {
+      setError("Please fill in all required fields")
+      return
+    }
+
+    setIsSubmitting(true)
+
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (!user) {
+        setError("You must be logged in to post an idea")
+        setIsSubmitting(false)
+        return
+      }
+
+      const { data, error: insertError } = await supabase
+        .from("research_ideas")
+        .insert({
+          author_id: user.id,
+          title: title.trim(),
+          description: description.trim(),
+          research_area: researchArea,
+          collaboration_type: collaborationType,
+          estimated_duration: estimatedDuration || null,
+          tags,
+          roles_needed: rolesNeeded,
+          skills_needed: skillsNeeded,
+          status: "open",
+        })
+        .select()
+        .single()
+
+      if (insertError) {
+        console.error("Error creating idea:", insertError)
+        setError("Failed to create idea. Please try again.")
+        setIsSubmitting(false)
+        return
+      }
+
+      router.push(`/ideas/${data.id}`)
+    } catch (err) {
+      console.error("Error:", err)
+      setError("An unexpected error occurred. Please try again.")
+      setIsSubmitting(false)
+    }
+  }
+
+  return (
+    <div className="max-w-3xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="flex items-center gap-4">
+        <Button variant="ghost" size="icon" asChild>
+          <Link href="/ideas">
+            <ArrowLeft className="h-5 w-5" />
+          </Link>
+        </Button>
+        <div>
+          <h1 className="text-2xl font-bold font-heading">Post Research Idea</h1>
+          <p className="text-muted-foreground">Share your concept and find collaborators</p>
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit}>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Lightbulb className="h-5 w-5 text-primary" />
+              Idea Details
+            </CardTitle>
+            <CardDescription>
+              Describe your research idea clearly to attract the right collaborators
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            {/* Title */}
+            <div className="space-y-2">
+              <Label htmlFor="title">Title *</Label>
+              <Input
+                id="title"
+                placeholder="A clear, descriptive title for your research idea"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                maxLength={200}
+              />
+              <p className="text-xs text-muted-foreground">{title.length}/200 characters</p>
+            </div>
+
+            {/* Description */}
+            <div className="space-y-2">
+              <Label htmlFor="description">Description *</Label>
+              <Textarea
+                id="description"
+                placeholder="Explain your research idea in detail. What problem does it solve? What are your goals? What methodology would you use?"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={6}
+                maxLength={2000}
+              />
+              <p className="text-xs text-muted-foreground">{description.length}/2000 characters</p>
+            </div>
+
+            {/* Research Area */}
+            <div className="space-y-2">
+              <Label htmlFor="area">Research Area *</Label>
+              <Select value={researchArea} onValueChange={setResearchArea}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select research area" />
+                </SelectTrigger>
+                <SelectContent>
+                  {RESEARCH_AREAS.map((area) => (
+                    <SelectItem key={area} value={area}>
+                      {area}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Tags */}
+            <div className="space-y-2">
+              <Label>Tags (up to 5)</Label>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Add a tag"
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault()
+                      addTag()
+                    }
+                  }}
+                />
+                <Button type="button" variant="outline" onClick={addTag} disabled={tags.length >= 5}>
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              {tags.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {tags.map((tag) => (
+                    <Badge key={tag} variant="secondary" className="gap-1">
+                      {tag}
+                      <button type="button" onClick={() => removeTag(tag)} className="hover:text-destructive">
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Collaboration Type */}
+            <div className="space-y-2">
+              <Label>Collaboration Type</Label>
+              <div className="grid md:grid-cols-3 gap-3">
+                {COLLABORATION_TYPES.map((type) => (
+                  <button
+                    key={type.value}
+                    type="button"
+                    onClick={() => setCollaborationType(type.value)}
+                    className={`p-4 rounded-lg border text-left transition-colors ${
+                      collaborationType === type.value
+                        ? "border-primary bg-primary/5"
+                        : "border-border hover:border-primary/50"
+                    }`}
+                  >
+                    <p className="font-medium">{type.label}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{type.description}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Roles Needed */}
+            <div className="space-y-2">
+              <Label>Roles Needed (select up to 5)</Label>
+              <div className="flex flex-wrap gap-2">
+                {ROLES.map((role) => (
+                  <Badge
+                    key={role}
+                    variant={rolesNeeded.includes(role) ? "default" : "outline"}
+                    className="cursor-pointer hover:bg-primary/20"
+                    onClick={() => toggleRole(role)}
+                  >
+                    {role}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+
+            {/* Skills Needed */}
+            <div className="space-y-2">
+              <Label>Skills Needed (up to 10)</Label>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Add a required skill"
+                  value={skillInput}
+                  onChange={(e) => setSkillInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault()
+                      addSkill()
+                    }
+                  }}
+                />
+                <Button type="button" variant="outline" onClick={addSkill} disabled={skillsNeeded.length >= 10}>
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              {skillsNeeded.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {skillsNeeded.map((skill) => (
+                    <Badge key={skill} variant="secondary" className="gap-1">
+                      {skill}
+                      <button type="button" onClick={() => removeSkill(skill)} className="hover:text-destructive">
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Estimated Duration */}
+            <div className="space-y-2">
+              <Label htmlFor="duration">Estimated Duration</Label>
+              <Select value={estimatedDuration} onValueChange={setEstimatedDuration}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select estimated duration" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1-3 months">1-3 months</SelectItem>
+                  <SelectItem value="3-6 months">3-6 months</SelectItem>
+                  <SelectItem value="6-12 months">6-12 months</SelectItem>
+                  <SelectItem value="1-2 years">1-2 years</SelectItem>
+                  <SelectItem value="2+ years">2+ years</SelectItem>
+                  <SelectItem value="Ongoing">Ongoing</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Submit */}
+            <div className="flex items-center justify-end gap-4 pt-4 border-t">
+              <Button type="button" variant="outline" asChild>
+                <Link href="/ideas">Cancel</Link>
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Posting...
+                  </>
+                ) : (
+                  <>
+                    <Lightbulb className="mr-2 h-4 w-4" />
+                    Post Idea
+                  </>
+                )}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </form>
+    </div>
+  )
+}
