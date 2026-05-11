@@ -31,6 +31,7 @@ import {
   LogOut,
   ChevronUp,
   User,
+  Shield,
 } from 'lucide-react'
 import type { Profile } from '@/lib/types/database'
 import { signOut } from '@/lib/actions/auth'
@@ -157,6 +158,28 @@ export function DashboardSidebar({ profile }: DashboardSidebarProps) {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {profile.roles?.includes('admin') && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Admin</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton 
+                    asChild 
+                    isActive={pathname === '/admin' || pathname.startsWith('/admin/')}
+                    tooltip="Admin Dashboard"
+                  >
+                    <Link href="/admin">
+                      <Shield />
+                      <span>Admin Dashboard</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
 
       <SidebarFooter>

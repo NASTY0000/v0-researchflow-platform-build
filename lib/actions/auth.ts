@@ -56,6 +56,34 @@ export async function signOut() {
   redirect('/')
 }
 
+export async function signInWithGoogle() {
+  const supabase = await createClient()
+  
+  const redirectUrl = process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ?? 
+    `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/callback`
+
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: redirectUrl,
+      queryParams: {
+        access_type: 'offline',
+        prompt: 'consent',
+      },
+    },
+  })
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  if (data.url) {
+    redirect(data.url)
+  }
+
+  return { error: 'Failed to initiate Google sign-in' }
+}
+
 export async function getUser() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
