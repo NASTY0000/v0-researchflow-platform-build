@@ -15,8 +15,6 @@ export async function signUp(formData: FormData) {
     email,
     password,
     options: {
-      emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ?? 
-        `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/callback`,
       data: {
         full_name: fullName,
       },
@@ -27,7 +25,39 @@ export async function signUp(formData: FormData) {
     return { error: error.message }
   }
 
-  return { success: true, message: 'Check your email to confirm your account' }
+  return { success: true, email, message: 'Verification code sent to your email' }
+}
+
+export async function verifyOtp(email: string, token: string) {
+  const supabase = await createClient()
+
+  const { error } = await supabase.auth.verifyOtp({
+    email,
+    token,
+    type: 'signup',
+  })
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  revalidatePath('/', 'layout')
+  redirect('/onboarding')
+}
+
+export async function resendOtp(email: string) {
+  const supabase = await createClient()
+
+  const { error } = await supabase.auth.resend({
+    type: 'signup',
+    email,
+  })
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  return { success: true, message: 'Verification code resent' }
 }
 
 export async function signIn(formData: FormData) {

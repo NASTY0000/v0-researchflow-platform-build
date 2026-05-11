@@ -7,8 +7,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Loader2, Mail, Lock, User, Sparkles, CheckCircle } from 'lucide-react'
-import { signUp, signInWithGoogle } from '@/lib/actions/auth'
+import { Loader2, Mail, Lock, User, Sparkles, ArrowLeft } from 'lucide-react'
+import { signUp, signInWithGoogle, verifyOtp, resendOtp } from '@/lib/actions/auth'
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
@@ -23,9 +23,13 @@ function GoogleIcon({ className }: { className?: string }) {
 
 export default function SignUpPage() {
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState(false)
+  const [step, setStep] = useState<'signup' | 'verify'>('signup')
+  const [email, setEmail] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
+  const [isVerifying, setIsVerifying] = useState(false)
+  const [isResending, setIsResending] = useState(false)
+  const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', ''])
 
   async function handleSubmit(formData: FormData) {
     setIsLoading(true)
@@ -36,13 +40,87 @@ export default function SignUpPage() {
     if (result?.error) {
       setError(result.error)
       setIsLoading(false)
-    } else if (result?.success) {
-      setSuccess(true)
+    } else if (result?.success && result?.email) {
+      setEmail(result.email)
+      setStep('verify')
       setIsLoading(false)
     }
   }
 
-  if (success) {
+  async function handleVerifyOtp() {
+    setIsVerifying(true)
+    setError(null)
+    
+    const token = otpDigits.join('')
+    if (token.length !== 6) {
+      setError('Please enter the complete 6-digit code')
+      setIsVerifying(false)
+      return
+    }
+
+    const result = await verifyOtp(email, token)
+    
+    if (result?.error) {
+      setError(result.error)
+      setIsVerifying(false)
+    }
+    // If successful, the action redirects to /onboarding
+  }
+
+  async function handleResendCode() {
+    setIsResending(true)
+    setError(null)
+    
+    const result = await resendOtp(email)
+    
+    if (result?.error) {
+      setError(result.error)
+    }
+    setIsResending(false)
+  }
+
+  function handleOtpChange(index: number, value: string) {
+    // Only allow digits
+    if (value && !/^\d$/.test(value)) return
+    
+    const newDigits = [...otpDigits]
+    newDigits[index] = value
+    setOtpDigits(newDigits)
+    
+    // Auto-focus next input
+    if (value && index < 5) {
+      const nextInput = document.getElementById(`otp-${index + 1}`)
+      nextInput?.focus()
+    }
+  }
+
+  function handleOtpKeyDown(index: number, e: React.KeyboardEvent<HTMLInputElement>) {
+    // Handle backspace - move to previous input
+    if (e.key === 'Backspace' && !otpDigits[index] && index > 0) {
+      const prevInput = document.getElementById(`otp-${index - 1}`)
+      prevInput?.focus()
+    }
+  }
+
+  function handleOtpPaste(e: React.ClipboardEvent) {
+    e.preventDefault()
+    const pastedData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6)
+    if (pastedData) {
+      const newDigits = [...otpDigits]
+      for (let i = 0; i < pastedData.length; i++) {
+        newDigits[i] = pastedData[i]
+      }
+      setOtpDigits(newDigits)
+      
+      // Focus the last filled input or the next empty one
+      const focusIndex = Math.min(pastedData.length, 5)
+      const input = document.getElementById(`otp-${focusIndex}`)
+      input?.focus()
+    }
+  }
+
+  // OTP Verification Screen
+  if (step === 'verify') {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-background">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -50,27 +128,102 @@ export default function SignUpPage() {
           <div className="absolute bottom-1/4 -right-1/4 w-96 h-96 bg-accent/20 rounded-full blur-3xl" />
         </div>
 
-        <Card className="w-full max-w-md border-border/50 bg-card/80 backdrop-blur-sm">
-          <CardHeader className="text-center">
-            <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-              <CheckCircle className="w-8 h-8 text-primary" />
-            </div>
-            <CardTitle className="text-2xl font-heading">Check your email</CardTitle>
-            <CardDescription>
-              We&apos;ve sent you a confirmation link to verify your account. 
-              Please check your inbox and click the link to continue.
-            </CardDescription>
-          </CardHeader>
-          <CardFooter className="flex flex-col space-y-4">
-            <Button asChild variant="outline" className="w-full">
-              <Link href="/auth/login">Back to login</Link>
-            </Button>
-          </CardFooter>
-        </Card>
+        <div className="w-full max-w-md relative">
+          <div className="text-center mb-8">
+            <Link href="/" className="inline-flex items-center gap-2">
+              <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
+                <Sparkles className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-2xl font-bold font-heading">ResearchFlow</span>
+            </Link>
+          </div>
+
+          <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+            <CardHeader className="text-center">
+              <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                <Mail className="w-8 h-8 text-primary" />
+              </div>
+              <CardTitle className="text-2xl font-heading">Verify your email</CardTitle>
+              <CardDescription>
+                We&apos;ve sent a 6-digit verification code to{' '}
+                <span className="font-medium text-foreground">{email}</span>
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {error && (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+
+              <div className="space-y-2">
+                <Label className="text-center block">Enter verification code</Label>
+                <div className="flex justify-center gap-2" onPaste={handleOtpPaste}>
+                  {otpDigits.map((digit, index) => (
+                    <Input
+                      key={index}
+                      id={`otp-${index}`}
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={1}
+                      value={digit}
+                      onChange={(e) => handleOtpChange(index, e.target.value)}
+                      onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                      className="w-12 h-14 text-center text-2xl font-bold"
+                      autoFocus={index === 0}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <Button 
+                onClick={handleVerifyOtp} 
+                className="w-full" 
+                disabled={isVerifying || otpDigits.some(d => !d)}
+              >
+                {isVerifying ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Verifying...
+                  </>
+                ) : (
+                  'Verify Email'
+                )}
+              </Button>
+
+              <div className="text-center text-sm text-muted-foreground">
+                Didn&apos;t receive the code?{' '}
+                <button
+                  type="button"
+                  onClick={handleResendCode}
+                  disabled={isResending}
+                  className="text-primary hover:underline font-medium disabled:opacity-50"
+                >
+                  {isResending ? 'Sending...' : 'Resend code'}
+                </button>
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button 
+                variant="ghost" 
+                className="w-full" 
+                onClick={() => {
+                  setStep('signup')
+                  setOtpDigits(['', '', '', '', '', ''])
+                  setError(null)
+                }}
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to sign up
+              </Button>
+            </CardFooter>
+          </Card>
+        </div>
       </div>
     )
   }
 
+  // Sign Up Form
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-background">
       {/* Background gradient */}
