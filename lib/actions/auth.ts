@@ -1,7 +1,6 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 
 export async function signUp(formData: FormData) {
@@ -30,7 +29,7 @@ export async function signUp(formData: FormData) {
   if (data?.session) {
     // User is auto-confirmed, redirect to onboarding
     revalidatePath('/', 'layout')
-    redirect('/onboarding')
+    return { success: true, redirectTo: '/onboarding' }
   }
 
   // Check if user already exists
@@ -55,7 +54,7 @@ export async function verifyOtp(email: string, token: string) {
   }
 
   revalidatePath('/', 'layout')
-  redirect('/onboarding')
+  return { success: true, redirectTo: '/onboarding' }
 }
 
 export async function resendOtp(email: string) {
@@ -89,14 +88,29 @@ export async function signIn(formData: FormData) {
   }
 
   revalidatePath('/', 'layout')
-  redirect('/dashboard')
+  
+  // Check if user needs to complete onboarding
+  const { data: { user } } = await supabase.auth.getUser()
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('onboarding_completed')
+      .eq('id', user.id)
+      .single()
+    
+    if (profile && !profile.onboarding_completed) {
+      return { success: true, redirectTo: '/onboarding' }
+    }
+  }
+
+  return { success: true, redirectTo: '/dashboard' }
 }
 
 export async function signOut() {
   const supabase = await createClient()
   await supabase.auth.signOut()
   revalidatePath('/', 'layout')
-  redirect('/')
+  return { success: true, redirectTo: '/' }
 }
 
 export async function signInWithGoogle() {
@@ -198,8 +212,8 @@ export async function completeOnboarding(data: Record<string, unknown>) {
   // Check if user selected mentor role - redirect to verification
   const roles = data.roles as string[] | undefined
   if (roles && roles.includes('mentor')) {
-    redirect('/mentor-verification')
+    return { success: true, redirectTo: '/mentor-verification' }
   }
   
-  redirect('/dashboard')
+  return { success: true, redirectTo: '/dashboard' }
 }
