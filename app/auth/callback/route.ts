@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     if (!exchangeError) {
       // Check if user has completed onboarding
       const { data: { user } } = await supabase.auth.getUser()
-      
+
       if (user) {
         const { data: profile } = await supabase
           .from('profiles')
@@ -35,6 +35,20 @@ export async function GET(request: NextRequest) {
 
         // If profile doesn't exist or onboarding not completed, go to onboarding
         if (!profile || !profile.onboarding_completed) {
+          // Ensure a profile row exists so completeOnboarding can upsert into it
+          if (!profile) {
+            await supabase.from('profiles').upsert(
+              {
+                id: user.id,
+                email: user.email!,
+                full_name: user.user_metadata?.full_name ?? null,
+                avatar_url: user.user_metadata?.avatar_url ?? null,
+                onboarding_completed: false,
+                onboarding_step: 1,
+              },
+              { onConflict: 'id', ignoreDuplicates: true }
+            )
+          }
           return NextResponse.redirect(`${origin}/onboarding`)
         }
       }
