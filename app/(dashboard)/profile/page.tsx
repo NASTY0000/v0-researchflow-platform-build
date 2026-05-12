@@ -239,10 +239,10 @@ export default function ProfilePage() {
                       <Mail className="w-4 h-4" />
                       {profile.email}
                     </span>
-                    {profile.university && (
+                    {profile.university_id && (
                       <span className="flex items-center gap-1">
                         <Building2 className="w-4 h-4" />
-                        {profile.university.name}
+                        {profile.university_id}
                       </span>
                     )}
                     <span className="flex items-center gap-1">

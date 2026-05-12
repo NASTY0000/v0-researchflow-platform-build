@@ -79,7 +79,7 @@ export async function signIn(formData: FormData) {
   const email = formData.get('email') as string
   const password = formData.get('password') as string
 
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
   })
@@ -89,6 +89,20 @@ export async function signIn(formData: FormData) {
   }
 
   revalidatePath('/', 'layout')
+
+  // Check onboarding status so the redirect is correct on first try
+  if (data.user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('onboarding_completed')
+      .eq('id', data.user.id)
+      .single()
+
+    if (!profile?.onboarding_completed) {
+      redirect('/onboarding')
+    }
+  }
+
   redirect('/dashboard')
 }
 
@@ -141,10 +155,7 @@ export async function getProfile() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select(`
-      *,
-      university:universities(*)
-    `)
+    .select('*')
     .eq('id', user.id)
     .single()
 

@@ -19,7 +19,8 @@ export default async function OnboardingPage() {
   const profile = profileResult.data
   const universities = universitiesResult.data || []
 
-  // If onboarding is already completed, redirect to dashboard
+  // Middleware handles the redirect if onboarding is already completed,
+  // but keep as a safety net
   if (profile?.onboarding_completed) {
     redirect('/dashboard')
   }

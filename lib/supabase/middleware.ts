@@ -6,8 +6,6 @@ export async function updateSession(request: NextRequest) {
     request,
   })
 
-  // With Fluid compute, don't put this client in a global environment
-  // variable. Always create a new one on each request.
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -31,69 +29,108 @@ export async function updateSession(request: NextRequest) {
     },
   )
 
-  // Do not run code between createServerClient and
-  // supabase.auth.getUser(). A simple mistake could make it very hard to debug
-  // issues with users being randomly logged out.
-
-  // IMPORTANT: If you remove getUser() and you use server-side rendering
-  // with the Supabase client, your users may be randomly logged out.
+  // IMPORTANT: Do not add any code between createServerClient and getUser()
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
   const pathname = request.nextUrl.pathname
 
-  // Protected routes - require authentication
-  const protectedRoutes = ['/dashboard', '/onboarding', '/projects', '/ideas', '/mentors', '/marketplace', '/messages', '/settings']
-  const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
+  // ── PUBLIC ROUTES: never redirect, pass through immediately ──────────────
+  const publicRoutes = [
+    '/',
+    '/auth/login',
+    '/auth/signup',
+    '/auth/callback',
+    '/auth/confirm',
+    '/auth/error',
+    '/forgot-password',
+    '/reset-password',
+  ]
+  const isPublicRoute = publicRoutes.some(
+    (route) => pathname === route || pathname.startsWith('/api/auth'),
+  )
+  if (isPublicRoute) {
+    // If authenticated user hits a login/signup page, send to dashboard once
+    if (user && (pathname === '/auth/login' || pathname === '/auth/signup')) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/dashboard'
+      const res = NextResponse.redirect(url)
+      supabaseResponse.cookies.getAll().forEach((c) => res.cookies.set(c))
+      return res
+    }
+    return supabaseResponse
+  }
 
-  // Auth routes - redirect to dashboard if already logged in
-  const authRoutes = ['/auth/login', '/auth/signup']
-  const isAuthRoute = authRoutes.some(route => pathname === route)
+  // ── PROTECTED ROUTES ─────────────────────────────────────────────────────
+  const protectedPrefixes = [
+    '/dashboard',
+    '/onboarding',
+    '/projects',
+    '/ideas',
+    '/matches',
+    '/mentors',
+    '/marketplace',
+    '/messages',
+    '/settings',
+    '/profile',
+    '/showcase',
+    '/admin',
+    '/mentor-verification',
+  ]
+  const isProtectedRoute = protectedPrefixes.some((prefix) =>
+    pathname.startsWith(prefix),
+  )
 
+  // Unauthenticated → login (once, login is public so no loop)
   if (isProtectedRoute && !user) {
-    // Not logged in, redirect to login
     const url = request.nextUrl.clone()
     url.pathname = '/auth/login'
     url.searchParams.set('redirect', pathname)
-    return NextResponse.redirect(url)
+    const res = NextResponse.redirect(url)
+    supabaseResponse.cookies.getAll().forEach((c) => res.cookies.set(c))
+    return res
   }
 
-  if (isAuthRoute && user) {
-    // Already logged in, redirect to dashboard
-    const url = request.nextUrl.clone()
-    url.pathname = '/dashboard'
-    return NextResponse.redirect(url)
-  }
+  // Authenticated on a protected route — check onboarding once
+  if (user && isProtectedRoute) {
+    const isOnOnboarding = pathname.startsWith('/onboarding')
 
-  // Check onboarding status for protected routes (except onboarding itself)
-  if (user && isProtectedRoute && !pathname.startsWith('/onboarding')) {
-    // Fetch profile to check onboarding status
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('onboarding_completed')
-      .eq('id', user.id)
-      .single()
+    // Only query the DB when NOT already on /onboarding to avoid extra round-trips
+    if (!isOnOnboarding) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('onboarding_completed')
+        .eq('id', user.id)
+        .single()
 
-    if (profile && !profile.onboarding_completed) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/onboarding'
-      return NextResponse.redirect(url)
+      // Profile missing or onboarding incomplete → send to /onboarding (once)
+      if (!profile || !profile.onboarding_completed) {
+        const url = request.nextUrl.clone()
+        url.pathname = '/onboarding'
+        const res = NextResponse.redirect(url)
+        supabaseResponse.cookies.getAll().forEach((c) => res.cookies.set(c))
+        return res
+      }
+    }
+
+    // Already on /onboarding but onboarding IS complete → send to /dashboard (once)
+    if (isOnOnboarding) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('onboarding_completed')
+        .eq('id', user.id)
+        .single()
+
+      if (profile?.onboarding_completed) {
+        const url = request.nextUrl.clone()
+        url.pathname = '/dashboard'
+        const res = NextResponse.redirect(url)
+        supabaseResponse.cookies.getAll().forEach((c) => res.cookies.set(c))
+        return res
+      }
     }
   }
-
-  // IMPORTANT: You *must* return the supabaseResponse object as it is.
-  // If you're creating a new response object with NextResponse.next() make sure to:
-  // 1. Pass the request in it, like so:
-  //    const myNewResponse = NextResponse.next({ request })
-  // 2. Copy over the cookies, like so:
-  //    myNewResponse.cookies.setAll(supabaseResponse.cookies.getAll())
-  // 3. Change the myNewResponse object to fit your needs, but avoid changing
-  //    the cookies!
-  // 4. Finally:
-  //    return myNewResponse
-  // If this is not done, you may be causing the browser and server to go out
-  // of sync and terminate the user's session prematurely!
 
   return supabaseResponse
 }

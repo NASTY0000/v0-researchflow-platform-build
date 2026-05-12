@@ -18,13 +18,11 @@ export default async function DashboardLayout({
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select(`
-      *,
-      university:universities(*)
-    `)
+    .select('*')
     .eq('id', user.id)
     .single()
 
+  // Middleware already enforces onboarding, but keep as safety net
   if (!profile?.onboarding_completed) {
     redirect('/onboarding')
   }
