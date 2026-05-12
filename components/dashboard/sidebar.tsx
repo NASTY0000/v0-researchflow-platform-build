@@ -94,6 +94,13 @@ export function DashboardSidebar({ profile }: DashboardSidebarProps) {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
   }
 
+  async function handleSignOut() {
+    const result = await signOut()
+    if (result?.redirectTo) {
+      window.location.href = result.redirectTo
+    }
+  }
+
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
@@ -223,7 +230,7 @@ export function DashboardSidebar({ profile }: DashboardSidebarProps) {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => signOut()}>
+                <DropdownMenuItem onClick={handleSignOut}>
                   <LogOut className="mr-2 h-4 w-4" />
                   Sign out
                 </DropdownMenuItem>
