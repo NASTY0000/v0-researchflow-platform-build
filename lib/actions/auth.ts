@@ -28,17 +28,7 @@ export async function signUp(formData: FormData) {
   // Check if user was auto-confirmed (email confirmation disabled in Supabase)
   // or if the session exists (meaning they can proceed without OTP)
   if (data?.session) {
-    // Create initial profile row so completeOnboarding can upsert it later
-    await supabase.from('profiles').upsert(
-      {
-        id: data.session.user.id,
-        email: data.session.user.email!,
-        full_name: fullName,
-        onboarding_completed: false,
-        onboarding_step: 1,
-      },
-      { onConflict: 'id', ignoreDuplicates: true }
-    )
+    // User is auto-confirmed, redirect to onboarding
     revalidatePath('/', 'layout')
     redirect('/onboarding')
   }
@@ -62,21 +52,6 @@ export async function verifyOtp(email: string, token: string) {
 
   if (error) {
     return { error: error.message }
-  }
-
-  // Create initial profile row so completeOnboarding can upsert it later
-  const { data: { user } } = await supabase.auth.getUser()
-  if (user) {
-    await supabase.from('profiles').upsert(
-      {
-        id: user.id,
-        email: user.email!,
-        full_name: user.user_metadata?.full_name ?? null,
-        onboarding_completed: false,
-        onboarding_step: 1,
-      },
-      { onConflict: 'id', ignoreDuplicates: true }
-    )
   }
 
   revalidatePath('/', 'layout')
@@ -200,20 +175,19 @@ export async function updateProfile(data: Record<string, unknown>) {
 export async function completeOnboarding(data: Record<string, unknown>) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-
+  
   if (!user) {
     return { error: 'Not authenticated' }
   }
 
   const { error } = await supabase
     .from('profiles')
-    .upsert({
-      id: user.id,
-      email: user.email!,
+    .update({
       ...data,
       onboarding_completed: true,
       onboarding_step: 5,
     })
+    .eq('id', user.id)
 
   if (error) {
     return { error: error.message }
