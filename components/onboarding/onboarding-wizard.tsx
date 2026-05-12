@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -52,7 +51,6 @@ interface OnboardingWizardProps {
 }
 
 export function OnboardingWizard({ initialProfile, universities }: OnboardingWizardProps) {
-  const router = useRouter()
   const [step, setStep] = useState(initialProfile?.onboarding_step || 1)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -239,6 +237,8 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
     if (result?.error) {
       setError(result.error)
       setIsLoading(false)
+    } else if (result?.redirectTo) {
+      window.location.href = result.redirectTo
     }
   }
 
@@ -288,7 +288,7 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
           </div>
           {/* Progress bar */}
           <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
-            <div className="h-full rounded-full transition-all duration-500" style={{ width: `${progress}%`, background: 'linear-gradient(90deg,#7C3AED,#06B6D4)', boxShadow: '2px 0 8px rgba(124,58,237,0.5)' }} />
+            <div className="h-full rounded-full transition-all duration-500" style={{ width: `${progress}%`, background: 'linear-gradient(90deg,#7C3AED,#06B6D4)', boxShadow: '2px 0 8px rgba(124,58,237,0.3)' }} />
           </div>
         </div>
       </div>
