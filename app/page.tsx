@@ -1,7 +1,7 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { 
-  Sparkles, 
   Users, 
   Lightbulb, 
   BookOpen, 
@@ -59,8 +59,8 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Link href="/" className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-gradient-to-br from-violet-600 to-violet-500 shadow-[0_0_20px_rgba(124,58,237,0.4)]">
-                <Sparkles className="w-4 h-4 text-white" />
+              <div className="w-9 h-9 rounded-xl overflow-hidden">
+                <Image src="/icon.svg" alt="ResearchFlow" width={36} height={36} className="w-9 h-9" />
               </div>
               <span className="text-xl font-bold font-heading gradient-text-cyan">ResearchFlow</span>
             </Link>
@@ -267,8 +267,8 @@ export default function LandingPage() {
       <footer className="py-12 px-4 border-t border-violet-500/12">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-gradient-to-br from-violet-600 to-violet-500">
-              <Sparkles className="w-4 h-4 text-white" />
+            <div className="w-8 h-8 rounded-lg overflow-hidden">
+              <Image src="/icon.svg" alt="ResearchFlow" width={32} height={32} className="w-8 h-8" />
             </div>
             <span className="font-bold font-heading gradient-text-cyan">ResearchFlow</span>
           </div>

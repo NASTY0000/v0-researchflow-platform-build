@@ -2,12 +2,13 @@
 
 import { useState, useRef } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Loader2, Mail, Lock, Sparkles, Play } from 'lucide-react'
+import { Loader2, Mail, Lock, Play } from 'lucide-react'
 import { signIn, signInWithGoogle } from '@/lib/actions/auth'
 
 const DEMO_EMAIL = 'demo@researchflow.app'
@@ -75,8 +76,8 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', boxShadow: '0 0 20px rgba(124,58,237,0.4)' }}>
-              <Sparkles className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 rounded-xl overflow-hidden">
+              <Image src="/icon.svg" alt="ResearchFlow" width={40} height={40} className="w-10 h-10" />
             </div>
             <span className="text-2xl font-bold font-heading gradient-text-cyan">ResearchFlow</span>
           </Link>

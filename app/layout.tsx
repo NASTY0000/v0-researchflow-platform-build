@@ -20,6 +20,11 @@ export const metadata: Metadata = {
   description: 'The premier research collaboration platform for African university students. Connect with peers, find mentors, and bring your research ideas to life.',
   keywords: ['research', 'collaboration', 'African universities', 'students', 'mentorship', 'academic'],
   authors: [{ name: 'ResearchFlow' }],
+  icons: {
+    icon: '/icon.svg',
+    shortcut: '/icon.svg',
+    apple: '/icon.svg',
+  },
   openGraph: {
     title: 'ResearchFlow | Collaborate. Discover. Publish.',
     description: 'The premier research collaboration platform for African university students.',

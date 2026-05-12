@@ -17,8 +17,8 @@ import {
 } from '@/components/ui/sidebar'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import Image from 'next/image'
 import { 
-  Sparkles,
   LayoutDashboard,
   Lightbulb,
   Users,
@@ -101,8 +101,8 @@ export function DashboardSidebar({ profile }: DashboardSidebarProps) {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link href="/dashboard">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg text-white" style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', boxShadow: '0 0 14px rgba(124,58,237,0.45)' }}>
-                  <Sparkles className="size-4" />
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg overflow-hidden">
+                  <Image src="/icon.svg" alt="ResearchFlow" width={32} height={32} className="size-8" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold font-heading gradient-text-cyan">ResearchFlow</span>

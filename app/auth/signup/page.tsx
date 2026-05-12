@@ -3,11 +3,12 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Loader2, Mail, Lock, User, Sparkles, CheckCircle } from 'lucide-react'
+import { Loader2, Mail, Lock, User, CheckCircle } from 'lucide-react'
 import { signUp, signInWithGoogle, verifyOtp, resendOtp } from '@/lib/actions/auth'
 
 function GoogleIcon({ className }: { className?: string }) {
@@ -132,8 +133,8 @@ export default function SignUpPage() {
         <div className="w-full max-w-md relative animate-fade-up">
           <div className="text-center mb-8">
             <Link href="/" className="inline-flex items-center gap-2.5">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', boxShadow: '0 0 20px rgba(124,58,237,0.4)' }}>
-                <Sparkles className="w-5 h-5 text-white" />
+              <div className="w-10 h-10 rounded-xl overflow-hidden">
+                <Image src="/icon.svg" alt="ResearchFlow" width={40} height={40} className="w-10 h-10" />
               </div>
               <span className="text-2xl font-bold font-heading gradient-text-cyan">ResearchFlow</span>
             </Link>
@@ -206,8 +207,8 @@ export default function SignUpPage() {
       <div className="w-full max-w-md relative animate-fade-up">
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', boxShadow: '0 0 20px rgba(124,58,237,0.4)' }}>
-              <Sparkles className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 rounded-xl overflow-hidden">
+              <Image src="/icon.svg" alt="ResearchFlow" width={40} height={40} className="w-10 h-10" />
             </div>
             <span className="text-2xl font-bold font-heading gradient-text-cyan">ResearchFlow</span>
           </Link>
