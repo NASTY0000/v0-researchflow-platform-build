@@ -1,14 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import Image from 'next/image'
+import Image from 'new/image'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-
 import { Loader2, Mail, Lock, User, CheckCircle } from 'lucide-react'
 import { signUp, signInWithGoogle, verifyOtp, resendOtp } from '@/lib/actions/auth'
 
@@ -31,7 +29,6 @@ const inputStyle = {
 }
 
 export default function SignUpPage() {
-  const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
   const [step, setStep] = useState<'signup' | 'verify' | 'done'>('signup')
@@ -43,10 +40,12 @@ export default function SignUpPage() {
   const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', ''])
   const [emailType, setEmailType] = useState<'personal' | 'institutional'>('personal')
 
-  async function handleSubmit(formData: FormData) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
     setIsLoading(true)
     setError(null)
     
+    const formData = new FormData(e.currentTarget)
     formData.set('emailType', emailType)
     
     const result = await signUp(formData)
@@ -60,7 +59,9 @@ export default function SignUpPage() {
         setIsLoading(false)
       } else {
         setStep('done')
-        setTimeout(() => router.push('/onboarding'), 1500)
+        setTimeout(() => {
+          window.location.href = '/onboarding'
+        }, 1500)
       }
     }
   }
@@ -69,16 +70,30 @@ export default function SignUpPage() {
     setIsVerifying(true)
     setError(null)
     const token = otpDigits.join('')
-    if (token.length !== 6) { setError('Please enter the complete 6-digit code'); setIsVerifying(false); return }
+    if (token.length !== 6) {
+      setError('Please enter the complete 6-digit code')
+      setIsVerifying(false)
+      return
+    }
     const result = await verifyOtp(email, token)
-    if (result?.error) { setError(result.error); setIsVerifying(false) }
+    if (result?.error) {
+      setError(result.error)
+      setIsVerifying(false)
+    } else if (result?.redirectTo) {
+      window.location.href = result.redirectTo
+    }
   }
 
   async function handleResendCode() {
-    setIsResending(true); setError(null)
+    setIsResending(true)
+    setError(null)
     const result = await resendOtp(email)
-    if (result?.error) { setError(result.error) }
-    else { setSuccessMsg('Code resent!'); setTimeout(() => setSuccessMsg(null), 3000) }
+    if (result?.error) {
+      setError(result.error)
+    } else {
+      setSuccessMsg('Code resent!')
+      setTimeout(() => setSuccessMsg(null), 3000)
+    }
     setIsResending(false)
   }
 
@@ -103,6 +118,19 @@ export default function SignUpPage() {
       for (let i = 0; i < pasted.length; i++) d[i] = pasted[i]
       setOtpDigits(d)
       document.getElementById(`otp-${Math.min(pasted.length, 5)}`)?.focus()
+    }
+  }
+
+  async function handleGoogleSignUp(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setIsGoogleLoading(true)
+    setError(null)
+    const result = await signInWithGoogle()
+    if (result?.error) {
+      setError(result.error)
+      setIsGoogleLoading(false)
+    } else if (result?.url) {
+      window.location.href = result.url
     }
   }
 
@@ -229,7 +257,7 @@ export default function SignUpPage() {
             </Alert>
           )}
 
-          <form action={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {/* Full Name */}
             <div className="space-y-1.5">
               <Label htmlFor="fullName" className="text-sm font-medium" style={{ color: '#7C6A9C' }}>Full Name</Label>
@@ -317,12 +345,7 @@ export default function SignUpPage() {
             </div>
           </div>
 
-          <form action={async () => {
-            setIsGoogleLoading(true); setError(null)
-            const result = await signInWithGoogle()
-            if (result?.error) { setError(result.error); setIsGoogleLoading(false) }
-            else if (result?.url) { window.location.href = result.url }
-          }}>
+          <form onSubmit={handleGoogleSignUp}>
             <Button type="submit" variant="outline" className="w-full h-10" disabled={isLoading || isGoogleLoading}
               style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(139,92,246,0.25)', color: '#F3F0FF', borderRadius: '8px' }}>
               {isGoogleLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Connecting...</> : <><GoogleIcon className="mr-2 h-4 w-4" />Continue with Google</>}
