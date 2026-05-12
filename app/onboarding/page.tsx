@@ -6,6 +6,7 @@ export default async function OnboardingPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
+  // No user — redirect to login
   if (!user) {
     redirect('/auth/login')
   }
@@ -19,14 +20,16 @@ export default async function OnboardingPage() {
   const profile = profileResult.data
   const universities = universitiesResult.data || []
 
-  // Middleware handles the redirect if onboarding is already completed,
-  // but keep as a safety net
-  if (profile?.onboarding_completed) {
+  // ══════════════════════════════════════════════════════════════════════════
+  // If onboarding is already complete, send to dashboard
+  // This is the ONLY redirect from /onboarding → /dashboard
+  // ══════════════════════════════════════════════════════════════════════════
+  if (profile?.onboarding_completed === true) {
     redirect('/dashboard')
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen" style={{ backgroundColor: '#05010F' }}>
       <OnboardingWizard 
         initialProfile={profile} 
         universities={universities}

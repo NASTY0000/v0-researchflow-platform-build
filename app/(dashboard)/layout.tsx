@@ -12,18 +12,23 @@ export default async function DashboardLayout({
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
+  // No user — redirect to login (middleware should catch this, but safety net)
   if (!user) {
     redirect('/auth/login')
   }
 
+  // Fetch profile
   const { data: profile } = await supabase
     .from('profiles')
     .select('*')
     .eq('id', user.id)
     .single()
 
-  // Middleware already enforces onboarding, but keep as safety net
-  if (!profile?.onboarding_completed) {
+  // ══════════════════════════════════════════════════════════════════════════
+  // ONBOARDING CHECK: Only place this check happens (not in middleware)
+  // If profile doesn't exist or onboarding not complete, redirect to onboarding
+  // ══════════════════════════════════════════════════════════════════════════
+  if (!profile || profile.onboarding_completed !== true) {
     redirect('/onboarding')
   }
 
