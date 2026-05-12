@@ -8,8 +8,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Loader2, Mail, Lock, User, CheckCircle } from 'lucide-react'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Loader2, Mail, Lock, User, CheckCircle, GraduationCap, Globe } from 'lucide-react'
 import { signUp, signInWithGoogle, verifyOtp, resendOtp } from '@/lib/actions/auth'
+import { COUNTRIES, ALL_NIGERIAN_UNIVERSITIES } from '@/lib/data/universities'
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
@@ -29,6 +31,13 @@ const inputStyle = {
   borderRadius: '8px',
 }
 
+const selectStyle = {
+  background: 'rgba(255,255,255,0.05)',
+  border: '1px solid rgba(139,92,246,0.25)',
+  color: '#F3F0FF',
+  borderRadius: '8px',
+}
+
 export default function SignUpPage() {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
@@ -40,10 +49,31 @@ export default function SignUpPage() {
   const [isVerifying, setIsVerifying] = useState(false)
   const [isResending, setIsResending] = useState(false)
   const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', ''])
+  
+  // New fields
+  const [country, setCountry] = useState('Nigeria')
+  const [university, setUniversity] = useState('')
+  const [customUniversity, setCustomUniversity] = useState('')
+  const [emailType, setEmailType] = useState<'personal' | 'institutional'>('personal')
+
+  const isNigeria = country === 'Nigeria'
+  const universityValue = isNigeria ? university : customUniversity
 
   async function handleSubmit(formData: FormData) {
+    // Validate university
+    if (!universityValue.trim()) {
+      setError('Please select or enter your university')
+      return
+    }
+
     setIsLoading(true)
     setError(null)
+    
+    // Add country and university to form data
+    formData.set('country', country)
+    formData.set('university', universityValue)
+    formData.set('emailType', emailType)
+    
     const result = await signUp(formData)
     if (result?.error) {
       setError(result.error)
@@ -225,6 +255,7 @@ export default function SignUpPage() {
           )}
 
           <form action={handleSubmit} className="space-y-4">
+            {/* Full Name */}
             <div className="space-y-1.5">
               <Label htmlFor="fullName" className="text-sm font-medium" style={{ color: '#7C6A9C' }}>Full Name</Label>
               <div className="relative">
@@ -233,14 +264,106 @@ export default function SignUpPage() {
               </div>
             </div>
 
+            {/* Country */}
             <div className="space-y-1.5">
-              <Label htmlFor="email" className="text-sm font-medium" style={{ color: '#7C6A9C' }}>Email</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#7C6A9C' }} />
-                <Input id="email" name="email" type="email" placeholder="you@university.edu" required className="pl-10" style={inputStyle} />
+              <Label className="text-sm font-medium" style={{ color: '#7C6A9C' }}>Country</Label>
+              <Select value={country} onValueChange={(val) => { setCountry(val); setUniversity(''); setCustomUniversity('') }}>
+                <SelectTrigger style={selectStyle}>
+                  <Globe className="w-4 h-4 mr-2" style={{ color: '#7C6A9C' }} />
+                  <SelectValue placeholder="Select your country" />
+                </SelectTrigger>
+                <SelectContent className="max-h-60">
+                  {COUNTRIES.map((c) => (
+                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* University */}
+            <div className="space-y-1.5">
+              <Label className="text-sm font-medium" style={{ color: '#7C6A9C' }}>University</Label>
+              {isNigeria ? (
+                <Select value={university} onValueChange={setUniversity}>
+                  <SelectTrigger style={selectStyle}>
+                    <GraduationCap className="w-4 h-4 mr-2" style={{ color: '#7C6A9C' }} />
+                    <SelectValue placeholder="Select your university" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-60">
+                    {ALL_NIGERIAN_UNIVERSITIES.map((u) => (
+                      <SelectItem key={u} value={u}>{u}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <div className="relative">
+                  <GraduationCap className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#7C6A9C' }} />
+                  <Input 
+                    value={customUniversity} 
+                    onChange={(e) => setCustomUniversity(e.target.value)}
+                    placeholder="Enter your university name" 
+                    required 
+                    className="pl-10" 
+                    style={inputStyle} 
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Email Type Toggle */}
+            <div className="space-y-1.5">
+              <Label className="text-sm font-medium" style={{ color: '#7C6A9C' }}>Email Type</Label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEmailType('personal')}
+                  className="flex-1 py-2.5 px-3 rounded-lg text-sm font-medium transition-all"
+                  style={emailType === 'personal' 
+                    ? { background: 'rgba(124,58,237,0.2)', border: '1px solid rgba(168,85,247,0.5)', color: '#C084FC' }
+                    : { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(139,92,246,0.2)', color: '#7C6A9C' }
+                  }
+                >
+                  Personal Email
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEmailType('institutional')}
+                  className="flex-1 py-2.5 px-3 rounded-lg text-sm font-medium transition-all"
+                  style={emailType === 'institutional' 
+                    ? { background: 'rgba(124,58,237,0.2)', border: '1px solid rgba(168,85,247,0.5)', color: '#C084FC' }
+                    : { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(139,92,246,0.2)', color: '#7C6A9C' }
+                  }
+                >
+                  Institutional Email
+                </button>
               </div>
             </div>
 
+            {/* Email */}
+            <div className="space-y-1.5">
+              <Label htmlFor="email" className="text-sm font-medium" style={{ color: '#7C6A9C' }}>
+                {emailType === 'personal' ? 'Personal Email Address' : 'Institutional Email Address'}
+              </Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#7C6A9C' }} />
+                <Input 
+                  id="email" 
+                  name="email" 
+                  type="email" 
+                  placeholder={emailType === 'personal' ? 'you@gmail.com' : 'name@oou.edu.ng'}
+                  required 
+                  className="pl-10" 
+                  style={inputStyle} 
+                />
+              </div>
+              {emailType === 'institutional' && (
+                <p className="text-xs" style={{ color: '#7C6A9C' }}>
+                  Use your official university email (e.g. name@oou.edu.ng)
+                </p>
+              )}
+            </div>
+
+            {/* Password */}
             <div className="space-y-1.5">
               <Label htmlFor="password" className="text-sm font-medium" style={{ color: '#7C6A9C' }}>Password</Label>
               <div className="relative">

@@ -194,5 +194,12 @@ export async function completeOnboarding(data: Record<string, unknown>) {
   }
 
   revalidatePath('/dashboard', 'layout')
+  
+  // Check if user selected mentor role - redirect to verification
+  const roles = data.roles as string[] | undefined
+  if (roles && roles.includes('mentor')) {
+    redirect('/mentor-verification')
+  }
+  
   redirect('/dashboard')
 }

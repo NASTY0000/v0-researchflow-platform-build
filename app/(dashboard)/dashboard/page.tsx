@@ -8,8 +8,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Progress } from "@/components/ui/progress"
 import {
   Lightbulb, Users, FolderKanban, TrendingUp,
-  ArrowRight, Sparkles, Target, BookOpen,
+  ArrowRight, Sparkles, Target, BookOpen, GraduationCap,
 } from "lucide-react"
+import { MentorDashboard } from "@/components/dashboard/mentor-dashboard"
 import { createClient } from "@/lib/supabase/client"
 import type { Profile, ResearchIdea, Match } from "@/lib/types/database"
 
@@ -251,6 +252,22 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Mentor Dashboard Section */}
+      {profile?.roles?.includes('mentor') && (
+        <div className="rounded-2xl p-6" style={cardStyle}>
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', boxShadow: '0 0 14px rgba(124,58,237,0.3)' }}>
+              <GraduationCap className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <h2 className="font-semibold font-heading">Mentor Dashboard</h2>
+              <p className="text-xs" style={{ color: '#7C6A9C' }}>Manage your mentorship activities</p>
+            </div>
+          </div>
+          <MentorDashboard />
+        </div>
+      )}
 
       {/* Research Progress */}
       {profile && (

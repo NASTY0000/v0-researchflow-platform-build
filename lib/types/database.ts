@@ -2,7 +2,7 @@
 
 export type AcademicLevel = 'undergraduate' | 'masters' | 'phd' | 'postdoc' | 'faculty'
 
-export type UserRole = 'student_researcher' | 'mentor' | 'admin'
+export type UserRole = 'student_researcher' | 'collaborator' | 'technical_expert' | 'mentor' | 'admin'
 
 export type ConnectionType = 'collaboration' | 'mentorship'
 
