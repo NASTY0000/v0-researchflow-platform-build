@@ -1,7 +1,6 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 
 export async function signUp(formData: FormData) {
@@ -28,9 +27,9 @@ export async function signUp(formData: FormData) {
   // Check if user was auto-confirmed (email confirmation disabled in Supabase)
   // or if the session exists (meaning they can proceed without OTP)
   if (data?.session) {
-    // User is auto-confirmed, redirect to onboarding
+    // User is auto-confirmed, return redirect URL for client to navigate
     revalidatePath('/', 'layout')
-    redirect('/onboarding')
+    return { success: true, autoConfirmed: true, redirectTo: '/onboarding' }
   }
 
   // Check if user already exists
@@ -55,7 +54,7 @@ export async function verifyOtp(email: string, token: string) {
   }
 
   revalidatePath('/', 'layout')
-  redirect('/onboarding')
+  return { success: true, redirectTo: '/onboarding' }
 }
 
 export async function resendOtp(email: string) {
@@ -90,7 +89,7 @@ export async function signIn(formData: FormData) {
 
   revalidatePath('/', 'layout')
 
-  // Check onboarding status so the redirect is correct on first try
+  // Check onboarding status and return the redirect URL to the client
   if (data.user) {
     const { data: profile } = await supabase
       .from('profiles')
@@ -99,18 +98,18 @@ export async function signIn(formData: FormData) {
       .single()
 
     if (!profile?.onboarding_completed) {
-      redirect('/onboarding')
+      return { success: true, redirectTo: '/onboarding' }
     }
   }
 
-  redirect('/dashboard')
+  return { success: true, redirectTo: '/dashboard' }
 }
 
 export async function signOut() {
   const supabase = await createClient()
   await supabase.auth.signOut()
   revalidatePath('/', 'layout')
-  redirect('/')
+  return { success: true, redirectTo: '/' }
 }
 
 export async function signInWithGoogle() {
@@ -209,8 +208,8 @@ export async function completeOnboarding(data: Record<string, unknown>) {
   // Check if user selected mentor role - redirect to verification
   const roles = data.roles as string[] | undefined
   if (roles && roles.includes('mentor')) {
-    redirect('/mentor-verification')
+    return { success: true, redirectTo: '/mentor-verification' }
   }
   
-  redirect('/dashboard')
+  return { success: true, redirectTo: '/dashboard' }
 }

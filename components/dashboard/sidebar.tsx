@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import {
   Sidebar,
   SidebarContent,
@@ -88,6 +88,7 @@ interface DashboardSidebarProps {
 
 export function DashboardSidebar({ profile }: DashboardSidebarProps) {
   const pathname = usePathname()
+  const router = useRouter()
 
   const getInitials = (name: string | null) => {
     if (!name) return 'U'
@@ -223,7 +224,12 @@ export function DashboardSidebar({ profile }: DashboardSidebarProps) {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => signOut()}>
+                <DropdownMenuItem onClick={async () => {
+                    const result = await signOut()
+                    if (result?.redirectTo) {
+                      router.push(result.redirectTo)
+                    }
+                  }}>
                   <LogOut className="mr-2 h-4 w-4" />
                   Sign out
                 </DropdownMenuItem>

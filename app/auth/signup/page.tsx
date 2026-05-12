@@ -54,7 +54,10 @@ export default function SignUpPage() {
       setError(result.error)
       setIsLoading(false)
     } else if (result?.success) {
-      if (result?.requiresVerification && result?.email) {
+      if (result?.autoConfirmed && result?.redirectTo) {
+        // User was auto-confirmed, navigate immediately
+        router.push(result.redirectTo)
+      } else if (result?.requiresVerification && result?.email) {
         setEmail(result.email)
         setStep('verify')
         setIsLoading(false)
@@ -71,7 +74,12 @@ export default function SignUpPage() {
     const token = otpDigits.join('')
     if (token.length !== 6) { setError('Please enter the complete 6-digit code'); setIsVerifying(false); return }
     const result = await verifyOtp(email, token)
-    if (result?.error) { setError(result.error); setIsVerifying(false) }
+    if (result?.error) { 
+      setError(result.error)
+      setIsVerifying(false) 
+    } else if (result?.redirectTo) {
+      router.push(result.redirectTo)
+    }
   }
 
   async function handleResendCode() {

@@ -38,7 +38,12 @@ export default function LoginPage() {
     setIsLoading(true)
     setError(null)
     const result = await signIn(formData)
-    if (result?.error) { setError(result.error); setIsLoading(false) }
+    if (result?.error) { 
+      setError(result.error)
+      setIsLoading(false) 
+    } else if (result?.redirectTo) {
+      router.push(result.redirectTo)
+    }
   }
 
   async function handleDemoLogin() {
@@ -50,7 +55,12 @@ export default function LoginPage() {
       formData.append('email', DEMO_EMAIL)
       formData.append('password', DEMO_PASSWORD)
       const result = await signIn(formData)
-      if (result?.error) { setError(result.error); setIsDemoLoading(false) }
+      if (result?.error) { 
+        setError(result.error)
+        setIsDemoLoading(false) 
+      } else if (result?.redirectTo) {
+        router.push(result.redirectTo)
+      }
     } catch {
       setError('Failed to load demo account.')
       setIsDemoLoading(false)
