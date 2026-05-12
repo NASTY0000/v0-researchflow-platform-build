@@ -12,6 +12,13 @@ import {
   Star,
   Zap,
 } from 'lucide-react'
+import { 
+  GlobalIllustrations, 
+  HeroIllustrations, 
+  FeaturesIllustrations, 
+  StatsIllustrations, 
+  FooterIllustrations 
+} from '@/components/landing/floating-illustrations'
 
 const features = [
   { icon: Lightbulb, title: 'Idea Board', description: 'Share your research ideas and discover opportunities to collaborate with peers across Africa.', color: '#A855F7' },
@@ -52,7 +59,9 @@ const testimonials = [
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-[#05010F] text-[#F3F0FF]">
+    <div className="min-h-screen bg-[#05010F] text-[#F3F0FF] relative">
+      {/* Global 3D Illustrations */}
+      <GlobalIllustrations />
 
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-[#05010F]/85 border-b border-violet-500/15 backdrop-blur-xl">
@@ -89,14 +98,10 @@ export default function LandingPage() {
 
       {/* Hero Section */}
       <section className="relative pt-36 pb-24 px-4 overflow-hidden">
-        {/* Background glows */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-16 left-1/4 w-[500px] h-[500px] rounded-full bg-[radial-gradient(ellipse,rgba(124,58,237,0.18),transparent_70%)] blur-sm" />
-          <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] rounded-full bg-[radial-gradient(ellipse,rgba(168,85,247,0.1),transparent_70%)]" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-[radial-gradient(ellipse,rgba(6,182,212,0.04),transparent_60%)]" />
-        </div>
+        {/* 3D Node Network */}
+        <HeroIllustrations />
 
-        <div className="max-w-7xl mx-auto relative">
+        <div className="max-w-7xl mx-auto relative z-10">
           <div className="text-center max-w-4xl mx-auto">
             {/* Tag pill */}
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-8 animate-fade-in bg-violet-600/12 border border-violet-500/25">
@@ -141,8 +146,10 @@ export default function LandingPage() {
       </section>
 
       {/* Features */}
-      <section id="features" className="py-24 px-4">
-        <div className="max-w-7xl mx-auto">
+      <section id="features" className="py-24 px-4 relative">
+        {/* DNA Helix Illustration */}
+        <FeaturesIllustrations />
+        <div className="max-w-7xl mx-auto relative z-10">
           <div className="text-center mb-16">
             <p className="label-section mb-3">Platform Features</p>
             <h2 className="text-3xl sm:text-4xl font-bold font-heading mb-4 tracking-tight">
@@ -202,8 +209,10 @@ export default function LandingPage() {
       </section>
 
       {/* Testimonials */}
-      <section id="testimonials" className="py-24 px-4">
-        <div className="max-w-7xl mx-auto">
+      <section id="testimonials" className="py-24 px-4 relative">
+        {/* Molecular Structure Illustration */}
+        <StatsIllustrations />
+        <div className="max-w-7xl mx-auto relative z-10">
           <div className="text-center mb-16">
             <p className="label-section mb-3">Social Proof</p>
             <h2 className="text-3xl sm:text-4xl font-bold font-heading tracking-tight">
@@ -239,8 +248,10 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-24 px-4">
-        <div className="max-w-4xl mx-auto text-center">
+      <section className="py-24 px-4 relative">
+        {/* Footer Nodes */}
+        <FooterIllustrations />
+        <div className="max-w-4xl mx-auto text-center relative z-10">
           <div className="p-10 sm:p-16 rounded-3xl relative overflow-hidden bg-gradient-to-br from-[#1E0533] to-[#050118] border border-violet-500/30">
             {/* Glow */}
             <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_50%_0%,rgba(124,58,237,0.25),transparent_60%)]" />

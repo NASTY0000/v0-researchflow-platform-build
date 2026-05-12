@@ -8,10 +8,9 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Loader2, Mail, Lock, User, CheckCircle, GraduationCap, Globe } from 'lucide-react'
+
+import { Loader2, Mail, Lock, User, CheckCircle } from 'lucide-react'
 import { signUp, signInWithGoogle, verifyOtp, resendOtp } from '@/lib/actions/auth'
-import { COUNTRIES, ALL_NIGERIAN_UNIVERSITIES } from '@/lib/data/universities'
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
@@ -31,13 +30,6 @@ const inputStyle = {
   borderRadius: '8px',
 }
 
-const selectStyle = {
-  background: 'rgba(255,255,255,0.05)',
-  border: '1px solid rgba(139,92,246,0.25)',
-  color: '#F3F0FF',
-  borderRadius: '8px',
-}
-
 export default function SignUpPage() {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
@@ -49,29 +41,12 @@ export default function SignUpPage() {
   const [isVerifying, setIsVerifying] = useState(false)
   const [isResending, setIsResending] = useState(false)
   const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', ''])
-  
-  // New fields
-  const [country, setCountry] = useState('Nigeria')
-  const [university, setUniversity] = useState('')
-  const [customUniversity, setCustomUniversity] = useState('')
   const [emailType, setEmailType] = useState<'personal' | 'institutional'>('personal')
 
-  const isNigeria = country === 'Nigeria'
-  const universityValue = isNigeria ? university : customUniversity
-
   async function handleSubmit(formData: FormData) {
-    // Validate university
-    if (!universityValue.trim()) {
-      setError('Please select or enter your university')
-      return
-    }
-
     setIsLoading(true)
     setError(null)
     
-    // Add country and university to form data
-    formData.set('country', country)
-    formData.set('university', universityValue)
     formData.set('emailType', emailType)
     
     const result = await signUp(formData)
@@ -262,52 +237,6 @@ export default function SignUpPage() {
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#7C6A9C' }} />
                 <Input id="fullName" name="fullName" type="text" placeholder="Your full name" required className="pl-10" style={inputStyle} />
               </div>
-            </div>
-
-            {/* Country */}
-            <div className="space-y-1.5">
-              <Label className="text-sm font-medium" style={{ color: '#7C6A9C' }}>Country</Label>
-              <Select value={country} onValueChange={(val) => { setCountry(val); setUniversity(''); setCustomUniversity('') }}>
-                <SelectTrigger style={selectStyle}>
-                  <Globe className="w-4 h-4 mr-2" style={{ color: '#7C6A9C' }} />
-                  <SelectValue placeholder="Select your country" />
-                </SelectTrigger>
-                <SelectContent className="max-h-60">
-                  {COUNTRIES.map((c) => (
-                    <SelectItem key={c} value={c}>{c}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* University */}
-            <div className="space-y-1.5">
-              <Label className="text-sm font-medium" style={{ color: '#7C6A9C' }}>University</Label>
-              {isNigeria ? (
-                <Select value={university} onValueChange={setUniversity}>
-                  <SelectTrigger style={selectStyle}>
-                    <GraduationCap className="w-4 h-4 mr-2" style={{ color: '#7C6A9C' }} />
-                    <SelectValue placeholder="Select your university" />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-60">
-                    {ALL_NIGERIAN_UNIVERSITIES.map((u) => (
-                      <SelectItem key={u} value={u}>{u}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <div className="relative">
-                  <GraduationCap className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#7C6A9C' }} />
-                  <Input 
-                    value={customUniversity} 
-                    onChange={(e) => setCustomUniversity(e.target.value)}
-                    placeholder="Enter your university name" 
-                    required 
-                    className="pl-10" 
-                    style={inputStyle} 
-                  />
-                </div>
-              )}
             </div>
 
             {/* Email Type Toggle */}

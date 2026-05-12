@@ -207,6 +207,27 @@
   50% { box-shadow: 0 0 20px rgba(168,85,247,0.7); }
 }
 
+/* 3D Floating Illustrations Animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-15px); }
+}
+
+@keyframes rotateY {
+  0% { transform: translateY(-50%) rotateY(0deg); }
+  100% { transform: translateY(-50%) rotateY(360deg); }
+}
+
+@keyframes rotate {
+  0% { transform: translateY(-50%) rotate(0deg); }
+  100% { transform: translateY(-50%) rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 0.5; }
+}
+
 @keyframes fade-up {
   from { opacity: 0; transform: translateY(16px); }
   to   { opacity: 1; transform: translateY(0); }

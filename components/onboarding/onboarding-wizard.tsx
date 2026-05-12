@@ -28,6 +28,7 @@ import {
 import type { Profile, University, AcademicLevel } from '@/lib/types/database'
 import { completeOnboarding, updateProfile } from '@/lib/actions/auth'
 import { ALL_RESEARCH_INTERESTS, SKILLS_OFFERED, COLLABORATOR_TYPES, USER_ROLES, type ExtendedUserRole } from '@/lib/data/research-data'
+import { COUNTRIES, ALL_NIGERIAN_UNIVERSITIES } from '@/lib/data/universities'
 
 const STEPS = [
   { id: 1, title: 'Basic Info', icon: User },
@@ -60,6 +61,9 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
   const [fullName, setFullName] = useState(initialProfile?.full_name || '')
   const [bio, setBio] = useState(initialProfile?.bio || '')
   const [universityId, setUniversityId] = useState(initialProfile?.university_id || '')
+  const [country, setCountry] = useState('Nigeria')
+  const [customUniversity, setCustomUniversity] = useState('')
+  const isNigeria = country === 'Nigeria'
   const [department, setDepartment] = useState(initialProfile?.department || '')
   const [academicLevel, setAcademicLevel] = useState<AcademicLevel | ''>(initialProfile?.academic_level || '')
   const [roles, setRoles] = useState<ExtendedUserRole[]>((initialProfile?.roles as ExtendedUserRole[]) || ['student_researcher'])
@@ -150,7 +154,9 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
       data.bio = bio
     }
     if (step >= 2) {
-      data.university_id = universityId || null
+      // For Nigeria, use universityId as the university name; for others, use customUniversity
+      const universityName = isNigeria ? universityId : customUniversity
+      data.university_id = universityName || null
       data.department = department
       data.academic_level = academicLevel || null
       // Filter out 'all' role for storage
@@ -183,6 +189,14 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
       setError('Please enter your full name')
       return
     }
+    if (step === 2) {
+      // Validate university selection
+      const hasUniversity = isNigeria ? universityId.trim() : customUniversity.trim()
+      if (!hasUniversity) {
+        setError('Please select or enter your university')
+        return
+      }
+    }
     if (step === 3 && researchInterests.length === 0) {
       setError('Please select at least one research interest')
       return
@@ -206,10 +220,11 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
     setIsLoading(true)
     setError(null)
 
+    const universityName = isNigeria ? universityId : customUniversity
     const data = {
       full_name: fullName,
       bio,
-      university_id: universityId || null,
+      university_id: universityName || null,
       department,
       academic_level: academicLevel || null,
       roles: roles.filter(r => r !== 'all'),
@@ -335,20 +350,49 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
+                {/* Country Selection */}
                 <div className="space-y-2">
-                  <Label style={{ color: '#7C6A9C' }}>University</Label>
-                  <Select value={universityId} onValueChange={setUniversityId}>
+                  <Label style={{ color: '#7C6A9C' }}>Country *</Label>
+                  <Select value={country} onValueChange={(val) => { setCountry(val); setUniversityId(''); setCustomUniversity('') }}>
                     <SelectTrigger style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(139,92,246,0.25)', color: '#F3F0FF' }}>
-                      <SelectValue placeholder="Select your university" />
+                      <SelectValue placeholder="Select your country" />
                     </SelectTrigger>
                     <SelectContent className="max-h-60">
-                      {universities.map((uni) => (
-                        <SelectItem key={uni.id} value={uni.id}>
-                          {uni.name} ({uni.country})
-                        </SelectItem>
+                      {COUNTRIES.map((c) => (
+                        <SelectItem key={c} value={c}>{c}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+
+                {/* University Selection - Different UI based on country */}
+                <div className="space-y-2">
+                  <Label style={{ color: '#7C6A9C' }}>University / Institution *</Label>
+                  {isNigeria ? (
+                    <Select value={universityId} onValueChange={setUniversityId}>
+                      <SelectTrigger style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(139,92,246,0.25)', color: '#F3F0FF' }}>
+                        <SelectValue placeholder="Select your university" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-60">
+                        {ALL_NIGERIAN_UNIVERSITIES.map((uni) => (
+                          <SelectItem key={uni} value={uni}>{uni}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Input
+                      value={customUniversity}
+                      onChange={(e) => setCustomUniversity(e.target.value)}
+                      placeholder="Enter your university name"
+                      style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(139,92,246,0.25)', color: '#F3F0FF' }}
+                    />
+                  )}
+                  <p className="text-xs" style={{ color: '#7C6A9C' }}>
+                    {isNigeria 
+                      ? 'Select from the list of Nigerian universities'
+                      : 'Enter the full name of your institution'
+                    }
+                  </p>
                 </div>
 
                 <div className="space-y-2">
