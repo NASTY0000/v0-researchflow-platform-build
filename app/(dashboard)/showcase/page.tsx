@@ -8,10 +8,11 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { 
-  Search, Filter, Eye, Heart, ExternalLink, FileText, 
-  Users, Calendar, Trophy, TrendingUp, Sparkles 
+import {
+  Search, Filter, Eye, Heart, ExternalLink, FileText,
+  Users, Calendar, Trophy, TrendingUp, Sparkles
 } from 'lucide-react'
+import { toast } from 'sonner'
 import type { ShowcaseEntry, Profile } from '@/lib/types/database'
 
 type ShowcaseWithAuthor = ShowcaseEntry & {
@@ -184,7 +185,11 @@ export default function ShowcasePage() {
                       {entry.likes}
                     </span>
                   </div>
-                  <Button size="sm">
+                  <Button size="sm" onClick={() => {
+                    const url = entry.external_url || entry.document_url
+                    if (url) { window.open(url, '_blank') }
+                    else { toast('No external link available for this entry') }
+                  }}>
                     Read More
                     <ExternalLink className="w-3 h-3 ml-1" />
                   </Button>

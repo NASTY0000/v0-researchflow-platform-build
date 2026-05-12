@@ -20,6 +20,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { toast } from 'sonner'
+import { useRouter } from 'next/navigation'
 import type { Profile, MentorProfile, University } from '@/lib/types/database'
 
 type MentorWithProfile = MentorProfile & {
@@ -27,6 +29,7 @@ type MentorWithProfile = MentorProfile & {
 }
 
 export default function AdminPage() {
+  const router = useRouter()
   const [stats, setStats] = useState({
     totalUsers: 0,
     pendingMentors: 0,
@@ -297,7 +300,7 @@ export default function AdminPage() {
                             <XCircle className="w-4 h-4 mr-1" />
                             Reject
                           </Button>
-                          <Button size="sm" variant="ghost">
+                          <Button size="sm" variant="ghost" onClick={() => toast('Document viewing coming soon')}>
                             <Eye className="w-4 h-4 mr-1" />
                             View Documents
                           </Button>
@@ -403,11 +406,11 @@ export default function AdminPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => router.push(`/profile/${user.id}`)}>
                               <Eye className="w-4 h-4 mr-2" />
                               View Profile
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive">
+                            <DropdownMenuItem className="text-destructive" onClick={() => toast('User suspension coming soon')}>
                               <Ban className="w-4 h-4 mr-2" />
                               Suspend User
                             </DropdownMenuItem>

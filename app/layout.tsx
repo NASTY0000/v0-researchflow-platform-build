@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { DM_Sans, Syne } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
+import { Toaster } from 'sonner'
 import './globals.css'
 
 const dmSans = DM_Sans({ 
@@ -47,6 +48,7 @@ export default function RootLayout({
     <html lang="en" className="dark" style={{ backgroundColor: '#05010F' }}>
       <body className={`${dmSans.variable} ${syne.variable} font-sans antialiased`} style={{ backgroundColor: '#05010F' }}>
         {children}
+        <Toaster position="bottom-right" theme="dark" />
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

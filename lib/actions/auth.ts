@@ -88,6 +88,20 @@ export async function signIn(formData: FormData) {
     return { error: error.message }
   }
 
+  const { data: { user } } = await supabase.auth.getUser()
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('onboarding_completed')
+      .eq('id', user.id)
+      .single()
+
+    if (!profile || !profile.onboarding_completed) {
+      revalidatePath('/', 'layout')
+      redirect('/onboarding')
+    }
+  }
+
   revalidatePath('/', 'layout')
   redirect('/dashboard')
 }

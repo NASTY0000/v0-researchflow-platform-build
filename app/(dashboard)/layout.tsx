@@ -25,7 +25,7 @@ export default async function DashboardLayout({
     .eq('id', user.id)
     .single()
 
-  if (!profile?.onboarding_completed) {
+  if (!profile || !profile.onboarding_completed) {
     redirect('/onboarding')
   }
 
