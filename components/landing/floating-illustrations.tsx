@@ -220,6 +220,14 @@ function NodeNetwork() {
 
 // DNA Helix - Features Section
 function DNAHelix() {
+  const [mounted, setMounted] = useState(false)
+  
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+  
+  if (!mounted) return null
+  
   return (
     <div
       className="absolute pointer-events-none select-none will-change-transform hidden md:block"

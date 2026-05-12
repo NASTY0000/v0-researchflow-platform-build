@@ -239,6 +239,8 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
     if (result?.error) {
       setError(result.error)
       setIsLoading(false)
+    } else if (result?.redirectTo) {
+      window.location.href = result.redirectTo
     }
   }
 

@@ -227,10 +227,10 @@ export default function MentorsPage() {
                         <span className="truncate">{mentor.profile.department}</span>
                       </p>
                     )}
-                    {mentor.profile?.university && (
+                    {mentor.profile?.university_id && (
                       <p className="text-sm text-muted-foreground flex items-center gap-1">
                         <Building2 className="h-3 w-3 shrink-0" />
-                        <span className="truncate">{mentor.profile.university.name}</span>
+                        <span className="truncate">{mentor.profile.university_id}</span>
                       </p>
                     )}
                   </div>

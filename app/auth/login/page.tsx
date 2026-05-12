@@ -34,11 +34,21 @@ export default function LoginPage() {
   const passwordRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
 
-  async function handleSubmit(formData: FormData) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
     setIsLoading(true)
     setError(null)
+    
+    const formData = new FormData(e.currentTarget)
     const result = await signIn(formData)
-    if (result?.error) { setError(result.error); setIsLoading(false) }
+    
+    if (result?.error) { 
+      setError(result.error)
+      setIsLoading(false) 
+    } else if (result?.redirectTo) {
+      // Use window.location for a full navigation to ensure auth cookies are sent
+      window.location.href = result.redirectTo
+    }
   }
 
   async function handleDemoLogin() {
@@ -50,7 +60,12 @@ export default function LoginPage() {
       formData.append('email', DEMO_EMAIL)
       formData.append('password', DEMO_PASSWORD)
       const result = await signIn(formData)
-      if (result?.error) { setError(result.error); setIsDemoLoading(false) }
+      if (result?.error) { 
+        setError(result.error)
+        setIsDemoLoading(false) 
+      } else if (result?.redirectTo) {
+        window.location.href = result.redirectTo
+      }
     } catch {
       setError('Failed to load demo account.')
       setIsDemoLoading(false)
@@ -94,7 +109,7 @@ export default function LoginPage() {
             </Alert>
           )}
 
-          <form action={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="email" className="text-sm font-medium" style={{ color: '#7C6A9C' }}>Email</Label>
               <div className="relative">

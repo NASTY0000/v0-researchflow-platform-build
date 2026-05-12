@@ -223,7 +223,12 @@ export function DashboardSidebar({ profile }: DashboardSidebarProps) {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => signOut()}>
+                <DropdownMenuItem onClick={async () => {
+                    const result = await signOut()
+                    if (result?.redirectTo) {
+                      window.location.href = result.redirectTo
+                    }
+                  }}>
                   <LogOut className="mr-2 h-4 w-4" />
                   Sign out
                 </DropdownMenuItem>

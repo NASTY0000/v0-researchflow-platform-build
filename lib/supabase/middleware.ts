@@ -6,8 +6,6 @@ export async function updateSession(request: NextRequest) {
     request,
   })
 
-  // With Fluid compute, don't put this client in a global environment
-  // variable. Always create a new one on each request.
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -31,69 +29,68 @@ export async function updateSession(request: NextRequest) {
     },
   )
 
-  // Do not run code between createServerClient and
-  // supabase.auth.getUser(). A simple mistake could make it very hard to debug
-  // issues with users being randomly logged out.
-
-  // IMPORTANT: If you remove getUser() and you use server-side rendering
-  // with the Supabase client, your users may be randomly logged out.
+  // IMPORTANT: Do not add any code between createServerClient and getUser()
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
   const pathname = request.nextUrl.pathname
 
-  // Protected routes - require authentication
-  const protectedRoutes = ['/dashboard', '/onboarding', '/projects', '/ideas', '/mentors', '/marketplace', '/messages', '/settings']
-  const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
-
-  // Auth routes - redirect to dashboard if already logged in
-  const authRoutes = ['/auth/login', '/auth/signup']
-  const isAuthRoute = authRoutes.some(route => pathname === route)
-
-  if (isProtectedRoute && !user) {
-    // Not logged in, redirect to login
-    const url = request.nextUrl.clone()
-    url.pathname = '/auth/login'
-    url.searchParams.set('redirect', pathname)
-    return NextResponse.redirect(url)
+  // ══════════════════════════════════════════════════════════════════════════
+  // STEP 1: STATIC/PUBLIC ASSETS — pass through immediately
+  // ══════════════════════════════════════════════════════════════════════════
+  if (
+    pathname.startsWith('/_next') ||
+    pathname === '/favicon.ico' ||
+    pathname.startsWith('/public') ||
+    pathname.startsWith('/api/auth')
+  ) {
+    return supabaseResponse
   }
 
-  if (isAuthRoute && user) {
-    // Already logged in, redirect to dashboard
+  // ══════════════════════════════════════════════════════════════════════════
+  // STEP 2: AUTH PAGES — if user is already logged in, redirect to dashboard
+  // ══════════════════════════════════════════════════════════════════════════
+  const authPages = ['/auth/login', '/auth/signup']
+  if (authPages.includes(pathname) && user) {
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'
-    return NextResponse.redirect(url)
+    url.search = '' // Clear any ?redirect= params
+    const res = NextResponse.redirect(url)
+    supabaseResponse.cookies.getAll().forEach((c) => res.cookies.set(c))
+    return res
   }
 
-  // Check onboarding status for protected routes (except onboarding itself)
-  if (user && isProtectedRoute && !pathname.startsWith('/onboarding')) {
-    // Fetch profile to check onboarding status
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('onboarding_completed')
-      .eq('id', user.id)
-      .single()
-
-    if (profile && !profile.onboarding_completed) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/onboarding'
-      return NextResponse.redirect(url)
-    }
+  // ══════════════════════════════════════════════════════════════════════════
+  // STEP 3: PUBLIC ROUTES — pass through, no auth required
+  // ══════════════════════════════════════════════════════════════════════════
+  const publicRoutes = [
+    '/',
+    '/auth/callback',
+    '/auth/confirm',
+    '/auth/error',
+    '/forgot-password',
+    '/reset-password',
+  ]
+  if (publicRoutes.includes(pathname) || authPages.includes(pathname)) {
+    return supabaseResponse
   }
 
-  // IMPORTANT: You *must* return the supabaseResponse object as it is.
-  // If you're creating a new response object with NextResponse.next() make sure to:
-  // 1. Pass the request in it, like so:
-  //    const myNewResponse = NextResponse.next({ request })
-  // 2. Copy over the cookies, like so:
-  //    myNewResponse.cookies.setAll(supabaseResponse.cookies.getAll())
-  // 3. Change the myNewResponse object to fit your needs, but avoid changing
-  //    the cookies!
-  // 4. Finally:
-  //    return myNewResponse
-  // If this is not done, you may be causing the browser and server to go out
-  // of sync and terminate the user's session prematurely!
+  // ══════════════════════════════════════════════════════════════════════════
+  // STEP 4: PROTECTED ROUTES — if no user, redirect to login
+  // ══════════════════════════════════════════════════════════════════════════
+  if (!user) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/auth/login'
+    // Don't add redirect param to avoid loops
+    const res = NextResponse.redirect(url)
+    supabaseResponse.cookies.getAll().forEach((c) => res.cookies.set(c))
+    return res
+  }
 
+  // ══════════════════════════════════════════════════════════════════════════
+  // STEP 5: USER IS AUTHENTICATED — let the page handle onboarding check
+  // DO NOT check onboarding in middleware. Let dashboard/page handle it.
+  // ══════════════════════════════════════════════════════════════════════════
   return supabaseResponse
 }
