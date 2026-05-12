@@ -43,10 +43,12 @@ export default function SignUpPage() {
   const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', ''])
   const [emailType, setEmailType] = useState<'personal' | 'institutional'>('personal')
 
-  async function handleSubmit(formData: FormData) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
     setIsLoading(true)
     setError(null)
     
+    const formData = new FormData(e.currentTarget)
     formData.set('emailType', emailType)
     
     const result = await signUp(formData)
@@ -56,14 +58,14 @@ export default function SignUpPage() {
     } else if (result?.success) {
       if (result?.autoConfirmed && result?.redirectTo) {
         // User was auto-confirmed, navigate immediately
-        router.push(result.redirectTo)
+        window.location.href = result.redirectTo
       } else if (result?.requiresVerification && result?.email) {
         setEmail(result.email)
         setStep('verify')
         setIsLoading(false)
       } else {
         setStep('done')
-        setTimeout(() => router.push('/onboarding'), 1500)
+        setTimeout(() => { window.location.href = '/onboarding' }, 1500)
       }
     }
   }
@@ -78,7 +80,7 @@ export default function SignUpPage() {
       setError(result.error)
       setIsVerifying(false) 
     } else if (result?.redirectTo) {
-      router.push(result.redirectTo)
+      window.location.href = result.redirectTo
     }
   }
 
@@ -237,7 +239,7 @@ export default function SignUpPage() {
             </Alert>
           )}
 
-          <form action={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {/* Full Name */}
             <div className="space-y-1.5">
               <Label htmlFor="fullName" className="text-sm font-medium" style={{ color: '#7C6A9C' }}>Full Name</Label>
