@@ -1,12 +1,13 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, type ChangeEvent } from "react"
 import Link from "next/link"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   Select,
   SelectContent,
@@ -23,21 +24,24 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
   BookOpen,
   Search,
   Star,
   Clock,
-  Calendar,
   GraduationCap,
   Building2,
   MessageSquare,
   Loader2,
-  Filter,
+  Paperclip,
+  CheckCircle2,
+  FolderKanban,
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
-import type { MentorProfile, Profile } from "@/lib/types/database"
+import type { MentorProfile, Profile, Project } from "@/lib/types/database"
 import { AkiliScoreBadge } from "@/components/akili/AkiliScoreBadge"
+import { toast } from "sonner"
 
 interface MentorWithProfile extends MentorProfile {
   profile: Profile
@@ -62,8 +66,15 @@ export default function MentorsPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedArea, setSelectedArea] = useState("All Areas")
   const [selectedMentor, setSelectedMentor] = useState<MentorWithProfile | null>(null)
+
+  // Request modal state
+  const [userProjects, setUserProjects] = useState<Project[]>([])
+  const [selectedProjectId, setSelectedProjectId] = useState("")
   const [requestMessage, setRequestMessage] = useState("")
+  const [briefFile, setBriefFile] = useState<File | null>(null)
+  const [briefError, setBriefError] = useState<string | null>(null)
   const [isRequesting, setIsRequesting] = useState(false)
+  const [requestSuccess, setRequestSuccess] = useState(false)
 
   useEffect(() => {
     loadMentors()
@@ -105,38 +116,111 @@ export default function MentorsPage() {
     setIsLoading(false)
   }
 
+  async function openRequestModal(mentor: MentorWithProfile) {
+    setSelectedMentor(mentor)
+    setRequestSuccess(false)
+    setSelectedProjectId("")
+    setRequestMessage("")
+    setBriefFile(null)
+    setBriefError(null)
+
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    const { data: memberRows } = await supabase
+      .from("team_members")
+      .select("team_id")
+      .eq("user_id", user.id)
+
+    if (memberRows && memberRows.length > 0) {
+      const teamIds = memberRows.map((r: { team_id: string }) => r.team_id)
+      const { data: projects } = await supabase
+        .from("projects")
+        .select("id, title, status")
+        .in("team_id", teamIds)
+        .eq("status", "active")
+        .order("created_at", { ascending: false })
+
+      setUserProjects((projects as Project[]) || [])
+    } else {
+      setUserProjects([])
+    }
+  }
+
+  function handleFileChange(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    setBriefError(null)
+    if (!file) { setBriefFile(null); return }
+    if (file.type !== "application/pdf") {
+      setBriefError("Only PDF files are accepted.")
+      setBriefFile(null)
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setBriefError("File must be under 5 MB.")
+      setBriefFile(null)
+      return
+    }
+    setBriefFile(file)
+  }
+
   async function handleRequestMentorship() {
     if (!selectedMentor) return
+    if (userProjects.length > 0 && !selectedProjectId) {
+      toast.error("Please select a project.")
+      return
+    }
 
     setIsRequesting(true)
     const supabase = createClient()
-
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
+    if (!user) { setIsRequesting(false); return }
+
+    let briefUrl: string | null = null
+    if (briefFile) {
+      const fileName = `${user.id}/${Date.now()}_${briefFile.name}`
+      const { data: uploadData } = await supabase.storage
+        .from("mentor-briefs")
+        .upload(fileName, briefFile, { upsert: false })
+      if (uploadData) {
+        const { data: publicUrl } = supabase.storage
+          .from("mentor-briefs")
+          .getPublicUrl(uploadData.path)
+        briefUrl = publicUrl.publicUrl
+      }
+    }
+
+    const { error } = await supabase.from("mentorship_requests").insert({
+      mentor_id: selectedMentor.user_id,
+      student_id: user.id,
+      project_id: selectedProjectId || null,
+      message: requestMessage.trim() || null,
+      brief_url: briefUrl,
+      status: "pending",
+    })
+
+    if (error) {
+      toast.error("Failed to send request. Please try again.")
       setIsRequesting(false)
       return
     }
 
-    // Create mentorship session request
-    await supabase.from("mentorship_sessions").insert({
-      mentor_id: selectedMentor.user_id,
-      mentee_id: user.id,
-      status: "requested",
-      notes: requestMessage || "I would like to request mentorship.",
-    })
-
-    // Create notification for mentor
     await supabase.from("notifications").insert({
       user_id: selectedMentor.user_id,
       type: "mentorship_request",
       title: "New Mentorship Request",
-      message: "Someone has requested your mentorship",
-      link: "/mentors/requests",
+      message: "A student has requested your mentorship",
+      link: "/dashboard",
     })
 
-    setSelectedMentor(null)
-    setRequestMessage("")
+    setRequestSuccess(true)
     setIsRequesting(false)
+  }
+
+  function closeModal() {
+    setSelectedMentor(null)
+    setRequestSuccess(false)
   }
 
   return (
@@ -237,12 +321,10 @@ export default function MentorsPage() {
                   </div>
                 </div>
 
-                {/* Bio */}
                 {mentor.bio && (
                   <p className="text-sm text-muted-foreground line-clamp-2 mb-4">{mentor.bio}</p>
                 )}
 
-                {/* Expertise */}
                 {mentor.expertise_areas && mentor.expertise_areas.length > 0 && (
                   <div className="flex flex-wrap gap-1 mb-4">
                     {mentor.expertise_areas.slice(0, 3).map((area) => (
@@ -258,7 +340,6 @@ export default function MentorsPage() {
                   </div>
                 )}
 
-                {/* Stats */}
                 <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
                   {mentor.rating && (
                     <span className="flex items-center gap-1">
@@ -280,11 +361,10 @@ export default function MentorsPage() {
                   )}
                 </div>
 
-                {/* Actions */}
                 <div className="flex gap-2 pt-4 border-t">
                   <Button
                     className="flex-1"
-                    onClick={() => setSelectedMentor(mentor)}
+                    onClick={() => openRequestModal(mentor)}
                   >
                     Request Mentorship
                   </Button>
@@ -313,52 +393,133 @@ export default function MentorsPage() {
         </Card>
       )}
 
-      {/* Request Dialog */}
-      <Dialog open={!!selectedMentor} onOpenChange={() => setSelectedMentor(null)}>
-        <DialogContent>
+      {/* Request Modal */}
+      <Dialog open={!!selectedMentor} onOpenChange={closeModal}>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Request Mentorship</DialogTitle>
             <DialogDescription>
-              Send a message to {selectedMentor?.profile?.full_name} explaining what you&apos;re looking for.
+              Send a request to {selectedMentor?.profile?.full_name}.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="flex items-center gap-4 p-4 bg-muted rounded-lg">
-              <Avatar className="h-12 w-12">
-                <AvatarImage src={selectedMentor?.profile?.avatar_url || undefined} />
-                <AvatarFallback className="bg-primary/10 text-primary">
-                  {selectedMentor?.profile?.full_name?.charAt(0) || "?"}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <h4 className="font-semibold">{selectedMentor?.profile?.full_name}</h4>
-                <p className="text-sm text-muted-foreground">
-                  {selectedMentor?.profile?.department}
-                </p>
-              </div>
+
+          {requestSuccess ? (
+            <div className="py-6 text-center space-y-3">
+              <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto" />
+              <p className="font-medium">
+                Request sent to {selectedMentor?.profile?.full_name}.
+              </p>
+              <p className="text-sm text-muted-foreground">
+                You&apos;ll be notified when they respond.
+              </p>
+              <Button onClick={closeModal} className="mt-2">Done</Button>
             </div>
-            <Textarea
-              placeholder="Introduce yourself and describe what kind of guidance you're seeking..."
-              value={requestMessage}
-              onChange={(e) => setRequestMessage(e.target.value)}
-              rows={4}
-            />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setSelectedMentor(null)}>
-              Cancel
-            </Button>
-            <Button onClick={handleRequestMentorship} disabled={isRequesting}>
-              {isRequesting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Sending...
-                </>
-              ) : (
-                "Send Request"
-              )}
-            </Button>
-          </DialogFooter>
+          ) : (
+            <>
+              {/* Mentor preview */}
+              <div className="flex items-center gap-4 p-4 bg-muted rounded-lg">
+                <Avatar className="h-12 w-12">
+                  <AvatarImage src={selectedMentor?.profile?.avatar_url || undefined} />
+                  <AvatarFallback className="bg-primary/10 text-primary">
+                    {selectedMentor?.profile?.full_name?.charAt(0) || "?"}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <h4 className="font-semibold">{selectedMentor?.profile?.full_name}</h4>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedMentor?.profile?.department}
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                {/* Project selector */}
+                <div className="space-y-2">
+                  <Label>Select Project</Label>
+                  {userProjects.length === 0 ? (
+                    <div className="flex items-start gap-2 p-3 rounded-lg bg-muted text-sm text-muted-foreground">
+                      <FolderKanban className="h-4 w-4 mt-0.5 shrink-0" />
+                      <span>
+                        You need an active project to request mentorship.{" "}
+                        <Link href="/ideas/new" className="text-primary underline" onClick={closeModal}>
+                          Post a research idea first.
+                        </Link>
+                      </span>
+                    </div>
+                  ) : (
+                    <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose a project..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {userProjects.map((p) => (
+                          <SelectItem key={p.id} value={p.id}>
+                            {p.title}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+
+                {/* Message */}
+                <div className="space-y-2">
+                  <Label>
+                    Message
+                    <span className="ml-2 text-xs text-muted-foreground font-normal">
+                      {requestMessage.length}/200
+                    </span>
+                  </Label>
+                  <Textarea
+                    placeholder="Briefly describe what you need guidance on..."
+                    value={requestMessage}
+                    onChange={(e) => setRequestMessage(e.target.value.slice(0, 200))}
+                    rows={3}
+                  />
+                </div>
+
+                {/* File upload */}
+                <div className="space-y-2">
+                  <Label>Attach Project Brief <span className="text-muted-foreground font-normal">(optional, PDF only, max 5 MB)</span></Label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-md border text-sm text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors">
+                      <Paperclip className="h-4 w-4" />
+                      {briefFile ? briefFile.name : "Choose PDF file"}
+                    </div>
+                    <input
+                      type="file"
+                      accept="application/pdf"
+                      className="hidden"
+                      onChange={handleFileChange}
+                    />
+                  </label>
+                  {briefError && (
+                    <p className="text-xs text-destructive">{briefError}</p>
+                  )}
+                </div>
+              </div>
+
+              <DialogFooter className="gap-2">
+                <Button variant="outline" onClick={closeModal}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleRequestMentorship}
+                  disabled={isRequesting || (userProjects.length > 0 && !selectedProjectId)}
+                  style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}
+                >
+                  {isRequesting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    "Send Request"
+                  )}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </div>

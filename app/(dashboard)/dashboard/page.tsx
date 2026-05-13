@@ -265,7 +265,7 @@ export default function DashboardPage() {
               <p className="text-xs" style={{ color: '#7C6A9C' }}>Manage your mentorship activities</p>
             </div>
           </div>
-          <MentorDashboard />
+          <MentorDashboard userId={profile.id} />
         </div>
       )}
 

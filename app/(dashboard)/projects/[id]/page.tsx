@@ -14,6 +14,7 @@ import {
   FileText,
   Route,
   Users,
+  GraduationCap,
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import type { Project, Team, Profile, Task } from "@/lib/types/database"
@@ -22,6 +23,7 @@ import { ProjectChat } from "@/components/projects/project-chat"
 import { ProjectRoadmap } from "@/components/projects/project-roadmap"
 import { ProjectFiles } from "@/components/projects/project-files"
 import { ProjectTeam } from "@/components/projects/project-team"
+import { MentorSessions } from "@/components/projects/mentor-sessions"
 
 interface ProjectWithDetails extends Project {
   team: Team & {
@@ -143,6 +145,10 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
             <Users className="h-4 w-4" />
             <span className="hidden sm:inline">Team</span>
           </TabsTrigger>
+          <TabsTrigger value="sessions" className="gap-2">
+            <GraduationCap className="h-4 w-4" />
+            <span className="hidden sm:inline">Sessions</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="kanban">
@@ -163,6 +169,10 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
 
         <TabsContent value="team">
           <ProjectTeam project={project} currentUserId={currentUserId} />
+        </TabsContent>
+
+        <TabsContent value="sessions">
+          <MentorSessions projectId={project.id} currentUserId={currentUserId} />
         </TabsContent>
       </Tabs>
     </div>

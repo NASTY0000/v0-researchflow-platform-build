@@ -397,6 +397,59 @@ export interface ProjectFile {
   uploader?: Profile
 }
 
+export interface MentorshipRequest {
+  id: string
+  mentor_id: string
+  student_id: string
+  project_id: string | null
+  message: string | null
+  brief_url: string | null
+  status: 'pending' | 'accepted' | 'declined'
+  decline_message: string | null
+  created_at: string
+  updated_at: string
+  // Joined fields
+  mentor?: Profile
+  student?: Profile
+  project?: Project
+}
+
+export interface MentorAvailability {
+  id: string
+  mentor_id: string
+  available_date: string
+  start_time: string
+  end_time: string
+  is_booked: boolean
+  booked_by: string | null
+  project_id: string | null
+  agenda: string | null
+  created_at: string
+  // Joined fields
+  mentor?: Profile
+  booker?: Profile
+}
+
+export interface MentorSession {
+  id: string
+  mentor_id: string
+  student_id: string
+  project_id: string | null
+  availability_slot_id: string | null
+  scheduled_at: string
+  agenda: string | null
+  notes: string | null
+  status: 'upcoming' | 'completed' | 'cancelled'
+  student_rating: number | null
+  student_feedback: string | null
+  rating_completed: boolean
+  created_at: string
+  updated_at: string
+  // Joined fields
+  mentor?: Profile
+  student?: Profile
+}
+
 // Onboarding form data
 export interface OnboardingData {
   step: number
