@@ -8,9 +8,11 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import Link from 'next/link'
 import {
-  Search, Filter, Eye, Heart, ExternalLink, FileText,
-  Users, Calendar, Trophy, TrendingUp, Sparkles
+  Search, Eye, Heart, ExternalLink, FileText,
+  Users, Calendar, Trophy, TrendingUp, Sparkles, X
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { ShowcaseEntry, Profile } from '@/lib/types/database'
@@ -38,6 +40,12 @@ export default function ShowcasePage() {
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedArea, setSelectedArea] = useState('All Areas')
+  const [selectedDepartment, setSelectedDepartment] = useState('All Departments')
+  const [selectedUniversity, setSelectedUniversity] = useState('All Universities')
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
+  const [departments, setDepartments] = useState<string[]>([])
+  const [universities, setUniversities] = useState<string[]>([])
   const supabase = createClient()
 
   useEffect(() => {
@@ -65,6 +73,10 @@ export default function ShowcasePage() {
     if (data) {
       setEntries(data.filter(e => e.status === 'published') as ShowcaseWithAuthor[])
       setFeaturedEntries(data.filter(e => e.status === 'featured') as ShowcaseWithAuthor[])
+      const depts = [...new Set(data.map((e: ShowcaseWithAuthor) => e.author?.department).filter(Boolean))] as string[]
+      const univs = [...new Set(data.map((e: ShowcaseWithAuthor) => e.author?.university_id).filter(Boolean))] as string[]
+      setDepartments(depts.sort())
+      setUniversities(univs.sort())
     }
 
     setIsLoading(false)
@@ -108,11 +120,26 @@ export default function ShowcasePage() {
     loadShowcase()
   }
 
-  const filteredEntries = entries.filter(entry =>
-    entry.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    entry.abstract.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    entry.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
-  )
+  const filteredEntries = entries.filter(entry => {
+    if (searchQuery &&
+      !entry.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
+      !entry.abstract.toLowerCase().includes(searchQuery.toLowerCase()) &&
+      !entry.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+    ) return false
+    if (selectedDepartment !== 'All Departments' && entry.author?.department !== selectedDepartment) return false
+    if (selectedUniversity !== 'All Universities' && entry.author?.university_id !== selectedUniversity) return false
+    if (dateFrom && entry.published_at && entry.published_at < dateFrom) return false
+    if (dateTo && entry.published_at && entry.published_at > dateTo + 'T23:59:59') return false
+    return true
+  })
+
+  const hasFilters = searchQuery || selectedArea !== 'All Areas' || selectedDepartment !== 'All Departments' ||
+    selectedUniversity !== 'All Universities' || dateFrom || dateTo
+
+  function clearFilters() {
+    setSearchQuery(''); setSelectedArea('All Areas'); setSelectedDepartment('All Departments')
+    setSelectedUniversity('All Universities'); setDateFrom(''); setDateTo('')
+  }
 
   return (
     <div className="space-y-8">
@@ -185,13 +212,11 @@ export default function ShowcasePage() {
                       {entry.likes}
                     </span>
                   </div>
-                  <Button size="sm" onClick={() => {
-                    const url = entry.external_url || entry.document_url
-                    if (url) { window.open(url, '_blank') }
-                    else { toast('No external link available for this entry') }
-                  }}>
-                    Read More
-                    <ExternalLink className="w-3 h-3 ml-1" />
+                  <Button size="sm" asChild>
+                    <Link href={`/showcase/${entry.id}`}>
+                      Read More
+                      <ExternalLink className="w-3 h-3 ml-1" />
+                    </Link>
                   </Button>
                 </CardFooter>
               </Card>
@@ -201,25 +226,58 @@ export default function ShowcasePage() {
       )}
 
       {/* Search and Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Search research by title, abstract, or tags..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
+      <div className="space-y-3">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Search research by title, abstract, or tags..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
+            <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectValue placeholder="Department" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="All Departments">All Departments</SelectItem>
+              {departments.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={selectedUniversity} onValueChange={setSelectedUniversity}>
+            <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectValue placeholder="University" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="All Universities">All Universities</SelectItem>
+              {universities.map(u => <SelectItem key={u} value={u}>{u}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </div>
-        <Tabs value={selectedArea} onValueChange={setSelectedArea} className="w-full sm:w-auto">
-          <TabsList className="flex-wrap h-auto p-1">
-            {RESEARCH_AREAS.slice(0, 5).map(area => (
-              <TabsTrigger key={area} value={area} className="text-xs">
-                {area}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
+        <div className="flex flex-wrap items-center gap-3">
+          <Tabs value={selectedArea} onValueChange={setSelectedArea} className="flex-1">
+            <TabsList className="flex-wrap h-auto p-1">
+              {RESEARCH_AREAS.slice(0, 5).map(area => (
+                <TabsTrigger key={area} value={area} className="text-xs">{area}</TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+          <div className="flex items-center gap-2">
+            <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="w-36 text-xs" title="From" />
+            <span className="text-xs text-muted-foreground">–</span>
+            <Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="w-36 text-xs" title="To" />
+          </div>
+        </div>
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <span>Showing <strong className="text-foreground">{filteredEntries.length + featuredEntries.length}</strong> results</span>
+          {hasFilters && (
+            <button onClick={clearFilters} className="flex items-center gap-1 text-primary hover:underline text-xs">
+              <X className="h-3 w-3" /> Clear all filters
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Stats Banner */}
@@ -370,9 +428,11 @@ export default function ShowcasePage() {
                     </span>
                   )}
                 </div>
-                <Button size="sm" variant="ghost" className="text-xs">
-                  Read
-                  <ExternalLink className="w-3 h-3 ml-1" />
+                <Button size="sm" variant="ghost" className="text-xs" asChild>
+                  <Link href={`/showcase/${entry.id}`}>
+                    Read More
+                    <ExternalLink className="w-3 h-3 ml-1" />
+                  </Link>
                 </Button>
               </CardFooter>
             </Card>
