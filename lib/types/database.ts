@@ -96,8 +96,24 @@ export interface Profile {
   public_profile: boolean
   created_at: string
   updated_at: string
+  // Akili Score fields (added via akili_score_migration.sql)
+  akili_score: number
+  akili_dimension_knowledge: number
+  akili_dimension_collaboration: number
+  akili_dimension_mentorship: number
+  akili_dimension_technical: number
   // Joined fields
   university?: University
+}
+
+export interface AkiliScoreEvent {
+  id: string
+  user_id: string
+  event_type: string
+  points_earned: number
+  description: string | null
+  related_id: string | null
+  created_at: string
 }
 
 export interface MentorProfile {

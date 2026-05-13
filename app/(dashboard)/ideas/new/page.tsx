@@ -19,6 +19,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ArrowLeft, Lightbulb, X, Plus, Loader2 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
+import { postResearchIdea } from "@/lib/actions/akili"
 
 const RESEARCH_AREAS = [
   "Computer Science",
@@ -151,6 +152,7 @@ export default function NewIdeaPage() {
         return
       }
 
+      await postResearchIdea(user.id, data.id)
       router.push(`/ideas/${data.id}`)
     } catch (err) {
       console.error("Error:", err)

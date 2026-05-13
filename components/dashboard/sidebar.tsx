@@ -35,6 +35,7 @@ import {
 } from 'lucide-react'
 import type { Profile } from '@/lib/types/database'
 import { signOut } from '@/lib/actions/auth'
+import { AkiliScoreBadge } from '@/components/akili/AkiliScoreBadge'
 
 const mainNavItems = [
   {
@@ -200,6 +201,9 @@ export function DashboardSidebar({ profile }: DashboardSidebarProps) {
                   <div className="grid flex-1 text-left text-sm leading-tight">
                     <span className="truncate font-semibold">{profile.full_name}</span>
                     <span className="truncate text-xs text-muted-foreground">{profile.email}</span>
+                    <span className="mt-0.5">
+                      <AkiliScoreBadge score={profile.akili_score || 0} showTitle={false} size="sm" />
+                    </span>
                   </div>
                   <ChevronUp className="ml-auto size-4" />
                 </SidebarMenuButton>

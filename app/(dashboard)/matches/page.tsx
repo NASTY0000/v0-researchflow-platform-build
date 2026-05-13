@@ -33,6 +33,7 @@ import {
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import type { Match, Profile } from "@/lib/types/database"
+import { AkiliScoreBadge } from "@/components/akili/AkiliScoreBadge"
 
 interface MatchWithProfile extends Match {
   matched_user: Profile
@@ -300,6 +301,9 @@ export default function MatchesPage() {
                           <p className="text-sm text-muted-foreground">
                             {match.matched_user?.department || "Researcher"}
                           </p>
+                          <div className="mt-1">
+                            <AkiliScoreBadge score={match.matched_user?.akili_score || 0} />
+                          </div>
                         </div>
                       </div>
                       <Button

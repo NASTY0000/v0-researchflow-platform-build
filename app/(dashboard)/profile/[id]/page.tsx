@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { ArrowLeft, User, Mail, GraduationCap, BookOpen } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
+import { AkiliScoreCard } from '@/components/akili/AkiliScoreCard'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -116,6 +117,9 @@ export default async function PublicProfilePage({ params }: Props) {
           </div>
         </div>
       )}
+
+      {/* Akili Score */}
+      <AkiliScoreCard userId={profile.id} />
     </div>
   )
 }

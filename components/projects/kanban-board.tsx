@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { createClient } from "@/lib/supabase/client"
 import type { Task, Profile } from "@/lib/types/database"
+import { completeAssignedTask } from "@/lib/actions/akili"
 import { format } from "date-fns"
 
 interface KanbanBoardProps {
@@ -142,8 +143,14 @@ export function KanbanBoard({ projectId, teamId, tasks: initialTasks }: KanbanBo
     const supabase = createClient()
 
     await supabase.from("tasks").update({ status: newStatus }).eq("id", taskId)
-
     setTasks(tasks.map((t) => (t.id === taskId ? { ...t, status: newStatus } : t)))
+
+    if (newStatus === "done") {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        await completeAssignedTask(user.id, taskId)
+      }
+    }
   }
 
   async function handleDeleteTask(taskId: string) {

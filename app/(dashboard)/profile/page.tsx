@@ -16,6 +16,7 @@ import {
   Eye, Users, Star, ExternalLink
 } from 'lucide-react'
 import type { Profile, PortfolioItem, University } from '@/lib/types/database'
+import { AkiliScoreCard } from '@/components/akili/AkiliScoreCard'
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<Profile & { university?: University } | null>(null)
@@ -280,6 +281,9 @@ export default function ProfilePage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Akili Score */}
+      <AkiliScoreCard userId={profile.id} />
 
       {/* Tabs */}
       <Tabs defaultValue="skills" className="space-y-4">

@@ -37,6 +37,7 @@ import {
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import type { MentorProfile, Profile } from "@/lib/types/database"
+import { AkiliScoreBadge } from "@/components/akili/AkiliScoreBadge"
 
 interface MentorWithProfile extends MentorProfile {
   profile: Profile
@@ -230,6 +231,9 @@ export default function MentorsPage() {
                         <span className="truncate">{mentor.profile.university_id}</span>
                       </p>
                     )}
+                    <div className="mt-1.5">
+                      <AkiliScoreBadge score={mentor.profile?.akili_score || 0} />
+                    </div>
                   </div>
                 </div>
 
