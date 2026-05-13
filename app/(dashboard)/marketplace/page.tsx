@@ -2,12 +2,11 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   Select,
   SelectContent,
@@ -31,21 +30,33 @@ import {
   Search,
   Plus,
   Clock,
-  DollarSign,
-  Tag,
-  Users,
-  Star,
-  Loader2,
-  MapPin,
+  Zap,
   Calendar,
+  Trophy,
+  Loader2,
+  CheckCircle,
+  Building2,
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import type { MarketplaceTask, Profile } from "@/lib/types/database"
+import { awardAkiliPoints } from "@/lib/actions/akili"
 import { formatDistanceToNow } from "date-fns"
+import { toast } from "sonner"
 
 interface TaskWithPoster extends MarketplaceTask {
   poster: Profile
-  _count?: { applications: number }
+  posted_by: string
+  budget_max: number | null
+  budget_min: number | null
+}
+
+interface LeaderboardEntry {
+  user_id: string
+  full_name: string | null
+  avatar_url: string | null
+  university_id: string | null
+  tasks_completed: number
+  points_earned: number
 }
 
 const CATEGORIES = [
@@ -80,7 +91,6 @@ export default function MarketplacePage() {
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("All Categories")
-  const [activeTab, setActiveTab] = useState("browse")
   const [showNewTask, setShowNewTask] = useState(false)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
 
@@ -88,14 +98,21 @@ export default function MarketplacePage() {
   const [newTitle, setNewTitle] = useState("")
   const [newDescription, setNewDescription] = useState("")
   const [newCategory, setNewCategory] = useState("")
-  const [newBudgetMin, setNewBudgetMin] = useState("")
-  const [newBudgetMax, setNewBudgetMax] = useState("")
+  const [newAkiliReward, setNewAkiliReward] = useState("50")
   const [newDeadline, setNewDeadline] = useState("")
   const [newSkills, setNewSkills] = useState<string[]>([])
   const [isCreating, setIsCreating] = useState(false)
 
+  // Task completion
+  const [manageTask, setManageTask] = useState<TaskWithPoster | null>(null)
+  const [isCompleting, setIsCompleting] = useState(false)
+
+  // Leaderboard
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
+
   useEffect(() => {
     loadTasks()
+    loadLeaderboard()
   }, [selectedCategory, searchQuery])
 
   async function loadTasks() {
@@ -107,28 +124,71 @@ export default function MarketplacePage() {
 
     let query = supabase
       .from("marketplace_tasks")
-      .select(`
-        *,
-        poster:profiles!marketplace_tasks_posted_by_fkey(id, full_name, avatar_url)
-      `)
+      .select(`*, poster:profiles!marketplace_tasks_posted_by_fkey(id, full_name, avatar_url, university_id)`)
       .eq("status", "open")
       .order("created_at", { ascending: false })
 
     if (selectedCategory !== "All Categories") {
       query = query.eq("category", selectedCategory)
     }
-
     if (searchQuery) {
       query = query.or(`title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`)
     }
 
     const { data, error } = await query.limit(50)
-
-    if (data && !error) {
-      setTasks(data)
-    }
-
+    if (data && !error) setTasks(data as TaskWithPoster[])
     setIsLoading(false)
+  }
+
+  async function loadLeaderboard() {
+    try {
+      const supabase = createClient()
+      const monthStart = new Date()
+      monthStart.setDate(1)
+      monthStart.setHours(0, 0, 0, 0)
+
+      const { data: events } = await supabase
+        .from("akili_score_events")
+        .select("user_id, points_earned, event_type")
+        .in("event_type", ["completeMarketplaceTask", "receive4to5StarOnMarketplaceTask"])
+        .gte("created_at", monthStart.toISOString())
+
+      if (!events || events.length === 0) return
+
+      const userMap: Record<string, { points: number; tasks: number }> = {}
+      for (const event of events) {
+        if (!userMap[event.user_id]) userMap[event.user_id] = { points: 0, tasks: 0 }
+        userMap[event.user_id].points += event.points_earned
+        if (event.event_type === "completeMarketplaceTask") userMap[event.user_id].tasks++
+      }
+
+      const sorted = Object.entries(userMap)
+        .sort(([, a], [, b]) => b.points - a.points)
+        .slice(0, 5)
+
+      if (!sorted.length) return
+
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, full_name, avatar_url, university_id")
+        .in("id", sorted.map(([id]) => id))
+
+      setLeaderboard(
+        sorted.map(([userId, stats]) => {
+          const profile = profiles?.find((p) => p.id === userId)
+          return {
+            user_id: userId,
+            full_name: profile?.full_name || null,
+            avatar_url: profile?.avatar_url || null,
+            university_id: profile?.university_id || null,
+            tasks_completed: stats.tasks,
+            points_earned: stats.points,
+          }
+        })
+      )
+    } catch {
+      // leaderboard is non-critical
+    }
   }
 
   async function handleCreateTask() {
@@ -138,18 +198,16 @@ export default function MarketplacePage() {
     const supabase = createClient()
 
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-      setIsCreating(false)
-      return
-    }
+    if (!user) { setIsCreating(false); return }
+
+    const reward = Math.min(500, Math.max(1, parseInt(newAkiliReward) || 50))
 
     const { error } = await supabase.from("marketplace_tasks").insert({
       posted_by: user.id,
       title: newTitle.trim(),
       description: newDescription.trim(),
       category: newCategory,
-      budget_min: newBudgetMin ? parseInt(newBudgetMin) : null,
-      budget_max: newBudgetMax ? parseInt(newBudgetMax) : null,
+      budget_max: reward,
       deadline: newDeadline || null,
       required_skills: newSkills,
       status: "open",
@@ -164,12 +222,48 @@ export default function MarketplacePage() {
     setIsCreating(false)
   }
 
+  async function handleCompleteTask() {
+    if (!manageTask) return
+    setIsCompleting(true)
+
+    const supabase = createClient()
+    const reward = manageTask.budget_max || 50
+
+    await supabase
+      .from("marketplace_tasks")
+      .update({ status: "completed" })
+      .eq("id", manageTask.id)
+
+    if (manageTask.assigned_to) {
+      await awardAkiliPoints(
+        manageTask.assigned_to,
+        "completeMarketplaceTask",
+        reward,
+        `Completed marketplace task: "${manageTask.title}"`,
+        manageTask.id,
+      )
+      await awardAkiliPoints(
+        manageTask.assigned_to,
+        "completeMarketplaceTask",
+        10,
+        `Technical bonus for completing: "${manageTask.title}"`,
+        manageTask.id,
+      )
+      toast.success(`Task complete! ${reward + 10} Akili Points awarded to the researcher.`)
+    } else {
+      toast.success("Task marked as complete.")
+    }
+
+    setManageTask(null)
+    setIsCompleting(false)
+    loadTasks()
+  }
+
   function resetNewTaskForm() {
     setNewTitle("")
     setNewDescription("")
     setNewCategory("")
-    setNewBudgetMin("")
-    setNewBudgetMax("")
+    setNewAkiliReward("50")
     setNewDeadline("")
     setNewSkills([])
   }
@@ -206,7 +300,7 @@ export default function MarketplacePage() {
             <DialogHeader>
               <DialogTitle>Post a Task</DialogTitle>
               <DialogDescription>
-                Describe the task you need help with
+                Posting is always free. Set an Akili Points reward to attract applicants.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
@@ -235,33 +329,31 @@ export default function MarketplacePage() {
                   </SelectTrigger>
                   <SelectContent>
                     {CATEGORIES.filter((c) => c !== "All Categories").map((cat) => (
-                      <SelectItem key={cat} value={cat}>
-                        {cat}
-                      </SelectItem>
+                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Min Budget ($)</Label>
-                  <Input
-                    type="number"
-                    placeholder="0"
-                    value={newBudgetMin}
-                    onChange={(e) => setNewBudgetMin(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Max Budget ($)</Label>
-                  <Input
-                    type="number"
-                    placeholder="100"
-                    value={newBudgetMax}
-                    onChange={(e) => setNewBudgetMax(e.target.value)}
-                  />
-                </div>
+
+              {/* Akili Points reward */}
+              <div className="space-y-2">
+                <Label className="flex items-center gap-1.5">
+                  <Zap className="w-3.5 h-3.5" style={{ color: '#A855F7' }} />
+                  Akili Points Reward (1–500)
+                </Label>
+                <Input
+                  type="number"
+                  min={1}
+                  max={500}
+                  placeholder="50"
+                  value={newAkiliReward}
+                  onChange={(e) => setNewAkiliReward(e.target.value)}
+                />
+                <p className="text-xs" style={{ color: '#7C6A9C' }}>
+                  Set the Akili Points reward for whoever completes this task. Higher rewards attract more applicants.
+                </p>
               </div>
+
               <div className="space-y-2">
                 <Label>Deadline</Label>
                 <Input
@@ -295,10 +387,7 @@ export default function MarketplacePage() {
                 disabled={isCreating || !newTitle.trim() || !newDescription.trim() || !newCategory}
               >
                 {isCreating ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Posting...
-                  </>
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Posting...</>
                 ) : (
                   "Post Task"
                 )}
@@ -327,9 +416,7 @@ export default function MarketplacePage() {
               </SelectTrigger>
               <SelectContent>
                 {CATEGORIES.map((cat) => (
-                  <SelectItem key={cat} value={cat}>
-                    {cat}
-                  </SelectItem>
+                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -337,7 +424,7 @@ export default function MarketplacePage() {
         </CardContent>
       </Card>
 
-      {/* Tasks */}
+      {/* Task grid */}
       {isLoading ? (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[...Array(6)].map((_, i) => (
@@ -355,17 +442,18 @@ export default function MarketplacePage() {
           {tasks.map((task) => (
             <Card key={task.id} className="hover:border-primary/50 transition-colors">
               <CardContent className="p-6">
+                {/* Category + reward */}
                 <div className="flex items-start justify-between mb-3">
                   <Badge variant="secondary">{task.category}</Badge>
-                  {task.budget_min || task.budget_max ? (
-                    <span className="text-sm font-semibold text-green-500 flex items-center gap-1">
-                      <DollarSign className="h-4 w-4" />
-                      {task.budget_min && task.budget_max
-                        ? `${task.budget_min}-${task.budget_max}`
-                        : task.budget_max || task.budget_min}
+                  {task.budget_max ? (
+                    <span className="text-sm font-semibold flex items-center gap-1" style={{ color: '#C084FC' }}>
+                      <Zap className="h-3.5 w-3.5" />
+                      {task.budget_max} Akili Points
                     </span>
                   ) : (
-                    <Badge variant="outline">Negotiable</Badge>
+                    <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(139,92,246,0.2)', color: '#9D8BB8' }}>
+                      Earn Akili Points
+                    </span>
                   )}
                 </div>
 
@@ -376,14 +464,10 @@ export default function MarketplacePage() {
                 {task.required_skills && task.required_skills.length > 0 && (
                   <div className="flex flex-wrap gap-1 mb-4">
                     {task.required_skills.slice(0, 3).map((skill) => (
-                      <Badge key={skill} variant="outline" className="text-xs">
-                        {skill}
-                      </Badge>
+                      <Badge key={skill} variant="outline" className="text-xs">{skill}</Badge>
                     ))}
                     {task.required_skills.length > 3 && (
-                      <Badge variant="outline" className="text-xs">
-                        +{task.required_skills.length - 3}
-                      </Badge>
+                      <Badge variant="outline" className="text-xs">+{task.required_skills.length - 3}</Badge>
                     )}
                   </div>
                 )}
@@ -402,7 +486,7 @@ export default function MarketplacePage() {
                   </span>
                 </div>
 
-                {/* Poster & Actions */}
+                {/* Poster & actions */}
                 <div className="flex items-center justify-between pt-4 border-t">
                   <div className="flex items-center gap-2">
                     <Avatar className="h-6 w-6">
@@ -415,9 +499,13 @@ export default function MarketplacePage() {
                       {task.poster?.full_name || "Anonymous"}
                     </span>
                   </div>
-                  <Button size="sm" variant={task.posted_by === currentUserId ? "outline" : "default"}>
-                    {task.posted_by === currentUserId ? "Manage" : "Apply"}
-                  </Button>
+                  {task.posted_by === currentUserId ? (
+                    <Button size="sm" variant="outline" onClick={() => setManageTask(task)}>
+                      Manage
+                    </Button>
+                  ) : (
+                    <Button size="sm">Apply</Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -440,6 +528,146 @@ export default function MarketplacePage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Monthly leaderboard */}
+      <div className="rounded-2xl p-6" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(139,92,246,0.2)' }}>
+        <div className="flex items-center gap-3 mb-5">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+            style={{ background: 'linear-gradient(135deg,rgba(245,158,11,0.25),rgba(245,158,11,0.1))', border: '1px solid rgba(245,158,11,0.3)' }}>
+            <Trophy className="w-5 h-5" style={{ color: '#F59E0B' }} />
+          </div>
+          <div>
+            <h2 className="font-bold font-heading text-lg">Top Contributors This Month</h2>
+            <p className="text-xs" style={{ color: '#7C6A9C' }}>Ranked by Akili Points earned from marketplace tasks</p>
+          </div>
+        </div>
+
+        {leaderboard.length === 0 ? (
+          <p className="text-sm text-center py-6" style={{ color: '#7C6A9C' }}>
+            No marketplace completions this month yet. Be the first!
+          </p>
+        ) : (
+          <div className="space-y-3">
+            {leaderboard.map((entry, index) => {
+              const isWinner = index === 0
+              return (
+                <div
+                  key={entry.user_id}
+                  className="flex items-center gap-4 p-3 rounded-xl"
+                  style={{
+                    background: isWinner ? 'rgba(245,158,11,0.06)' : 'rgba(255,255,255,0.02)',
+                    border: isWinner ? '1px solid rgba(245,158,11,0.25)' : '1px solid rgba(139,92,246,0.1)',
+                  }}
+                >
+                  {/* Rank */}
+                  <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-sm font-bold"
+                    style={{
+                      background: isWinner ? 'rgba(245,158,11,0.2)' : 'rgba(255,255,255,0.05)',
+                      color: isWinner ? '#F59E0B' : '#7C6A9C',
+                    }}>
+                    {index + 1}
+                  </div>
+
+                  {/* Avatar */}
+                  <Avatar className="h-9 w-9 shrink-0">
+                    <AvatarImage src={entry.avatar_url || undefined} />
+                    <AvatarFallback className="text-sm" style={{ background: 'rgba(124,58,237,0.2)', color: '#C084FC' }}>
+                      {entry.full_name?.charAt(0) || '?'}
+                    </AvatarFallback>
+                  </Avatar>
+
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-semibold text-sm truncate">{entry.full_name || 'Researcher'}</span>
+                      {isWinner && (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
+                          style={{ background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.3)', color: '#F59E0B' }}>
+                          ResearchFlow Expert
+                        </span>
+                      )}
+                    </div>
+                    {entry.university_id && (
+                      <p className="text-xs flex items-center gap-1 mt-0.5" style={{ color: '#7C6A9C' }}>
+                        <Building2 className="w-3 h-3" />
+                        {entry.university_id}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Stats */}
+                  <div className="text-right shrink-0">
+                    <p className="font-bold text-sm flex items-center gap-1 justify-end" style={{ color: '#C084FC' }}>
+                      <Zap className="w-3.5 h-3.5" />
+                      {entry.points_earned.toLocaleString()}
+                    </p>
+                    <p className="text-[10px]" style={{ color: '#7C6A9C' }}>
+                      {entry.tasks_completed} task{entry.tasks_completed !== 1 ? 's' : ''}
+                    </p>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Manage / Complete Task dialog */}
+      <Dialog open={!!manageTask} onOpenChange={(open) => { if (!open) setManageTask(null) }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Manage Task</DialogTitle>
+            <DialogDescription className="line-clamp-2">
+              {manageTask?.title}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            {/* Reward info */}
+            <div className="flex items-center gap-3 p-3 rounded-xl"
+              style={{ background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.2)' }}>
+              <Zap className="w-5 h-5 shrink-0" style={{ color: '#A855F7' }} />
+              <div>
+                <p className="text-sm font-semibold" style={{ color: '#C084FC' }}>
+                  {manageTask?.budget_max || 50} Akili Points reward
+                </p>
+                <p className="text-xs" style={{ color: '#7C6A9C' }}>
+                  Will be awarded to the researcher who completes this task
+                </p>
+              </div>
+            </div>
+
+            {/* Assignee status */}
+            {manageTask?.assigned_to ? (
+              <div className="flex items-center gap-2 text-sm">
+                <CheckCircle className="w-4 h-4 text-green-500" />
+                <span>Researcher assigned — points will be awarded on completion</span>
+              </div>
+            ) : (
+              <p className="text-sm" style={{ color: '#7C6A9C' }}>
+                No researcher assigned yet. Points will be awarded once an assignee is set.
+              </p>
+            )}
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setManageTask(null)}>
+              Close
+            </Button>
+            <Button
+              onClick={handleCompleteTask}
+              disabled={isCompleting}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {isCompleting ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Completing...</>
+              ) : (
+                <><CheckCircle className="mr-2 h-4 w-4" />Mark Complete</>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
