@@ -10,26 +10,23 @@ export default async function DashboardLayout({
   children: React.ReactNode
 }) {
   const supabase = await createClient()
+
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
     redirect('/auth/login')
   }
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from('profiles')
-    .select(`
-      *,
-      university:universities(*)
-    `)
+    .select('*')
     .eq('id', user.id)
     .single()
 
-  if (!profile?.onboarding_completed) {
+  if (!profileError && profile && profile.onboarding_completed === false) {
     redirect('/onboarding')
   }
 
-  // Fetch unread notifications count
   const { count: unreadCount } = await supabase
     .from('notifications')
     .select('*', { count: 'exact', head: true })
@@ -41,7 +38,10 @@ export default async function DashboardLayout({
       <DashboardSidebar profile={profile} />
       <SidebarInset>
         <DashboardHeader profile={profile} unreadCount={unreadCount || 0} />
-        <main className="flex-1 p-4 lg:p-6" style={{ backgroundColor: '#05010F', minHeight: '100vh' }}>
+        <main
+          className="flex-1 p-4 lg:p-6"
+          style={{ backgroundColor: '#05010F', minHeight: '100vh' }}
+        >
           {children}
         </main>
       </SidebarInset>
