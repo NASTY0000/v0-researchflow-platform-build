@@ -240,7 +240,8 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
       setError(result.error)
       setIsLoading(false)
     } else if (result?.redirectTo) {
-      window.location.href = result.redirectTo
+      router.refresh()
+      router.push(result.redirectTo)
     }
   }
 

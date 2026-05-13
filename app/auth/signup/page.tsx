@@ -57,15 +57,16 @@ export default function SignUpPage() {
       setIsLoading(false)
     } else if (result?.success) {
       if (result?.autoConfirmed && result?.redirectTo) {
-        // User was auto-confirmed, navigate immediately
-        window.location.href = result.redirectTo
+        // User was auto-confirmed, refresh router and navigate
+        router.refresh()
+        router.push(result.redirectTo)
       } else if (result?.requiresVerification && result?.email) {
         setEmail(result.email)
         setStep('verify')
         setIsLoading(false)
       } else {
         setStep('done')
-        setTimeout(() => { window.location.href = '/onboarding' }, 1500)
+        setTimeout(() => { router.refresh(); router.push('/onboarding') }, 1500)
       }
     }
   }
@@ -80,7 +81,8 @@ export default function SignUpPage() {
       setError(result.error)
       setIsVerifying(false) 
     } else if (result?.redirectTo) {
-      window.location.href = result.redirectTo
+      router.refresh()
+      router.push(result.redirectTo)
     }
   }
 
@@ -331,7 +333,7 @@ export default function SignUpPage() {
             setIsGoogleLoading(true); setError(null)
             const result = await signInWithGoogle()
             if (result?.error) { setError(result.error); setIsGoogleLoading(false) }
-            else if (result?.url) { window.location.href = result.url }
+            else if (result?.url) { router.push(result.url) }
           }}>
             <Button type="submit" variant="outline" className="w-full h-10" disabled={isLoading || isGoogleLoading}
               style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(139,92,246,0.25)', color: '#F3F0FF', borderRadius: '8px' }}>

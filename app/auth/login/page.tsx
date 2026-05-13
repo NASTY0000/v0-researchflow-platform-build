@@ -46,8 +46,9 @@ export default function LoginPage() {
       setError(result.error)
       setIsLoading(false) 
     } else if (result?.redirectTo) {
-      // Use window.location for a full navigation to ensure auth cookies are sent
-      window.location.href = result.redirectTo
+      // Refresh router cache to pick up new auth state, then navigate
+      router.refresh()
+      router.push(result.redirectTo)
     }
   }
 
@@ -64,7 +65,8 @@ export default function LoginPage() {
         setError(result.error)
         setIsDemoLoading(false) 
       } else if (result?.redirectTo) {
-        window.location.href = result.redirectTo
+        router.refresh()
+        router.push(result.redirectTo)
       }
     } catch {
       setError('Failed to load demo account.')
@@ -150,7 +152,7 @@ export default function LoginPage() {
             setIsGoogleLoading(true); setError(null)
             const result = await signInWithGoogle()
             if (result?.error) { setError(result.error); setIsGoogleLoading(false) }
-            else if (result?.url) { window.location.href = result.url }
+            else if (result?.url) { router.push(result.url) }
           }} className="mb-3">
             <Button type="submit" variant="outline" className="w-full h-10" disabled={isLoading || isGoogleLoading || isDemoLoading}
               style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(139,92,246,0.25)', color: '#F3F0FF', borderRadius: '8px' }}>
