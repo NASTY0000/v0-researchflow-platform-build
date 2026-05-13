@@ -17,19 +17,12 @@ export default async function DashboardLayout({
     redirect('/auth/login')
   }
 
-  // FIXED: removed university:universities(*) join
-  // That join was failing because university stores
-  // plain text not a UUID, making profile return null,
-  // which caused the infinite redirect loop
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('*')
     .eq('id', user.id)
     .single()
 
-  // Only redirect if profile loaded successfully
-  // AND onboarding is confirmed not complete.
-  // Never redirect on a query error — that caused the loop.
   if (!profileError && profile && profile.onboarding_completed === false) {
     redirect('/onboarding')
   }

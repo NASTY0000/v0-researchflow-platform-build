@@ -1,7 +1,6 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 
 export async function signUp(formData: FormData) {
@@ -25,39 +24,37 @@ export async function signUp(formData: FormData) {
     return { error: error.message }
   }
 
-  // Create profile row immediately so the dashboard layout query never
-  // returns null for this user. Ignore conflicts — a DB trigger may have
-  // already created the row.
-  if (data?.user) {
-    await supabase.from('profiles').insert({
+  if (data?.user?.identities?.length === 0) {
+    return { error: 'An account with this email already exists. Please sign in instead.' }
+  }
+
+  if (data?.session && data.user) {
+    await supabase.from('profiles').upsert({
       id: data.user.id,
       full_name: fullName,
       email: email,
       onboarding_completed: false,
       onboarding_step: 0,
       created_at: new Date().toISOString(),
-    })
-  }
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'id' })
 
-  // Check if user was auto-confirmed (email confirmation disabled in Supabase)
-  // or if the session exists (meaning they can proceed without OTP)
-  if (data?.session) {
     revalidatePath('/', 'layout')
-    redirect('/onboarding')
+    return { success: true, redirectTo: '/onboarding' }
   }
 
-  // Check if user already exists
-  if (data?.user?.identities?.length === 0) {
-    return { error: 'An account with this email already exists. Please sign in instead.' }
+  return {
+    success: true,
+    email,
+    requiresVerification: true,
+    message: 'Verification code sent to your email',
   }
-
-  return { success: true, email, requiresVerification: true, message: 'Verification code sent to your email' }
 }
 
 export async function verifyOtp(email: string, token: string) {
   const supabase = await createClient()
 
-  const { error } = await supabase.auth.verifyOtp({
+  const { data, error } = await supabase.auth.verifyOtp({
     email,
     token,
     type: 'signup',
@@ -67,8 +64,20 @@ export async function verifyOtp(email: string, token: string) {
     return { error: error.message }
   }
 
+  if (data?.user) {
+    await supabase.from('profiles').upsert({
+      id: data.user.id,
+      email: data.user.email,
+      full_name: data.user.user_metadata?.full_name || '',
+      onboarding_completed: false,
+      onboarding_step: 0,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'id' })
+  }
+
   revalidatePath('/', 'layout')
-  redirect('/onboarding')
+  return { success: true, redirectTo: '/onboarding' }
 }
 
 export async function resendOtp(email: string) {
@@ -101,7 +110,10 @@ export async function signIn(formData: FormData) {
     return { error: error.message }
   }
 
+  revalidatePath('/', 'layout')
+
   const { data: { user } } = await supabase.auth.getUser()
+
   if (user) {
     const { data: profile } = await supabase
       .from('profiles')
@@ -110,26 +122,25 @@ export async function signIn(formData: FormData) {
       .single()
 
     if (!profile || !profile.onboarding_completed) {
-      revalidatePath('/', 'layout')
-      redirect('/onboarding')
+      return { success: true, redirectTo: '/onboarding' }
     }
   }
 
-  revalidatePath('/', 'layout')
-  redirect('/dashboard')
+  return { success: true, redirectTo: '/dashboard' }
 }
 
 export async function signOut() {
   const supabase = await createClient()
   await supabase.auth.signOut()
   revalidatePath('/', 'layout')
-  redirect('/')
+  return { success: true, redirectTo: '/' }
 }
 
 export async function signInWithGoogle() {
   const supabase = await createClient()
-  
-  const redirectUrl = process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ?? 
+
+  const redirectUrl =
+    process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ??
     `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/callback`
 
   const { data, error } = await supabase.auth.signInWithOAuth({
@@ -163,7 +174,7 @@ export async function getUser() {
 export async function getProfile() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  
+
   if (!user) return null
 
   const { data: profile } = await supabase
@@ -178,14 +189,17 @@ export async function getProfile() {
 export async function updateProfile(data: Record<string, unknown>) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  
+
   if (!user) {
     return { error: 'Not authenticated' }
   }
 
   const { error } = await supabase
     .from('profiles')
-    .update(data)
+    .update({
+      ...data,
+      updated_at: new Date().toISOString(),
+    })
     .eq('id', user.id)
 
   if (error) {
@@ -199,7 +213,7 @@ export async function updateProfile(data: Record<string, unknown>) {
 export async function completeOnboarding(data: Record<string, unknown>) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  
+
   if (!user) {
     return { error: 'Not authenticated' }
   }
@@ -210,6 +224,7 @@ export async function completeOnboarding(data: Record<string, unknown>) {
       ...data,
       onboarding_completed: true,
       onboarding_step: 5,
+      updated_at: new Date().toISOString(),
     })
     .eq('id', user.id)
 
@@ -218,12 +233,11 @@ export async function completeOnboarding(data: Record<string, unknown>) {
   }
 
   revalidatePath('/dashboard', 'layout')
-  
-  // Check if user selected mentor role - redirect to verification
+
   const roles = data.roles as string[] | undefined
   if (roles && roles.includes('mentor')) {
-    redirect('/mentor-verification')
+    return { success: true, redirectTo: '/mentor-verification' }
   }
-  
-  redirect('/dashboard')
+
+  return { success: true, redirectTo: '/dashboard' }
 }
