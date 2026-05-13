@@ -15,7 +15,7 @@ export default async function PublicProfilePage({ params }: Props) {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('*, university:universities(*)')
+    .select('*')
     .eq('id', id)
     .single()
 
@@ -54,10 +54,10 @@ export default async function PublicProfilePage({ params }: Props) {
             {profile.department && (
               <p className="text-sm mt-0.5" style={{ color: '#7C6A9C' }}>{profile.department}</p>
             )}
-            {(profile as any).university?.name && (
+            {profile.university_id && (
               <p className="text-sm flex items-center gap-1.5 mt-1" style={{ color: '#7C6A9C' }}>
                 <GraduationCap className="w-3.5 h-3.5" />
-                {(profile as any).university.name}
+                {profile.university_id}
               </p>
             )}
             {profile.academic_level && (

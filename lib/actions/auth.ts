@@ -25,10 +25,23 @@ export async function signUp(formData: FormData) {
     return { error: error.message }
   }
 
+  // Create profile row immediately so the dashboard layout query never
+  // returns null for this user. Ignore conflicts — a DB trigger may have
+  // already created the row.
+  if (data?.user) {
+    await supabase.from('profiles').insert({
+      id: data.user.id,
+      full_name: fullName,
+      email: email,
+      onboarding_completed: false,
+      onboarding_step: 0,
+      created_at: new Date().toISOString(),
+    })
+  }
+
   // Check if user was auto-confirmed (email confirmation disabled in Supabase)
   // or if the session exists (meaning they can proceed without OTP)
   if (data?.session) {
-    // User is auto-confirmed, redirect to onboarding
     revalidatePath('/', 'layout')
     redirect('/onboarding')
   }
@@ -155,10 +168,7 @@ export async function getProfile() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select(`
-      *,
-      university:universities(*)
-    `)
+    .select('*')
     .eq('id', user.id)
     .single()
 

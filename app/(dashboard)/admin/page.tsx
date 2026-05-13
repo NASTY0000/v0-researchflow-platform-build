@@ -25,7 +25,7 @@ import { useRouter } from 'next/navigation'
 import type { Profile, MentorProfile, University } from '@/lib/types/database'
 
 type MentorWithProfile = MentorProfile & {
-  user: Profile & { university?: University }
+  user: Profile
 }
 
 export default function AdminPage() {
@@ -37,7 +37,7 @@ export default function AdminPage() {
     publishedResearch: 0,
   })
   const [pendingMentors, setPendingMentors] = useState<MentorWithProfile[]>([])
-  const [users, setUsers] = useState<(Profile & { university?: University })[]>([])
+  const [users, setUsers] = useState<Profile[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const supabase = createClient()
@@ -69,7 +69,7 @@ export default function AdminPage() {
       .from('mentor_profiles')
       .select(`
         *,
-        user:profiles(*, university:universities(*))
+        user:profiles(*)
       `)
       .eq('is_verified', false)
       .order('created_at', { ascending: false })
@@ -81,12 +81,12 @@ export default function AdminPage() {
     // Load recent users
     const { data: recentUsers } = await supabase
       .from('profiles')
-      .select(`*, university:universities(*)`)
+      .select('*')
       .order('created_at', { ascending: false })
       .limit(50)
 
     if (recentUsers) {
-      setUsers(recentUsers as (Profile & { university?: University })[])
+      setUsers(recentUsers as Profile[])
     }
 
     setIsLoading(false)
@@ -269,10 +269,10 @@ export default function AdminPage() {
                           </Badge>
                         </div>
                         <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-muted-foreground">
-                          {mentor.user?.university && (
+                          {mentor.user?.university_id && (
                             <span className="flex items-center gap-1">
                               <Building2 className="w-3.5 h-3.5" />
-                              {mentor.user.university.name}
+                              {mentor.user.university_id}
                             </span>
                           )}
                           {mentor.user?.department && (
@@ -366,7 +366,7 @@ export default function AdminPage() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <span className="text-sm">{user.university?.name || '-'}</span>
+                        <span className="text-sm">{user.university_id || '-'}</span>
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1">

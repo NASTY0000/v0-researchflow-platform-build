@@ -39,7 +39,7 @@ import { createClient } from "@/lib/supabase/client"
 import type { MentorProfile, Profile } from "@/lib/types/database"
 
 interface MentorWithProfile extends MentorProfile {
-  profile: Profile & { university?: { name: string } }
+  profile: Profile
 }
 
 const EXPERTISE_AREAS = [
@@ -76,10 +76,7 @@ export default function MentorsPage() {
       .from("mentor_profiles")
       .select(`
         *,
-        profile:profiles!mentor_profiles_user_id_fkey(
-          *,
-          university:universities(name)
-        )
+        profile:profiles!mentor_profiles_user_id_fkey(*)
       `)
       .eq("is_accepting_mentees", true)
       .order("rating", { ascending: false })
@@ -227,10 +224,10 @@ export default function MentorsPage() {
                         <span className="truncate">{mentor.profile.department}</span>
                       </p>
                     )}
-                    {mentor.profile?.university && (
+                    {mentor.profile?.university_id && (
                       <p className="text-sm text-muted-foreground flex items-center gap-1">
                         <Building2 className="h-3 w-3 shrink-0" />
-                        <span className="truncate">{mentor.profile.university.name}</span>
+                        <span className="truncate">{mentor.profile.university_id}</span>
                       </p>
                     )}
                   </div>

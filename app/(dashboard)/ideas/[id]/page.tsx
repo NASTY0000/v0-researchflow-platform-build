@@ -38,7 +38,7 @@ import type { ResearchIdea, Profile } from "@/lib/types/database"
 import { formatDistanceToNow, format } from "date-fns"
 
 interface IdeaWithAuthor extends ResearchIdea {
-  author: Profile & { university?: { name: string } }
+  author: Profile
 }
 
 export default function IdeaDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -64,10 +64,7 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
         .from("research_ideas")
         .select(`
           *,
-          author:profiles!research_ideas_author_id_fkey(
-            *,
-            university:universities(name)
-          )
+          author:profiles!research_ideas_author_id_fkey(*)
         `)
         .eq("id", id)
         .single()
@@ -327,10 +324,10 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
                       {idea.author.department}
                     </p>
                   )}
-                  {idea.author?.university && (
+                  {idea.author?.university_id && (
                     <p className="text-sm text-muted-foreground flex items-center gap-1">
                       <Building2 className="h-3 w-3" />
-                      {idea.author.university.name}
+                      {idea.author.university_id}
                     </p>
                   )}
                 </div>
