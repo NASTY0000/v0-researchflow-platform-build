@@ -66,21 +66,27 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // Check onboarding status for protected routes (except onboarding itself)
-  if (user && isProtectedRoute && !pathname.startsWith('/onboarding')) {
-    // Fetch profile to check onboarding status
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('onboarding_completed')
-      .eq('id', user.id)
-      .single()
+// Check onboarding status safely
+if (user && isProtectedRoute && !pathname.startsWith('/onboarding')) {
+  const { data: profile, error } = await supabase
+    .from('profiles')
+    .select('onboarding_completed')
+    .eq('id', user.id)
+    .maybeSingle()
 
-    if (profile && !profile.onboarding_completed) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/onboarding'
-      return NextResponse.redirect(url)
-    }
+  // If no profile exists yet, allow request temporarily
+  if (error) {
+    console.log('Profile fetch error:', error.message)
+    return supabaseResponse
   }
+
+  // Only redirect if profile exists AND onboarding is false
+  if (profile && profile.onboarding_completed === false) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/onboarding'
+    return NextResponse.redirect(url)
+  }
+}
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is.
   // If you're creating a new response object with NextResponse.next() make sure to:
