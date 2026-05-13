@@ -383,6 +383,28 @@ export interface ShowcaseEntry {
   user_has_liked?: boolean
 }
 
+export type ShowcaseSubmissionStatus = 'pending' | 'approved' | 'needs_revision' | 'rejected'
+
+export interface ShowcaseSubmission {
+  id: string
+  project_id: string | null
+  submitted_by: string
+  title: string
+  abstract: string
+  research_area_tags: string[]
+  methodology_tags: string[]
+  pdf_url: string | null
+  visibility: 'public' | 'university'
+  status: ShowcaseSubmissionStatus
+  admin_notes: string | null
+  submitted_at: string
+  reviewed_at: string | null
+  reviewed_by: string | null
+  // Joined
+  submitter?: Profile
+  project?: Project
+}
+
 export interface ProjectFile {
   id: string
   project_id: string

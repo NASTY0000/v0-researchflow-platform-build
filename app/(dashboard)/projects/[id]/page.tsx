@@ -156,7 +156,11 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
         </TabsContent>
 
         <TabsContent value="roadmap">
-          <ProjectRoadmap project={project} />
+          <ProjectRoadmap
+            project={project}
+            currentUserId={currentUserId}
+            isOwner={currentUserId === project.team?.leader_id}
+          />
         </TabsContent>
 
         <TabsContent value="chat">

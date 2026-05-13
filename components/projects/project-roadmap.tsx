@@ -23,9 +23,12 @@ import {
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import type { Project } from "@/lib/types/database"
+import { ShowcaseSubmit } from "./showcase-submit"
 
 interface ProjectRoadmapProps {
   project: Project
+  currentUserId?: string | null
+  isOwner?: boolean
 }
 
 const PHASES = [
@@ -127,7 +130,7 @@ const PHASES = [
   },
 ]
 
-export function ProjectRoadmap({ project }: ProjectRoadmapProps) {
+export function ProjectRoadmap({ project, currentUserId = null, isOwner = false }: ProjectRoadmapProps) {
   const [expandedPhase, setExpandedPhase] = useState<string | null>(project.current_phase || "problem_identification")
 
   const currentPhaseIndex = PHASES.findIndex((p) => p.id === project.current_phase)
@@ -282,6 +285,14 @@ export function ProjectRoadmap({ project }: ProjectRoadmapProps) {
           })}
         </div>
       </div>
+
+      {/* Showcase submission — owner only */}
+      <ShowcaseSubmit
+        project={project}
+        currentUserId={currentUserId}
+        isOwner={isOwner}
+        allPhasesComplete={currentPhaseIndex >= 6}
+      />
     </div>
   )
 }
