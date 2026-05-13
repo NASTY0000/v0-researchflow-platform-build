@@ -29,68 +29,52 @@ export async function updateSession(request: NextRequest) {
     },
   )
 
-  // IMPORTANT: Do not add any code between createServerClient and getUser()
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
   const pathname = request.nextUrl.pathname
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // STEP 1: STATIC/PUBLIC ASSETS — pass through immediately
-  // ══════════════════════════════════════════════════════════════════════════
-  if (
-    pathname.startsWith('/_next') ||
-    pathname === '/favicon.ico' ||
-    pathname.startsWith('/public') ||
-    pathname.startsWith('/api/auth')
-  ) {
-    return supabaseResponse
-  }
-
-  // ══════════════════════════════════════════════════════════════════════════
-  // STEP 2: AUTH PAGES — if user is already logged in, redirect to dashboard
-  // ══════════════════════════════════════════════════════════════════════════
-  const authPages = ['/auth/login', '/auth/signup']
-  if (authPages.includes(pathname) && user) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/dashboard'
-    url.search = '' // Clear any ?redirect= params
-    const res = NextResponse.redirect(url)
-    supabaseResponse.cookies.getAll().forEach((c) => res.cookies.set(c))
-    return res
-  }
-
-  // ══════════════════════════════════════════════════════════════════════════
-  // STEP 3: PUBLIC ROUTES — pass through, no auth required
-  // ══════════════════════════════════════════════════════════════════════════
-  const publicRoutes = [
-    '/',
-    '/auth/callback',
-    '/auth/confirm',
-    '/auth/error',
-    '/forgot-password',
-    '/reset-password',
+  // Protected routes - require authentication
+  const protectedRoutes = [
+    '/dashboard',
+    '/onboarding', 
+    '/projects',
+    '/ideas',
+    '/mentors',
+    '/marketplace',
+    '/messages',
+    '/settings',
   ]
-  if (publicRoutes.includes(pathname) || authPages.includes(pathname)) {
-    return supabaseResponse
-  }
+  const isProtectedRoute = protectedRoutes.some(
+    route => pathname.startsWith(route)
+  )
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // STEP 4: PROTECTED ROUTES — if no user, redirect to login
-  // ══════════════════════════════════════════════════════════════════════════
-  if (!user) {
+  // Auth routes - redirect to dashboard if already logged in
+  const authRoutes = ['/auth/login', '/auth/signup']
+  const isAuthRoute = authRoutes.some(
+    route => pathname === route
+  )
+
+  // Not logged in trying to access protected route
+  if (isProtectedRoute && !user) {
     const url = request.nextUrl.clone()
     url.pathname = '/auth/login'
-    // Don't add redirect param to avoid loops
-    const res = NextResponse.redirect(url)
-    supabaseResponse.cookies.getAll().forEach((c) => res.cookies.set(c))
-    return res
+    url.search = ''
+    return NextResponse.redirect(url)
   }
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // STEP 5: USER IS AUTHENTICATED — let the page handle onboarding check
-  // DO NOT check onboarding in middleware. Let dashboard/page handle it.
-  // ══════════════════════════════════════════════════════════════════════════
+  // Already logged in trying to access auth pages
+  if (isAuthRoute && user) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/dashboard'
+    url.search = ''
+    return NextResponse.redirect(url)
+  }
+
+  // DO NOT add any onboarding checks here.
+  // Onboarding redirect is handled inside
+  // app/(dashboard)/layout.tsx only.
+
   return supabaseResponse
 }
