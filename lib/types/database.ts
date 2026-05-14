@@ -96,6 +96,10 @@ export interface Profile {
   public_profile: boolean
   created_at: string
   updated_at: string
+  is_admin: boolean
+  is_suspended: boolean
+  suspended_until: string | null
+  suspension_reason: string | null
   // Akili Score fields (added via akili_score_migration.sql)
   akili_score: number
   akili_dimension_knowledge: number
@@ -470,6 +474,47 @@ export interface MentorSession {
   // Joined fields
   mentor?: Profile
   student?: Profile
+}
+
+// Admin-specific types
+
+export interface ContentReport {
+  id: string
+  reporter_id: string | null
+  content_type: 'idea' | 'task' | 'message' | 'showcase' | 'comment' | 'profile'
+  content_id: string
+  reason: string
+  description: string | null
+  status: 'pending' | 'resolved' | 'dismissed'
+  resolved_by: string | null
+  resolved_at: string | null
+  created_at: string
+  // Joined
+  reporter?: Profile
+}
+
+export interface Broadcast {
+  id: string
+  sent_by: string
+  title: string
+  message: string
+  audience: 'all' | 'university' | 'role'
+  audience_filter: string | null
+  recipient_count: number
+  sent_at: string
+  // Joined
+  sender?: Profile
+}
+
+export interface UniversityRecord {
+  id: string
+  name: string
+  country: string
+  type: 'Federal' | 'State' | 'Private'
+  email_domain: string | null
+  is_active: boolean
+  created_at: string
+  updated_at: string
 }
 
 // Onboarding form data

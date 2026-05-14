@@ -37,7 +37,7 @@ const DIMENSION_ICONS: Record<AkiliDimension, React.ElementType> = {
 
 const MAX_DIMENSION = 5000
 
-export function AkiliScoreCard({ userId }: { userId: string }) {
+export function AkiliScoreCard({ userId, limit = 5 }: { userId: string; limit?: number }) {
   const [data, setData] = useState<AkiliData | null>(null)
   const [events, setEvents] = useState<ScoreEvent[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -56,7 +56,7 @@ export function AkiliScoreCard({ userId }: { userId: string }) {
           .select('id, event_type, points_earned, description, created_at')
           .eq('user_id', userId)
           .order('created_at', { ascending: false })
-          .limit(5),
+          .limit(limit),
       ])
       if (profileRes.data) setData(profileRes.data as AkiliData)
       if (eventsRes.data) setEvents(eventsRes.data)

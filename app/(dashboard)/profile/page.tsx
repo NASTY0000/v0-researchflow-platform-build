@@ -273,8 +273,6 @@ export default function ProfilePage() {
                     <SelectItem value="presentation">Presentation</SelectItem>
                     <SelectItem value="project">Project</SelectItem>
                     <SelectItem value="award">Award</SelectItem>
-                    <SelectItem value="certificate">Certificate</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -645,7 +643,7 @@ export default function ProfilePage() {
 
         <TabsContent value="activity" className="space-y-6">
           {/* Stats Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className={`grid gap-4 ${profile.roles?.includes('mentor') ? 'grid-cols-2 md:grid-cols-4' : 'grid-cols-2 md:grid-cols-3'}`}>
             <Card>
               <CardContent className="p-5 flex flex-col items-center text-center gap-2">
                 <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -664,15 +662,17 @@ export default function ProfilePage() {
                 <p className="text-xs text-muted-foreground">Completed Projects</p>
               </CardContent>
             </Card>
-            <Card>
-              <CardContent className="p-5 flex flex-col items-center text-center gap-2">
-                <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
-                  <Users className="w-5 h-5 text-accent" />
-                </div>
-                <p className="text-3xl font-bold">{activityStats.mentorshipSessions}</p>
-                <p className="text-xs text-muted-foreground">Mentorship Sessions</p>
-              </CardContent>
-            </Card>
+            {profile.roles?.includes('mentor') && (
+              <Card>
+                <CardContent className="p-5 flex flex-col items-center text-center gap-2">
+                  <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
+                    <Users className="w-5 h-5 text-accent" />
+                  </div>
+                  <p className="text-3xl font-bold">{activityStats.mentorshipSessions}</p>
+                  <p className="text-xs text-muted-foreground">Mentorship Sessions</p>
+                </CardContent>
+              </Card>
+            )}
             <Card>
               <CardContent className="p-5 flex flex-col items-center text-center gap-2">
                 <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center">
@@ -683,6 +683,9 @@ export default function ProfilePage() {
               </CardContent>
             </Card>
           </div>
+
+          {/* Akili Score */}
+          <AkiliScoreCard userId={profile.id} limit={10} />
 
           {/* Mentor Section */}
           {mentorInfo ? (
@@ -698,10 +701,10 @@ export default function ProfilePage() {
                 <div className="flex items-center gap-3 flex-wrap">
                   {mentorInfo.is_verified ? (
                     <Badge className="bg-green-500/15 text-green-600 border-green-500/20 hover:bg-green-500/20">
-                      <CheckCircle2 className="w-3 h-3 mr-1" />Verified Mentor
+                      <CheckCircle2 className="w-3 h-3 mr-1" />Approved
                     </Badge>
                   ) : (
-                    <Badge variant="outline" className="text-muted-foreground">
+                    <Badge className="bg-amber-500/15 text-amber-600 border-amber-500/20 hover:bg-amber-500/20">
                       Pending Verification
                     </Badge>
                   )}
@@ -728,6 +731,27 @@ export default function ProfilePage() {
                     </div>
                   )}
                 </div>
+              </CardContent>
+            </Card>
+          ) : profile.roles?.includes('mentor') ? (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Shield className="w-5 h-5 text-primary" />
+                  Mentor Profile
+                </CardTitle>
+                <CardDescription>Your mentorship application status</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <Badge className="bg-red-500/15 text-red-600 border-red-500/20 hover:bg-red-500/20">
+                    Application Not Approved
+                  </Badge>
+                </div>
+                <p className="text-sm text-muted-foreground">Your mentor application was not approved. You may resubmit with updated documents.</p>
+                <Button variant="outline" asChild>
+                  <a href="/mentor-verification">Re-upload Documents</a>
+                </Button>
               </CardContent>
             </Card>
           ) : (
