@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { isProfileSuspended, SUSPENDED_LOGIN_MESSAGE } from '@/lib/supabase/admin'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(request: NextRequest) {
@@ -29,9 +30,22 @@ export async function GET(request: NextRequest) {
       if (user) {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('onboarding_completed')
+          .select('onboarding_completed, account_status, suspended_until')
           .eq('id', user.id)
           .single()
+
+        const p = profile as {
+          onboarding_completed?: boolean
+          account_status?: string
+          suspended_until?: string | null
+        } | null
+
+        if (p && isProfileSuspended(p.account_status, p.suspended_until)) {
+          await supabase.auth.signOut()
+          const login = new URL('/auth/login', origin)
+          login.searchParams.set('error', encodeURIComponent(SUSPENDED_LOGIN_MESSAGE))
+          return NextResponse.redirect(login)
+        }
 
         // If profile doesn't exist or onboarding not completed, go to onboarding
         if (!profile || !profile.onboarding_completed) {

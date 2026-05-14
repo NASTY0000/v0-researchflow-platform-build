@@ -54,6 +54,10 @@ export type NotificationType =
   | 'match_found' 
   | 'idea_comment' 
   | 'system'
+  | 'announcement'
+  | 'mentor_verification'
+  | 'mentor_rejected'
+  | 'moderation_warning'
 
 export type PortfolioItemType = 'publication' | 'project' | 'certificate' | 'award' | 'presentation' | 'other'
 
@@ -63,6 +67,18 @@ export type MatchStatus = 'suggested' | 'viewed' | 'contacted' | 'dismissed'
 
 export type ShowcaseStatus = 'draft' | 'submitted' | 'published' | 'featured' | 'archived'
 
+export type AccountStatus = 'active' | 'suspended'
+
+export type UniversityType = 'federal' | 'state' | 'private'
+
+export type MentorVerificationStatus = 'none' | 'pending' | 'approved' | 'rejected' | 'revoked'
+
+export type ContentReportType = 'idea' | 'task' | 'message'
+
+export type ContentReportQueueStatus = 'open' | 'dismissed' | 'actioned'
+
+export type BroadcastAudience = 'all' | 'university' | 'role'
+
 // Database row types
 export interface University {
   id: string
@@ -70,6 +86,8 @@ export interface University {
   country: string
   email_domain: string | null
   is_verified: boolean
+  university_type?: UniversityType | null
+  is_active?: boolean
   created_at: string
 }
 
@@ -94,6 +112,11 @@ export interface Profile {
   portfolio_views: number
   email_notifications: boolean
   public_profile: boolean
+  is_admin?: boolean
+  account_status?: AccountStatus
+  suspension_reason?: string | null
+  suspended_until?: string | null
+  akili_score?: number
   created_at: string
   updated_at: string
   // Joined fields
@@ -113,6 +136,12 @@ export interface MentorProfile {
   total_sessions: number
   rating: number
   review_count: number
+  verification_status?: MentorVerificationStatus
+  institutional_email?: string | null
+  staff_id_document_url?: string | null
+  supervisor_letter_url?: string | null
+  verification_submitted_at?: string | null
+  verification_rejection_reason?: string | null
   created_at: string
   updated_at: string
   // Joined fields
@@ -211,6 +240,7 @@ export interface Task {
   status: TaskStatus
   priority: TaskPriority
   assigned_to: string | null
+  assignee_id?: string | null
   due_date: string | null
   phase: string | null
   order_index: number
@@ -379,6 +409,38 @@ export interface ProjectFile {
   created_at: string
   // Joined fields
   uploader?: Profile
+}
+
+export interface PlatformEvent {
+  id: string
+  event_type: string
+  actor_id: string | null
+  subject_type: string | null
+  subject_id: string | null
+  metadata: Record<string, unknown>
+  created_at: string
+}
+
+export interface ContentReport {
+  id: string
+  reporter_id: string
+  content_type: ContentReportType
+  content_id: string
+  reason: string
+  status: ContentReportQueueStatus
+  created_at: string
+  reporter?: Profile
+}
+
+export interface Broadcast {
+  id: string
+  title: string
+  message: string
+  audience: BroadcastAudience
+  audience_filter: string | null
+  sent_by: string
+  recipient_count: number
+  created_at: string
 }
 
 // Onboarding form data

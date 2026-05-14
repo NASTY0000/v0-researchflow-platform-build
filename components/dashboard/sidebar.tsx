@@ -77,7 +77,7 @@ const resourceNavItems = [
   },
   {
     title: 'Showcase',
-    href: '/showcase',
+    href: '/research-showcase',
     icon: Award,
   },
 ]
@@ -166,7 +166,7 @@ export function DashboardSidebar({ profile }: DashboardSidebarProps) {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {profile.roles?.includes('admin') && (
+        {((profile.is_admin === true) || profile.roles?.includes('admin')) && (
           <SidebarGroup>
             <SidebarGroupLabel>Admin</SidebarGroupLabel>
             <SidebarGroupContent>

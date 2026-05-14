@@ -17,7 +17,9 @@ export default async function OnboardingPage() {
   ])
 
   const profile = profileResult.data
-  const universities = universitiesResult.data || []
+  const universities = (universitiesResult.data || []).filter(
+    (u: { is_active?: boolean }) => u.is_active !== false,
+  )
 
   // If onboarding is already completed, redirect to dashboard
   if (profile?.onboarding_completed) {

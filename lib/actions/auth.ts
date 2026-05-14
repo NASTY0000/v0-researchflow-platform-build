@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { isProfileSuspended, SUSPENDED_LOGIN_MESSAGE } from '@/lib/supabase/admin'
 
 export async function signUp(formData: FormData) {
   const supabase = await createClient()
@@ -94,11 +95,22 @@ export async function signIn(formData: FormData) {
   if (user) {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('onboarding_completed')
+      .select('onboarding_completed, account_status, suspended_until')
       .eq('id', user.id)
       .single()
     
-    if (profile && !profile.onboarding_completed) {
+    const p = profile as {
+      onboarding_completed?: boolean
+      account_status?: string
+      suspended_until?: string | null
+    } | null
+
+    if (p && isProfileSuspended(p.account_status, p.suspended_until)) {
+      await supabase.auth.signOut()
+      return { error: SUSPENDED_LOGIN_MESSAGE }
+    }
+
+    if (p && !p.onboarding_completed) {
       return { success: true, redirectTo: '/onboarding' }
     }
   }

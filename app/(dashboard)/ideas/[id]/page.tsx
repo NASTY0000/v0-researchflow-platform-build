@@ -35,7 +35,7 @@ import {
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import type { ResearchIdea, Profile } from "@/lib/types/database"
-import { formatDistanceToNow, format } from "date-fns"
+import { submitContentReport } from '@/lib/actions/admin'
 
 interface IdeaWithAuthor extends ResearchIdea {
   author: Profile & { university?: { name: string } }
@@ -50,7 +50,9 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
   const [hasUpvoted, setHasUpvoted] = useState(false)
   const [isConnecting, setIsConnecting] = useState(false)
   const [connectionMessage, setConnectionMessage] = useState("")
-  const [showConnectDialog, setShowConnectDialog] = useState(false)
+  const [reportOpen, setReportOpen] = useState(false)
+  const [reportReason, setReportReason] = useState('')
+  const [reportSubmitting, setReportSubmitting] = useState(false)
 
   useEffect(() => {
     async function loadIdea() {
@@ -296,9 +298,52 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
                   Share
                 </Button>
 
-                <Button variant="ghost" size="icon">
-                  <Flag className="h-4 w-4" />
-                </Button>
+                <Dialog open={reportOpen} onOpenChange={setReportOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="ghost" size="icon" title="Report">
+                      <Flag className="h-4 w-4" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Report this idea</DialogTitle>
+                      <DialogDescription>
+                        Moderators will review your report. Please provide a short reason.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <Textarea
+                      value={reportReason}
+                      onChange={(e) => setReportReason(e.target.value)}
+                      placeholder="Reason"
+                      rows={4}
+                    />
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setReportOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button
+                        disabled={!reportReason.trim() || reportSubmitting}
+                        onClick={async () => {
+                          setReportSubmitting(true)
+                          const res = await submitContentReport({
+                            contentType: 'idea',
+                            contentId: id,
+                            reason: reportReason.trim(),
+                          })
+                          setReportSubmitting(false)
+                          if (res.error) alert(res.error)
+                          else {
+                            setReportOpen(false)
+                            setReportReason('')
+                            alert('Report submitted. Thank you.')
+                          }
+                        }}
+                      >
+                        Submit report
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
             </CardContent>
           </Card>

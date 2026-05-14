@@ -35,13 +35,14 @@ export async function POST() {
           department: 'Computer Science',
           academic_level: 'masters',
           bio: 'A demo account to explore ResearchFlow features.',
-          roles: ['student_researcher'],
+          roles: ['student_researcher', 'admin'],
           research_interests: ['Machine Learning', 'Data Science', 'AI Ethics'],
           skills: ['Python', 'TensorFlow', 'Data Analysis', 'Technical Writing'],
           looking_for: ['Data Scientists', 'Research Advisors', 'Co-authors'],
           weekly_hours_available: 20,
           onboarding_completed: true,
-          onboarding_step: 5
+          onboarding_step: 5,
+          is_admin: true,
         })
         .eq('id', demoUser.id)
 
@@ -77,13 +78,14 @@ export async function POST() {
           department: 'Computer Science',
           academic_level: 'masters',
           bio: 'A demo account to explore ResearchFlow features.',
-          roles: ['student_researcher'],
+          roles: ['student_researcher', 'admin'],
           research_interests: ['Machine Learning', 'Data Science', 'AI Ethics'],
           skills: ['Python', 'TensorFlow', 'Data Analysis', 'Technical Writing'],
           looking_for: ['Data Scientists', 'Research Advisors', 'Co-authors'],
           weekly_hours_available: 20,
           onboarding_completed: true,
-          onboarding_step: 5
+          onboarding_step: 5,
+          is_admin: true,
         })
         .eq('id', newUser.user.id)
     }
