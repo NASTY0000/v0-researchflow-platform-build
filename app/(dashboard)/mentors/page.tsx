@@ -37,6 +37,9 @@ import {
   Paperclip,
   CheckCircle2,
   FolderKanban,
+  Briefcase,
+  Award,
+  ArrowRight,
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import type { MentorProfile, Profile, Project } from "@/lib/types/database"
@@ -60,12 +63,45 @@ const EXPERTISE_AREAS = [
   "Field Research",
 ]
 
+const MENTOR_TIERS = [
+  {
+    id: "faculty",
+    label: "Tier 1: Registered Faculty",
+    icon: GraduationCap,
+    description: "Academic staff at a recognised university or research institution.",
+    color: "#F59E0B",
+    bg: "rgba(245,158,11,0.08)",
+    border: "rgba(245,158,11,0.3)",
+  },
+  {
+    id: "postgraduate",
+    label: "Tier 2: Postgraduate Student",
+    icon: BookOpen,
+    description: "Masters or PhD students with research experience who can guide undergraduates.",
+    color: "#A855F7",
+    bg: "rgba(168,85,247,0.08)",
+    border: "rgba(168,85,247,0.3)",
+  },
+  {
+    id: "industry",
+    label: "Tier 3: Industry Professional",
+    icon: Briefcase,
+    description: "Working professionals with domain expertise relevant to African research.",
+    color: "#22C55E",
+    bg: "rgba(34,197,94,0.08)",
+    border: "rgba(34,197,94,0.3)",
+  },
+]
+
 export default function MentorsPage() {
   const [mentors, setMentors] = useState<MentorWithProfile[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedArea, setSelectedArea] = useState("All Areas")
   const [selectedMentor, setSelectedMentor] = useState<MentorWithProfile | null>(null)
+  const [currentUserRoles, setCurrentUserRoles] = useState<string[]>([])
+  const [showBecomeMentorModal, setShowBecomeMentorModal] = useState(false)
+  const [applyingTier, setApplyingTier] = useState<string | null>(null)
 
   // Request modal state
   const [userProjects, setUserProjects] = useState<Project[]>([])
@@ -83,6 +119,16 @@ export default function MentorsPage() {
   async function loadMentors() {
     setIsLoading(true)
     const supabase = createClient()
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("roles")
+        .eq("id", user.id)
+        .single()
+      if (profile?.roles) setCurrentUserRoles(profile.roles)
+    }
 
     let query = supabase
       .from("mentor_profiles")
@@ -223,8 +269,104 @@ export default function MentorsPage() {
     setRequestSuccess(false)
   }
 
+  function handleBecomeMentorClick() {
+    if (currentUserRoles.includes("mentor")) {
+      window.location.href = "/mentors/requests"
+    } else {
+      setShowBecomeMentorModal(true)
+    }
+  }
+
+  async function applyAsMentor(tier: string) {
+    setApplyingTier(tier)
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { setApplyingTier(null); return }
+
+    const updatedRoles = Array.from(new Set([...currentUserRoles, "mentor"]))
+    const { error } = await supabase
+      .from("profiles")
+      .update({ roles: updatedRoles })
+      .eq("id", user.id)
+
+    if (error) {
+      toast.error("Failed to apply. Please try again.")
+      setApplyingTier(null)
+      return
+    }
+
+    setCurrentUserRoles(updatedRoles)
+    toast.success("Mentor role added! Complete your mentor profile in Settings.")
+    setApplyingTier(null)
+    setShowBecomeMentorModal(false)
+    window.location.href = "/settings"
+  }
+
   return (
     <div className="space-y-6">
+      {/* Become a Mentor Modal */}
+      {showBecomeMentorModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden" style={{ background: '#0F0A1E', border: '1px solid rgba(139,92,246,0.3)' }}>
+            <div className="flex items-center justify-between p-6" style={{ borderBottom: '1px solid rgba(139,92,246,0.15)' }}>
+              <div>
+                <h2 className="text-xl font-bold font-heading">Become a Mentor</h2>
+                <p className="text-sm mt-0.5" style={{ color: '#7C6A9C' }}>Choose the tier that matches your background</p>
+              </div>
+              <button
+                onClick={() => setShowBecomeMentorModal(false)}
+                className="w-8 h-8 rounded-lg flex items-center justify-center"
+                style={{ color: '#7C6A9C', background: 'rgba(255,255,255,0.05)' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-6 space-y-3">
+              {MENTOR_TIERS.map((tier) => {
+                const Icon = tier.icon
+                return (
+                  <div
+                    key={tier.id}
+                    className="flex items-center gap-4 p-4 rounded-xl"
+                    style={{ background: tier.bg, border: `1px solid ${tier.border}` }}
+                  >
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                      style={{ background: `${tier.bg}`, border: `1px solid ${tier.border}` }}
+                    >
+                      <Icon className="w-5 h-5" style={{ color: tier.color }} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm" style={{ color: tier.color }}>{tier.label}</p>
+                      <p className="text-xs mt-0.5" style={{ color: '#9D8BB8' }}>{tier.description}</p>
+                    </div>
+                    <Button
+                      size="sm"
+                      onClick={() => applyAsMentor(tier.id)}
+                      disabled={!!applyingTier}
+                      style={{ background: `linear-gradient(135deg, ${tier.color}55, ${tier.color}33)`, border: `1px solid ${tier.border}`, color: tier.color, flexShrink: 0 }}
+                    >
+                      {applyingTier === tier.id ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <>Apply <ArrowRight className="w-3 h-3 ml-1" /></>
+                      )}
+                    </Button>
+                  </div>
+                )
+              })}
+            </div>
+
+            <div className="px-6 pb-6">
+              <p className="text-xs text-center" style={{ color: '#7C6A9C' }}>
+                After applying, complete your mentor verification profile in Settings. Your application will be reviewed by the ResearchFlow team.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -236,8 +378,12 @@ export default function MentorsPage() {
             Connect with experienced researchers for guidance and support
           </p>
         </div>
-        <Button variant="outline" asChild>
-          <Link href="/mentors/become">Become a Mentor</Link>
+        <Button
+          variant="outline"
+          onClick={handleBecomeMentorClick}
+          style={{ border: '1px solid rgba(168,85,247,0.4)', color: '#C084FC' }}
+        >
+          {currentUserRoles.includes("mentor") ? "Mentor Dashboard" : "Become a Mentor"}
         </Button>
       </div>
 
@@ -386,8 +532,12 @@ export default function MentorsPage() {
                 ? "Try adjusting your filters"
                 : "No mentors are currently available"}
             </p>
-            <Button variant="outline" asChild>
-              <Link href="/mentors/become">Become a Mentor</Link>
+            <Button
+              variant="outline"
+              onClick={handleBecomeMentorClick}
+              style={{ border: '1px solid rgba(168,85,247,0.4)', color: '#C084FC' }}
+            >
+              {currentUserRoles.includes("mentor") ? "Mentor Dashboard" : "Become a Mentor"}
             </Button>
           </CardContent>
         </Card>
