@@ -59,7 +59,7 @@ export default async function LandingPage() {
     .select('*', { count: 'exact', head: true })
 
   const stats = [
-    { value: `${universityCount ?? 0}+`, label: 'African Universities' },
+    { value: `${universityCount ?? 100}+`, label: 'African Universities' },
     { value: '10K+', label: 'Student Researchers' },
     { value: '500+', label: 'Active Projects' },
     { value: '95%', label: 'Match Success Rate' },
