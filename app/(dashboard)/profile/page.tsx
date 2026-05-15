@@ -171,22 +171,44 @@ export default function ProfilePage() {
     setIsUploadingAvatar(true)
     setAvatarError(null)
 
-    const ext = file.name.split('.').pop()
-    const path = `${profile.id}/${Date.now()}.${ext}`
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { setIsUploadingAvatar(false); return }
 
-    const { error: uploadError } = await supabase.storage.from('avatars').upload(path, file, { upsert: true })
+    const fileExt = file.name.split('.').pop()
+    const filePath = `${user.id}/${Date.now()}.${fileExt}`
+
+    const { error: uploadError } = await supabase
+      .storage
+      .from('avatars')
+      .upload(filePath, file, {
+        upsert: true,
+        contentType: file.type,
+      })
+
     if (uploadError) {
-      setAvatarError('Upload failed. Please try again.')
+      console.error('Upload error:', uploadError)
+      setAvatarError(uploadError.message)
       setIsUploadingAvatar(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
       return
     }
 
-    const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path)
-    await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', profile.id)
+    const { data: urlData } = supabase
+      .storage
+      .from('avatars')
+      .getPublicUrl(filePath)
+
+    const publicUrl = urlData.publicUrl
+
+    await supabase
+      .from('profiles')
+      .update({ avatar_url: publicUrl })
+      .eq('id', user.id)
+
     setProfile({ ...profile, avatar_url: publicUrl })
     setIsUploadingAvatar(false)
 
-    // Reset input so same file can be re-uploaded
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 

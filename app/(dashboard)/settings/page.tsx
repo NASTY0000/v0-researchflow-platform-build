@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -76,6 +76,11 @@ export default function SettingsPage() {
   const [universities, setUniversities] = useState<University[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
+
+  // ── Avatar upload ──
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
+  const [avatarError, setAvatarError] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // ── Profile tab ──
   const [isSaving, setIsSaving] = useState(false)
@@ -192,6 +197,60 @@ export default function SettingsPage() {
     setActiveMentorships(count || 0)
 
     setIsLoading(false)
+  }
+
+  // ── Avatar upload ─────────────────────────────────────────────────────────────
+  async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (file.size > 5 * 1024 * 1024) {
+      setAvatarError("Image must be under 5MB")
+      return
+    }
+
+    setIsUploadingAvatar(true)
+    setAvatarError(null)
+
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { setIsUploadingAvatar(false); return }
+
+    const fileExt = file.name.split(".").pop()
+    const filePath = `${user.id}/${Date.now()}.${fileExt}`
+
+    const { error: uploadError } = await supabase
+      .storage
+      .from("avatars")
+      .upload(filePath, file, {
+        upsert: true,
+        contentType: file.type,
+      })
+
+    if (uploadError) {
+      console.error("Upload error:", uploadError)
+      setAvatarError(uploadError.message)
+      setIsUploadingAvatar(false)
+      if (fileInputRef.current) fileInputRef.current.value = ""
+      return
+    }
+
+    const { data: urlData } = supabase
+      .storage
+      .from("avatars")
+      .getPublicUrl(filePath)
+
+    const publicUrl = urlData.publicUrl
+
+    await supabase
+      .from("profiles")
+      .update({ avatar_url: publicUrl })
+      .eq("id", user.id)
+
+    setProfile(prev => prev ? { ...prev, avatar_url: publicUrl } : prev)
+    setIsUploadingAvatar(false)
+
+    if (fileInputRef.current) fileInputRef.current.value = ""
   }
 
   // ── Save profile ─────────────────────────────────────────────────────────────
@@ -406,13 +465,31 @@ export default function SettingsPage() {
               <CardDescription>Your profile photo visible to other users</CardDescription>
             </CardHeader>
             <CardContent className="flex items-center gap-6">
-              <Avatar className="h-24 w-24">
-                <AvatarImage src={profile?.avatar_url || undefined} />
-                <AvatarFallback className="bg-primary/10 text-primary text-2xl">{fullName?.charAt(0) || "?"}</AvatarFallback>
-              </Avatar>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={handleAvatarUpload}
+              />
+              <div className="relative">
+                <Avatar className="h-24 w-24">
+                  <AvatarImage src={profile?.avatar_url || undefined} />
+                  <AvatarFallback className="bg-primary/10 text-primary text-2xl">{fullName?.charAt(0) || "?"}</AvatarFallback>
+                </Avatar>
+                {isUploadingAvatar && (
+                  <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50">
+                    <Loader2 className="w-6 h-6 animate-spin text-white" />
+                  </div>
+                )}
+              </div>
               <div className="space-y-2">
-                <Button variant="outline"><Camera className="mr-2 h-4 w-4" />Change Photo</Button>
+                <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isUploadingAvatar}>
+                  <Camera className="mr-2 h-4 w-4" />
+                  {isUploadingAvatar ? "Uploading..." : "Change Photo"}
+                </Button>
                 <p className="text-xs text-muted-foreground">JPG, PNG or WebP. Max 5MB.</p>
+                {avatarError && <p className="text-xs text-destructive">{avatarError}</p>}
               </div>
             </CardContent>
           </Card>
