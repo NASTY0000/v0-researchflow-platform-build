@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/mentor-session-reminders",
+      "schedule": "0 * * * *"
+    }
+  ]
+}

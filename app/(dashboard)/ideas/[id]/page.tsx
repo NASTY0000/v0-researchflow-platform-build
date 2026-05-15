@@ -34,6 +34,7 @@ import {
   Building2,
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
+import { notifyConnectionRequestAction } from "@/lib/actions/notifications"
 import type { ResearchIdea, Profile } from "@/lib/types/database"
 import { submitContentReport } from '@/lib/actions/admin'
 
@@ -139,13 +140,16 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
       })
 
       if (!error) {
-        // Create notification for author
-        await supabase.from("notifications").insert({
-          user_id: idea.author_id,
-          type: "connection_request",
+        const { data: me } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("id", currentUserId)
+          .single()
+        await notifyConnectionRequestAction({
+          recipientId: idea.author_id,
+          senderName: (me?.full_name || "Someone").trim() || "Someone",
           title: "New Collaboration Request",
-          message: `Someone wants to collaborate on your idea "${idea.title}"`,
-          link: `/ideas/${idea.id}`,
+          message: `${(me?.full_name || "Someone").trim() || "Someone"} wants to collaborate on your idea "${idea.title}"`,
         })
 
         setShowConnectDialog(false)

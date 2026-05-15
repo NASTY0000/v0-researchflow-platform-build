@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import type { UserRole } from '@/lib/types/database'
 import { assertAdmin, createServiceRoleClient } from '@/lib/supabase/admin'
+import { sendNotification } from '@/lib/notifications/service'
 
 const ADMIN_PATHS = ['/admin', '/admin/users', '/admin/mentors', '/admin/showcase', '/admin/moderation', '/admin/universities', '/admin/analytics', '/admin/broadcast']
 
@@ -343,6 +344,16 @@ export async function setShowcaseStatus(entryId: string, status: 'published' | '
   const { error, admin } = await requireAdmin()
   if (error || !admin) return { error: error || 'Unauthorized' }
 
+  const { data: entry } = await admin
+    .from('showcase_entries')
+    .select('id, author_id, title, status')
+    .eq('id', entryId)
+    .single()
+
+  if (!entry) return { error: 'Entry not found' }
+
+  const prevStatus = entry.status as string
+
   const patch: Record<string, unknown> = { status, updated_at: new Date().toISOString() }
   if (status === 'published' || status === 'featured') {
     patch.published_at = new Date().toISOString()
@@ -353,7 +364,26 @@ export async function setShowcaseStatus(entryId: string, status: 'published' | '
 
   const { error: upErr } = await admin.from('showcase_entries').update(patch).eq('id', entryId)
   if (upErr) return { error: upErr.message }
+
+  const nowPublished = status === 'published' || status === 'featured'
+  const wasPublished = prevStatus === 'published' || prevStatus === 'featured'
+  if (nowPublished && !wasPublished) {
+    const title = entry.title as string
+    const plain = `Congratulations! Your research '${title}' has been published to the ResearchFlow Showcase!`
+    await sendNotification({
+      recipientUserId: entry.author_id as string,
+      type: 'showcase_published',
+      title: 'Showcase entry published',
+      message: plain,
+      link: `/showcase/${entryId}`,
+      metadata: { showcase_entry_id: entryId, showcase_status: status },
+      whatsappPlainBody: plain,
+      smsShortBody: `Showcase published: ${title}`,
+    })
+  }
+
   revalidateAdmin()
+  revalidatePath('/notifications')
   return { success: true }
 }
 

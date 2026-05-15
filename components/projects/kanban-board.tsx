@@ -39,6 +39,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { createClient } from "@/lib/supabase/client"
+import { notifyTaskAssignedAction } from "@/lib/actions/notifications"
 import type { Task, Profile } from "@/lib/types/database"
 import { format } from "date-fns"
 
@@ -126,6 +127,15 @@ export function KanbanBoard({ projectId, teamId, tasks: initialTasks }: KanbanBo
       .single()
 
     if (data && !error) {
+      const { data: auth } = await supabase.auth.getUser()
+      const uid = auth.user?.id
+      if (newAssignee && uid && newAssignee !== uid) {
+        await notifyTaskAssignedAction({
+          assigneeId: newAssignee,
+          taskTitle: newTitle.trim(),
+          projectId,
+        })
+      }
       setTasks([...tasks, data])
       setShowNewTask(false)
       setNewTitle("")

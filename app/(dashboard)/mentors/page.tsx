@@ -36,6 +36,7 @@ import {
   Filter,
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
+import { notifyMentorshipRequestAction } from "@/lib/actions/notifications"
 import type { MentorProfile, Profile } from "@/lib/types/database"
 
 interface MentorWithProfile extends MentorProfile {
@@ -127,13 +128,18 @@ export default function MentorsPage() {
       notes: requestMessage || "I would like to request mentorship.",
     })
 
-    // Create notification for mentor
-    await supabase.from("notifications").insert({
-      user_id: selectedMentor.user_id,
-      type: "mentorship_request",
-      title: "New Mentorship Request",
-      message: "Someone has requested your mentorship",
-      link: "/mentors/requests",
+    const { data: stu } = await supabase.from("profiles").select("full_name").eq("id", user.id).single()
+    const msg = (requestMessage || "").trim()
+    const projectTitle = msg
+      ? msg.length > 100
+        ? `${msg.slice(0, 97)}…`
+        : msg
+      : "Research mentorship"
+
+    await notifyMentorshipRequestAction({
+      mentorId: selectedMentor.user_id,
+      studentName: (stu?.full_name || "A student").trim() || "A student",
+      projectTitle,
     })
 
     setSelectedMentor(null)

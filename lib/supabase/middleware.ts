@@ -13,8 +13,11 @@ const PROTECTED_PREFIXES = [
   '/settings',
   '/profile',
   '/matches',
+  '/notifications',
+  '/showcase',
   '/research-showcase',
   '/mentor-verification',
+  '/network',
 ]
 
 const AUTH_ROUTES = ['/auth/login', '/auth/signup']

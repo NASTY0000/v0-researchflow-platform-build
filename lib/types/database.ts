@@ -36,7 +36,13 @@ export type CompensationType = 'paid' | 'collaboration' | 'credit'
 
 export type SessionType = 'video' | 'chat' | 'in_person'
 
-export type SessionStatus = 'scheduled' | 'completed' | 'cancelled' | 'no_show'
+export type SessionStatus =
+  | 'requested'
+  | 'accepted'
+  | 'scheduled'
+  | 'completed'
+  | 'cancelled'
+  | 'no_show'
 
 export type MessageType = 'text' | 'file' | 'system'
 
@@ -58,6 +64,9 @@ export type NotificationType =
   | 'mentor_verification'
   | 'mentor_rejected'
   | 'moderation_warning'
+  | 'mentorship_request'
+  | 'mentorship_accepted'
+  | 'showcase_published'
 
 export type PortfolioItemType = 'publication' | 'project' | 'certificate' | 'award' | 'presentation' | 'other'
 
@@ -117,10 +126,47 @@ export interface Profile {
   suspension_reason?: string | null
   suspended_until?: string | null
   akili_score?: number
+  phone_number: string | null
+  phone_verified: boolean
+  whatsapp_enabled: boolean
+  sms_enabled: boolean
   created_at: string
   updated_at: string
   // Joined fields
   university?: University
+}
+
+export interface NotificationPreference {
+  id: string
+  user_id: string
+  notification_type: string
+  in_app: boolean
+  whatsapp: boolean
+  sms: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface NotificationLog {
+  id: string
+  user_id: string
+  channel: 'whatsapp' | 'sms'
+  notification_type: string
+  provider_id: string | null
+  status: 'sent' | 'failed' | 'skipped'
+  error: string | null
+  metadata: Record<string, unknown>
+  created_at: string
+}
+
+export interface PhoneVerificationChallenge {
+  id: string
+  user_id: string
+  phone_e164: string
+  code_hash: string
+  expires_at: string
+  attempts: number
+  created_at: string
 }
 
 export interface MentorProfile {
@@ -240,6 +286,7 @@ export interface Task {
   status: TaskStatus
   priority: TaskPriority
   assigned_to: string | null
+  /** DB column used by project kanban (may mirror assigned_to) */
   assignee_id?: string | null
   due_date: string | null
   phase: string | null
@@ -276,7 +323,7 @@ export interface MentorshipSession {
   mentor_id: string
   mentee_id: string
   project_id: string | null
-  scheduled_at: string
+  scheduled_at: string | null
   duration_minutes: number
   session_type: SessionType
   topic: string | null

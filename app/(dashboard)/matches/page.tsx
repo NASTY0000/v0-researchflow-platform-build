@@ -32,6 +32,10 @@ import {
   BookOpen,
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
+import {
+  notifyConnectionRequestAction,
+  notifyMatchFoundAction,
+} from "@/lib/actions/notifications"
 import type { Match, Profile } from "@/lib/types/database"
 
 interface MatchWithProfile extends Match {
@@ -147,6 +151,14 @@ export default function MatchesPage() {
       if (score >= 20) {
         const matchType = candidate.roles?.includes("mentor") ? "mentor" : "collaborator"
 
+        const { data: existingMatch } = await supabase
+          .from("matches")
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("matched_user_id", candidate.id)
+          .eq("match_type", matchType)
+          .maybeSingle()
+
         // Insert or update match
         await supabase.from("matches").upsert(
           {
@@ -163,6 +175,24 @@ export default function MatchesPage() {
             onConflict: "user_id,matched_user_id,match_type",
           }
         )
+
+        if (!existingMatch) {
+          let matcherUniversity = "their institution"
+          if (profile.university_id) {
+            const { data: uniRow } = await supabase
+              .from("universities")
+              .select("name")
+              .eq("id", profile.university_id)
+              .maybeSingle()
+            if (uniRow?.name) matcherUniversity = uniRow.name
+          }
+          const matcherName = (profile.full_name || "A researcher").trim() || "A researcher"
+          await notifyMatchFoundAction({
+            matchedUserId: candidate.id,
+            matcherName,
+            matcherUniversity,
+          })
+        }
       }
     }
 
@@ -196,13 +226,12 @@ export default function MatchesPage() {
         .update({ status: "contacted" })
         .eq("id", selectedMatch.id)
 
-      // Create notification
-      await supabase.from("notifications").insert({
-        user_id: selectedMatch.matched_user_id,
-        type: "connection_request",
+      const { data: me } = await supabase.from("profiles").select("full_name").eq("id", user.id).single()
+      await notifyConnectionRequestAction({
+        recipientId: selectedMatch.matched_user_id,
+        senderName: (me?.full_name || "Someone").trim() || "Someone",
         title: "New Connection Request",
-        message: `Someone wants to connect with you`,
-        link: "/network",
+        message: `${(me?.full_name || "Someone").trim() || "Someone"} wants to connect with you`,
       })
 
       setSelectedMatch(null)
