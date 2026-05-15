@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
@@ -9,10 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import {
-  Search, BookOpen, Calendar, Eye, ArrowRight,
-  Sparkles, Loader2, Filter, X,
-} from 'lucide-react'
+import { Search, BookOpen, Calendar, Eye, ArrowRight, Sparkles, Loader2, Filter } from 'lucide-react'
 import type { ShowcaseEntry, Profile } from '@/lib/types/database'
 
 type EntryWithAuthor = ShowcaseEntry & { author: Profile | null }
@@ -29,86 +26,42 @@ export default function ShowcasePage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [search, setSearch] = useState('')
   const [areaFilter, setAreaFilter] = useState('all')
-  const [departmentFilter, setDepartmentFilter] = useState('')
-  const [universityFilter, setUniversityFilter] = useState('')
-  const [page, setPage] = useState(0)
-  const [hasMore, setHasMore] = useState(true)
 
-  const PAGE_SIZE = 12
-  const supabase = createClient()
-
-  const load = useCallback(async (reset = false) => {
-    const currentPage = reset ? 0 : page
-    if (reset) setPage(0)
-    setIsLoading(true)
-
-    let query = supabase
-      .from('showcase_entries')
-      .select('*, author:profiles!author_id(id,full_name,avatar_url,department,university_id)', { count: 'exact' })
-      .in('status', ['published', 'featured'])
-      .order('published_at', { ascending: false })
-      .range(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE - 1)
-
-    if (search.trim()) {
-      query = query.or(`title.ilike.%${search.trim()}%,abstract.ilike.%${search.trim()}%,research_area.ilike.%${search.trim()}%`)
-    }
-    if (areaFilter && areaFilter !== 'all') {
-      query = query.eq('research_area', areaFilter)
-    }
-
-    const { data, count } = await query
-
-    const results = (data || []) as EntryWithAuthor[]
-
-    // Client-side department/university filter (joined field)
-    const filtered = results.filter(e => {
-      if (departmentFilter.trim()) {
-        if (!e.author?.department?.toLowerCase().includes(departmentFilter.trim().toLowerCase())) return false
-      }
-      if (universityFilter.trim()) {
-        if (!e.author?.university_id?.toLowerCase().includes(universityFilter.trim().toLowerCase())) return false
-      }
-      return true
-    })
-
-    if (reset) {
-      setEntries(filtered)
-    } else {
-      setEntries(prev => [...prev, ...filtered])
-    }
-    setHasMore((count || 0) > (currentPage + 1) * PAGE_SIZE)
-    setIsLoading(false)
-  }, [page, search, areaFilter, departmentFilter, universityFilter])
-
-  // Check auth status
   useEffect(() => {
+    const supabase = createClient()
     supabase.auth.getUser().then(({ data: { user } }) => setIsLoggedIn(!!user))
   }, [])
 
-  // Reload on filter change
   useEffect(() => {
-    load(true)
-  }, [search, areaFilter, departmentFilter, universityFilter])
+    async function load() {
+      setIsLoading(true)
+      const supabase = createClient()
 
-  function loadMore() {
-    setPage(p => p + 1)
-  }
+      let query = supabase
+        .from('showcase_entries')
+        .select('*, author:profiles!author_id(id,full_name,avatar_url,department,university_id)')
+        .in('status', ['published', 'featured'])
+        .order('published_at', { ascending: false })
+        .limit(50)
 
-  useEffect(() => {
-    if (page > 0) load(false)
-  }, [page])
+      if (search.trim()) {
+        query = query.or(`title.ilike.%${search.trim()}%,abstract.ilike.%${search.trim()}%`)
+      }
+      if (areaFilter !== 'all') {
+        query = query.eq('research_area', areaFilter)
+      }
 
-  function clearFilters() {
-    setSearch('')
-    setAreaFilter('all')
-    setDepartmentFilter('')
-    setUniversityFilter('')
-  }
+      const { data } = await query
+      setEntries((data || []) as EntryWithAuthor[])
+      setIsLoading(false)
+    }
 
-  const hasActiveFilters = search || (areaFilter && areaFilter !== 'all') || departmentFilter || universityFilter
+    load()
+  }, [search, areaFilter])
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#05010F', color: '#F3F0FF' }}>
+
       {/* Nav */}
       <nav
         className="sticky top-0 z-40 px-4 sm:px-6 py-3 flex items-center justify-between"
@@ -140,8 +93,8 @@ export default function ShowcasePage() {
       </nav>
 
       {/* Header */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-12 pb-8 space-y-4">
-        <div className="flex items-center gap-2 mb-2">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-12 pb-6 space-y-3">
+        <div className="flex items-center gap-2">
           <BookOpen className="w-5 h-5" style={{ color: '#A855F7' }} />
           <span className="text-sm font-semibold uppercase tracking-widest" style={{ color: '#A855F7' }}>Research Showcase</span>
         </div>
@@ -154,27 +107,24 @@ export default function ShowcasePage() {
       </div>
 
       {/* Filters */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 pb-8 space-y-3">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 pb-8">
         <div className="flex flex-col sm:flex-row gap-3">
-          {/* Search */}
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#7C6A9C' }} />
             <Input
               className="pl-9"
-              placeholder="Search by title, abstract, or research area..."
+              placeholder="Search by title or abstract..."
               value={search}
               onChange={e => setSearch(e.target.value)}
               style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(139,92,246,0.2)', color: '#F3F0FF' }}
             />
           </div>
-
-          {/* Research Area */}
           <Select value={areaFilter} onValueChange={setAreaFilter}>
             <SelectTrigger
               className="w-full sm:w-52"
               style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(139,92,246,0.2)', color: '#F3F0FF' }}
             >
-              <Filter className="w-3.5 h-3.5 mr-2" style={{ color: '#7C6A9C' }} />
+              <Filter className="w-3.5 h-3.5 mr-2 shrink-0" style={{ color: '#7C6A9C' }} />
               <SelectValue placeholder="Research Area" />
             </SelectTrigger>
             <SelectContent style={{ background: '#0F0A1E', border: '1px solid rgba(139,92,246,0.3)' }}>
@@ -185,83 +135,35 @@ export default function ShowcasePage() {
             </SelectContent>
           </Select>
         </div>
-
-        <div className="flex flex-col sm:flex-row gap-3">
-          {/* Department */}
-          <Input
-            className="flex-1"
-            placeholder="Filter by department..."
-            value={departmentFilter}
-            onChange={e => setDepartmentFilter(e.target.value)}
-            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(139,92,246,0.2)', color: '#F3F0FF' }}
-          />
-          {/* University */}
-          <Input
-            className="flex-1"
-            placeholder="Filter by university..."
-            value={universityFilter}
-            onChange={e => setUniversityFilter(e.target.value)}
-            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(139,92,246,0.2)', color: '#F3F0FF' }}
-          />
-          {hasActiveFilters && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={clearFilters}
-              className="shrink-0"
-              style={{ color: '#7C6A9C' }}
-            >
-              <X className="w-4 h-4 mr-1" />Clear
-            </Button>
-          )}
-        </div>
       </div>
 
       {/* Grid */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 pb-16">
-        {isLoading && entries.length === 0 ? (
+        {isLoading ? (
           <div className="flex items-center justify-center py-24">
             <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#A855F7' }} />
           </div>
         ) : entries.length === 0 ? (
-          <div className="py-20 text-center space-y-3">
-            <BookOpen className="w-12 h-12 mx-auto mb-2 opacity-20" />
-            <p className="font-medium text-lg">No research entries found</p>
-            <p className="text-sm" style={{ color: '#7C6A9C' }}>
-              {hasActiveFilters ? 'Try adjusting your filters' : 'Check back soon — research is being published'}
-            </p>
-            {hasActiveFilters && (
-              <Button variant="outline" size="sm" onClick={clearFilters} style={{ border: '1px solid rgba(139,92,246,0.3)', color: '#A855F7' }}>
-                Clear Filters
+          <div className="py-20 text-center space-y-4 rounded-2xl" style={{ border: '1px dashed rgba(139,92,246,0.25)' }}>
+            <BookOpen className="w-12 h-12 mx-auto opacity-20" />
+            <p className="font-semibold text-lg">No published research yet.</p>
+            <p style={{ color: '#7C6A9C' }}>Be the first to submit your work.</p>
+            {isLoggedIn && (
+              <Button asChild style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}>
+                <Link href="/projects">Submit Research</Link>
               </Button>
             )}
           </div>
         ) : (
-          <>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {entries.map(entry => (
-                <EntryCard key={entry.id} entry={entry} />
-              ))}
-            </div>
-
-            {hasMore && (
-              <div className="flex justify-center mt-10">
-                <Button
-                  variant="outline"
-                  onClick={loadMore}
-                  disabled={isLoading}
-                  style={{ border: '1px solid rgba(139,92,246,0.3)', color: '#A855F7' }}
-                >
-                  {isLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                  Load More Research
-                </Button>
-              </div>
-            )}
-          </>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {entries.map(entry => (
+              <EntryCard key={entry.id} entry={entry} />
+            ))}
+          </div>
         )}
       </div>
 
-      {/* Join Banner (non-logged-in) */}
+      {/* Join Banner */}
       {!isLoggedIn && (
         <div className="max-w-6xl mx-auto px-4 sm:px-6 pb-16">
           <div
@@ -274,10 +176,7 @@ export default function ShowcasePage() {
               Connect with researchers across Africa, share your own work, find collaborators, and grow your academic network — all in one place.
             </p>
             <div className="flex items-center justify-center gap-3 flex-wrap">
-              <Button
-                asChild
-                style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}
-              >
+              <Button asChild style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}>
                 <Link href="/auth/signup">Create Free Account</Link>
               </Button>
               <Button variant="outline" asChild style={{ border: '1px solid rgba(139,92,246,0.3)', color: '#A855F7' }}>
@@ -311,19 +210,25 @@ export default function ShowcasePage() {
   )
 }
 
+function truncateAbstract(text: string, wordLimit = 100): string {
+  const words = text.trim().split(/\s+/)
+  if (words.length <= wordLimit) return text
+  return words.slice(0, wordLimit).join(' ') + '…'
+}
+
 function EntryCard({ entry }: { entry: EntryWithAuthor }) {
   const isFeatured = entry.status === 'featured'
 
   return (
     <div
-      className="flex flex-col rounded-2xl overflow-hidden transition-all duration-200 hover:translate-y-[-2px] group"
+      className="flex flex-col rounded-2xl overflow-hidden transition-all duration-200 hover:translate-y-[-2px]"
       style={{
         background: 'rgba(255,255,255,0.03)',
-        border: isFeatured ? '1px solid rgba(234,179,8,0.35)' : '1px solid rgba(139,92,246,0.18)',
-        boxShadow: isFeatured ? '0 0 20px rgba(234,179,8,0.08)' : undefined,
+        border: isFeatured
+          ? '1px solid rgba(234,179,8,0.35)'
+          : '1px solid rgba(139,92,246,0.18)',
       }}
     >
-      {/* Featured banner */}
       {isFeatured && (
         <div
           className="px-4 py-1.5 text-xs font-semibold flex items-center gap-1.5"
@@ -334,7 +239,7 @@ function EntryCard({ entry }: { entry: EntryWithAuthor }) {
       )}
 
       <div className="p-5 flex flex-col flex-1 space-y-4">
-        {/* Author + date */}
+        {/* Author */}
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
             <Avatar className="h-7 w-7 shrink-0">
@@ -361,7 +266,7 @@ function EntryCard({ entry }: { entry: EntryWithAuthor }) {
         </div>
 
         {/* Title */}
-        <h3 className="font-semibold text-sm leading-snug line-clamp-2 group-hover:text-[#C084FC] transition-colors" style={{ color: '#F3F0FF' }}>
+        <h3 className="font-semibold text-sm leading-snug line-clamp-2" style={{ color: '#F3F0FF' }}>
           {entry.title}
         </h3>
 
@@ -381,24 +286,18 @@ function EntryCard({ entry }: { entry: EntryWithAuthor }) {
         </div>
 
         {/* Abstract preview */}
-        <p className="text-xs leading-relaxed line-clamp-3 flex-1" style={{ color: '#7C6A9C' }}>
-          {entry.abstract}
+        <p className="text-xs leading-relaxed flex-1" style={{ color: '#7C6A9C' }}>
+          {truncateAbstract(entry.abstract)}
         </p>
 
-        {/* Footer */}
+        {/* Footer row */}
         <div className="flex items-center justify-between pt-1">
           <span className="flex items-center gap-1 text-xs" style={{ color: '#7C6A9C' }}>
             <Eye className="w-3.5 h-3.5" />{entry.views.toLocaleString()}
           </span>
           <Link href={`/showcase/${entry.id}`}>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="text-xs h-7 px-3 gap-1 group/btn"
-              style={{ color: '#A855F7' }}
-            >
-              Read More
-              <ArrowRight className="w-3 h-3 group-hover/btn:translate-x-0.5 transition-transform" />
+            <Button size="sm" variant="ghost" className="text-xs h-7 px-3 gap-1" style={{ color: '#A855F7' }}>
+              Read More <ArrowRight className="w-3 h-3" />
             </Button>
           </Link>
         </div>
