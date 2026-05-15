@@ -160,7 +160,7 @@ export function DashboardSidebar({ profile }: DashboardSidebarProps) {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {profile.roles?.includes('admin') && (
+        {(profile.is_admin === true || profile.roles?.includes('admin')) && (
           <SidebarGroup>
             <SidebarGroupLabel>Admin</SidebarGroupLabel>
             <SidebarGroupContent>
