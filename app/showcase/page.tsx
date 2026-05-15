@@ -76,9 +76,14 @@ export default function ShowcasePage() {
 
         <div className="flex items-center gap-3">
           {isLoggedIn ? (
-            <Button size="sm" asChild style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}>
-              <Link href="/dashboard">Dashboard</Link>
-            </Button>
+            <>
+              <Button size="sm" variant="ghost" asChild style={{ color: '#C4B5D8' }}>
+                <Link href="/projects">Submit Research</Link>
+              </Button>
+              <Button size="sm" asChild style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}>
+                <Link href="/dashboard">Dashboard</Link>
+              </Button>
+            </>
           ) : (
             <>
               <Button size="sm" variant="ghost" asChild style={{ color: '#C4B5D8' }}>
@@ -149,9 +154,11 @@ export default function ShowcasePage() {
             <p className="font-semibold text-lg">No published research yet.</p>
             <p style={{ color: '#7C6A9C' }}>Be the first to submit your work.</p>
             {isLoggedIn && (
-              <Button asChild style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}>
-                <Link href="/projects">Submit Research</Link>
-              </Button>
+              <Link href="/projects">
+                <Button style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}>
+                  Go to My Projects
+                </Button>
+              </Link>
             )}
           </div>
         ) : (

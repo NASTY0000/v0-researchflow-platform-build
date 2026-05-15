@@ -1,6 +1,8 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import ReactCrop, { type Crop, centerCrop, makeAspectCrop } from 'react-image-crop'
+import 'react-image-crop/dist/ReactCrop.css'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -57,6 +59,12 @@ export default function ProfilePage() {
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
   const [avatarError, setAvatarError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Crop modal state
+  const [cropSrc, setCropSrc] = useState<string | null>(null)
+  const [crop, setCrop] = useState<Crop>()
+  const [completedCrop, setCompletedCrop] = useState<Crop | null>(null)
+  const imgRef = useRef<HTMLImageElement>(null)
 
   // Portfolio modal state
   const [showPortfolioModal, setShowPortfolioModal] = useState(false)
@@ -159,57 +167,85 @@ export default function ProfilePage() {
     setIsSaving(false)
   }
 
-  async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleAvatarFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
-    if (!file || !profile) return
-
+    if (!file) return
     if (file.size > 5 * 1024 * 1024) {
       setAvatarError('Image must be under 5MB')
       return
     }
+    setAvatarError(null)
+    const reader = new FileReader()
+    reader.onload = () => setCropSrc(reader.result as string)
+    reader.readAsDataURL(file)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
 
+  const onImageLoad = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
+    const { width, height } = e.currentTarget
+    const centered = centerCrop(
+      makeAspectCrop({ unit: '%', width: 90 }, 1, width, height),
+      width,
+      height
+    )
+    setCrop(centered)
+    setCompletedCrop(centered)
+  }, [])
+
+  async function handleCropAndUpload() {
+    if (!completedCrop || !imgRef.current || !profile) return
     setIsUploadingAvatar(true)
     setAvatarError(null)
+
+    const canvas = document.createElement('canvas')
+    const size = 400
+    canvas.width = size
+    canvas.height = size
+    const ctx = canvas.getContext('2d')
+    if (!ctx) { setIsUploadingAvatar(false); return }
+
+    const img = imgRef.current
+    const scaleX = img.naturalWidth / img.width
+    const scaleY = img.naturalHeight / img.height
+    const pixelCrop = {
+      x: completedCrop.x * (completedCrop.unit === '%' ? img.width / 100 : 1) * scaleX,
+      y: completedCrop.y * (completedCrop.unit === '%' ? img.height / 100 : 1) * scaleY,
+      width: completedCrop.width * (completedCrop.unit === '%' ? img.width / 100 : 1) * scaleX,
+      height: completedCrop.height * (completedCrop.unit === '%' ? img.height / 100 : 1) * scaleY,
+    }
+
+    ctx.beginPath()
+    ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2)
+    ctx.clip()
+    ctx.drawImage(img, pixelCrop.x, pixelCrop.y, pixelCrop.width, pixelCrop.height, 0, 0, size, size)
+
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.92))
+    if (!blob) { setIsUploadingAvatar(false); return }
 
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { setIsUploadingAvatar(false); return }
 
-    const fileExt = file.name.split('.').pop()
-    const filePath = `${user.id}/${Date.now()}.${fileExt}`
-
-    const { error: uploadError } = await supabase
-      .storage
-      .from('avatars')
-      .upload(filePath, file, {
-        upsert: true,
-        contentType: file.type,
-      })
+    const filePath = `${user.id}/${Date.now()}.jpg`
+    const { error: uploadError } = await supabase.storage.from('avatars').upload(filePath, blob, {
+      upsert: true,
+      contentType: 'image/jpeg',
+    })
 
     if (uploadError) {
       console.error('Upload error:', uploadError)
       setAvatarError(uploadError.message)
       setIsUploadingAvatar(false)
-      if (fileInputRef.current) fileInputRef.current.value = ''
       return
     }
 
-    const { data: urlData } = supabase
-      .storage
-      .from('avatars')
-      .getPublicUrl(filePath)
-
+    const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(filePath)
     const publicUrl = urlData.publicUrl
 
-    await supabase
-      .from('profiles')
-      .update({ avatar_url: publicUrl })
-      .eq('id', user.id)
-
+    await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', user.id)
     setProfile({ ...profile, avatar_url: publicUrl })
+    setCropSrc(null)
     setIsUploadingAvatar(false)
-
-    if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
   function openAddModal() {
@@ -431,6 +467,54 @@ export default function ProfilePage() {
         </div>
       )}
 
+      {/* Crop Modal */}
+      {cropSrc && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="bg-background border rounded-2xl shadow-2xl w-full max-w-lg">
+            <div className="flex items-center justify-between p-5 border-b">
+              <h2 className="text-lg font-semibold">Crop Photo</h2>
+              <Button variant="ghost" size="icon" onClick={() => setCropSrc(null)}>
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+            <div className="p-5 flex justify-center">
+              <ReactCrop
+                crop={crop}
+                onChange={(c) => setCrop(c)}
+                onComplete={(c) => setCompletedCrop(c)}
+                aspect={1}
+                circularCrop
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  ref={imgRef}
+                  src={cropSrc}
+                  alt="Crop preview"
+                  onLoad={onImageLoad}
+                  style={{ maxHeight: '60vh', maxWidth: '100%' }}
+                />
+              </ReactCrop>
+            </div>
+            <div className="flex gap-3 p-5 border-t">
+              <Button
+                onClick={handleCropAndUpload}
+                disabled={isUploadingAvatar}
+                style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}
+                className="flex-1"
+              >
+                {isUploadingAvatar ? (
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Uploading...</>
+                ) : (
+                  'Crop & Upload'
+                )}
+              </Button>
+              <Button variant="outline" onClick={() => setCropSrc(null)}>Cancel</Button>
+            </div>
+            {avatarError && <p className="text-xs text-destructive px-5 pb-4">{avatarError}</p>}
+          </div>
+        </div>
+      )}
+
       {/* Header Card */}
       <Card>
         <CardContent className="p-8">
@@ -441,7 +525,7 @@ export default function ProfilePage() {
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
                 className="hidden"
-                onChange={handleAvatarUpload}
+                onChange={handleAvatarFileSelect}
               />
               <Avatar className="w-24 h-24">
                 <AvatarImage src={profile.avatar_url || undefined} />

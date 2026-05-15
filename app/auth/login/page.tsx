@@ -38,7 +38,15 @@ export default function LoginPage() {
     setIsLoading(true)
     setError(null)
     const result = await signIn(formData)
-    if (result?.error) { setError(result.error); setIsLoading(false) }
+    if (result?.error) {
+      setError(result.error)
+      setIsLoading(false)
+    } else if (result?.redirectTo) {
+      setIsLoading(false)
+      window.location.href = result.redirectTo
+    } else {
+      setIsLoading(false)
+    }
   }
 
   async function handleDemoLogin() {

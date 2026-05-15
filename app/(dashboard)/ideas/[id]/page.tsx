@@ -36,6 +36,7 @@ import {
 import { createClient } from "@/lib/supabase/client"
 import type { ResearchIdea, Profile } from "@/lib/types/database"
 import { formatDistanceToNow, format } from "date-fns"
+import { Input } from "@/components/ui/input"
 
 interface IdeaWithAuthor extends ResearchIdea {
   author: Profile
@@ -51,6 +52,11 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
   const [isConnecting, setIsConnecting] = useState(false)
   const [connectionMessage, setConnectionMessage] = useState("")
   const [showConnectDialog, setShowConnectDialog] = useState(false)
+  const [universityName, setUniversityName] = useState<string>("")
+  const [showFlagDialog, setShowFlagDialog] = useState(false)
+  const [flagReason, setFlagReason] = useState("")
+  const [isFlagging, setIsFlagging] = useState(false)
+  const [shareCopied, setShareCopied] = useState(false)
 
   useEffect(() => {
     async function loadIdea() {
@@ -75,6 +81,21 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
       }
 
       setIdea(data)
+
+      // Resolve university UUID to name
+      if (data.author?.university_id) {
+        const uid = data.author.university_id
+        if (uid.includes('-')) {
+          const { data: uni } = await supabase
+            .from('universities')
+            .select('name')
+            .eq('id', uid)
+            .single()
+          setUniversityName(uni?.name || '')
+        } else {
+          setUniversityName(uid)
+        }
+      }
 
       // Increment views
       await supabase
@@ -154,6 +175,38 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
     setIsConnecting(false)
   }
 
+  function handleShare() {
+    const url = window.location.href
+    if (navigator.share && idea) {
+      navigator.share({
+        title: idea.title,
+        text: idea.description?.slice(0, 100),
+        url,
+      }).catch(() => {})
+    } else {
+      navigator.clipboard.writeText(url).then(() => {
+        setShareCopied(true)
+        setTimeout(() => setShareCopied(false), 2000)
+      })
+    }
+  }
+
+  async function handleFlag() {
+    if (!flagReason.trim() || !idea || !currentUserId) return
+    setIsFlagging(true)
+    const supabase = createClient()
+    await supabase.from('content_reports').insert({
+      reporter_id: currentUserId,
+      content_type: 'idea',
+      content_id: idea.id,
+      reason: flagReason.trim(),
+      status: 'open',
+    })
+    setIsFlagging(false)
+    setShowFlagDialog(false)
+    setFlagReason("")
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -173,6 +226,32 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
+      {/* Flag dialog */}
+      {showFlagDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="bg-background border rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4">
+            <h3 className="font-semibold text-lg">Report Content</h3>
+            <p className="text-sm text-muted-foreground">Describe the issue with this post.</p>
+            <Input
+              placeholder="Reason for reporting..."
+              value={flagReason}
+              onChange={(e) => setFlagReason(e.target.value)}
+            />
+            <div className="flex gap-3">
+              <Button
+                variant="destructive"
+                disabled={!flagReason.trim() || isFlagging}
+                onClick={handleFlag}
+                className="flex-1"
+              >
+                {isFlagging ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Reporting...</> : 'Submit Report'}
+              </Button>
+              <Button variant="outline" onClick={() => setShowFlagDialog(false)}>Cancel</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" asChild>
@@ -288,14 +367,16 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
                   Upvote ({idea.upvotes || 0})
                 </Button>
 
-                <Button variant="outline">
+                <Button variant="outline" onClick={handleShare}>
                   <Share2 className="mr-2 h-4 w-4" />
-                  Share
+                  {shareCopied ? 'Copied!' : 'Share'}
                 </Button>
 
-                <Button variant="ghost" size="icon">
-                  <Flag className="h-4 w-4" />
-                </Button>
+                {currentUserId && !isAuthor && (
+                  <Button variant="ghost" size="icon" onClick={() => setShowFlagDialog(true)}>
+                    <Flag className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -324,10 +405,10 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
                       {idea.author.department}
                     </p>
                   )}
-                  {idea.author?.university_id && (
+                  {universityName && (
                     <p className="text-sm text-muted-foreground flex items-center gap-1">
                       <Building2 className="h-3 w-3" />
-                      {idea.author.university_id}
+                      {universityName}
                     </p>
                   )}
                 </div>
