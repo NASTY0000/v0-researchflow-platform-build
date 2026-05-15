@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -15,7 +15,7 @@ import {
   User, Mail, Building2, GraduationCap, Calendar,
   Edit, Save, X, Plus, Award, BookOpen, Briefcase, FileText,
   Eye, Star, ExternalLink, Trash2, CheckCircle2, FolderOpen,
-  Users, MessageSquare, ListChecks, Zap, Shield, TrendingUp
+  Users, MessageSquare, ListChecks, Zap, Shield, TrendingUp, Loader2
 } from 'lucide-react'
 import type { Profile, PortfolioItem, PortfolioItemType, University } from '@/lib/types/database'
 import { AkiliScoreCard } from '@/components/akili/AkiliScoreCard'
@@ -52,6 +52,11 @@ export default function ProfilePage() {
     department: '',
     academic_level: '',
   })
+
+  const [universityName, setUniversityName] = useState('')
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
+  const [avatarError, setAvatarError] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Portfolio modal state
   const [showPortfolioModal, setShowPortfolioModal] = useState(false)
@@ -91,6 +96,17 @@ export default function ProfilePage() {
         department: profileResult.data.department || '',
         academic_level: profileResult.data.academic_level || '',
       })
+
+      // Resolve university UUID to name if needed
+      const uid = profileResult.data.university_id
+      if (uid) {
+        if (uid.includes('-')) {
+          const { data: uni } = await supabase.from('universities').select('name').eq('id', uid).single()
+          setUniversityName(uni?.name || uid)
+        } else {
+          setUniversityName(uid)
+        }
+      }
     }
 
     if (portfolioResult.data) setPortfolioItems(portfolioResult.data)
@@ -141,6 +157,37 @@ export default function ProfilePage() {
       setIsEditing(false)
     }
     setIsSaving(false)
+  }
+
+  async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file || !profile) return
+
+    if (file.size > 5 * 1024 * 1024) {
+      setAvatarError('Image must be under 5MB')
+      return
+    }
+
+    setIsUploadingAvatar(true)
+    setAvatarError(null)
+
+    const ext = file.name.split('.').pop()
+    const path = `${profile.id}/${Date.now()}.${ext}`
+
+    const { error: uploadError } = await supabase.storage.from('avatars').upload(path, file, { upsert: true })
+    if (uploadError) {
+      setAvatarError('Upload failed. Please try again.')
+      setIsUploadingAvatar(false)
+      return
+    }
+
+    const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path)
+    await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', profile.id)
+    setProfile({ ...profile, avatar_url: publicUrl })
+    setIsUploadingAvatar(false)
+
+    // Reset input so same file can be re-uploaded
+    if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
   function openAddModal() {
@@ -367,16 +414,37 @@ export default function ProfilePage() {
         <CardContent className="p-8">
           <div className="flex flex-col md:flex-row items-start gap-6">
             <div className="relative">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={handleAvatarUpload}
+              />
               <Avatar className="w-24 h-24">
                 <AvatarImage src={profile.avatar_url || undefined} />
                 <AvatarFallback className="text-2xl">
                   {profile.full_name?.charAt(0) || 'U'}
                 </AvatarFallback>
               </Avatar>
-              <Button size="icon" variant="outline" className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full">
+              {isUploadingAvatar && (
+                <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50">
+                  <Loader2 className="w-6 h-6 animate-spin text-white" />
+                </div>
+              )}
+              <Button
+                size="icon"
+                variant="outline"
+                className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploadingAvatar}
+              >
                 <Edit className="w-3 h-3" />
               </Button>
             </div>
+            {avatarError && (
+              <p className="text-xs text-destructive mt-1">{avatarError}</p>
+            )}
 
             <div className="flex-1 space-y-4">
               {isEditing ? (
@@ -439,9 +507,9 @@ export default function ProfilePage() {
                     <span className="flex items-center gap-1">
                       <Mail className="w-4 h-4" />{profile.email}
                     </span>
-                    {profile.university_id && (
+                    {universityName && (
                       <span className="flex items-center gap-1">
-                        <Building2 className="w-4 h-4" />{profile.university_id}
+                        <Building2 className="w-4 h-4" />{universityName}
                       </span>
                     )}
                     <span className="flex items-center gap-1">
