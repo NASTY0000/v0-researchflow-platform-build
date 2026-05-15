@@ -283,6 +283,15 @@ export default function MentorsPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { setApplyingTier(null); return }
 
+    // Check if user is admin for instant approval
+    const { data: profileData } = await supabase
+      .from("profiles")
+      .select("is_admin, roles")
+      .eq("id", user.id)
+      .single()
+
+    const isAdmin = profileData?.is_admin === true || profileData?.roles?.includes("admin")
+
     // 1. Add 'mentor' to roles
     const updatedRoles = Array.from(new Set([...currentUserRoles, "mentor"]))
     const { error: rolesError } = await supabase
@@ -296,16 +305,16 @@ export default function MentorsPage() {
       return
     }
 
-    // 2. Upsert mentor_profiles with pending status
+    // 2. Upsert mentor_profiles — instant approval for admins, pending for everyone else
     const tierNumber = tierId === "faculty" ? 1 : tierId === "postgraduate" ? 2 : 3
     await supabase.from("mentor_profiles").upsert(
       {
         user_id: user.id,
         tier: tierNumber,
-        is_verified: false,
+        is_verified: isAdmin,
         specializations: [],
         mentorship_areas: [],
-        available_slots: 0,
+        available_slots: isAdmin ? 10 : 0,
         slots_used: 0,
         total_sessions: 0,
         rating: 0,
@@ -317,8 +326,14 @@ export default function MentorsPage() {
     setCurrentUserRoles(updatedRoles)
     setApplyingTier(null)
     setShowBecomeMentorModal(false)
-    // 3. Redirect to verification form
-    window.location.href = "/mentor-verification"
+
+    // 3. Admins skip verification and go straight to dashboard
+    if (isAdmin) {
+      toast.success("Mentor profile approved instantly!")
+      window.location.href = "/mentor-dashboard"
+    } else {
+      window.location.href = "/mentor-verification"
+    }
   }
 
   return (
