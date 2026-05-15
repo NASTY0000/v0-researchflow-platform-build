@@ -42,6 +42,7 @@ import { createClient } from "@/lib/supabase/client"
 import type { Task, Profile } from "@/lib/types/database"
 import { completeAssignedTask } from "@/lib/actions/akili"
 import { format } from "date-fns"
+import { toast } from "sonner"
 
 interface KanbanBoardProps {
   projectId: string
@@ -169,10 +170,16 @@ export function KanbanBoard({ projectId, teamId, tasks: initialTasks }: KanbanBo
 
   function handleDrop(e: React.DragEvent, columnId: string) {
     e.preventDefault()
-    if (draggedTask) {
-      handleStatusChange(draggedTask.id, columnId)
+    if (!draggedTask) return
+
+    if (!navigator.onLine) {
+      toast.error('Moving tasks requires internet connection. Please reconnect and try again.')
       setDraggedTask(null)
+      return
     }
+
+    handleStatusChange(draggedTask.id, columnId)
+    setDraggedTask(null)
   }
 
   function getTasksByColumn(columnId: string) {

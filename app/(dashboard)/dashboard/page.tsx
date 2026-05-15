@@ -8,10 +8,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Progress } from "@/components/ui/progress"
 import {
   Lightbulb, Users, FolderKanban, TrendingUp,
-  ArrowRight, Sparkles, Target, BookOpen, GraduationCap,
+  ArrowRight, Sparkles, Target, BookOpen, GraduationCap, Clock,
 } from "lucide-react"
 import { MentorDashboard } from "@/components/dashboard/mentor-dashboard"
 import { createClient } from "@/lib/supabase/client"
+import { getLastSyncTime, syncToLocal } from "@/lib/offline/sync"
+import { useOnlineStatus } from "@/lib/offline/hooks"
 import type { Profile, ResearchIdea, Match } from "@/lib/types/database"
 
 interface DashboardStats {
@@ -34,6 +36,8 @@ export default function DashboardPage() {
   const [recentIdeas, setRecentIdeas] = useState<ResearchIdea[]>([])
   const [matches, setMatches] = useState<Match[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [lastSync, setLastSync] = useState<string | null>(null)
+  const isOnline = useOnlineStatus()
 
   useEffect(() => {
     async function loadDashboard() {
@@ -65,6 +69,10 @@ export default function DashboardPage() {
       if (matchesData) setMatches(matchesData)
 
       setIsLoading(false)
+
+      // Sync data to IndexedDB for offline use
+      syncToLocal().catch(() => {})
+      setLastSync(getLastSyncTime())
     }
     loadDashboard()
   }, [])
@@ -108,6 +116,12 @@ export default function DashboardPage() {
               <span className="gradient-text">{profile?.full_name?.split(" ")[0] || "Researcher"}</span>
             </h1>
             <p style={{ color: '#7C6A9C' }}>Here&apos;s what&apos;s happening with your research journey</p>
+            {!isOnline && lastSync && (
+              <p className="flex items-center gap-1 text-xs mt-1" style={{ color: '#F59E0B' }}>
+                <Clock className="w-3 h-3" />
+                Data last updated {lastSync} (offline)
+              </p>
+            )}
           </div>
           <Button asChild style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', boxShadow: '0 0 20px rgba(124,58,237,0.35)', border: 'none', borderRadius: '8px', flexShrink: 0 }}>
             <Link href="/ideas/new">
