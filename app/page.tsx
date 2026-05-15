@@ -1,24 +1,25 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
-import { 
-  Users, 
-  Lightbulb, 
-  BookOpen, 
-  ArrowRight, 
+import {
+  Users,
+  Lightbulb,
+  BookOpen,
+  ArrowRight,
   GraduationCap,
   Globe,
   Rocket,
   Star,
   Zap,
 } from 'lucide-react'
-import { 
-  GlobalIllustrations, 
-  HeroIllustrations, 
-  FeaturesIllustrations, 
-  StatsIllustrations, 
-  FooterIllustrations 
+import {
+  GlobalIllustrations,
+  HeroIllustrations,
+  FeaturesIllustrations,
+  StatsIllustrations,
+  FooterIllustrations
 } from '@/components/landing/floating-illustrations'
+import { createClient } from '@/lib/supabase/server'
 
 const features = [
   { icon: Lightbulb, title: 'Idea Board', description: 'Share your research ideas and discover opportunities to collaborate with peers across Africa.', color: '#A855F7' },
@@ -29,12 +30,6 @@ const features = [
   { icon: Rocket, title: 'Task Marketplace', description: 'Find help or offer your expertise on specific research tasks.', color: '#A855F7' },
 ]
 
-const stats = [
-  { value: '30+', label: 'African Universities' },
-  { value: '10K+', label: 'Student Researchers' },
-  { value: '500+', label: 'Active Projects' },
-  { value: '95%', label: 'Match Success Rate' },
-]
 
 const testimonials = [
   {
@@ -57,7 +52,20 @@ const testimonials = [
   },
 ]
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const supabase = await createClient()
+  const { count: universityCount } = await supabase
+    .from('universities')
+    .select('*', { count: 'exact', head: true })
+    .eq('is_active', true)
+
+  const stats = [
+    { value: `${universityCount ?? 100}+`, label: 'African Universities' },
+    { value: '10K+', label: 'Student Researchers' },
+    { value: '500+', label: 'Active Projects' },
+    { value: '95%', label: 'Match Success Rate' },
+  ]
+
   return (
     <div className="min-h-screen bg-[#05010F] text-[#F3F0FF] relative">
       {/* Global 3D Illustrations */}
