@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { completeOnboardingWithAllSkills } from '@/lib/actions/akili'
+import { generateMatchesOnOnboarding } from '@/lib/actions/matching'
 
 export async function signUp(formData: FormData) {
   const supabase = await createClient()
@@ -236,6 +237,7 @@ export async function completeOnboarding(data: Record<string, unknown>) {
   revalidatePath('/dashboard', 'layout')
 
   await completeOnboardingWithAllSkills(user.id)
+  generateMatchesOnOnboarding(user.id).catch(() => {})
 
   const roles = data.roles as string[] | undefined
   if (roles && roles.includes('mentor')) {

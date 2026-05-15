@@ -33,6 +33,7 @@ import {
   ChevronUp,
   User,
   Shield,
+  UserCheck,
 } from 'lucide-react'
 import type { Profile } from '@/lib/types/database'
 import { signOut } from '@/lib/actions/auth'
@@ -53,6 +54,11 @@ const mainNavItems = [
     title: 'Find Collaborators',
     href: '/matches',
     icon: Users,
+  },
+  {
+    title: 'My Network',
+    href: '/network',
+    icon: UserCheck,
   },
   {
     title: 'My Projects',

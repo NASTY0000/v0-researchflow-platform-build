@@ -20,6 +20,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ArrowLeft, Lightbulb, X, Plus, Loader2 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { postResearchIdea } from "@/lib/actions/akili"
+import { generateMatchesForNewIdea } from "@/lib/actions/matching"
 
 const RESEARCH_AREAS = [
   "Computer Science",
@@ -153,6 +154,7 @@ export default function NewIdeaPage() {
       }
 
       await postResearchIdea(user.id, data.id)
+      generateMatchesForNewIdea(data.id, user.id).catch(() => {})
       router.push(`/ideas/${data.id}`)
     } catch (err) {
       console.error("Error:", err)
