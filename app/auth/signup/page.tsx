@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
-import { Loader2, Mail, Lock, User, CheckCircle } from 'lucide-react'
+import { Loader2, Mail, Lock, User, CheckCircle, ArrowLeft } from 'lucide-react'
 import { signUp, signInWithGoogle, verifyOtp, resendOtp } from '@/lib/actions/auth'
 
 function GoogleIcon({ className }: { className?: string }) {
@@ -340,6 +340,11 @@ export default function SignUpPage() {
           Already have an account?{' '}
           <Link href="/auth/login" className="font-medium" style={{ color: '#A855F7' }}>Sign in</Link>
         </p>
+
+        <Link href="/" className="text-sm text-muted-foreground hover:text-primary flex items-center gap-1 justify-center mt-4">
+          <ArrowLeft className="w-3 h-3" />
+          Back to Home
+        </Link>
       </div>
     </div>
   )

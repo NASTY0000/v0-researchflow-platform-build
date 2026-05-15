@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Loader2, Mail, Lock, Play } from 'lucide-react'
+import { Loader2, Mail, Lock, Play, ArrowLeft } from 'lucide-react'
 import { signIn, signInWithGoogle } from '@/lib/actions/auth'
 
 const DEMO_EMAIL = 'demo@researchflow.app'
@@ -159,6 +159,11 @@ export default function LoginPage() {
           Don&apos;t have an account?{' '}
           <Link href="/auth/signup" className="font-medium" style={{ color: '#A855F7' }}>Sign up</Link>
         </p>
+
+        <Link href="/" className="text-sm text-muted-foreground hover:text-primary flex items-center gap-1 justify-center mt-4">
+          <ArrowLeft className="w-3 h-3" />
+          Back to Home
+        </Link>
       </div>
     </div>
   )
