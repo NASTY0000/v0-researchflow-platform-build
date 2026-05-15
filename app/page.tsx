@@ -19,7 +19,6 @@ import {
   StatsIllustrations,
   FooterIllustrations
 } from '@/components/landing/floating-illustrations'
-import { createClient } from '@/lib/supabase/server'
 
 const features = [
   { icon: Lightbulb, title: 'Idea Board', description: 'Share your research ideas and discover opportunities to collaborate with peers across Africa.', color: '#A855F7' },
@@ -52,14 +51,9 @@ const testimonials = [
   },
 ]
 
-export default async function LandingPage() {
-  const supabase = await createClient()
-  const { count: universityCount } = await supabase
-    .from('universities')
-    .select('*', { count: 'exact', head: true })
-
+export default function LandingPage() {
   const stats = [
-    { value: `${universityCount ?? 100}+`, label: 'African Universities' },
+    { value: '100+', label: 'African Universities' },
     { value: '10K+', label: 'Student Researchers' },
     { value: '500+', label: 'Active Projects' },
     { value: '95%', label: 'Match Success Rate' },
