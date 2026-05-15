@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import type { Profile, PortfolioItem, PortfolioItemType, University } from '@/lib/types/database'
 import { AkiliScoreCard } from '@/components/akili/AkiliScoreCard'
+import { getAkiliNarrative } from '@/lib/utils/akili'
 
 interface ActivityStats {
   activeProjects: number
@@ -417,7 +418,7 @@ export default function ProfilePage() {
                         {profile.akili_score > 0 && (
                           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-sm font-semibold bg-primary/10 text-primary border border-primary/20">
                             <Zap className="w-3.5 h-3.5" />
-                            {profile.akili_score.toLocaleString()} Akili
+                            {profile.akili_score.toLocaleString()} · {getAkiliNarrative(profile.akili_score).title}
                           </span>
                         )}
                       </div>
