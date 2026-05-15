@@ -18,12 +18,13 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import Image from 'next/image'
-import { 
+import {
   LayoutDashboard,
   Lightbulb,
   Users,
   FolderKanban,
   GraduationCap,
+  BookOpen,
   Store,
   MessageSquare,
   Award,
@@ -64,7 +65,7 @@ const resourceNavItems = [
   {
     title: 'Mentor Directory',
     href: '/mentors',
-    icon: GraduationCap,
+    icon: BookOpen,
   },
   {
     title: 'Marketplace',

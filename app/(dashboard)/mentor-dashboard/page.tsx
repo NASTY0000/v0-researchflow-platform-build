@@ -78,32 +78,31 @@ export default function MentorDashboardPage() {
       .eq('user_id', user.id)
       .single()
 
-    if (!mp) {
-      router.push('/mentors')
-      return
-    }
-    setMentorProfile(mp)
+    // If no mentor_profile yet, show an empty state — don't redirect away
+    if (mp) {
+      setMentorProfile(mp)
 
-    if (mp.is_verified) {
-      const [reqResult, slotsResult] = await Promise.all([
-        supabase
-          .from('mentorship_requests')
-          .select('*, student:profiles!mentorship_requests_student_id_fkey(*), project:projects(*)')
-          .eq('mentor_id', user.id)
-          .order('created_at', { ascending: false }),
-        supabase
-          .from('mentor_availability')
-          .select('*')
-          .eq('mentor_id', user.id)
-          .gte('available_date', new Date().toISOString().split('T')[0])
-          .order('available_date', { ascending: true }),
-      ])
+      if (mp.is_verified) {
+        const [reqResult, slotsResult] = await Promise.all([
+          supabase
+            .from('mentorship_requests')
+            .select('*, student:profiles!mentorship_requests_student_id_fkey(*), project:projects(*)')
+            .eq('mentor_id', user.id)
+            .order('created_at', { ascending: false }),
+          supabase
+            .from('mentor_availability')
+            .select('*')
+            .eq('mentor_id', user.id)
+            .gte('available_date', new Date().toISOString().split('T')[0])
+            .order('available_date', { ascending: true }),
+        ])
 
-      if (reqResult.data) {
-        setPendingRequests(reqResult.data.filter((r) => r.status === 'pending') as RequestWithStudent[])
-        setActiveRequests(reqResult.data.filter((r) => r.status === 'accepted') as RequestWithStudent[])
+        if (reqResult.data) {
+          setPendingRequests(reqResult.data.filter((r) => r.status === 'pending') as RequestWithStudent[])
+          setActiveRequests(reqResult.data.filter((r) => r.status === 'accepted') as RequestWithStudent[])
+        }
+        if (slotsResult.data) setSlots(slotsResult.data)
       }
-      if (slotsResult.data) setSlots(slotsResult.data)
     }
 
     setIsLoading(false)
@@ -208,7 +207,34 @@ export default function MentorDashboardPage() {
     )
   }
 
-  if (!mentorProfile) return null
+  // No mentor_profile row yet — guide user to complete the application
+  if (!mentorProfile) {
+    return (
+      <div className="max-w-2xl mx-auto">
+        <h1 className="text-3xl font-bold font-heading flex items-center gap-3 mb-8">
+          <GraduationCap className="w-8 h-8 text-primary" />
+          Mentor Dashboard
+        </h1>
+        <div className="rounded-2xl p-10 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(139,92,246,0.2)' }}>
+          <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5" style={{ background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(168,85,247,0.3)' }}>
+            <GraduationCap className="w-8 h-8" style={{ color: '#A855F7' }} />
+          </div>
+          <h2 className="text-xl font-bold font-heading mb-2">Complete Your Mentor Application</h2>
+          <p className="text-sm max-w-sm mx-auto mb-6" style={{ color: '#7C6A9C' }}>
+            You have the mentor role but haven&apos;t submitted your verification documents yet.
+            Complete your application to unlock the mentor dashboard.
+          </p>
+          <Link
+            href="/mentor-verification"
+            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-medium"
+            style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', color: '#F3F0FF' }}
+          >
+            Complete Application
+          </Link>
+        </div>
+      </div>
+    )
+  }
 
   const isVerified = mentorProfile.is_verified
 
