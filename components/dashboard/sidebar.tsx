@@ -160,6 +160,28 @@ export function DashboardSidebar({ profile }: DashboardSidebarProps) {
           </SidebarGroupContent>
         </SidebarGroup>
 
+        {profile.roles?.includes('mentor') && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Mentoring</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={pathname === '/mentor-dashboard' || pathname.startsWith('/mentor-dashboard/')}
+                    tooltip="Mentor Dashboard"
+                  >
+                    <Link href="/mentor-dashboard">
+                      <GraduationCap />
+                      <span>Mentor Dashboard</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+
         {(profile.is_admin === true || profile.roles?.includes('admin')) && (
           <SidebarGroup>
             <SidebarGroupLabel>Admin</SidebarGroupLabel>

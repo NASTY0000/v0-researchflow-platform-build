@@ -271,35 +271,54 @@ export default function MentorsPage() {
 
   function handleBecomeMentorClick() {
     if (currentUserRoles.includes("mentor")) {
-      window.location.href = "/mentors/requests"
+      window.location.href = "/mentor-dashboard"
     } else {
       setShowBecomeMentorModal(true)
     }
   }
 
-  async function applyAsMentor(tier: string) {
-    setApplyingTier(tier)
+  async function applyAsMentor(tierId: string) {
+    setApplyingTier(tierId)
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { setApplyingTier(null); return }
 
+    // 1. Add 'mentor' to roles
     const updatedRoles = Array.from(new Set([...currentUserRoles, "mentor"]))
-    const { error } = await supabase
+    const { error: rolesError } = await supabase
       .from("profiles")
       .update({ roles: updatedRoles })
       .eq("id", user.id)
 
-    if (error) {
+    if (rolesError) {
       toast.error("Failed to apply. Please try again.")
       setApplyingTier(null)
       return
     }
 
+    // 2. Upsert mentor_profiles with pending status
+    const tierNumber = tierId === "faculty" ? 1 : tierId === "postgraduate" ? 2 : 3
+    await supabase.from("mentor_profiles").upsert(
+      {
+        user_id: user.id,
+        tier: tierNumber,
+        is_verified: false,
+        specializations: [],
+        mentorship_areas: [],
+        available_slots: 0,
+        slots_used: 0,
+        total_sessions: 0,
+        rating: 0,
+        review_count: 0,
+      },
+      { onConflict: "user_id" }
+    )
+
     setCurrentUserRoles(updatedRoles)
-    toast.success("Mentor role added! Complete your mentor profile in Settings.")
     setApplyingTier(null)
     setShowBecomeMentorModal(false)
-    window.location.href = "/settings"
+    // 3. Redirect to verification form
+    window.location.href = "/mentor-verification"
   }
 
   return (
