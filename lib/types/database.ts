@@ -100,6 +100,20 @@ export interface Profile {
   is_suspended: boolean
   suspended_until: string | null
   suspension_reason: string | null
+  // Privacy settings
+  profile_visibility: 'public' | 'university_only' | 'connections_only'
+  show_availability: boolean
+  allow_dm_from_non_connections: boolean
+  appear_in_search: boolean
+  // Account status
+  account_status: 'active' | 'suspended' | 'deleted'
+  deletion_requested_at: string | null
+  data_export_requested_at: string | null
+  // Email preferences
+  email_digest: boolean
+  email_marketing: boolean
+  // Notification preferences (JSONB: { [type]: { whatsapp: bool, sms: bool } })
+  notification_prefs: Record<string, { whatsapp: boolean; sms: boolean }>
   // Akili Score fields (added via akili_score_migration.sql)
   akili_score: number
   akili_dimension_knowledge: number
