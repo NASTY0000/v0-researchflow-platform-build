@@ -41,14 +41,12 @@ export default function ProfilePage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
-    const { data } = await supabase
-      .from('profiles')
-      .select(`
-        *,
-        university:universities(*)
-      `)
-      .eq('id', user.id)
-      .single()
+  const { data } = await supabase
+  .from('profiles')
+  .select('*')
+  .eq('id', user.id)
+  .single()
+
 
     if (data) {
       setProfile(data as Profile & { university?: University })
