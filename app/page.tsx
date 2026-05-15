@@ -57,10 +57,9 @@ export default async function LandingPage() {
   const { count: universityCount } = await supabase
     .from('universities')
     .select('*', { count: 'exact', head: true })
-    .eq('is_active', true)
 
   const stats = [
-    { value: `${universityCount ?? 100}+`, label: 'African Universities' },
+    { value: `${universityCount ?? 0}+`, label: 'African Universities' },
     { value: '10K+', label: 'Student Researchers' },
     { value: '500+', label: 'Active Projects' },
     { value: '95%', label: 'Match Success Rate' },
