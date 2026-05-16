@@ -249,6 +249,46 @@
   50% { box-shadow: 0 0 20px rgba(168,85,247,0.7); }
 }
 
+/* Podium entrance & effects */
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-60px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(60px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes dropInBounce {
+  0%   { opacity: 0; transform: translateY(-80px) scale(0.8); }
+  60%  { opacity: 1; transform: translateY(10px) scale(1.05); }
+  80%  { transform: translateY(-5px) scale(0.98); }
+  100% { transform: translateY(0) scale(1); }
+}
+@keyframes crownFloat {
+  0%, 100% { transform: translateY(0px) rotate(-3deg); }
+  50%       { transform: translateY(-6px) rotate(3deg); }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 15px rgba(245,158,11,0.4); }
+  50%       { box-shadow: 0 0 30px rgba(245,158,11,0.8), 0 0 60px rgba(245,158,11,0.3); }
+}
+@keyframes pulseGlowSilver {
+  0%, 100% { box-shadow: 0 0 10px rgba(156,163,175,0.3); }
+  50%       { box-shadow: 0 0 25px rgba(156,163,175,0.6); }
+}
+@keyframes pulseGlowBronze {
+  0%, 100% { box-shadow: 0 0 10px rgba(217,119,6,0.3); }
+  50%       { box-shadow: 0 0 25px rgba(217,119,6,0.6); }
+}
+@keyframes scoreCountUp {
+  from { opacity: 0; transform: scale(0.5); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
 /* 3D Floating Illustrations Animations */
 @keyframes float {
   0%, 100% { transform: translateY(0); }

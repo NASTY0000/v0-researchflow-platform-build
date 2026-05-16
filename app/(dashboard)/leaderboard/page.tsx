@@ -114,33 +114,46 @@ export default function LeaderboardPage() {
             icon: <Medal className="w-8 h-8 text-gray-200" />,
             cardCls: 'bg-gradient-to-br from-gray-300 via-gray-400 to-gray-500 dark:from-gray-600 dark:via-gray-700 dark:to-gray-800',
             border: '2px solid #9CA3AF',
-            shadowCls: 'shadow-md shadow-gray-400/40',
             rankBg: 'bg-white',
             rankTxt: 'text-gray-600',
             avatarCls: 'w-16 h-16',
             label: '🥈 Runner Up',
+            cardStyle: {
+              animation: 'slideInLeft 0.6s ease-out 0.2s forwards, pulseGlowSilver 3s ease-in-out 1.5s infinite',
+              opacity: 0 as const,
+            },
+            scoreDelay: '0.9s',
           },
           {
             rank: 1,
             icon: <Crown className="w-10 h-10 text-yellow-200" />,
             cardCls: 'bg-gradient-to-br from-yellow-400 via-yellow-500 to-amber-700',
             border: '2px solid #F59E0B',
-            shadowCls: 'shadow-lg shadow-yellow-500/40',
             rankBg: 'bg-white',
             rankTxt: 'text-yellow-600',
             avatarCls: 'w-20 h-20',
             label: '🥇 Champion',
+            cardStyle: {
+              animation: 'dropInBounce 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0s forwards, pulseGlow 3s ease-in-out 1s infinite',
+              opacity: 0 as const,
+            },
+            scoreDelay: '0.8s',
+            shimmer: true,
           },
           {
             rank: 3,
             icon: <Award className="w-8 h-8 text-yellow-200" />,
             cardCls: 'bg-gradient-to-br from-amber-600 via-amber-700 to-amber-900 dark:from-amber-800 dark:via-amber-900 dark:to-stone-900',
             border: '2px solid #D97706',
-            shadowCls: 'shadow-md shadow-amber-600/40',
             rankBg: 'bg-white',
             rankTxt: 'text-amber-700',
             avatarCls: 'w-16 h-16',
             label: '🥉 Third Place',
+            cardStyle: {
+              animation: 'slideInRight 0.6s ease-out 0.4s forwards, pulseGlowBronze 3s ease-in-out 2s infinite',
+              opacity: 0 as const,
+            },
+            scoreDelay: '1s',
           },
         ]
 
@@ -150,14 +163,35 @@ export default function LeaderboardPage() {
               if (!user) return <div key={idx} />
               const cfg = configs[idx]
               const isFirst = cfg.rank === 1
+              const hoverCls = isFirst
+                ? 'transition-transform duration-300 hover:scale-[1.15] cursor-pointer'
+                : 'transition-transform duration-300 hover:scale-105 cursor-pointer'
               return (
                 <div
                   key={user.id}
-                  className={`rounded-2xl text-center ${cfg.cardCls} ${cfg.shadowCls} ${isFirst ? 'pt-8 pb-6' : 'pt-5 pb-5'} px-3 space-y-2.5 ${user.id === currentUserId ? 'ring-2 ring-white/60' : ''}`}
-                  style={{ border: cfg.border }}
+                  className={`relative overflow-hidden rounded-2xl text-center ${cfg.cardCls} ${isFirst ? 'pt-8 pb-6' : 'pt-5 pb-5'} px-3 space-y-2.5 ${hoverCls} ${user.id === currentUserId ? 'ring-2 ring-white/60' : ''}`}
+                  style={{ border: cfg.border, ...cfg.cardStyle }}
                 >
+                  {/* Shimmer overlay — gold only */}
+                  {cfg.shimmer && (
+                    <div className="absolute inset-0 rounded-xl pointer-events-none overflow-hidden">
+                      <div style={{
+                        position: 'absolute', inset: 0,
+                        background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%)',
+                        backgroundSize: '200% 100%',
+                        animation: 'shimmer 3s linear infinite',
+                      }} />
+                    </div>
+                  )}
+
                   {/* Icon */}
-                  <div className="flex justify-center">{cfg.icon}</div>
+                  <div className="flex justify-center">
+                    {isFirst ? (
+                      <span style={{ animation: 'crownFloat 2s ease-in-out infinite', display: 'inline-block' }}>
+                        {cfg.icon}
+                      </span>
+                    ) : cfg.icon}
+                  </div>
 
                   {/* Rank badge */}
                   <div className="flex justify-center">
@@ -186,9 +220,17 @@ export default function LeaderboardPage() {
                     </p>
                   )}
 
-                  {/* Score */}
-                  <p className={`font-black text-white ${isFirst ? 'text-3xl' : 'text-2xl'}`}>
-                    {user.akili_score.toLocaleString()}
+                  {/* Score — pops in */}
+                  <p className={`font-black ${isFirst ? 'text-3xl' : 'text-2xl'}`}>
+                    <span style={{
+                      display: 'inline-block',
+                      animation: 'scoreCountUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
+                      animationDelay: cfg.scoreDelay,
+                      opacity: 0,
+                      color: 'white',
+                    }}>
+                      {user.akili_score.toLocaleString()}
+                    </span>
                   </p>
 
                   {/* Title */}
