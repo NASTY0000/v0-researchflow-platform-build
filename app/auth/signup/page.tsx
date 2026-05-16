@@ -55,12 +55,10 @@ export default function SignUpPage() {
       setIsLoading(false)
     } else if (result?.success) {
       if (result?.requiresVerification && result?.email) {
-        setEmail(result.email)
-        setStep('verify')
-        setIsLoading(false)
+        router.push(`/auth/verify?email=${encodeURIComponent(result.email as string)}`)
       } else {
         setStep('done')
-        setTimeout(() => router.push('/onboarding'), 1500)
+        setTimeout(() => router.push((result.redirectTo as string) || '/onboarding'), 1500)
       }
     }
   }

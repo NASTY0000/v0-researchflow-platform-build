@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { completeOnboardingWithAllSkills } from '@/lib/actions/akili'
 import { generateMatchesOnOnboarding } from '@/lib/actions/matching'
+import { checkRateLimit } from '@/lib/rate-limit'
 
 export async function signUp(formData: FormData) {
   const supabase = await createClient()
@@ -11,6 +12,11 @@ export async function signUp(formData: FormData) {
   const email = formData.get('email') as string
   const password = formData.get('password') as string
   const fullName = formData.get('fullName') as string
+
+  const limit = await checkRateLimit(email, 'signup', 5, 3600)
+  if (!limit.allowed) {
+    return { error: 'Too many signup attempts. Please try again in an hour.' }
+  }
 
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -42,7 +48,7 @@ export async function signUp(formData: FormData) {
     }, { onConflict: 'id' })
 
     revalidatePath('/', 'layout')
-    return { success: true, redirectTo: '/onboarding' }
+    return { success: true, redirectTo: '/onboarding', showVerifyBanner: true }
   }
 
   return {
@@ -83,6 +89,11 @@ export async function verifyOtp(email: string, token: string) {
 }
 
 export async function resendOtp(email: string) {
+  const limit = await checkRateLimit(email, 'otp_resend', 3, 3600)
+  if (!limit.allowed) {
+    return { error: 'Too many resend attempts. Please wait before requesting another code.' }
+  }
+
   const supabase = await createClient()
 
   const { error } = await supabase.auth.resend({
@@ -102,6 +113,11 @@ export async function signIn(formData: FormData) {
 
   const email = formData.get('email') as string
   const password = formData.get('password') as string
+
+  const limit = await checkRateLimit(email, 'signin', 10, 900)
+  if (!limit.allowed) {
+    return { error: 'Too many login attempts. Please wait 15 minutes before trying again.' }
+  }
 
   const { error } = await supabase.auth.signInWithPassword({
     email,

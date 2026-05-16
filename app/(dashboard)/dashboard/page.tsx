@@ -38,6 +38,17 @@ export default function DashboardPage() {
   useEffect(() => {
     async function loadDashboard() {
       const supabase = createClient()
+
+      // Load from cache immediately while fetching
+      try {
+        const cached = localStorage.getItem('rf_dashboard_cache')
+        if (cached) {
+          const { profile: cachedProfile, stats: cachedStats } = JSON.parse(cached)
+          if (cachedProfile) setProfile(cachedProfile)
+          if (cachedStats) setStats(cachedStats)
+        }
+      } catch {}
+
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
@@ -65,6 +76,20 @@ export default function DashboardPage() {
       if (matchesData) setMatches(matchesData)
 
       setIsLoading(false)
+
+      // Cache dashboard data for offline use
+      try {
+        localStorage.setItem('rf_dashboard_cache', JSON.stringify({
+          profile: profileData,
+          stats: {
+            totalIdeas: ideasCount.count || 0,
+            activeProjects: projectsCount.count || 0,
+            connections: connectionsCount.count || 0,
+            matches: matchesCount.count || 0,
+          },
+          timestamp: Date.now(),
+        }))
+      } catch {}
     }
     loadDashboard()
   }, [])

@@ -3,6 +3,7 @@ import { DM_Sans, Syne } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { Toaster } from 'sonner'
 import { InstallPrompt } from '@/components/ui/InstallPrompt'
+import { OfflineBanner } from '@/components/ui/offline-banner'
 import './globals.css'
 
 const dmSans = DM_Sans({
@@ -55,6 +56,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="ResearchFlow" />
       </head>
       <body className={`${dmSans.variable} ${syne.variable} font-sans antialiased`} style={{ backgroundColor: '#05010F' }}>
+        <OfflineBanner />
         {children}
         <InstallPrompt />
         <Toaster position="bottom-right" theme="dark" />
