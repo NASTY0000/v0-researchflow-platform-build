@@ -8,18 +8,11 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { ArrowLeft, Save, X, Plus, Loader2 } from 'lucide-react'
+import { ArrowLeft, Save, Loader2 } from 'lucide-react'
 import type { ResearchIdea } from '@/lib/types/database'
-
-const RESEARCH_AREAS = [
-  'Computer Science', 'Data Science', 'Artificial Intelligence', 'Machine Learning',
-  'Biotechnology', 'Environmental Science', 'Public Health', 'Economics',
-  'Social Sciences', 'Engineering', 'Mathematics', 'Physics', 'Chemistry',
-  'Medicine', 'Agriculture', 'Education', 'Other',
-]
+import { TagInput } from '@/components/ui/tag-input'
+import { RESEARCH_AREAS, SKILLS_LIST } from '@/lib/constants/tags'
 
 export default function EditIdeaPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
@@ -33,10 +26,8 @@ export default function EditIdeaPage({ params }: { params: Promise<{ id: string 
 
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  const [researchArea, setResearchArea] = useState('')
-  const [tagInput, setTagInput] = useState('')
+  const [researchArea, setResearchArea] = useState<string[]>([])
   const [tags, setTags] = useState<string[]>([])
-  const [skillInput, setSkillInput] = useState('')
   const [skillsNeeded, setSkillsNeeded] = useState<string[]>([])
 
   useEffect(() => {
@@ -64,7 +55,7 @@ export default function EditIdeaPage({ params }: { params: Promise<{ id: string 
       setIdea(data)
       setTitle(data.title || '')
       setDescription(data.description || '')
-      setResearchArea(data.research_area || '')
+      setResearchArea(data.research_area ? [data.research_area] : [])
       setTags(data.tags || [])
       setSkillsNeeded(data.skills_needed || [])
       setIsLoading(false)
@@ -72,24 +63,8 @@ export default function EditIdeaPage({ params }: { params: Promise<{ id: string 
     load()
   }, [id, router])
 
-  function addTag() {
-    const t = tagInput.trim()
-    if (t && !tags.includes(t) && tags.length < 10) {
-      setTags([...tags, t])
-      setTagInput('')
-    }
-  }
-
-  function addSkill() {
-    const s = skillInput.trim()
-    if (s && !skillsNeeded.includes(s) && skillsNeeded.length < 10) {
-      setSkillsNeeded([...skillsNeeded, s])
-      setSkillInput('')
-    }
-  }
-
   async function handleSave() {
-    if (!title.trim() || !description.trim() || !researchArea || !idea) return
+    if (!title.trim() || !description.trim() || researchArea.length === 0 || !idea) return
     setIsSaving(true)
     setError(null)
 
@@ -99,7 +74,7 @@ export default function EditIdeaPage({ params }: { params: Promise<{ id: string 
       .update({
         title: title.trim(),
         description: description.trim(),
-        research_area: researchArea,
+        research_area: researchArea[0],
         tags,
         skills_needed: skillsNeeded,
         updated_at: new Date().toISOString(),
@@ -161,70 +136,35 @@ export default function EditIdeaPage({ params }: { params: Promise<{ id: string 
 
         <div className="space-y-2">
           <Label>Research Area <span className="text-destructive">*</span></Label>
-          <Select value={researchArea} onValueChange={setResearchArea}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select research area" />
-            </SelectTrigger>
-            <SelectContent>
-              {RESEARCH_AREAS.map((area) => (
-                <SelectItem key={area} value={area}>{area}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <TagInput
+            options={RESEARCH_AREAS}
+            value={researchArea}
+            onChange={setResearchArea}
+            placeholder="Search research area..."
+            maxItems={1}
+          />
         </div>
 
         <div className="space-y-2">
           <Label>Tags</Label>
-          <div className="flex gap-2">
-            <Input
-              value={tagInput}
-              onChange={(e) => setTagInput(e.target.value)}
-              placeholder="Add a tag..."
-              onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
-            />
-            <Button type="button" variant="outline" onClick={addTag} disabled={tags.length >= 10}>
-              <Plus className="w-4 h-4" />
-            </Button>
-          </div>
-          {tags.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-2">
-              {tags.map((tag) => (
-                <Badge key={tag} variant="secondary" className="flex items-center gap-1">
-                  {tag}
-                  <button onClick={() => setTags(tags.filter((t) => t !== tag))} className="ml-1">
-                    <X className="w-3 h-3" />
-                  </button>
-                </Badge>
-              ))}
-            </div>
-          )}
+          <TagInput
+            options={[]}
+            value={tags}
+            onChange={setTags}
+            placeholder="Type a tag and press Enter..."
+            maxItems={10}
+          />
         </div>
 
         <div className="space-y-2">
           <Label>Skills Needed</Label>
-          <div className="flex gap-2">
-            <Input
-              value={skillInput}
-              onChange={(e) => setSkillInput(e.target.value)}
-              placeholder="Add a skill..."
-              onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill())}
-            />
-            <Button type="button" variant="outline" onClick={addSkill} disabled={skillsNeeded.length >= 10}>
-              <Plus className="w-4 h-4" />
-            </Button>
-          </div>
-          {skillsNeeded.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-2">
-              {skillsNeeded.map((skill) => (
-                <Badge key={skill} variant="secondary" className="flex items-center gap-1 bg-primary/10 text-primary border-primary/20">
-                  {skill}
-                  <button onClick={() => setSkillsNeeded(skillsNeeded.filter((s) => s !== skill))} className="ml-1">
-                    <X className="w-3 h-3" />
-                  </button>
-                </Badge>
-              ))}
-            </div>
-          )}
+          <TagInput
+            options={SKILLS_LIST}
+            value={skillsNeeded}
+            onChange={setSkillsNeeded}
+            placeholder="Search skills..."
+            maxItems={10}
+          />
         </div>
 
         <div className="flex gap-3 pt-2">

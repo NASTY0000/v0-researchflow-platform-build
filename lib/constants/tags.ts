@@ -144,3 +144,16 @@ export const SKILLS_LIST = [
   'Web Development',
   'Western Blotting',
 ].sort()
+
+export const LOOKING_FOR_OPTIONS = [
+  'Co-author', 'Data Analyst',
+  'Data Collector', 'Designer',
+  'Developer', 'Editor',
+  'Field Researcher', 'Grant Writer',
+  'Lab Partner', 'Literature Reviewer',
+  'Mentor', 'Peer Reviewer',
+  'Project Manager', 'Research Advisor',
+  'Statistician', 'Subject Expert',
+  'Survey Administrator', 'Technical Writer',
+  'Translator', 'Videographer',
+].sort()

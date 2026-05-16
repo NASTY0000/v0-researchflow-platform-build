@@ -27,8 +27,9 @@ import {
 } from 'lucide-react'
 import type { Profile, University, AcademicLevel } from '@/lib/types/database'
 import { completeOnboarding, updateProfile } from '@/lib/actions/auth'
-import { ALL_RESEARCH_INTERESTS, SKILLS_OFFERED, COLLABORATOR_TYPES, USER_ROLES, type ExtendedUserRole } from '@/lib/data/research-data'
+import { USER_ROLES, type ExtendedUserRole } from '@/lib/data/research-data'
 import { TagInput } from '@/components/ui/tag-input'
+import { RESEARCH_AREAS, SKILLS_LIST, LOOKING_FOR_OPTIONS } from '@/lib/constants/tags'
 import { COUNTRIES, ALL_NIGERIAN_UNIVERSITIES } from '@/lib/data/universities'
 
 const STEPS = [
@@ -480,8 +481,9 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
                 <TagInput
                   value={researchInterests}
                   onChange={setResearchInterests}
-                  suggestions={ALL_RESEARCH_INTERESTS}
+                  options={RESEARCH_AREAS}
                   placeholder="Search research areas..."
+                  maxItems={10}
                 />
               </CardContent>
             </Card>
@@ -506,8 +508,9 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
                   <TagInput
                     value={skills}
                     onChange={setSkills}
-                    suggestions={SKILLS_OFFERED}
+                    options={SKILLS_LIST}
                     placeholder="Search skills..."
+                    maxItems={15}
                   />
                 </div>
 
@@ -525,8 +528,9 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
                   <TagInput
                     value={lookingFor}
                     onChange={setLookingFor}
-                    suggestions={COLLABORATOR_TYPES}
+                    options={LOOKING_FOR_OPTIONS}
                     placeholder="Search collaborator types..."
+                    maxItems={10}
                   />
                 </div>
 
