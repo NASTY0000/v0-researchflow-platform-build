@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Crown, Medal, Award } from 'lucide-react'
 
@@ -29,7 +30,7 @@ function getTitle(score: number): string {
   return 'Emerging Researcher'
 }
 
-function getUniversity(uid: string | null): string {
+function getUniversity(uid: string | null | undefined): string {
   if (!uid) return ''
   if (uid.length === 36 && uid.includes('-')) return ''
   return uid
@@ -40,6 +41,12 @@ export default function LeaderboardPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    const t = setTimeout(() => setMounted(true), 100)
+    return () => clearTimeout(t)
+  }, [])
 
   useEffect(() => {
     async function load() {
@@ -88,166 +95,200 @@ export default function LeaderboardPage() {
   }
 
   const top3 = users.slice(0, 3)
-  const rest = users.slice(3)
   const currentUserRank = users.findIndex(u => u.id === currentUserId) + 1
 
   return (
     <div className="space-y-8 max-w-4xl mx-auto">
       <div>
         <h1 className="text-2xl font-bold">Akili Leaderboard</h1>
-        <p className="text-muted-foreground mt-1">
-          Top researchers on ResearchFlow
-        </p>
+        <p className="text-muted-foreground mt-1">Top researchers on ResearchFlow</p>
         {currentUserRank > 0 && (
-          <p className="text-sm text-primary mt-1">
-            Your rank: #{currentUserRank}
-          </p>
+          <p className="text-sm text-primary mt-1">Your rank: #{currentUserRank}</p>
         )}
       </div>
 
       {/* Top 3 Podium */}
-      {top3.length > 0 && (() => {
-        const podiumOrder = [top3[1], top3[0], top3[2]]
-        const configs = [
-          {
-            rank: 2,
-            icon: <Medal className="w-8 h-8 text-gray-200" />,
-            cardCls: 'bg-gradient-to-br from-gray-300 via-gray-400 to-gray-500 dark:from-gray-600 dark:via-gray-700 dark:to-gray-800',
-            border: '2px solid #9CA3AF',
-            rankBg: 'bg-white',
-            rankTxt: 'text-gray-600',
-            avatarCls: 'w-16 h-16',
-            label: '🥈 Runner Up',
-            cardStyle: {
-              animation: 'slideInLeft 0.6s ease-out 0.2s forwards, pulseGlowSilver 3s ease-in-out 1.5s infinite',
-              opacity: 0 as const,
-            },
-            scoreDelay: '0.9s',
-          },
-          {
-            rank: 1,
-            icon: <Crown className="w-10 h-10 text-yellow-200" />,
-            cardCls: 'bg-gradient-to-br from-yellow-400 via-yellow-500 to-amber-700',
-            border: '2px solid #F59E0B',
-            rankBg: 'bg-white',
-            rankTxt: 'text-yellow-600',
-            avatarCls: 'w-20 h-20',
-            label: '🥇 Champion',
-            cardStyle: {
-              animation: 'dropInBounce 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0s forwards, pulseGlow 3s ease-in-out 1s infinite',
-              opacity: 0 as const,
-            },
-            scoreDelay: '0.8s',
-            shimmer: true,
-          },
-          {
-            rank: 3,
-            icon: <Award className="w-8 h-8 text-yellow-200" />,
-            cardCls: 'bg-gradient-to-br from-amber-600 via-amber-700 to-amber-900 dark:from-amber-800 dark:via-amber-900 dark:to-stone-900',
-            border: '2px solid #D97706',
-            rankBg: 'bg-white',
-            rankTxt: 'text-amber-700',
-            avatarCls: 'w-16 h-16',
-            label: '🥉 Third Place',
-            cardStyle: {
-              animation: 'slideInRight 0.6s ease-out 0.4s forwards, pulseGlowBronze 3s ease-in-out 2s infinite',
-              opacity: 0 as const,
-            },
-            scoreDelay: '1s',
-          },
-        ]
+      {top3.length > 0 && (
+        <div className="grid grid-cols-3 gap-3 items-end mb-8">
 
-        return (
-          <div className="grid grid-cols-3 gap-4 items-end">
-            {podiumOrder.map((user, idx) => {
-              if (!user) return <div key={idx} />
-              const cfg = configs[idx]
-              const isFirst = cfg.rank === 1
-              const hoverCls = isFirst
-                ? 'transition-transform duration-300 hover:scale-[1.15] cursor-pointer'
-                : 'transition-transform duration-300 hover:scale-105 cursor-pointer'
-              return (
-                <div
-                  key={user.id}
-                  className={`relative overflow-hidden rounded-2xl text-center ${cfg.cardCls} ${isFirst ? 'pt-8 pb-6' : 'pt-5 pb-5'} px-3 space-y-2.5 ${hoverCls} ${user.id === currentUserId ? 'ring-2 ring-white/60' : ''}`}
-                  style={{ border: cfg.border, ...cfg.cardStyle }}
-                >
-                  {/* Shimmer overlay — gold only */}
-                  {cfg.shimmer && (
-                    <div className="absolute inset-0 rounded-xl pointer-events-none overflow-hidden">
-                      <div style={{
-                        position: 'absolute', inset: 0,
-                        background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%)',
-                        backgroundSize: '200% 100%',
-                        animation: 'shimmer 3s linear infinite',
-                      }} />
-                    </div>
-                  )}
+          {/* 2ND PLACE — SILVER */}
+          <div
+            className="relative rounded-2xl overflow-hidden border-2 border-gray-400 dark:border-gray-500 cursor-pointer hover:scale-105 transition-transform duration-300"
+            style={{
+              background: 'linear-gradient(135deg, #E5E7EB, #9CA3AF, #6B7280)',
+              minHeight: '260px',
+              opacity: mounted ? 1 : 0,
+              transform: mounted ? 'translateX(0)' : 'translateX(-50px)',
+              transition: 'opacity 0.6s ease 0.3s, transform 0.6s ease 0.3s',
+            }}
+          >
+            {/* Silver diagonal glow overlay */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: 'linear-gradient(135deg, transparent 30%, rgba(255,255,255,0.25) 50%, transparent 70%)',
+                backgroundSize: '250% 250%',
+                animation: mounted ? 'silverDiagonalGlow 4s ease-in-out 1s infinite' : 'none',
+              }}
+            />
 
-                  {/* Icon */}
-                  <div className="flex justify-center">
-                    {isFirst ? (
-                      <span style={{ animation: 'crownFloat 2s ease-in-out infinite', display: 'inline-block' }}>
-                        {cfg.icon}
-                      </span>
-                    ) : cfg.icon}
-                  </div>
-
-                  {/* Rank badge */}
-                  <div className="flex justify-center">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${cfg.rankBg} ${cfg.rankTxt}`}>
-                      {cfg.rank}
-                    </div>
-                  </div>
-
-                  {/* Avatar */}
-                  <Avatar className={`mx-auto ${cfg.avatarCls} border-2 border-white/40`}>
-                    <AvatarImage src={user.avatar_url || undefined} />
-                    <AvatarFallback className="bg-white/20 text-white font-bold text-lg">
-                      {user.full_name?.charAt(0) || '?'}
-                    </AvatarFallback>
-                  </Avatar>
-
-                  {/* Name */}
-                  <p className={`font-bold truncate text-white ${isFirst ? 'text-base' : 'text-sm'}`}>
-                    {user.full_name || 'Anonymous'}
-                  </p>
-
-                  {/* University */}
-                  {getUniversity(user.university_id) && (
-                    <p className="text-xs text-white/70 truncate">
-                      {getUniversity(user.university_id)}
-                    </p>
-                  )}
-
-                  {/* Score — pops in */}
-                  <p className={`font-black ${isFirst ? 'text-3xl' : 'text-2xl'}`}>
-                    <span style={{
-                      display: 'inline-block',
-                      animation: 'scoreCountUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
-                      animationDelay: cfg.scoreDelay,
-                      opacity: 0,
-                      color: 'white',
-                    }}>
-                      {user.akili_score.toLocaleString()}
-                    </span>
-                  </p>
-
-                  {/* Title */}
-                  <div className="flex justify-center">
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-white/20 text-white font-medium">
-                      {getTitle(user.akili_score)}
-                    </span>
-                  </div>
-
-                  {/* Place label */}
-                  <p className="text-xs font-semibold text-white/90">{cfg.label}</p>
-                </div>
-              )
-            })}
+            <div className="relative z-10 p-4 flex flex-col items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-gray-300 border-2 border-white flex items-center justify-center font-bold text-gray-700 text-sm shadow-md">
+                2
+              </div>
+              <Medal className="w-7 h-7 text-gray-200" />
+              <Avatar className="w-14 h-14 border-2 border-white/50 shadow-lg">
+                <AvatarImage src={top3[1]?.avatar_url || undefined} />
+                <AvatarFallback className="bg-gray-500 text-white font-bold">
+                  {top3[1]?.full_name?.charAt(0) || '?'}
+                </AvatarFallback>
+              </Avatar>
+              <p className="font-bold text-sm text-white text-center leading-tight drop-shadow-md">
+                {top3[1]?.full_name || 'Anonymous'}
+              </p>
+              {getUniversity(top3[1]?.university_id) && (
+                <p className="text-xs text-gray-200 text-center truncate w-full drop-shadow-sm">
+                  {getUniversity(top3[1]?.university_id)}
+                </p>
+              )}
+              <div style={{
+                opacity: mounted ? 1 : 0,
+                transform: mounted ? 'scale(1)' : 'scale(0.6)',
+                transition: 'opacity 0.4s ease 0.9s, transform 0.4s ease 0.9s',
+              }}>
+                <p className="text-2xl font-black text-white drop-shadow-lg text-center">
+                  {(top3[1]?.akili_score || 0).toLocaleString()}
+                </p>
+              </div>
+              <span className="text-xs text-gray-200 font-medium drop-shadow-sm text-center">🥈 Runner Up</span>
+              <Badge className="text-xs bg-white/20 text-white border-white/30">
+                {getTitle(top3[1]?.akili_score || 0)}
+              </Badge>
+            </div>
           </div>
-        )
-      })()}
+
+          {/* 1ST PLACE — GOLD (center, tallest) */}
+          <div
+            className="relative rounded-2xl overflow-hidden border-2 border-yellow-400 cursor-pointer z-10 hover:scale-[1.05] transition-transform duration-300"
+            style={{
+              background: 'linear-gradient(135deg, #FCD34D, #F59E0B, #D97706, #92400E)',
+              minHeight: '310px',
+              opacity: mounted ? 1 : 0,
+              transform: mounted ? 'translateY(0) scale(1)' : 'translateY(-60px) scale(0.85)',
+              transition: 'opacity 0.7s ease 0s, transform 0.7s cubic-bezier(0.34,1.4,0.64,1) 0s',
+              boxShadow: mounted
+                ? '0 0 30px rgba(245,158,11,0.6), 0 0 60px rgba(245,158,11,0.3)'
+                : 'none',
+            }}
+          >
+            {/* Gold diagonal glow overlay */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: 'linear-gradient(135deg, transparent 25%, rgba(255,255,255,0.35) 50%, transparent 75%)',
+                backgroundSize: '250% 250%',
+                animation: mounted ? 'goldDiagonalGlow 3s ease-in-out 0.8s infinite' : 'none',
+              }}
+            />
+
+            <div className="relative z-10 p-4 flex flex-col items-center gap-2">
+              <div className="w-9 h-9 rounded-full bg-yellow-300 border-2 border-white flex items-center justify-center font-black text-yellow-900 text-base shadow-lg">
+                1
+              </div>
+              <div style={{
+                animation: mounted ? 'crownFloat 2.5s ease-in-out infinite' : 'none',
+                display: 'inline-block',
+              }}>
+                <Crown className="w-10 h-10 text-yellow-200 drop-shadow-lg" />
+              </div>
+              <Avatar className="w-20 h-20 border-4 border-yellow-200/70 shadow-xl">
+                <AvatarImage src={top3[0]?.avatar_url || undefined} />
+                <AvatarFallback className="bg-yellow-600 text-white font-black text-2xl">
+                  {top3[0]?.full_name?.charAt(0) || '?'}
+                </AvatarFallback>
+              </Avatar>
+              <p className="font-black text-base text-white text-center leading-tight drop-shadow-lg">
+                {top3[0]?.full_name || 'Anonymous'}
+              </p>
+              {getUniversity(top3[0]?.university_id) && (
+                <p className="text-xs text-yellow-100 text-center truncate w-full drop-shadow-sm">
+                  {getUniversity(top3[0]?.university_id)}
+                </p>
+              )}
+              <div style={{
+                opacity: mounted ? 1 : 0,
+                transform: mounted ? 'scale(1)' : 'scale(0.6)',
+                transition: 'opacity 0.4s ease 0.8s, transform 0.4s ease 0.8s',
+              }}>
+                <p className="text-4xl font-black text-white drop-shadow-xl text-center">
+                  {(top3[0]?.akili_score || 0).toLocaleString()}
+                </p>
+              </div>
+              <span className="text-sm text-yellow-100 font-bold drop-shadow-md text-center">🥇 Champion</span>
+              <Badge className="text-xs bg-white/25 text-white border-white/40 font-medium">
+                {getTitle(top3[0]?.akili_score || 0)}
+              </Badge>
+            </div>
+          </div>
+
+          {/* 3RD PLACE — BRONZE */}
+          <div
+            className="relative rounded-2xl overflow-hidden border-2 border-amber-600 dark:border-amber-700 cursor-pointer hover:scale-105 transition-transform duration-300"
+            style={{
+              background: 'linear-gradient(135deg, #FCD34D, #D97706, #92400E, #78350F)',
+              minHeight: '240px',
+              opacity: mounted ? 1 : 0,
+              transform: mounted ? 'translateX(0)' : 'translateX(50px)',
+              transition: 'opacity 0.6s ease 0.5s, transform 0.6s ease 0.5s',
+            }}
+          >
+            {/* Bronze diagonal glow overlay */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: 'linear-gradient(135deg, transparent 30%, rgba(255,255,255,0.2) 50%, transparent 70%)',
+                backgroundSize: '250% 250%',
+                animation: mounted ? 'bronzeDiagonalGlow 4.5s ease-in-out 1.2s infinite' : 'none',
+              }}
+            />
+
+            <div className="relative z-10 p-4 flex flex-col items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-amber-600 border-2 border-white flex items-center justify-center font-bold text-white text-sm shadow-md">
+                3
+              </div>
+              <Award className="w-7 h-7 text-amber-200" />
+              <Avatar className="w-14 h-14 border-2 border-white/50 shadow-lg">
+                <AvatarImage src={top3[2]?.avatar_url || undefined} />
+                <AvatarFallback className="bg-amber-700 text-white font-bold">
+                  {top3[2]?.full_name?.charAt(0) || '?'}
+                </AvatarFallback>
+              </Avatar>
+              <p className="font-bold text-sm text-white text-center leading-tight drop-shadow-md">
+                {top3[2]?.full_name || 'Anonymous'}
+              </p>
+              {getUniversity(top3[2]?.university_id) && (
+                <p className="text-xs text-amber-100 text-center truncate w-full drop-shadow-sm">
+                  {getUniversity(top3[2]?.university_id)}
+                </p>
+              )}
+              <div style={{
+                opacity: mounted ? 1 : 0,
+                transform: mounted ? 'scale(1)' : 'scale(0.6)',
+                transition: 'opacity 0.4s ease 1.1s, transform 0.4s ease 1.1s',
+              }}>
+                <p className="text-2xl font-black text-white drop-shadow-lg text-center">
+                  {(top3[2]?.akili_score || 0).toLocaleString()}
+                </p>
+              </div>
+              <span className="text-xs text-amber-100 font-medium drop-shadow-sm text-center">🥉 Third Place</span>
+              <Badge className="text-xs bg-white/20 text-white border-white/30">
+                {getTitle(top3[2]?.akili_score || 0)}
+              </Badge>
+            </div>
+          </div>
+
+        </div>
+      )}
 
       {/* Full Table */}
       <Card>
@@ -294,7 +335,7 @@ export default function LeaderboardPage() {
                   </div>
                   <div className="text-right">
                     <p className="font-bold text-primary">
-                      {user.akili_score}
+                      {user.akili_score.toLocaleString()}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {getTitle(user.akili_score)}
