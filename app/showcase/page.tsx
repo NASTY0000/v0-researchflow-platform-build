@@ -60,24 +60,21 @@ export default function ShowcasePage() {
   }, [search, areaFilter])
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#05010F', color: '#F3F0FF' }}>
+    <div className="min-h-screen bg-background text-foreground">
 
       {/* Nav */}
-      <nav
-        className="sticky top-0 z-40 px-4 sm:px-6 py-3 flex items-center justify-between"
-        style={{ background: 'rgba(5,1,15,0.92)', borderBottom: '1px solid rgba(139,92,246,0.15)', backdropFilter: 'blur(12px)' }}
-      >
+      <nav className="sticky top-0 z-40 px-4 sm:px-6 py-3 flex items-center justify-between bg-background/90 backdrop-blur-xl border-b border-border">
         <Link href="/" className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg overflow-hidden">
             <Image src="/icon.svg" alt="ResearchFlow" width={32} height={32} className="w-8 h-8" />
           </div>
-          <span className="font-bold font-heading hidden sm:block" style={{ color: '#A855F7' }}>ResearchFlow</span>
+          <span className="font-bold font-heading hidden sm:block text-primary">ResearchFlow</span>
         </Link>
 
         <div className="flex items-center gap-3">
           {isLoggedIn ? (
             <>
-              <Button size="sm" variant="ghost" asChild style={{ color: '#C4B5D8' }}>
+              <Button size="sm" variant="ghost" asChild className="text-muted-foreground">
                 <Link href="/projects">Submit Research</Link>
               </Button>
               <Button size="sm" asChild style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}>
@@ -86,7 +83,7 @@ export default function ShowcasePage() {
             </>
           ) : (
             <>
-              <Button size="sm" variant="ghost" asChild style={{ color: '#C4B5D8' }}>
+              <Button size="sm" variant="ghost" asChild className="text-muted-foreground">
                 <Link href="/auth/login">Sign In</Link>
               </Button>
               <Button size="sm" asChild style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}>
@@ -100,13 +97,13 @@ export default function ShowcasePage() {
       {/* Header */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-12 pb-6 space-y-3">
         <div className="flex items-center gap-2">
-          <BookOpen className="w-5 h-5" style={{ color: '#A855F7' }} />
-          <span className="text-sm font-semibold uppercase tracking-widest" style={{ color: '#A855F7' }}>Research Showcase</span>
+          <BookOpen className="w-5 h-5 text-primary" />
+          <span className="text-sm font-semibold uppercase tracking-widest text-primary">Research Showcase</span>
         </div>
         <h1 className="text-3xl sm:text-4xl font-bold font-heading" style={{ letterSpacing: '-0.02em' }}>
           African Research, Shared Openly
         </h1>
-        <p className="text-base max-w-xl" style={{ color: '#7C6A9C' }}>
+        <p className="text-base max-w-xl text-muted-foreground">
           Explore published research from student researchers and academics across Africa.
         </p>
       </div>
@@ -115,24 +112,20 @@ export default function ShowcasePage() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 pb-8">
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#7C6A9C' }} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               className="pl-9"
               placeholder="Search by title or abstract..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(139,92,246,0.2)', color: '#F3F0FF' }}
             />
           </div>
           <Select value={areaFilter} onValueChange={setAreaFilter}>
-            <SelectTrigger
-              className="w-full sm:w-52"
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(139,92,246,0.2)', color: '#F3F0FF' }}
-            >
-              <Filter className="w-3.5 h-3.5 mr-2 shrink-0" style={{ color: '#7C6A9C' }} />
+            <SelectTrigger className="w-full sm:w-52">
+              <Filter className="w-3.5 h-3.5 mr-2 shrink-0 text-muted-foreground" />
               <SelectValue placeholder="Research Area" />
             </SelectTrigger>
-            <SelectContent style={{ background: '#0F0A1E', border: '1px solid rgba(139,92,246,0.3)' }}>
+            <SelectContent>
               <SelectItem value="all">All Areas</SelectItem>
               {RESEARCH_AREAS.map(area => (
                 <SelectItem key={area} value={area}>{area}</SelectItem>
@@ -146,13 +139,13 @@ export default function ShowcasePage() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 pb-16">
         {isLoading ? (
           <div className="flex items-center justify-center py-24">
-            <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#A855F7' }} />
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
         ) : entries.length === 0 ? (
-          <div className="py-20 text-center space-y-4 rounded-2xl" style={{ border: '1px dashed rgba(139,92,246,0.25)' }}>
+          <div className="py-20 text-center space-y-4 rounded-2xl border border-dashed border-border">
             <BookOpen className="w-12 h-12 mx-auto opacity-20" />
             <p className="font-semibold text-lg">No published research yet.</p>
-            <p style={{ color: '#7C6A9C' }}>Be the first to submit your work.</p>
+            <p className="text-muted-foreground">Be the first to submit your work.</p>
             {isLoggedIn && (
               <Link href="/projects">
                 <Button style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}>
@@ -173,20 +166,17 @@ export default function ShowcasePage() {
       {/* Join Banner */}
       {!isLoggedIn && (
         <div className="max-w-6xl mx-auto px-4 sm:px-6 pb-16">
-          <div
-            className="rounded-2xl p-10 text-center space-y-5"
-            style={{ background: 'linear-gradient(135deg, rgba(124,58,237,0.15), rgba(168,85,247,0.08))', border: '1px solid rgba(139,92,246,0.3)' }}
-          >
-            <Sparkles className="w-10 h-10 mx-auto" style={{ color: '#A855F7' }} />
+          <div className="rounded-2xl p-10 text-center space-y-5 bg-secondary border border-border">
+            <Sparkles className="w-10 h-10 mx-auto text-primary" />
             <h2 className="text-2xl font-bold font-heading">Join ResearchFlow to Collaborate on Research</h2>
-            <p className="max-w-lg mx-auto" style={{ color: '#7C6A9C' }}>
+            <p className="max-w-lg mx-auto text-muted-foreground">
               Connect with researchers across Africa, share your own work, find collaborators, and grow your academic network — all in one place.
             </p>
             <div className="flex items-center justify-center gap-3 flex-wrap">
               <Button asChild style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}>
                 <Link href="/auth/signup">Create Free Account</Link>
               </Button>
-              <Button variant="outline" asChild style={{ border: '1px solid rgba(139,92,246,0.3)', color: '#A855F7' }}>
+              <Button variant="outline" asChild>
                 <Link href="/auth/login">Sign In</Link>
               </Button>
             </div>
@@ -195,20 +185,20 @@ export default function ShowcasePage() {
       )}
 
       {/* Footer */}
-      <footer className="py-10 px-4 sm:px-6" style={{ borderTop: '1px solid rgba(139,92,246,0.12)' }}>
+      <footer className="py-10 px-4 sm:px-6 border-t border-border">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg overflow-hidden">
               <Image src="/icon.svg" alt="ResearchFlow" width={28} height={28} />
             </div>
-            <span className="font-bold font-heading text-sm" style={{ color: '#A855F7' }}>ResearchFlow</span>
+            <span className="font-bold font-heading text-sm text-primary">ResearchFlow</span>
           </div>
-          <div className="flex items-center gap-6 text-sm" style={{ color: '#7C6A9C' }}>
+          <div className="flex items-center gap-6 text-sm text-muted-foreground">
             {['About', 'Terms', 'Privacy', 'Contact'].map(item => (
-              <Link key={item} href={`/${item.toLowerCase()}`} className="hover:text-[#F3F0FF] transition-colors">{item}</Link>
+              <Link key={item} href={`/${item.toLowerCase()}`} className="hover:text-foreground transition-colors">{item}</Link>
             ))}
           </div>
-          <p className="text-xs" style={{ color: '#7C6A9C' }}>
+          <p className="text-xs text-muted-foreground">
             &copy; {new Date().getFullYear()} ResearchFlow. All rights reserved.
           </p>
         </div>
@@ -228,13 +218,8 @@ function EntryCard({ entry }: { entry: EntryWithAuthor }) {
 
   return (
     <div
-      className="flex flex-col rounded-2xl overflow-hidden transition-all duration-200 hover:translate-y-[-2px]"
-      style={{
-        background: 'rgba(255,255,255,0.03)',
-        border: isFeatured
-          ? '1px solid rgba(234,179,8,0.35)'
-          : '1px solid rgba(139,92,246,0.18)',
-      }}
+      className="flex flex-col rounded-2xl overflow-hidden transition-all duration-200 hover:translate-y-[-2px] bg-card border border-border"
+      style={isFeatured ? { borderColor: 'rgba(234,179,8,0.35)' } : undefined}
     >
       {isFeatured && (
         <div
@@ -251,21 +236,21 @@ function EntryCard({ entry }: { entry: EntryWithAuthor }) {
           <div className="flex items-center gap-2 min-w-0">
             <Avatar className="h-7 w-7 shrink-0">
               <AvatarImage src={entry.author?.avatar_url || undefined} />
-              <AvatarFallback className="text-xs" style={{ background: 'rgba(124,58,237,0.2)', color: '#A855F7' }}>
+              <AvatarFallback className="text-xs bg-primary/20 text-primary">
                 {entry.author?.full_name?.charAt(0) || '?'}
               </AvatarFallback>
             </Avatar>
             <div className="min-w-0">
-              <p className="text-xs font-medium truncate" style={{ color: '#C4B5D8' }}>
+              <p className="text-xs font-medium truncate text-foreground">
                 {entry.author?.full_name || 'Unknown'}
               </p>
               {entry.author?.department && (
-                <p className="text-[10px] truncate" style={{ color: '#7C6A9C' }}>{entry.author.department}</p>
+                <p className="text-[10px] truncate text-muted-foreground">{entry.author.department}</p>
               )}
             </div>
           </div>
           {entry.published_at && (
-            <span className="flex items-center gap-1 shrink-0 text-[10px]" style={{ color: '#7C6A9C' }}>
+            <span className="flex items-center gap-1 shrink-0 text-[10px] text-muted-foreground">
               <Calendar className="w-3 h-3" />
               {new Date(entry.published_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
             </span>
@@ -273,7 +258,7 @@ function EntryCard({ entry }: { entry: EntryWithAuthor }) {
         </div>
 
         {/* Title */}
-        <h3 className="font-semibold text-sm leading-snug line-clamp-2" style={{ color: '#F3F0FF' }}>
+        <h3 className="font-semibold text-sm leading-snug line-clamp-2 text-foreground">
           {entry.title}
         </h3>
 
@@ -286,24 +271,24 @@ function EntryCard({ entry }: { entry: EntryWithAuthor }) {
             {entry.research_area}
           </Badge>
           {entry.tags?.slice(0, 2).map(tag => (
-            <Badge key={tag} variant="outline" className="text-[10px] px-2 py-0" style={{ borderColor: 'rgba(139,92,246,0.2)', color: '#7C6A9C' }}>
+            <Badge key={tag} variant="outline" className="text-[10px] px-2 py-0 text-muted-foreground">
               {tag}
             </Badge>
           ))}
         </div>
 
         {/* Abstract preview */}
-        <p className="text-xs leading-relaxed flex-1" style={{ color: '#7C6A9C' }}>
+        <p className="text-xs leading-relaxed flex-1 text-muted-foreground">
           {truncateAbstract(entry.abstract)}
         </p>
 
         {/* Footer row */}
         <div className="flex items-center justify-between pt-1">
-          <span className="flex items-center gap-1 text-xs" style={{ color: '#7C6A9C' }}>
+          <span className="flex items-center gap-1 text-xs text-muted-foreground">
             <Eye className="w-3.5 h-3.5" />{entry.views.toLocaleString()}
           </span>
           <Link href={`/showcase/${entry.id}`}>
-            <Button size="sm" variant="ghost" className="text-xs h-7 px-3 gap-1" style={{ color: '#A855F7' }}>
+            <Button size="sm" variant="ghost" className="text-xs h-7 px-3 gap-1 text-primary">
               Read More <ArrowRight className="w-3 h-3" />
             </Button>
           </Link>

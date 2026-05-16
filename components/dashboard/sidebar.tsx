@@ -120,7 +120,7 @@ export function DashboardSidebar({ profile }: DashboardSidebarProps) {
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold font-heading gradient-text-cyan">ResearchFlow</span>
-                  <span className="truncate text-xs" style={{ color: '#7C6A9C' }}>Collaborate & Discover</span>
+                  <span className="truncate text-xs text-muted-foreground">Collaborate & Discover</span>
                 </div>
               </Link>
             </SidebarMenuButton>

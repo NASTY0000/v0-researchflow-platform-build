@@ -3,18 +3,18 @@ import { ArrowLeft } from 'lucide-react'
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen p-8" style={{ backgroundColor: '#05010F', color: '#F3F0FF' }}>
+    <div className="min-h-screen p-8 bg-background text-foreground">
       <div className="max-w-3xl mx-auto">
-        <Link href="/" className="inline-flex items-center gap-2 text-sm mb-8" style={{ color: '#A855F7' }}>
+        <Link href="/" className="inline-flex items-center gap-2 text-sm mb-8 text-primary">
           <ArrowLeft className="w-4 h-4" /> Back to home
         </Link>
 
         <h1 className="text-4xl font-bold font-heading mb-4" style={{ letterSpacing: '-0.03em' }}>About ResearchFlow</h1>
-        <p className="text-lg mb-10" style={{ color: '#7C6A9C' }}>
+        <p className="text-lg mb-10 text-muted-foreground">
           Connecting African researchers to collaborate, grow, and publish together.
         </p>
 
-        <div className="space-y-6 text-sm leading-relaxed" style={{ color: '#C4B5D8' }}>
+        <div className="space-y-6 text-sm leading-relaxed text-muted-foreground">
           {[
             {
               title: 'Our Mission',
@@ -33,15 +33,15 @@ export default function AboutPage() {
               body: 'We are a team of researchers and engineers who experienced firsthand the friction of finding collaborators and mentors. We built the platform we wished existed when we were students.',
             },
           ].map(section => (
-            <div key={section.title} className="p-6 rounded-2xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(139,92,246,0.15)' }}>
-              <h2 className="font-semibold font-heading mb-3" style={{ color: '#F3F0FF' }}>{section.title}</h2>
+            <div key={section.title} className="p-6 rounded-2xl bg-card border border-border">
+              <h2 className="font-semibold font-heading mb-3 text-foreground">{section.title}</h2>
               <p>{section.body}</p>
             </div>
           ))}
         </div>
 
         <div className="mt-10 text-center">
-          <Link href="/auth/signup" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-medium text-sm" style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', color: '#F3F0FF', boxShadow: '0 0 20px rgba(124,58,237,0.35)' }}>
+          <Link href="/auth/signup" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-medium text-sm text-white" style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', boxShadow: '0 0 20px rgba(124,58,237,0.35)' }}>
             Join ResearchFlow
           </Link>
         </div>

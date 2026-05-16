@@ -63,12 +63,12 @@ export default function LandingPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-[#05010F] text-[#F3F0FF] relative">
+    <div className="min-h-screen bg-background text-foreground relative">
       {/* Global 3D Illustrations */}
       <GlobalIllustrations />
 
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#05010F]/85 border-b border-violet-500/15 backdrop-blur-xl">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-background/85 border-b border-border backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Link href="/" className="flex items-center gap-2.5">
@@ -81,7 +81,7 @@ export default function LandingPage() {
             <div className="hidden md:flex items-center gap-8">
               {['Features', 'How It Works', 'Testimonials'].map((item) => (
                 <Link key={item} href={`#${item.toLowerCase().replace(/ /g, '-')}`}
-                  className="text-sm text-[#7C6A9C] hover:text-[#F3F0FF] transition-colors"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   {item}
                 </Link>
@@ -89,7 +89,7 @@ export default function LandingPage() {
             </div>
 
             <div className="flex items-center gap-3">
-              <Button variant="ghost" asChild className="text-[#7C6A9C] hover:text-[#F3F0FF]">
+              <Button variant="ghost" asChild className="text-muted-foreground hover:text-foreground">
                 <Link href="/auth/login">Sign in</Link>
               </Button>
               <Button asChild className="bg-gradient-to-br from-violet-600 to-violet-500 shadow-[0_0_20px_rgba(124,58,237,0.35)] border-none hover:shadow-[0_0_30px_rgba(124,58,237,0.5)]">
@@ -119,7 +119,7 @@ export default function LandingPage() {
               <span className="gradient-text">Publish.</span>
             </h1>
 
-            <p className="text-lg sm:text-xl max-w-2xl mx-auto mb-10 leading-relaxed animate-fade-up stagger-1 text-[#7C6A9C]">
+            <p className="text-lg sm:text-xl max-w-2xl mx-auto mb-10 leading-relaxed animate-fade-up stagger-1 text-muted-foreground">
               The premier research collaboration platform connecting university students across Africa.
               Find collaborators, access mentors, and bring your research ideas to life.
             </p>
@@ -140,9 +140,9 @@ export default function LandingPage() {
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-24 max-w-4xl mx-auto animate-fade-up stagger-3">
             {stats.map((stat) => (
-              <div key={stat.label} className="text-center p-6 rounded-2xl bg-white/[0.03] border border-violet-500/15">
+              <div key={stat.label} className="text-center p-6 rounded-2xl bg-card border border-border">
                 <div className="text-4xl font-bold font-heading stat-number">{stat.value}</div>
-                <div className="text-sm mt-1 text-[#7C6A9C]">{stat.label}</div>
+                <div className="text-sm mt-1 text-muted-foreground">{stat.label}</div>
               </div>
             ))}
           </div>
@@ -159,7 +159,7 @@ export default function LandingPage() {
             <h2 className="text-3xl sm:text-4xl font-bold font-heading mb-4 tracking-tight">
               Everything You Need to Succeed
             </h2>
-            <p className="max-w-2xl mx-auto text-[#7C6A9C]">
+            <p className="max-w-2xl mx-auto text-muted-foreground">
               From ideation to publication, ResearchFlow provides all the tools for successful research collaboration.
             </p>
           </div>
@@ -168,16 +168,16 @@ export default function LandingPage() {
             {features.map((feature, i) => (
               <div
                 key={feature.title}
-                className={`p-6 rounded-2xl transition-all duration-300 cursor-default animate-fade-up stagger-${Math.min(i + 1, 4)} bg-white/[0.03] border border-violet-500/15 backdrop-blur-xl hover:border-violet-500/45 hover:shadow-[0_0_30px_rgba(124,58,237,0.15)]`}
+                className={`p-6 rounded-2xl transition-all duration-300 cursor-default animate-fade-up stagger-${Math.min(i + 1, 4)} bg-card border border-border hover:border-primary/40 hover:shadow-[0_0_30px_rgba(124,58,237,0.12)]`}
               >
-                <div 
+                <div
                   className="w-11 h-11 rounded-xl flex items-center justify-center mb-4"
                   style={{ background: `${feature.color}18`, border: `1px solid ${feature.color}30` }}
                 >
                   <feature.icon className="w-5 h-5" style={{ color: feature.color }} />
                 </div>
                 <h3 className="text-lg font-semibold font-heading mb-2">{feature.title}</h3>
-                <p className="text-sm leading-relaxed text-[#7C6A9C]">{feature.description}</p>
+                <p className="text-sm leading-relaxed text-muted-foreground">{feature.description}</p>
               </div>
             ))}
           </div>
@@ -185,14 +185,14 @@ export default function LandingPage() {
       </section>
 
       {/* How It Works */}
-      <section id="how-it-works" className="py-24 px-4 bg-gradient-to-br from-[#1E0533]/40 to-transparent">
+      <section id="how-it-works" className="py-24 px-4 bg-secondary/20">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <p className="label-section mb-3">Getting Started</p>
             <h2 className="text-3xl sm:text-4xl font-bold font-heading mb-4 tracking-tight">
               Get Started in Minutes
             </h2>
-            <p className="text-[#7C6A9C]">Join thousands of researchers already collaborating on ResearchFlow.</p>
+            <p className="text-muted-foreground">Join thousands of researchers already collaborating on ResearchFlow.</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-6">
@@ -221,7 +221,7 @@ export default function LandingPage() {
             ].map((item, i) => (
               <div
                 key={item.step}
-                className={`relative p-8 rounded-2xl animate-fade-up stagger-${i + 1} bg-white/[0.03] border border-violet-500/15 hover:border-violet-500/35 transition-all duration-300`}
+                className={`relative p-8 rounded-2xl animate-fade-up stagger-${i + 1} bg-card border border-border hover:border-primary/35 transition-all duration-300`}
               >
                 <div className="flex items-center gap-4 mb-5">
                   <div
@@ -234,7 +234,7 @@ export default function LandingPage() {
                 </div>
                 <div className="w-8 h-0.5 mb-4 rounded bg-gradient-to-r from-violet-600 to-cyan-500" />
                 <h3 className="text-xl font-semibold font-heading mb-3">{item.title}</h3>
-                <p className="text-[#7C6A9C] text-sm leading-relaxed">{item.description}</p>
+                <p className="text-muted-foreground text-sm leading-relaxed">{item.description}</p>
               </div>
             ))}
           </div>
@@ -257,21 +257,21 @@ export default function LandingPage() {
             {testimonials.map((t, i) => (
               <div
                 key={i}
-                className={`p-6 rounded-2xl animate-fade-up stagger-${i + 1} bg-white/[0.03] border border-violet-500/15`}
+                className={`p-6 rounded-2xl animate-fade-up stagger-${i + 1} bg-card border border-border`}
               >
                 <div className="flex gap-1 mb-4">
                   {[...Array(5)].map((_, j) => (
                     <Star key={j} className="w-4 h-4 fill-current text-violet-400" />
                   ))}
                 </div>
-                <p className="mb-6 leading-relaxed text-[#F3F0FF]">&ldquo;{t.quote}&rdquo;</p>
+                <p className="mb-6 leading-relaxed text-foreground">&ldquo;{t.quote}&rdquo;</p>
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold bg-gradient-to-br from-violet-600 to-violet-500 text-[#F3F0FF]">
+                  <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold bg-gradient-to-br from-violet-600 to-violet-500 text-primary-foreground">
                     {t.initial}
                   </div>
                   <div>
                     <div className="font-semibold text-sm">{t.author}</div>
-                    <div className="text-xs text-[#7C6A9C]">{t.role}</div>
+                    <div className="text-xs text-muted-foreground">{t.role}</div>
                   </div>
                 </div>
               </div>
@@ -288,15 +288,15 @@ export default function LandingPage() {
         {/* Footer Nodes */}
         <FooterIllustrations />
         <div className="max-w-4xl mx-auto text-center relative z-10">
-          <div className="p-10 sm:p-16 rounded-3xl relative overflow-hidden bg-gradient-to-br from-[#1E0533] to-[#050118] border border-violet-500/30">
+          <div className="p-10 sm:p-16 rounded-3xl relative overflow-hidden bg-secondary dark:bg-gradient-to-br dark:from-[#1E0533] dark:to-[#050118] border border-border dark:border-violet-500/30">
             {/* Glow */}
-            <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_50%_0%,rgba(124,58,237,0.25),transparent_60%)]" />
+            <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_50%_0%,rgba(124,58,237,0.15),transparent_60%)]" />
             <div className="relative">
               <p className="label-section mb-4">Join the movement</p>
               <h2 className="text-3xl sm:text-4xl font-bold font-heading mb-4 tracking-tight">
                 Ready to Transform Your Research?
               </h2>
-              <p className="mb-10 max-w-2xl mx-auto text-[#7C6A9C]">
+              <p className="mb-10 max-w-2xl mx-auto text-muted-foreground">
                 Join the growing community of African researchers collaborating, learning, and publishing together.
               </p>
               <Button size="lg" asChild className="bg-gradient-to-br from-violet-600 to-violet-500 shadow-[0_0_24px_rgba(124,58,237,0.5)] border-none rounded-lg hover:shadow-[0_0_32px_rgba(124,58,237,0.6)]">
@@ -311,7 +311,7 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 px-4 border-t border-violet-500/12">
+      <footer className="py-12 px-4 border-t border-border">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg overflow-hidden">
@@ -319,12 +319,12 @@ export default function LandingPage() {
             </div>
             <span className="font-bold font-heading gradient-text-cyan">ResearchFlow</span>
           </div>
-          <div className="flex items-center gap-6 text-sm text-[#7C6A9C]">
+          <div className="flex items-center gap-6 text-sm text-muted-foreground">
             {['About', 'Terms', 'Privacy', 'Contact'].map(item => (
-              <Link key={item} href={`/${item.toLowerCase()}`} className="hover:text-[#F3F0FF] transition-colors">{item}</Link>
+              <Link key={item} href={`/${item.toLowerCase()}`} className="hover:text-foreground transition-colors">{item}</Link>
             ))}
           </div>
-          <div className="text-sm text-[#7C6A9C]">
+          <div className="text-sm text-muted-foreground">
             &copy; {new Date().getFullYear()} ResearchFlow. All rights reserved.
           </div>
         </div>
