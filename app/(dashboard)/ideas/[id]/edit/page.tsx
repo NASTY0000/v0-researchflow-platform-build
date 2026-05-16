@@ -170,7 +170,7 @@ export default function EditIdeaPage({ params }: { params: Promise<{ id: string 
         <div className="flex gap-3 pt-2">
           <Button
             onClick={handleSave}
-            disabled={isSaving || !title.trim() || !description.trim() || !researchArea}
+            disabled={isSaving || !title.trim() || !description.trim() || researchArea.length === 0}
             style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}
           >
             {isSaving ? (

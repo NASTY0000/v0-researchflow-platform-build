@@ -18,6 +18,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { TagInput } from '@/components/ui/tag-input'
+import { RESEARCH_AREAS, SKILLS_LIST } from '@/lib/constants/tags'
 import {
   User, Mail, Building2, GraduationCap, Calendar,
   Edit, Save, X, Plus, Award, BookOpen, Briefcase, FileText,
@@ -78,6 +80,8 @@ export default function ProfilePage() {
     bio: '',
     department: '',
     academic_level: '',
+    research_interests: [] as string[],
+    skills: [] as string[],
   })
 
   const [universityName, setUniversityName] = useState('')
@@ -232,6 +236,8 @@ export default function ProfilePage() {
         bio: profileResult.data.bio || '',
         department: profileResult.data.department || '',
         academic_level: profileResult.data.academic_level || '',
+        research_interests: profileResult.data.research_interests || [],
+        skills: profileResult.data.skills || [],
       })
 
       // Resolve university UUID to name if needed
@@ -701,6 +707,24 @@ export default function ProfilePage() {
                       <Label>Academic Level</Label>
                       <Input value={editForm.academic_level} onChange={(e) => setEditForm({ ...editForm, academic_level: e.target.value })} placeholder="e.g., undergraduate" />
                     </div>
+                  </div>
+                  <div>
+                    <Label className="mb-1.5 block">Research Interests</Label>
+                    <TagInput
+                      options={RESEARCH_AREAS}
+                      value={editForm.research_interests}
+                      onChange={(tags) => setEditForm({ ...editForm, research_interests: tags })}
+                      placeholder="Search research areas..."
+                    />
+                  </div>
+                  <div>
+                    <Label className="mb-1.5 block">Skills</Label>
+                    <TagInput
+                      options={SKILLS_LIST}
+                      value={editForm.skills}
+                      onChange={(tags) => setEditForm({ ...editForm, skills: tags })}
+                      placeholder="Search or add skills..."
+                    />
                   </div>
                   <div className="flex gap-2">
                     <Button onClick={saveProfile} disabled={isSaving}>

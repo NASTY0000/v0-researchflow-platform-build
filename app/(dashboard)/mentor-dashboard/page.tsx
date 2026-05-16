@@ -11,7 +11,8 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { TagInput } from '@/components/ui/tag-input'
+import { RESEARCH_AREAS } from '@/lib/constants/tags'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import {
   CheckCircle2, Clock, AlertTriangle, XCircle, Users, Calendar,
@@ -30,11 +31,6 @@ type AvailabilitySlot = MentorAvailability
 
 const TIER_LABELS: Record<number, string> = { 1: 'Registered Faculty', 2: 'Postgraduate Student', 3: 'Industry Professional' }
 
-const RESEARCH_AREAS = [
-  'Computer Science', 'Data Science', 'AI/Machine Learning', 'Biotechnology',
-  'Environmental Science', 'Public Health', 'Economics', 'Social Sciences',
-  'Engineering', 'Mathematics', 'Medicine', 'Agriculture', 'Education', 'Other',
-]
 
 export default function MentorDashboardPage() {
   const router = useRouter()
@@ -58,7 +54,7 @@ export default function MentorDashboardPage() {
   // Open call form
   const [callTitle, setCallTitle] = useState('')
   const [callDescription, setCallDescription] = useState('')
-  const [callArea, setCallArea] = useState('')
+  const [callArea, setCallArea] = useState<string[]>([])
   const [callDeadline, setCallDeadline] = useState('')
   const [isPostingCall, setIsPostingCall] = useState(false)
 
@@ -174,7 +170,7 @@ export default function MentorDashboardPage() {
   }
 
   async function postOpenCall() {
-    if (!callTitle.trim() || !callDescription.trim() || !callArea || !currentUserId) return
+    if (!callTitle.trim() || !callDescription.trim() || callArea.length === 0 || !currentUserId) return
     setIsPostingCall(true)
     const supabase = createClient()
 
@@ -182,7 +178,7 @@ export default function MentorDashboardPage() {
       author_id: currentUserId,
       title: callTitle.trim(),
       description: callDescription.trim(),
-      research_area: callArea,
+      research_area: callArea[0],
       tags: ['open-call', 'mentorship'],
       roles_needed: ['mentee'],
       skills_needed: [],
@@ -195,7 +191,7 @@ export default function MentorDashboardPage() {
 
     if (error) { toast.error(error.message); setIsPostingCall(false); return }
     toast.success('Open call posted!')
-    setCallTitle(''); setCallDescription(''); setCallArea(''); setCallDeadline('')
+    setCallTitle(''); setCallDescription(''); setCallArea([]); setCallDeadline('')
     setIsPostingCall(false)
   }
 
@@ -518,16 +514,13 @@ export default function MentorDashboardPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Research Area</Label>
-                  <Select value={callArea} onValueChange={setCallArea}>
-                    <SelectTrigger style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(139,92,246,0.25)' }}>
-                      <SelectValue placeholder="Select area" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {RESEARCH_AREAS.map((area) => (
-                        <SelectItem key={area} value={area}>{area}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <TagInput
+                    options={RESEARCH_AREAS}
+                    value={callArea}
+                    onChange={setCallArea}
+                    placeholder="Search research areas..."
+                    maxItems={3}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Application Deadline</Label>
