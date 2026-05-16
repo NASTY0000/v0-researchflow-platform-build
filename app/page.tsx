@@ -288,18 +288,18 @@ export default function LandingPage() {
         {/* Footer Nodes */}
         <FooterIllustrations />
         <div className="max-w-4xl mx-auto text-center relative z-10">
-          <div className="p-10 sm:p-16 rounded-3xl relative overflow-hidden bg-secondary dark:bg-gradient-to-br dark:from-[#1E0533] dark:to-[#050118] border border-border dark:border-violet-500/30">
+          <div className="p-10 sm:p-16 rounded-3xl relative overflow-hidden bg-gradient-to-r from-purple-700 to-purple-900 dark:from-purple-900 dark:to-[#050118]">
             {/* Glow */}
-            <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_50%_0%,rgba(124,58,237,0.15),transparent_60%)]" />
-            <div className="relative">
-              <p className="label-section mb-4">Join the movement</p>
-              <h2 className="text-3xl sm:text-4xl font-bold font-heading mb-4 tracking-tight">
+            <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_50%_0%,rgba(255,255,255,0.08),transparent_60%)]" />
+            <div className="relative text-white">
+              <p className="label-section mb-4" style={{ color: 'rgba(255,255,255,0.6)' }}>Join the movement</p>
+              <h2 className="text-3xl sm:text-4xl font-bold font-heading mb-4 tracking-tight text-white">
                 Ready to Transform Your Research?
               </h2>
-              <p className="mb-10 max-w-2xl mx-auto text-muted-foreground">
+              <p className="mb-10 max-w-2xl mx-auto text-white/80">
                 Join the growing community of African researchers collaborating, learning, and publishing together.
               </p>
-              <Button size="lg" asChild className="bg-gradient-to-br from-violet-600 to-violet-500 shadow-[0_0_24px_rgba(124,58,237,0.5)] border-none rounded-lg hover:shadow-[0_0_32px_rgba(124,58,237,0.6)]">
+              <Button size="lg" asChild className="bg-white text-purple-800 hover:bg-white/90 border-none rounded-lg shadow-[0_0_24px_rgba(255,255,255,0.2)] hover:shadow-[0_0_32px_rgba(255,255,255,0.3)]">
                 <Link href="/auth/signup">
                   Create Free Account
                   <ArrowRight className="ml-2 w-4 h-4" />

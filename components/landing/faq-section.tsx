@@ -50,13 +50,12 @@ export function FaqSection() {
             <AccordionItem
               key={i}
               value={`item-${i}`}
-              className="rounded-2xl px-6 overflow-hidden"
-              style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(139,92,246,0.15)' }}
+              className="rounded-2xl px-6 overflow-hidden bg-card border border-border"
             >
-              <AccordionTrigger className="text-left font-semibold text-[#F3F0FF] hover:no-underline py-5 hover:text-violet-300 transition-colors">
+              <AccordionTrigger className="text-left font-semibold text-foreground hover:no-underline py-5 hover:text-violet-500 transition-colors">
                 {faq.q}
               </AccordionTrigger>
-              <AccordionContent className="text-sm leading-relaxed pb-5 text-[#7C6A9C]">
+              <AccordionContent className="text-sm leading-relaxed pb-5 text-muted-foreground">
                 {faq.a}
               </AccordionContent>
             </AccordionItem>
