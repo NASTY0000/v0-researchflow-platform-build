@@ -14,7 +14,6 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Separator } from '@/components/ui/separator'
 import { Search, Plus } from 'lucide-react'
-import { toast } from 'sonner'
 import type { Profile } from '@/lib/types/database'
 import { NotificationsDropdown } from '@/components/dashboard/notifications-dropdown'
 
@@ -35,8 +34,8 @@ export function DashboardHeader({ profile, unreadCount }: DashboardHeaderProps) 
         <SidebarTrigger className="-ml-1" />
         <Separator orientation="vertical" className="mr-2 h-4" />
         
-        {/* Search placeholder */}
-        <Button variant="outline" className="hidden sm:flex items-center gap-2 w-64 justify-start" onClick={() => toast('Search coming soon')} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(139,92,246,0.2)', color: '#7C6A9C', borderRadius: '8px' }}>
+        {/* Search */}
+        <Button variant="outline" className="hidden sm:flex items-center gap-2 w-64 justify-start" onClick={() => window.dispatchEvent(new CustomEvent('open-search'))} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(139,92,246,0.2)', color: '#7C6A9C', borderRadius: '8px' }}>
           <Search className="h-4 w-4" />
           <span className="text-sm">Search...</span>
           <kbd className="ml-auto pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
