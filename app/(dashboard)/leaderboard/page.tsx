@@ -3,9 +3,8 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Trophy, Medal, Award } from 'lucide-react'
+import { Crown, Medal, Award } from 'lucide-react'
 
 interface LeaderboardUser {
   id: string
@@ -107,49 +106,106 @@ export default function LeaderboardPage() {
       </div>
 
       {/* Top 3 Podium */}
-      {top3.length > 0 && (
-        <div className="grid grid-cols-3 gap-4">
-          {[top3[1], top3[0], top3[2]].map((user, idx) => {
-            if (!user) return <div key={idx} />
-            const realRank = idx === 0 ? 2 : idx === 1 ? 1 : 3
-            const icons = [
-              <Medal key="2" className="w-6 h-6 text-gray-400" />,
-              <Trophy key="1" className="w-8 h-8 text-yellow-500" />,
-              <Award key="3" className="w-6 h-6 text-amber-600" />
-            ]
-            return (
-              <Card
-                key={user.id}
-                className={`text-center ${realRank === 1 ? 'border-yellow-500/50 scale-105' : ''} ${user.id === currentUserId ? 'border-primary' : ''}`}
-              >
-                <CardContent className="p-4 space-y-2">
+      {top3.length > 0 && (() => {
+        const podiumOrder = [top3[1], top3[0], top3[2]]
+        const configs = [
+          {
+            rank: 2,
+            icon: <Medal className="w-8 h-8 text-gray-200" />,
+            cardCls: 'bg-gradient-to-br from-gray-300 via-gray-400 to-gray-500 dark:from-gray-600 dark:via-gray-700 dark:to-gray-800',
+            border: '2px solid #9CA3AF',
+            shadowCls: 'shadow-md shadow-gray-400/40',
+            rankBg: 'bg-white',
+            rankTxt: 'text-gray-600',
+            avatarCls: 'w-16 h-16',
+            label: '🥈 Runner Up',
+          },
+          {
+            rank: 1,
+            icon: <Crown className="w-10 h-10 text-yellow-200" />,
+            cardCls: 'bg-gradient-to-br from-yellow-400 via-yellow-500 to-amber-700',
+            border: '2px solid #F59E0B',
+            shadowCls: 'shadow-lg shadow-yellow-500/40',
+            rankBg: 'bg-white',
+            rankTxt: 'text-yellow-600',
+            avatarCls: 'w-20 h-20',
+            label: '🥇 Champion',
+          },
+          {
+            rank: 3,
+            icon: <Award className="w-8 h-8 text-yellow-200" />,
+            cardCls: 'bg-gradient-to-br from-amber-600 via-amber-700 to-amber-900 dark:from-amber-800 dark:via-amber-900 dark:to-stone-900',
+            border: '2px solid #D97706',
+            shadowCls: 'shadow-md shadow-amber-600/40',
+            rankBg: 'bg-white',
+            rankTxt: 'text-amber-700',
+            avatarCls: 'w-16 h-16',
+            label: '🥉 Third Place',
+          },
+        ]
+
+        return (
+          <div className="grid grid-cols-3 gap-4 items-end">
+            {podiumOrder.map((user, idx) => {
+              if (!user) return <div key={idx} />
+              const cfg = configs[idx]
+              const isFirst = cfg.rank === 1
+              return (
+                <div
+                  key={user.id}
+                  className={`rounded-2xl text-center ${cfg.cardCls} ${cfg.shadowCls} ${isFirst ? 'pt-8 pb-6' : 'pt-5 pb-5'} px-3 space-y-2.5 ${user.id === currentUserId ? 'ring-2 ring-white/60' : ''}`}
+                  style={{ border: cfg.border }}
+                >
+                  {/* Icon */}
+                  <div className="flex justify-center">{cfg.icon}</div>
+
+                  {/* Rank badge */}
                   <div className="flex justify-center">
-                    {icons[idx]}
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${cfg.rankBg} ${cfg.rankTxt}`}>
+                      {cfg.rank}
+                    </div>
                   </div>
-                  <Avatar className="mx-auto w-12 h-12">
+
+                  {/* Avatar */}
+                  <Avatar className={`mx-auto ${cfg.avatarCls} border-2 border-white/40`}>
                     <AvatarImage src={user.avatar_url || undefined} />
-                    <AvatarFallback>
+                    <AvatarFallback className="bg-white/20 text-white font-bold text-lg">
                       {user.full_name?.charAt(0) || '?'}
                     </AvatarFallback>
                   </Avatar>
-                  <p className="font-semibold text-sm truncate">
+
+                  {/* Name */}
+                  <p className={`font-bold truncate text-white ${isFirst ? 'text-base' : 'text-sm'}`}>
                     {user.full_name || 'Anonymous'}
                   </p>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {getUniversity(user.university_id)}
+
+                  {/* University */}
+                  {getUniversity(user.university_id) && (
+                    <p className="text-xs text-white/70 truncate">
+                      {getUniversity(user.university_id)}
+                    </p>
+                  )}
+
+                  {/* Score */}
+                  <p className={`font-black text-white ${isFirst ? 'text-3xl' : 'text-2xl'}`}>
+                    {user.akili_score.toLocaleString()}
                   </p>
-                  <p className="text-xl font-bold text-primary">
-                    {user.akili_score}
-                  </p>
-                  <Badge variant="secondary" className="text-xs">
-                    {getTitle(user.akili_score)}
-                  </Badge>
-                </CardContent>
-              </Card>
-            )
-          })}
-        </div>
-      )}
+
+                  {/* Title */}
+                  <div className="flex justify-center">
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-white/20 text-white font-medium">
+                      {getTitle(user.akili_score)}
+                    </span>
+                  </div>
+
+                  {/* Place label */}
+                  <p className="text-xs font-semibold text-white/90">{cfg.label}</p>
+                </div>
+              )
+            })}
+          </div>
+        )
+      })()}
 
       {/* Full Table */}
       <Card>
