@@ -82,8 +82,6 @@ export default function LeaderboardPage() {
         akili_dimension_mentorship, akili_dimension_technical,
         university:universities!profiles_university_id_fkey(name)
       `)
-      .gte('akili_score', 0)
-      .eq('public_profile', true)
       .order('akili_score', { ascending: false })
       .limit(50)
 

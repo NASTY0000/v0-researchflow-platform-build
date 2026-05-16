@@ -23,13 +23,6 @@ function GoogleIcon({ className }: { className?: string }) {
   )
 }
 
-const inputStyle = {
-  background: 'rgba(255,255,255,0.05)',
-  border: '1px solid rgba(139,92,246,0.25)',
-  color: '#F3F0FF',
-  borderRadius: '8px',
-}
-
 export default function SignUpPage() {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
@@ -46,9 +39,9 @@ export default function SignUpPage() {
   async function handleSubmit(formData: FormData) {
     setIsLoading(true)
     setError(null)
-    
+
     formData.set('emailType', emailType)
-    
+
     const result = await signUp(formData)
     if (result?.error) {
       setError(result.error)
@@ -114,15 +107,15 @@ export default function SignUpPage() {
   // Success screen
   if (step === 'done') {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 animate-fade-in" style={{ backgroundColor: '#05010F' }}>
+      <div className="min-h-screen flex items-center justify-center p-4 animate-fade-in bg-background">
         {bg}
         <div className="text-center relative animate-fade-up">
-          <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6" style={{ background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.3)' }}>
-            <CheckCircle className="w-10 h-10" style={{ color: '#22C55E' }} />
+          <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 bg-green-500/15 border border-green-500/30">
+            <CheckCircle className="w-10 h-10 text-green-500" />
           </div>
           <h2 className="text-3xl font-bold font-heading mb-2">Account Created!</h2>
-          <p style={{ color: '#7C6A9C' }}>Redirecting to onboarding...</p>
-          <Loader2 className="w-5 h-5 animate-spin mx-auto mt-4" style={{ color: '#A855F7' }} />
+          <p className="text-muted-foreground">Redirecting to onboarding...</p>
+          <Loader2 className="w-5 h-5 animate-spin mx-auto mt-4 text-primary" />
         </div>
       </div>
     )
@@ -131,7 +124,7 @@ export default function SignUpPage() {
   // OTP verification screen
   if (step === 'verify') {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: '#05010F' }}>
+      <div className="min-h-screen flex items-center justify-center p-4 bg-background">
         {bg}
         <div className="w-full max-w-md relative animate-fade-up">
           <div className="text-center mb-8">
@@ -143,23 +136,23 @@ export default function SignUpPage() {
             </Link>
           </div>
 
-          <div className="p-8 rounded-2xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(139,92,246,0.2)', backdropFilter: 'blur(16px)' }}>
-            <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-5" style={{ background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(168,85,247,0.3)' }}>
-              <Mail className="w-7 h-7" style={{ color: '#A855F7' }} />
+          <div className="p-8 rounded-2xl bg-card border border-border backdrop-blur-xl">
+            <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-5 bg-primary/10 border border-primary/30">
+              <Mail className="w-7 h-7 text-primary" />
             </div>
             <h1 className="text-2xl font-bold font-heading mb-1 text-center" style={{ letterSpacing: '-0.02em' }}>Check your email</h1>
-            <p className="text-sm text-center mb-6" style={{ color: '#7C6A9C' }}>
-              We sent a 6-digit code to <span style={{ color: '#C084FC' }}>{email}</span>
+            <p className="text-sm text-center mb-6 text-muted-foreground">
+              We sent a 6-digit code to <span className="text-primary">{email}</span>
             </p>
 
             {error && (
-              <Alert variant="destructive" className="mb-5" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)' }}>
+              <Alert variant="destructive" className="mb-5">
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
             {successMsg && (
-              <Alert className="mb-5" style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)' }}>
-                <AlertDescription style={{ color: '#22C55E' }}>{successMsg}</AlertDescription>
+              <Alert className="mb-5 border-green-500/40 bg-green-500/10">
+                <AlertDescription className="text-green-500">{successMsg}</AlertDescription>
               </Alert>
             )}
 
@@ -175,11 +168,9 @@ export default function SignUpPage() {
                   value={digit}
                   onChange={e => handleOtpChange(i, e.target.value)}
                   onKeyDown={e => handleOtpKeyDown(i, e)}
-                  className="w-12 h-14 text-center text-xl font-bold rounded-xl outline-none transition-all"
+                  className="w-12 h-14 text-center text-xl font-bold rounded-xl outline-none transition-all border bg-background text-foreground focus:border-primary"
                   style={{
-                    background: digit ? 'rgba(124,58,237,0.15)' : 'rgba(255,255,255,0.05)',
-                    border: `1px solid ${digit ? 'rgba(168,85,247,0.6)' : 'rgba(139,92,246,0.25)'}`,
-                    color: '#F3F0FF',
+                    borderColor: digit ? 'rgba(168,85,247,0.6)' : undefined,
                     boxShadow: digit ? '0 0 12px rgba(124,58,237,0.25)' : 'none',
                   }}
                 />
@@ -187,13 +178,13 @@ export default function SignUpPage() {
             </div>
 
             <Button className="w-full h-10" onClick={handleVerifyOtp} disabled={isVerifying || otpDigits.some(d => !d)}
-              style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', boxShadow: '0 0 20px rgba(124,58,237,0.35)', border: 'none', borderRadius: '8px', color: '#F3F0FF' }}>
+              style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', boxShadow: '0 0 20px rgba(124,58,237,0.35)', border: 'none', borderRadius: '8px', color: '#fff' }}>
               {isVerifying ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Verifying...</> : 'Verify Email'}
             </Button>
 
             <div className="flex items-center justify-center gap-2 mt-4">
-              <span className="text-sm" style={{ color: '#7C6A9C' }}>Didn&apos;t receive it?</span>
-              <button onClick={handleResendCode} disabled={isResending} className="text-sm font-medium" style={{ color: '#A855F7' }}>
+              <span className="text-sm text-muted-foreground">Didn&apos;t receive it?</span>
+              <button onClick={handleResendCode} disabled={isResending} className="text-sm font-medium text-primary">
                 {isResending ? 'Resending...' : 'Resend code'}
               </button>
             </div>
@@ -205,7 +196,7 @@ export default function SignUpPage() {
 
   // Sign up form
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: '#05010F' }}>
+    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
       {bg}
       <div className="w-full max-w-md relative animate-fade-up">
         <div className="text-center mb-8">
@@ -217,12 +208,12 @@ export default function SignUpPage() {
           </Link>
         </div>
 
-        <div className="p-8 rounded-2xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(139,92,246,0.2)', backdropFilter: 'blur(16px)' }}>
+        <div className="p-8 rounded-2xl bg-card border border-border backdrop-blur-xl">
           <h1 className="text-2xl font-bold font-heading mb-1" style={{ letterSpacing: '-0.02em' }}>Create your account</h1>
-          <p className="text-sm mb-6" style={{ color: '#7C6A9C' }}>Join thousands of researchers across Africa</p>
+          <p className="text-sm mb-6 text-muted-foreground">Join thousands of researchers across Africa</p>
 
           {error && (
-            <Alert variant="destructive" className="mb-5" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)' }}>
+            <Alert variant="destructive" className="mb-5">
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
@@ -230,24 +221,24 @@ export default function SignUpPage() {
           <form action={handleSubmit} className="space-y-4">
             {/* Full Name */}
             <div className="space-y-1.5">
-              <Label htmlFor="fullName" className="text-sm font-medium" style={{ color: '#7C6A9C' }}>Full Name</Label>
+              <Label htmlFor="fullName" className="text-sm font-medium text-muted-foreground">Full Name</Label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#7C6A9C' }} />
-                <Input id="fullName" name="fullName" type="text" placeholder="Your full name" required className="pl-10" style={inputStyle} />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input id="fullName" name="fullName" type="text" placeholder="Your full name" required className="pl-10" />
               </div>
             </div>
 
             {/* Email Type Toggle */}
             <div className="space-y-1.5">
-              <Label className="text-sm font-medium" style={{ color: '#7C6A9C' }}>Email Type</Label>
+              <Label className="text-sm font-medium text-muted-foreground">Email Type</Label>
               <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={() => setEmailType('personal')}
-                  className="flex-1 py-2.5 px-3 rounded-lg text-sm font-medium transition-all"
-                  style={emailType === 'personal' 
-                    ? { background: 'rgba(124,58,237,0.2)', border: '1px solid rgba(168,85,247,0.5)', color: '#C084FC' }
-                    : { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(139,92,246,0.2)', color: '#7C6A9C' }
+                  className="flex-1 py-2.5 px-3 rounded-lg text-sm font-medium transition-all border"
+                  style={emailType === 'personal'
+                    ? { background: 'rgba(124,58,237,0.2)', borderColor: 'rgba(168,85,247,0.5)', color: 'var(--primary)' }
+                    : { background: 'transparent', borderColor: 'var(--border)', color: 'var(--muted-foreground)' }
                   }
                 >
                   Personal Email
@@ -255,10 +246,10 @@ export default function SignUpPage() {
                 <button
                   type="button"
                   onClick={() => setEmailType('institutional')}
-                  className="flex-1 py-2.5 px-3 rounded-lg text-sm font-medium transition-all"
-                  style={emailType === 'institutional' 
-                    ? { background: 'rgba(124,58,237,0.2)', border: '1px solid rgba(168,85,247,0.5)', color: '#C084FC' }
-                    : { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(139,92,246,0.2)', color: '#7C6A9C' }
+                  className="flex-1 py-2.5 px-3 rounded-lg text-sm font-medium transition-all border"
+                  style={emailType === 'institutional'
+                    ? { background: 'rgba(124,58,237,0.2)', borderColor: 'rgba(168,85,247,0.5)', color: 'var(--primary)' }
+                    : { background: 'transparent', borderColor: 'var(--border)', color: 'var(--muted-foreground)' }
                   }
                 >
                   Institutional Email
@@ -268,23 +259,22 @@ export default function SignUpPage() {
 
             {/* Email */}
             <div className="space-y-1.5">
-              <Label htmlFor="email" className="text-sm font-medium" style={{ color: '#7C6A9C' }}>
+              <Label htmlFor="email" className="text-sm font-medium text-muted-foreground">
                 {emailType === 'personal' ? 'Personal Email Address' : 'Institutional Email Address'}
               </Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#7C6A9C' }} />
-                <Input 
-                  id="email" 
-                  name="email" 
-                  type="email" 
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
                   placeholder={emailType === 'personal' ? 'you@gmail.com' : 'name@oou.edu.ng'}
-                  required 
-                  className="pl-10" 
-                  style={inputStyle} 
+                  required
+                  className="pl-10"
                 />
               </div>
               {emailType === 'institutional' && (
-                <p className="text-xs" style={{ color: '#7C6A9C' }}>
+                <p className="text-xs text-muted-foreground">
                   Use your official university email (e.g. name@oou.edu.ng)
                 </p>
               )}
@@ -292,15 +282,15 @@ export default function SignUpPage() {
 
             {/* Password */}
             <div className="space-y-1.5">
-              <Label htmlFor="password" className="text-sm font-medium" style={{ color: '#7C6A9C' }}>Password</Label>
+              <Label htmlFor="password" className="text-sm font-medium text-muted-foreground">Password</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#7C6A9C' }} />
-                <Input id="password" name="password" type="password" placeholder="At least 8 characters" required minLength={8} className="pl-10" style={inputStyle} />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input id="password" name="password" type="password" placeholder="At least 8 characters" required minLength={8} className="pl-10" />
               </div>
             </div>
 
             <Button type="submit" className="w-full h-10 mt-2" disabled={isLoading || isGoogleLoading}
-              style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', boxShadow: '0 0 20px rgba(124,58,237,0.35)', border: 'none', borderRadius: '8px', color: '#F3F0FF' }}>
+              style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', boxShadow: '0 0 20px rgba(124,58,237,0.35)', border: 'none', borderRadius: '8px', color: '#fff' }}>
               {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Creating account...</> : 'Create account'}
             </Button>
           </form>
@@ -308,10 +298,10 @@ export default function SignUpPage() {
           {/* Divider */}
           <div className="relative my-5">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full" style={{ borderTop: '1px solid rgba(139,92,246,0.2)' }} />
+              <span className="w-full border-t border-border" />
             </div>
             <div className="relative flex justify-center">
-              <span className="px-3 text-xs uppercase" style={{ background: 'transparent', color: '#7C6A9C', letterSpacing: '0.1em' }}>Or continue with</span>
+              <span className="px-3 text-xs uppercase bg-card text-muted-foreground" style={{ letterSpacing: '0.1em' }}>Or continue with</span>
             </div>
           </div>
 
@@ -321,22 +311,21 @@ export default function SignUpPage() {
             if (result?.error) { setError(result.error); setIsGoogleLoading(false) }
             else if (result?.url) { window.location.href = result.url }
           }}>
-            <Button type="submit" variant="outline" className="w-full h-10" disabled={isLoading || isGoogleLoading}
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(139,92,246,0.25)', color: '#F3F0FF', borderRadius: '8px' }}>
+            <Button type="submit" variant="outline" className="w-full h-10" disabled={isLoading || isGoogleLoading}>
               {isGoogleLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Connecting...</> : <><GoogleIcon className="mr-2 h-4 w-4" />Continue with Google</>}
             </Button>
           </form>
 
-          <p className="text-xs mt-5" style={{ color: '#7C6A9C' }}>
+          <p className="text-xs mt-5 text-muted-foreground">
             By creating an account, you agree to our{' '}
-            <Link href="/terms" style={{ color: '#A855F7' }}>Terms</Link> and{' '}
-            <Link href="/privacy" style={{ color: '#A855F7' }}>Privacy Policy</Link>.
+            <Link href="/terms" className="text-primary">Terms</Link> and{' '}
+            <Link href="/privacy" className="text-primary">Privacy Policy</Link>.
           </p>
         </div>
 
-        <p className="text-center text-sm mt-6" style={{ color: '#7C6A9C' }}>
+        <p className="text-center text-sm mt-6 text-muted-foreground">
           Already have an account?{' '}
-          <Link href="/auth/login" className="font-medium" style={{ color: '#A855F7' }}>Sign in</Link>
+          <Link href="/auth/login" className="font-medium text-primary">Sign in</Link>
         </p>
 
         <Link href="/" className="text-sm text-muted-foreground hover:text-primary flex items-center gap-1 justify-center mt-4">

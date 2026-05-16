@@ -255,6 +255,17 @@ export async function completeOnboarding(data: Record<string, unknown>) {
   await completeOnboardingWithAllSkills(user.id)
   generateMatchesOnOnboarding(user.id).catch(() => {})
 
+  // Award Akili points for completing onboarding
+  await supabase.from('akili_score_events').insert({
+    user_id: user.id,
+    event_type: 'onboarding_complete',
+    points_earned: 10,
+    dimension: 'knowledge',
+    description: 'Completed profile setup',
+  }).then(() =>
+    supabase.from('profiles').update({ akili_score: 10 }).eq('id', user.id)
+  ).catch(() => {})
+
   const roles = data.roles as string[] | undefined
   if (roles && roles.includes('mentor')) {
     return { success: true, redirectTo: '/mentor-verification' }

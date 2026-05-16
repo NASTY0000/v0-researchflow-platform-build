@@ -1,9 +1,9 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import { useTheme } from "next-themes"
 import { createClient } from "@/lib/supabase/client"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -13,8 +13,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
   Shield, Bell, Key, Download, Trash2, AlertTriangle,
-  Loader2, Check, LogOut, Save, Globe, MessageSquare,
-  Search, Activity,
+  Loader2, Check, LogOut, Save, MessageSquare,
+  Search, Activity, Sun, Moon, Monitor,
 } from "lucide-react"
 
 const NOTIF_TYPES = [
@@ -40,18 +40,14 @@ function pwScore(pw: string) {
 const PW_LEVELS = ["", "Weak", "Fair", "Good", "Strong"]
 const PW_COLORS = ["", "bg-red-500", "bg-orange-400", "bg-yellow-400", "bg-green-500"]
 
-const card = {
-  background: "rgba(255,255,255,0.03)",
-  border: "1px solid rgba(139,92,246,0.2)",
-  borderRadius: "16px",
-  backdropFilter: "blur(12px)",
-}
+const card = "p-6 rounded-2xl bg-card border border-border backdrop-blur-sm space-y-5"
 
 const sectionHeading = "text-lg font-semibold font-heading mb-1"
 const rowClass = "flex items-center justify-between gap-4 py-3"
 
 export default function SettingsPage() {
   const router = useRouter()
+  const { theme, setTheme } = useTheme()
   const [isLoading, setIsLoading] = useState(true)
   const [userId, setUserId] = useState("")
   const [dataExportedAt, setDataExportedAt] = useState<string | null>(null)
@@ -222,9 +218,8 @@ export default function SettingsPage() {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center space-y-3">
-          <div className="w-10 h-10 rounded-full animate-spin mx-auto"
-            style={{ border: "3px solid rgba(124,58,237,0.2)", borderTopColor: "#7C3AED" }} />
-          <p style={{ color: "#7C6A9C" }}>Loading settings…</p>
+          <div className="w-10 h-10 rounded-full animate-spin mx-auto border-[3px] border-primary/20 border-t-primary" />
+          <p className="text-muted-foreground">Loading settings…</p>
         </div>
       </div>
     )
@@ -234,21 +229,54 @@ export default function SettingsPage() {
     <div className="max-w-2xl mx-auto space-y-8 pb-16">
       <div>
         <h1 className="text-3xl font-bold font-heading" style={{ letterSpacing: "-0.03em" }}>Settings</h1>
-        <p style={{ color: "#7C6A9C" }} className="mt-1 text-sm">Manage your privacy, notifications, and account</p>
+        <p className="mt-1 text-sm text-muted-foreground">Manage your appearance, privacy, notifications, and account</p>
+      </div>
+
+      {/* ══════════════════════════════════════════
+          SECTION 0 — APPEARANCE
+      ══════════════════════════════════════════ */}
+      <div className={card}>
+        <div className="flex items-center gap-2 mb-1">
+          <Sun className="w-5 h-5 text-primary" />
+          <h2 className={sectionHeading}>Appearance</h2>
+        </div>
+        <p className="text-xs text-muted-foreground -mt-3">Choose how ResearchFlow looks for you.</p>
+        <div className="grid grid-cols-3 gap-3 pt-1">
+          {([
+            { value: "light", label: "Light", icon: <Sun className="w-5 h-5" /> },
+            { value: "dark",  label: "Dark",  icon: <Moon className="w-5 h-5" /> },
+            { value: "system",label: "System",icon: <Monitor className="w-5 h-5" /> },
+          ] as const).map(({ value, label, icon }) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setTheme(value)}
+              className="flex flex-col items-center gap-2 p-4 rounded-xl border transition-all"
+              style={{
+                background: theme === value ? "rgba(124,58,237,0.12)" : "transparent",
+                borderColor: theme === value ? "rgba(168,85,247,0.5)" : "var(--border)",
+                color: theme === value ? "var(--primary)" : "var(--muted-foreground)",
+              }}
+            >
+              {icon}
+              <span className="text-sm font-medium">{label}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* ══════════════════════════════════════════
           SECTION 1 — PRIVACY SETTINGS
       ══════════════════════════════════════════ */}
-      <div style={card} className="p-6 space-y-5">
+      <div className={card}>
         <div className="flex items-center gap-2 mb-1">
-          <Shield className="w-5 h-5" style={{ color: "#A855F7" }} />
+          <Shield className="w-5 h-5 text-primary" />
           <h2 className={sectionHeading}>Privacy Settings</h2>
         </div>
 
         {/* Profile Visibility */}
         <div className="space-y-3">
-          <Label className="text-sm font-medium" style={{ color: "#C4B5FD" }}>Profile Visibility</Label>
+          <Label className="text-sm font-medium text-primary/80">Profile Visibility</Label>
           <RadioGroup
             value={profileVisibility}
             onValueChange={v => setProfileVisibility(v as typeof profileVisibility)}
@@ -270,7 +298,7 @@ export default function SettingsPage() {
                 <RadioGroupItem value={val} id={`vis-${val}`} className="mt-0.5 shrink-0" />
                 <div>
                   <p className="text-sm font-medium">{title}</p>
-                  <p className="text-xs mt-0.5" style={{ color: "#7C6A9C" }}>{desc}</p>
+                  <p className="text-xs mt-0.5 text-muted-foreground">{desc}</p>
                 </div>
               </label>
             ))}
@@ -282,21 +310,21 @@ export default function SettingsPage() {
         {/* Toggle rows */}
         {([
           {
-            icon: <Activity className="w-4 h-4" style={{ color: "#7C6A9C" }} />,
+            icon: <Activity className="w-4 h-4 text-muted-foreground" />,
             label: "Availability Status",
             desc: "Show when I'm active on platform",
             checked: showAvailability,
             set: setShowAvailability,
           },
           {
-            icon: <MessageSquare className="w-4 h-4" style={{ color: "#7C6A9C" }} />,
+            icon: <MessageSquare className="w-4 h-4 text-muted-foreground" />,
             label: "Direct Messages",
             desc: "Allow direct messages from people I'm not connected with",
             checked: allowDm,
             set: setAllowDm,
           },
           {
-            icon: <Search className="w-4 h-4" style={{ color: "#7C6A9C" }} />,
+            icon: <Search className="w-4 h-4 text-muted-foreground" />,
             label: "Appear in Collaborator Search",
             desc: "Show up in match suggestions and search results",
             checked: appearInSearch,
@@ -308,7 +336,7 @@ export default function SettingsPage() {
               <span className="mt-0.5 shrink-0">{icon}</span>
               <div>
                 <p className="text-sm font-medium">{label}</p>
-                <p className="text-xs" style={{ color: "#7C6A9C" }}>{desc}</p>
+                <p className="text-xs text-muted-foreground">{desc}</p>
               </div>
             </div>
             <Switch checked={checked} onCheckedChange={set} />
@@ -316,7 +344,7 @@ export default function SettingsPage() {
         ))}
 
         {privacyMsg && (
-          <p className="text-sm flex items-center gap-1.5" style={{ color: privacyMsg.startsWith("Failed") ? "#f87171" : "#4ade80" }}>
+          <p className={`text-sm flex items-center gap-1.5 ${privacyMsg.startsWith("Failed") ? "text-red-400" : "text-green-400"}`}>
             {!privacyMsg.startsWith("Failed") && <Check className="w-3.5 h-3.5" />}
             {privacyMsg}
           </p>
@@ -335,12 +363,12 @@ export default function SettingsPage() {
       {/* ══════════════════════════════════════════
           SECTION 2 — NOTIFICATION PREFERENCES
       ══════════════════════════════════════════ */}
-      <div style={card} className="p-6 space-y-4">
+      <div className={card}>
         <div className="flex items-center gap-2 mb-1">
-          <Bell className="w-5 h-5" style={{ color: "#A855F7" }} />
+          <Bell className="w-5 h-5 text-primary" />
           <h2 className={sectionHeading}>Notification Preferences</h2>
         </div>
-        <p className="text-xs" style={{ color: "#7C6A9C" }}>
+        <p className="text-xs text-muted-foreground">
           Toggle in-app notifications on or off per event type.
         </p>
 
@@ -363,7 +391,7 @@ export default function SettingsPage() {
         </div>
 
         {notifMsg && (
-          <p className="text-sm flex items-center gap-1.5" style={{ color: notifMsg.startsWith("Failed") ? "#f87171" : "#4ade80" }}>
+          <p className={`text-sm flex items-center gap-1.5 ${notifMsg.startsWith("Failed") ? "text-red-400" : "text-green-400"}`}>
             {!notifMsg.startsWith("Failed") && <Check className="w-3.5 h-3.5" />}
             {notifMsg}
           </p>
@@ -382,13 +410,13 @@ export default function SettingsPage() {
       {/* ══════════════════════════════════════════
           SECTION 3 — ACCOUNT SETTINGS
       ══════════════════════════════════════════ */}
-      <div style={card} className="p-6 space-y-4">
+      <div className={card}>
         <div className="flex items-center gap-2 mb-1">
-          <Key className="w-5 h-5" style={{ color: "#A855F7" }} />
+          <Key className="w-5 h-5 text-primary" />
           <h2 className={sectionHeading}>Account</h2>
         </div>
 
-        <p className="text-sm font-medium" style={{ color: "#C4B5FD" }}>Change Password</p>
+        <p className="text-sm font-medium text-primary/80">Change Password</p>
 
         {pwMsg && (
           <Alert variant={pwMsg.ok ? "default" : "destructive"}
@@ -402,16 +430,16 @@ export default function SettingsPage() {
 
         <div className="space-y-3">
           <div className="space-y-1.5">
-            <Label className="text-xs" style={{ color: "#7C6A9C" }}>Current Password</Label>
+            <Label className="text-xs text-muted-foreground">Current Password</Label>
             <Input type="password" value={currentPw} onChange={e => setCurrentPw(e.target.value)}
               placeholder="Enter current password"
-              style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(139,92,246,0.25)", borderRadius: "8px" }} />
+              className="rounded-lg" />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs" style={{ color: "#7C6A9C" }}>New Password</Label>
+            <Label className="text-xs text-muted-foreground">New Password</Label>
             <Input type="password" value={newPw} onChange={e => setNewPw(e.target.value)}
               placeholder="Enter new password"
-              style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(139,92,246,0.25)", borderRadius: "8px" }} />
+              className="rounded-lg" />
             {newPw && (
               <div className="space-y-1 pt-1">
                 <div className="flex gap-1">
@@ -419,17 +447,17 @@ export default function SettingsPage() {
                     <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i <= score ? PW_COLORS[score] : "bg-white/10"}`} />
                   ))}
                 </div>
-                <p className="text-xs" style={{ color: "#7C6A9C" }}>
-                  Strength: <span className="font-medium text-[#F3F0FF]">{PW_LEVELS[score] || "—"}</span>
+                <p className="text-xs text-muted-foreground">
+                  Strength: <span className="font-medium text-foreground">{PW_LEVELS[score] || "—"}</span>
                 </p>
               </div>
             )}
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs" style={{ color: "#7C6A9C" }}>Confirm New Password</Label>
+            <Label className="text-xs text-muted-foreground">Confirm New Password</Label>
             <Input type="password" value={confirmPw} onChange={e => setConfirmPw(e.target.value)}
               placeholder="Confirm new password"
-              style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(139,92,246,0.25)", borderRadius: "8px" }} />
+              className="rounded-lg" />
             {confirmPw && newPw !== confirmPw && (
               <p className="text-xs text-red-400">Passwords do not match</p>
             )}
@@ -450,24 +478,24 @@ export default function SettingsPage() {
       ══════════════════════════════════════════ */}
       <div className="space-y-4">
         {/* Download */}
-        <div style={card} className="p-6 space-y-3">
+        <div className={card}>
           <div className="flex items-center gap-2 mb-1">
-            <Download className="w-5 h-5" style={{ color: "#A855F7" }} />
+            <Download className="w-5 h-5 text-primary" />
             <h2 className={sectionHeading}>Data Management</h2>
           </div>
 
-          <p className="text-sm font-medium" style={{ color: "#C4B5FD" }}>Download My Data</p>
-          <p className="text-sm" style={{ color: "#7C6A9C" }}>
+          <p className="text-sm font-medium text-primary/80">Download My Data</p>
+          <p className="text-sm text-muted-foreground">
             Download a copy of all your ResearchFlow data including your profile, ideas, projects, messages, and Akili Score history.
             You&apos;ll receive an email within 24 hours.
           </p>
           {dataExportedAt && (
-            <p className="text-xs" style={{ color: "#7C6A9C" }}>
+            <p className="text-xs text-muted-foreground">
               Last requested: {new Date(dataExportedAt).toLocaleDateString()}
             </p>
           )}
           {exportMsg && (
-            <p className="text-sm flex items-center gap-1.5" style={{ color: "#4ade80" }}>
+            <p className="text-sm flex items-center gap-1.5 text-green-400">
               <Check className="w-3.5 h-3.5" />{exportMsg}
             </p>
           )}
@@ -480,13 +508,12 @@ export default function SettingsPage() {
         </div>
 
         {/* Delete Account */}
-        <div className="p-6 rounded-2xl space-y-4"
-          style={{ background: "rgba(239,68,68,0.05)", border: "1px solid rgba(239,68,68,0.3)" }}>
+        <div className="p-6 rounded-2xl space-y-4 bg-red-500/5 border border-red-500/30">
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-5 h-5 text-red-400" />
             <h3 className="text-base font-semibold font-heading text-red-400">Delete Account</h3>
           </div>
-          <p className="text-sm" style={{ color: "#FCA5A5" }}>
+          <p className="text-sm text-red-300">
             Deleting your account is permanent and cannot be undone. All your data will be removed from ResearchFlow.
           </p>
           <Button variant="destructive" onClick={() => setShowDeleteModal(true)}
@@ -500,14 +527,13 @@ export default function SettingsPage() {
       {/* ══════════════════════════════════════════
           SECTION 5 — SIGN OUT
       ══════════════════════════════════════════ */}
-      <div style={card} className="p-6">
+      <div className={card}>
         <div className="flex items-center justify-between">
           <div>
             <p className="font-medium">Sign Out</p>
-            <p className="text-sm" style={{ color: "#7C6A9C" }}>Sign out of your account on this device</p>
+            <p className="text-sm text-muted-foreground">Sign out of your account on this device</p>
           </div>
-          <Button variant="outline" onClick={signOut}
-            style={{ border: "1px solid rgba(139,92,246,0.3)", borderRadius: "8px" }}>
+          <Button variant="outline" onClick={signOut} className="border-primary/30 rounded-lg">
             <LogOut className="mr-2 h-4 w-4" />Sign Out
           </Button>
         </div>
@@ -516,28 +542,26 @@ export default function SettingsPage() {
       {/* ── Delete Confirmation Modal ── */}
       {showDeleteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="w-full max-w-sm rounded-2xl p-6 space-y-4"
-            style={{ background: "#0E0320", border: "1px solid rgba(239,68,68,0.4)" }}>
+          <div className="w-full max-w-sm rounded-2xl p-6 space-y-4 bg-card border border-red-500/40">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full flex items-center justify-center"
-                style={{ background: "rgba(239,68,68,0.15)" }}>
+              <div className="w-10 h-10 rounded-full flex items-center justify-center bg-red-500/15">
                 <AlertTriangle className="w-5 h-5 text-red-400" />
               </div>
               <div>
                 <h3 className="font-semibold">Delete Account</h3>
-                <p className="text-xs" style={{ color: "#7C6A9C" }}>This cannot be undone</p>
+                <p className="text-xs text-muted-foreground">This cannot be undone</p>
               </div>
             </div>
-            <p className="text-sm" style={{ color: "#7C6A9C" }}>
+            <p className="text-sm text-muted-foreground">
               Your profile will be anonymised and you&apos;ll be removed from all teams. Published ideas and showcase entries will remain as &quot;Deleted User&quot;.
             </p>
             <div className="space-y-1.5">
-              <Label className="text-xs" style={{ color: "#7C6A9C" }}>
+              <Label className="text-xs text-muted-foreground">
                 Type <span className="font-mono font-bold text-red-400">DELETE</span> to confirm
               </Label>
               <Input value={deleteText} onChange={e => setDeleteText(e.target.value)}
                 placeholder="DELETE"
-                style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: "8px" }} />
+                className="bg-red-500/8 border-red-500/30 rounded-lg" />
             </div>
             <div className="flex gap-3">
               <Button variant="destructive" className="flex-1 bg-red-600 hover:bg-red-700"

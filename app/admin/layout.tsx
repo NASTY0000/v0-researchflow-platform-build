@@ -37,8 +37,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       />
       <SidebarInset>
         {/* Admin header */}
-        <header className="flex h-14 items-center gap-4 border-b px-4 sticky top-0 z-10"
-          style={{ background: 'rgba(9,6,27,0.85)', backdropFilter: 'blur(12px)', borderColor: 'rgba(139,92,246,0.15)' }}>
+        <header className="flex h-14 items-center gap-4 border-b px-4 sticky top-0 z-10 bg-background/90 backdrop-blur-xl">
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="h-5" />
           <div className="flex items-center gap-2">
@@ -50,7 +49,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </div>
         </header>
 
-        <main className="flex-1 p-4 lg:p-6" style={{ backgroundColor: '#05010F', minHeight: '100vh' }}>
+        <main className="flex-1 p-4 lg:p-6 bg-background min-h-screen">
           {children}
         </main>
       </SidebarInset>

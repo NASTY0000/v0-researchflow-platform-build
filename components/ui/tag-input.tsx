@@ -1,134 +1,152 @@
 'use client'
 
-import { useState, useRef, KeyboardEvent } from 'react'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { X, Plus, Search } from 'lucide-react'
+import { useState, useRef } from 'react'
+import { X, Plus } from 'lucide-react'
+import { Input } from './input'
+import { Badge } from './badge'
 
 interface TagInputProps {
+  options: string[]
   value: string[]
   onChange: (tags: string[]) => void
-  suggestions: string[]
   placeholder?: string
-  maxTags?: number
+  maxItems?: number
+  label?: string
 }
 
-export function TagInput({ value, onChange, suggestions, placeholder = 'Search or add custom...', maxTags = 20 }: TagInputProps) {
-  const [search, setSearch] = useState('')
+export function TagInput({
+  options,
+  value,
+  onChange,
+  placeholder = 'Search or type...',
+  maxItems,
+}: TagInputProps) {
+  const [query, setQuery] = useState('')
+  const [open, setOpen] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const filtered = search.trim()
-    ? suggestions.filter(s => s.toLowerCase().includes(search.toLowerCase()))
-    : suggestions
+  const filtered = query.length > 0
+    ? options
+        .filter(o =>
+          o.toLowerCase().includes(query.toLowerCase()) &&
+          !value.includes(o)
+        )
+        .slice(0, 8)
+    : options
+        .filter(o => !value.includes(o))
+        .slice(0, 8)
 
-  const canAddCustom = search.trim().length > 0 &&
-    !suggestions.some(s => s.toLowerCase() === search.trim().toLowerCase()) &&
-    !value.includes(search.trim())
+  const canAdd = maxItems ? value.length < maxItems : true
 
-  function toggle(tag: string) {
-    if (value.includes(tag)) {
-      onChange(value.filter(v => v !== tag))
-    } else if (value.length < maxTags) {
+  function addTag(tag: string) {
+    if (!value.includes(tag) && canAdd) {
       onChange([...value, tag])
     }
+    setQuery('')
+    setOpen(false)
+    inputRef.current?.focus()
   }
 
-  function addCustom() {
-    const trimmed = search.trim()
-    if (!trimmed || value.includes(trimmed) || value.length >= maxTags) return
-    onChange([...value, trimmed])
-    setSearch('')
+  function removeTag(tag: string) {
+    onChange(value.filter(t => t !== tag))
   }
 
-  function handleKey(e: KeyboardEvent<HTMLInputElement>) {
-    if (e.key === 'Enter') {
-      e.preventDefault()
-      if (canAddCustom) addCustom()
-      else if (filtered.length === 1) toggle(filtered[0])
-    }
-  }
+  const showCustomAdd =
+    query.trim().length > 0 &&
+    !options.some(o => o.toLowerCase() === query.trim().toLowerCase()) &&
+    !value.includes(query.trim()) &&
+    canAdd
 
   return (
-    <div className="space-y-3">
-      {/* Search input */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input
-          ref={inputRef}
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          onKeyDown={handleKey}
-          placeholder={placeholder}
-          className="pl-10 pr-10"
-        />
-        {search.trim() && (
-          <button
-            type="button"
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            onClick={() => setSearch('')}
-          >
-            <X className="w-4 h-4" />
-          </button>
-        )}
+    <div className="space-y-2">
+      {/* Selected tags */}
+      <div className="flex flex-wrap gap-2">
+        {value.map(tag => (
+          <Badge key={tag} variant="secondary" className="gap-1 pr-1">
+            {tag}
+            <button
+              type="button"
+              onClick={() => removeTag(tag)}
+              className="ml-1 hover:opacity-70"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </Badge>
+        ))}
       </div>
 
-      {/* Selected count */}
-      {value.length > 0 && (
-        <p className="text-xs text-muted-foreground">{value.length} selected</p>
+      {/* Input with dropdown */}
+      {canAdd && (
+        <div className="relative">
+          <Input
+            ref={inputRef}
+            value={query}
+            onChange={e => {
+              setQuery(e.target.value)
+              setOpen(true)
+            }}
+            onFocus={() => setOpen(true)}
+            onBlur={() => {
+              setTimeout(() => setOpen(false), 150)
+            }}
+            onKeyDown={e => {
+              if (e.key === 'Enter' && query.trim()) {
+                e.preventDefault()
+                if (filtered.length > 0) {
+                  addTag(filtered[0])
+                } else if (showCustomAdd) {
+                  addTag(query.trim())
+                }
+              }
+              if (e.key === 'Backspace' && !query && value.length > 0) {
+                removeTag(value[value.length - 1])
+              }
+            }}
+            placeholder={
+              maxItems && value.length >= maxItems
+                ? `Maximum ${maxItems} items selected`
+                : placeholder
+            }
+            disabled={!!(maxItems && value.length >= maxItems)}
+          />
+
+          {open && (filtered.length > 0 || showCustomAdd) && (
+            <div className="absolute z-50 w-full mt-1 rounded-xl border bg-popover shadow-lg overflow-hidden">
+              {filtered.map(option => (
+                <button
+                  key={option}
+                  type="button"
+                  className="w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors"
+                  onMouseDown={e => {
+                    e.preventDefault()
+                    addTag(option)
+                  }}
+                >
+                  {option}
+                </button>
+              ))}
+              {showCustomAdd && (
+                <button
+                  type="button"
+                  className="w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors flex items-center gap-2 text-primary border-t border-border"
+                  onMouseDown={e => {
+                    e.preventDefault()
+                    addTag(query.trim())
+                  }}
+                >
+                  <Plus className="h-3 w-3" />
+                  Add &quot;{query.trim()}&quot;
+                </button>
+              )}
+            </div>
+          )}
+        </div>
       )}
 
-      {/* Tags grid */}
-      <div className="max-h-64 overflow-y-auto pr-1 -mr-1">
-        <div className="flex flex-wrap gap-2">
-          {filtered.map(tag => (
-            <Badge
-              key={tag}
-              className="cursor-pointer transition-all text-sm py-1.5 px-3"
-              onClick={() => toggle(tag)}
-              style={value.includes(tag)
-                ? { background: 'rgba(124,58,237,0.3)', border: '1px solid rgba(168,85,247,0.6)', color: '#C084FC' }
-                : { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(139,92,246,0.2)', color: '#7C6A9C' }
-              }
-            >
-              {tag}
-            </Badge>
-          ))}
-
-          {/* "Other" — add-custom chip */}
-          {canAddCustom && (
-            <Badge
-              className="cursor-pointer transition-all text-sm py-1.5 px-3 gap-1"
-              style={{ background: 'rgba(6,182,212,0.15)', border: '1px solid rgba(6,182,212,0.4)', color: '#06B6D4' }}
-              onClick={addCustom}
-            >
-              <Plus className="w-3 h-3" />
-              Add &quot;{search.trim()}&quot;
-            </Badge>
-          )}
-
-          {filtered.length === 0 && !canAddCustom && (
-            <p className="text-sm text-muted-foreground py-2">No results found.</p>
-          )}
-        </div>
-      </div>
-
-      {/* Custom (non-suggestion) selected tags */}
-      {value.filter(v => !suggestions.includes(v)).length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {value.filter(v => !suggestions.includes(v)).map(tag => (
-            <Badge
-              key={tag}
-              className="gap-1 py-1.5 px-3"
-              style={{ background: 'rgba(6,182,212,0.2)', border: '1px solid rgba(6,182,212,0.4)', color: '#06B6D4' }}
-            >
-              {tag}
-              <button type="button" onClick={() => toggle(tag)}>
-                <X className="w-3 h-3" />
-              </button>
-            </Badge>
-          ))}
-        </div>
+      {maxItems && (
+        <p className="text-xs text-muted-foreground">
+          {value.length}/{maxItems} selected
+        </p>
       )}
     </div>
   )

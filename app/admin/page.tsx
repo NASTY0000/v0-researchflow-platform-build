@@ -142,11 +142,11 @@ export default function AdminOverviewPage() {
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
         {[
           { label: 'Total Users', value: stats.totalUsers, icon: Users, color: 'primary', sub: `${stats.monthlyActiveUsers} MAU`, href: '/admin/users' },
-          { label: 'Active Projects', value: stats.activeProjectsMonth, icon: FolderKanban, color: 'green-500', sub: 'This month', href: '/admin/projects' },
-          { label: 'Teams Formed', value: stats.teamsFormedMonth, icon: Users, color: 'cyan-500', sub: 'This month', href: '/admin/teams' },
+          { label: 'Active Projects', value: stats.activeProjectsMonth, icon: FolderKanban, color: 'green-500', sub: 'This month', href: '/admin/analytics' },
+          { label: 'Teams Formed', value: stats.teamsFormedMonth, icon: Users, color: 'cyan-500', sub: 'This month', href: '/admin/analytics' },
           { label: 'Pending Review', value: stats.pendingShowcase, icon: FileText, color: 'orange-500', sub: 'Showcase', href: '/admin/showcase' },
           { label: 'Mentor Queue', value: stats.pendingMentors, icon: Shield, color: 'yellow-500', sub: 'Verifications', href: '/admin/mentors' },
-          { label: 'Monthly Active', value: stats.monthlyActiveUsers, icon: Activity, color: 'purple-400', sub: 'Last 30 days', href: '/admin/users' },
+          { label: 'Monthly Active', value: stats.monthlyActiveUsers, icon: Activity, color: 'purple-400', sub: 'Last 30 days', href: '/admin/analytics' },
         ].map(card => (
           <Link key={card.label} href={card.href}>
             <Card className="relative overflow-hidden cursor-pointer hover:border-primary/40 transition-colors">

@@ -55,27 +55,46 @@ export default function AdminUsersPage() {
 
   const loadUsers = useCallback(async () => {
     setIsLoading(true)
-    let q = supabase.from('profiles').select('*, university:universities(name)', { count: 'exact' })
 
-    if (search.trim()) {
-      q = q.or(`full_name.ilike.%${search.trim()}%,email.ilike.%${search.trim()}%`)
-    }
-    if (roleFilter !== 'all') {
-      q = q.contains('roles', [roleFilter])
-    }
-    if (statusFilter === 'suspended') {
-      q = q.eq('is_suspended', true)
-    } else if (statusFilter === 'active') {
-      q = q.eq('is_suspended', false).eq('onboarding_completed', true)
-    } else if (statusFilter === 'onboarding') {
-      q = q.eq('onboarding_completed', false)
+    // Build base filter conditions
+    const applyFilters = (q: ReturnType<typeof supabase.from>) => {
+      if (search.trim()) {
+        q = q.or(`full_name.ilike.%${search.trim()}%,email.ilike.%${search.trim()}%`)
+      }
+      if (roleFilter !== 'all') q = q.contains('roles', [roleFilter])
+      if (statusFilter === 'suspended') q = q.eq('is_suspended', true)
+      else if (statusFilter === 'active') q = q.eq('is_suspended', false).eq('onboarding_completed', true)
+      else if (statusFilter === 'onboarding') q = q.eq('onboarding_completed', false)
+      return q
     }
 
-    q = q.order('created_at', { ascending: false }).range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1)
-
-    const { data, count } = await q
-    if (data) setUsers(data as Profile[])
+    // Step 1: Get count without join (join can skew exact count)
+    const countQ = applyFilters(supabase.from('profiles').select('id', { count: 'exact', head: true }))
+    const { count } = await countQ
     setTotalCount(count || 0)
+
+    // Step 2: Get paginated data
+    const dataQ = applyFilters(
+      supabase.from('profiles').select('*')
+    ).order('created_at', { ascending: false }).range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1)
+    const { data: profiles } = await dataQ
+
+    if (profiles) {
+      // Step 3: Resolve UUID university_ids separately
+      const uuidIds = profiles
+        .map(p => p.university_id)
+        .filter((uid): uid is string => !!uid && /^[0-9a-f]{8}-[0-9a-f]{4}/.test(uid))
+      const uniMap = new Map<string, string>()
+      if (uuidIds.length > 0) {
+        const { data: unis } = await supabase.from('universities').select('id, name').in('id', uuidIds)
+        unis?.forEach(u => uniMap.set(u.id, u.name))
+      }
+      const enriched = profiles.map(p => ({
+        ...p,
+        university_id: uniMap.get(p.university_id ?? '') || p.university_id,
+      }))
+      setUsers(enriched as Profile[])
+    }
     setIsLoading(false)
   }, [search, roleFilter, statusFilter, page])
 
@@ -337,7 +356,7 @@ export default function AdminUsersPage() {
                       </div>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground max-w-36 truncate">
-                      {resolveUniversityName(user.university_id, (user as Profile & { university?: { name: string } }).university?.name)}
+                      {resolveUniversityName(user.university_id)}
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">

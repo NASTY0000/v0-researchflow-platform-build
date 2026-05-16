@@ -32,13 +32,13 @@ export function DashboardHeader({ profile, unreadCount }: DashboardHeaderProps) 
   }
 
   return (
-    <header className="flex h-16 shrink-0 items-center justify-between px-4 gap-4 bg-background/80 backdrop-blur-xl" style={{ borderBottom: '1px solid rgba(139,92,246,0.12)' }}>
+    <header className="flex h-16 shrink-0 items-center justify-between px-4 gap-4 bg-background/80 backdrop-blur-xl border-b border-border/50">
       <div className="flex items-center gap-2">
         <SidebarTrigger className="-ml-1" />
         <Separator orientation="vertical" className="mr-2 h-4" />
         
         {/* Search */}
-        <Button variant="outline" className="hidden sm:flex items-center gap-2 w-64 justify-start" onClick={() => window.dispatchEvent(new CustomEvent('open-search'))} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(139,92,246,0.2)', color: '#7C6A9C', borderRadius: '8px' }}>
+        <Button variant="outline" className="hidden sm:flex items-center gap-2 w-64 justify-start text-muted-foreground rounded-lg" onClick={() => window.dispatchEvent(new CustomEvent('open-search'))}>
           <Search className="h-4 w-4" />
           <span className="text-sm">Search...</span>
           <kbd className="ml-auto pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">

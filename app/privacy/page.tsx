@@ -38,10 +38,9 @@ export default function PrivacyPage() {
   }, [])
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#05010F', color: '#F3F0FF' }}>
+    <div className="min-h-screen bg-background text-foreground">
       {/* Nav */}
-      <nav className="sticky top-0 z-40 px-6 py-4 flex items-center justify-between"
-        style={{ background: 'rgba(5,1,15,0.92)', borderBottom: '1px solid rgba(139,92,246,0.15)', backdropFilter: 'blur(12px)' }}>
+      <nav className="sticky top-0 z-40 px-6 py-4 flex items-center justify-between bg-background/90 backdrop-blur-xl border-b border-border">
         <Link href="/" className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg overflow-hidden">
             <Image src="/icon.svg" alt="ResearchFlow" width={32} height={32} />
@@ -58,7 +57,7 @@ export default function PrivacyPage() {
         {/* TOC Sidebar */}
         <aside className="hidden lg:block w-60 shrink-0">
           <div className="sticky top-24 space-y-1">
-            <p className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: '#7C6A9C' }}>Contents</p>
+            <p className="text-xs font-semibold uppercase tracking-widest mb-4 text-muted-foreground">Contents</p>
             {SECTIONS.map(s => (
               <a
                 key={s.id}
@@ -80,8 +79,8 @@ export default function PrivacyPage() {
         <article className="flex-1 max-w-3xl space-y-12">
           <div className="space-y-3">
             <h1 className="text-4xl font-bold font-heading">Privacy Policy</h1>
-            <p className="text-sm" style={{ color: '#7C6A9C' }}>Last updated: May 1, 2026</p>
-            <p style={{ color: '#C4B5D8' }}>
+            <p className="text-sm text-muted-foreground">Last updated: May 1, 2026</p>
+            <p className="text-muted-foreground">
               ResearchFlow is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose,
               and safeguard your information when you use our platform.
             </p>
@@ -184,7 +183,7 @@ export default function PrivacyPage() {
             <p>You also have the right to lodge a complaint with your local data protection authority if you believe we have handled your data improperly.</p>
           </Section>
 
-          <div className="border-t pt-8 space-y-2" style={{ borderColor: 'rgba(139,92,246,0.2)', color: '#7C6A9C' }}>
+          <div className="border-t border-border pt-8 space-y-2 text-muted-foreground">
             <p className="text-sm">See also: <Link href="/terms" style={{ color: '#A855F7' }}>Terms of Service</Link></p>
           </div>
         </article>
@@ -196,8 +195,8 @@ export default function PrivacyPage() {
 function Section({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
   return (
     <section id={id} className="space-y-4 scroll-mt-24">
-      <h2 className="text-xl font-semibold font-heading" style={{ color: '#E2D9F3' }}>{title}</h2>
-      <div className="space-y-3 text-sm leading-relaxed [&_p]:text-[#C4B5D8] [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1.5 [&_ul_li]:text-[#C4B5D8]">
+      <h2 className="text-xl font-semibold font-heading text-foreground">{title}</h2>
+      <div className="space-y-3 text-sm leading-relaxed text-muted-foreground [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1.5">
         {children}
       </div>
     </section>

@@ -1,8 +1,26 @@
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 /**
- * Resolve a university_id value to a display name.
- * Some users have the full university name stored directly;
- * others have a UUID that joins to the universities table.
- * Pass the joined `university?.name` when available.
+ * Get a display-ready university name from a profile object.
+ * Prefers the joined `university.name`, falls back to `university_id` if it's
+ * not a UUID (i.e. the name was stored directly), returns '' otherwise.
+ */
+export function getUniversityName(
+  profile: {
+    university_id?: string | null
+    university?: { name?: string | null } | null
+  }
+): string {
+  if (profile.university?.name) return profile.university.name
+  const uid = profile.university_id
+  if (!uid) return ''
+  if (UUID_RE.test(uid)) return ''
+  return uid
+}
+
+/**
+ * Legacy helper — pass the joined name explicitly when available.
+ * Returns a fallback string ('—') instead of empty string.
  */
 export function resolveUniversityName(
   universityId: string | null | undefined,
@@ -10,9 +28,6 @@ export function resolveUniversityName(
 ): string {
   if (universityName) return universityName
   if (!universityId) return '—'
-  // UUID format — couldn't resolve via join
-  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(universityId)) {
-    return 'Unknown University'
-  }
+  if (UUID_RE.test(universityId)) return 'Unknown University'
   return universityId
 }
