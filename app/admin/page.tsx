@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -140,23 +141,25 @@ export default function AdminOverviewPage() {
       {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
         {[
-          { label: 'Total Users', value: stats.totalUsers, icon: Users, color: 'primary', sub: `${stats.monthlyActiveUsers} MAU` },
-          { label: 'Active Projects', value: stats.activeProjectsMonth, icon: FolderKanban, color: 'green-500', sub: 'This month' },
-          { label: 'Teams Formed', value: stats.teamsFormedMonth, icon: Users, color: 'cyan-500', sub: 'This month' },
+          { label: 'Total Users', value: stats.totalUsers, icon: Users, color: 'primary', sub: `${stats.monthlyActiveUsers} MAU`, href: '/admin/users' },
+          { label: 'Active Projects', value: stats.activeProjectsMonth, icon: FolderKanban, color: 'green-500', sub: 'This month', href: '/admin/projects' },
+          { label: 'Teams Formed', value: stats.teamsFormedMonth, icon: Users, color: 'cyan-500', sub: 'This month', href: '/admin/teams' },
           { label: 'Pending Review', value: stats.pendingShowcase, icon: FileText, color: 'orange-500', sub: 'Showcase', href: '/admin/showcase' },
           { label: 'Mentor Queue', value: stats.pendingMentors, icon: Shield, color: 'yellow-500', sub: 'Verifications', href: '/admin/mentors' },
-          { label: 'Monthly Active', value: stats.monthlyActiveUsers, icon: Activity, color: 'purple-400', sub: 'Last 30 days' },
+          { label: 'Monthly Active', value: stats.monthlyActiveUsers, icon: Activity, color: 'purple-400', sub: 'Last 30 days', href: '/admin/users' },
         ].map(card => (
-          <Card key={card.label} className="relative overflow-hidden">
-            <CardContent className="p-4">
-              <div className={`w-9 h-9 rounded-lg bg-${card.color}/10 flex items-center justify-center mb-3`}>
-                <card.icon className={`w-4.5 h-4.5 text-${card.color}`} />
-              </div>
-              <p className="text-2xl font-bold">{isLoading ? '—' : card.value}</p>
-              <p className="text-xs font-medium mt-0.5">{card.label}</p>
-              <p className="text-xs text-muted-foreground">{card.sub}</p>
-            </CardContent>
-          </Card>
+          <Link key={card.label} href={card.href}>
+            <Card className="relative overflow-hidden cursor-pointer hover:border-primary/40 transition-colors">
+              <CardContent className="p-4">
+                <div className={`w-9 h-9 rounded-lg bg-${card.color}/10 flex items-center justify-center mb-3`}>
+                  <card.icon className={`w-4.5 h-4.5 text-${card.color}`} />
+                </div>
+                <p className="text-2xl font-bold">{isLoading ? '—' : card.value}</p>
+                <p className="text-xs font-medium mt-0.5">{card.label}</p>
+                <p className="text-xs text-muted-foreground">{card.sub}</p>
+              </CardContent>
+            </Card>
+          </Link>
         ))}
       </div>
 

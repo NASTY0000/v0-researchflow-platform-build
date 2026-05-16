@@ -24,6 +24,7 @@ import {
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import type { Profile } from '@/lib/types/database'
+import { resolveUniversityName } from '@/lib/utils/university'
 
 const PAGE_SIZE = 50
 
@@ -54,7 +55,7 @@ export default function AdminUsersPage() {
 
   const loadUsers = useCallback(async () => {
     setIsLoading(true)
-    let q = supabase.from('profiles').select('*', { count: 'exact' })
+    let q = supabase.from('profiles').select('*, university:universities(name)', { count: 'exact' })
 
     if (search.trim()) {
       q = q.or(`full_name.ilike.%${search.trim()}%,email.ilike.%${search.trim()}%`)
@@ -336,7 +337,7 @@ export default function AdminUsersPage() {
                       </div>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground max-w-36 truncate">
-                      {user.university_id || '—'}
+                      {resolveUniversityName(user.university_id, (user as Profile & { university?: { name: string } }).university?.name)}
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">

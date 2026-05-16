@@ -36,14 +36,17 @@ export default function AdminBroadcastPage() {
 
   const load = useCallback(async () => {
     setIsLoading(true)
-    const { data } = await supabase
-      .from('broadcasts')
-      .select('*, sender:profiles!sent_by(id,full_name,email)')
-      .order('sent_at', { ascending: false })
-      .limit(20)
-    if (data) setBroadcasts(data as Broadcast[])
+    try {
+      const res = await fetch('/api/admin/broadcasts')
+      if (res.ok) {
+        const data = await res.json()
+        setBroadcasts(data as Broadcast[])
+      }
+    } catch {
+      // silent
+    }
     setIsLoading(false)
-  }, [supabase])
+  }, [])
 
   useEffect(() => { load() }, [load])
 

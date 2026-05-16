@@ -42,8 +42,7 @@ export default async function DashboardLayout({
         <SidebarInset>
           <DashboardHeader profile={profile} unreadCount={unreadCount || 0} />
           <main
-            className="flex-1 p-4 lg:p-6 pb-20 md:pb-6"
-            style={{ backgroundColor: '#05010F', minHeight: '100vh' }}
+            className="flex-1 p-4 lg:p-6 pb-20 md:pb-6 bg-background min-h-screen"
           >
             {children}
           </main>

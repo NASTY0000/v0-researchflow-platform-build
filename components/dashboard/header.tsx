@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useTheme } from 'next-themes'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -13,7 +14,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Separator } from '@/components/ui/separator'
-import { Search, Plus } from 'lucide-react'
+import { Search, Plus, Sun, Moon } from 'lucide-react'
 import type { Profile } from '@/lib/types/database'
 import { NotificationsDropdown } from '@/components/dashboard/notifications-dropdown'
 
@@ -23,13 +24,15 @@ interface DashboardHeaderProps {
 }
 
 export function DashboardHeader({ profile, unreadCount }: DashboardHeaderProps) {
+  const { theme, setTheme } = useTheme()
+
   const getInitials = (name: string | null) => {
     if (!name) return 'U'
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
   }
 
   return (
-    <header className="flex h-16 shrink-0 items-center justify-between px-4 gap-4" style={{ borderBottom: '1px solid rgba(139,92,246,0.12)', backgroundColor: 'rgba(5,1,15,0.8)', backdropFilter: 'blur(20px)' }}>
+    <header className="flex h-16 shrink-0 items-center justify-between px-4 gap-4 bg-background/80 backdrop-blur-xl" style={{ borderBottom: '1px solid rgba(139,92,246,0.12)' }}>
       <div className="flex items-center gap-2">
         <SidebarTrigger className="-ml-1" />
         <Separator orientation="vertical" className="mr-2 h-4" />
@@ -67,6 +70,18 @@ export function DashboardHeader({ profile, unreadCount }: DashboardHeaderProps) 
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        {/* Theme toggle */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+          className="h-8 w-8"
+          aria-label="Toggle theme"
+        >
+          <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+          <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+        </Button>
 
         {/* Notifications */}
         <NotificationsDropdown initialUnreadCount={unreadCount} />

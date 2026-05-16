@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell,
@@ -45,7 +46,7 @@ interface MentorInfo {
 
 interface AkiliEvent {
   id: string
-  action: string
+  event_type: string
   points_earned: number
   created_at: string
 }
@@ -62,6 +63,7 @@ interface AnalyticsData {
 }
 
 export default function ProfilePage() {
+  const router = useRouter()
   const [profile, setProfile] = useState<Profile & { university?: University } | null>(null)
   const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([])
   const [activityStats, setActivityStats] = useState<ActivityStats>({
@@ -127,7 +129,7 @@ export default function ProfilePage() {
     const [eventsResult, ideasResult, connectionsResult, rankResult] = await Promise.all([
       supabase
         .from('akili_score_events')
-        .select('id, action, points_earned, created_at, dimension')
+        .select('id, event_type, points_earned, created_at, dimension')
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .limit(100),
@@ -1121,7 +1123,7 @@ export default function ProfilePage() {
                     <p className="text-xs text-muted-foreground">Profile Views</p>
                   </CardContent>
                 </Card>
-                <Card>
+                <Card className="cursor-pointer hover:border-primary/40 transition-colors" onClick={() => router.push('/ideas')}>
                   <CardContent className="p-5 flex flex-col items-center text-center gap-2">
                     <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center">
                       <Lightbulb className="w-5 h-5 text-cyan-500" />
@@ -1130,7 +1132,7 @@ export default function ProfilePage() {
                     <p className="text-xs text-muted-foreground">Idea Views</p>
                   </CardContent>
                 </Card>
-                <Card>
+                <Card className="cursor-pointer hover:border-primary/40 transition-colors" onClick={() => router.push('/network')}>
                   <CardContent className="p-5 flex flex-col items-center text-center gap-2">
                     <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center">
                       <Users className="w-5 h-5 text-violet-500" />
@@ -1139,7 +1141,7 @@ export default function ProfilePage() {
                     <p className="text-xs text-muted-foreground">Pending Requests</p>
                   </CardContent>
                 </Card>
-                <Card>
+                <Card className="cursor-pointer hover:border-primary/40 transition-colors" onClick={() => router.push('/leaderboard')}>
                   <CardContent className="p-5 flex flex-col items-center text-center gap-2">
                     <div className="w-10 h-10 rounded-xl bg-yellow-500/10 flex items-center justify-center">
                       <TrendingUp className="w-5 h-5 text-yellow-500" />
@@ -1224,12 +1226,12 @@ export default function ProfilePage() {
                   </CardHeader>
                   <CardContent className="space-y-2">
                     {analyticsData.recentEvents.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">No recent activity.</p>
+                      <p className="text-sm text-muted-foreground">No Akili events yet. Complete your profile and post ideas to earn points!</p>
                     ) : (
                       analyticsData.recentEvents.map(ev => (
                         <div key={ev.id} className="flex items-center justify-between py-1.5 border-b last:border-0 border-border/50">
                           <div>
-                            <p className="text-sm font-medium capitalize">{ev.action.replace(/_/g, ' ')}</p>
+                            <p className="text-sm font-medium capitalize">{ev.event_type.replace(/_/g, ' ')}</p>
                             <p className="text-xs text-muted-foreground">
                               {new Date(ev.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                             </p>

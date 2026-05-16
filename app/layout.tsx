@@ -4,6 +4,7 @@ import { Analytics } from '@vercel/analytics/next'
 import { Toaster } from 'sonner'
 import { InstallPrompt } from '@/components/ui/InstallPrompt'
 import { OfflineBanner } from '@/components/ui/offline-banner'
+import { ThemeProvider } from '@/components/theme-provider'
 import './globals.css'
 
 const dmSans = DM_Sans({
@@ -47,7 +48,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="dark" style={{ backgroundColor: '#05010F' }}>
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#7C3AED" />
@@ -55,30 +56,32 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="ResearchFlow" />
       </head>
-      <body className={`${dmSans.variable} ${syne.variable} font-sans antialiased`} style={{ backgroundColor: '#05010F' }}>
-        <OfflineBanner />
-        {children}
-        <InstallPrompt />
-        <Toaster position="bottom-right" theme="dark" />
-        {process.env.NODE_ENV === 'production' && <Analytics />}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                  navigator.serviceWorker
-                    .register('/sw.js')
-                    .then(function(reg) {
-                      console.log('SW registered:', reg.scope)
-                    })
-                    .catch(function(err) {
-                      console.log('SW failed:', err)
-                    })
-                })
-              }
-            `,
-          }}
-        />
+      <body className={`${dmSans.variable} ${syne.variable} font-sans antialiased`}>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
+          <OfflineBanner />
+          {children}
+          <InstallPrompt />
+          <Toaster position="bottom-right" theme="dark" />
+          {process.env.NODE_ENV === 'production' && <Analytics />}
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `
+                if ('serviceWorker' in navigator) {
+                  window.addEventListener('load', function() {
+                    navigator.serviceWorker
+                      .register('/sw.js')
+                      .then(function(reg) {
+                        console.log('SW registered:', reg.scope)
+                      })
+                      .catch(function(err) {
+                        console.log('SW failed:', err)
+                      })
+                  })
+                }
+              `,
+            }}
+          />
+        </ThemeProvider>
       </body>
     </html>
   )

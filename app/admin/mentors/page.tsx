@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Profile, MentorProfile } from '@/lib/types/database'
+import { resolveUniversityName } from '@/lib/utils/university'
 
 type MentorWithProfile = MentorProfile & { user: Profile }
 
@@ -37,8 +38,8 @@ export default function AdminMentorsPage() {
   async function loadData() {
     setIsLoading(true)
     const [pendingResult, approvedResult] = await Promise.all([
-      supabase.from('mentor_profiles').select('*, user:profiles(*)').eq('is_verified', false).order('created_at', { ascending: false }),
-      supabase.from('mentor_profiles').select('*, user:profiles(*)').eq('is_verified', true).order('created_at', { ascending: false }),
+      supabase.from('mentor_profiles').select('*, user:profiles(*, university:universities(name))').eq('is_verified', false).order('created_at', { ascending: false }),
+      supabase.from('mentor_profiles').select('*, user:profiles(*, university:universities(name))').eq('is_verified', true).order('created_at', { ascending: false }),
     ])
     if (pendingResult.data) setPendingMentors(pendingResult.data as MentorWithProfile[])
     if (approvedResult.data) setApprovedMentors(approvedResult.data as MentorWithProfile[])
@@ -179,7 +180,7 @@ export default function AdminMentorsPage() {
                     {selectedMentor.user?.university_id && (
                       <div className="flex items-center gap-2 text-muted-foreground">
                         <Building2 className="w-4 h-4 flex-shrink-0" />
-                        <span>{selectedMentor.user.university_id}</span>
+                        <span>{resolveUniversityName(selectedMentor.user.university_id, (selectedMentor.user as Profile & { university?: { name: string } }).university?.name)}</span>
                       </div>
                     )}
                     {selectedMentor.user?.department && (
@@ -340,7 +341,7 @@ export default function AdminMentorsPage() {
                           </div>
                           <div className="flex flex-wrap gap-3 mt-2 text-xs text-muted-foreground">
                             {mentor.user?.university_id && (
-                              <span className="flex items-center gap-1"><Building2 className="w-3 h-3" />{mentor.user.university_id}</span>
+                              <span className="flex items-center gap-1"><Building2 className="w-3 h-3" />{resolveUniversityName(mentor.user.university_id, (mentor.user as Profile & { university?: { name: string } }).university?.name)}</span>
                             )}
                             {mentor.user?.department && (
                               <span className="flex items-center gap-1"><GraduationCap className="w-3 h-3" />{mentor.user.department}</span>
@@ -425,7 +426,7 @@ export default function AdminMentorsPage() {
                             <p className="font-medium text-sm">{mentor.user?.full_name}</p>
                             <Badge variant="secondary" className="text-xs">Tier {mentor.tier}</Badge>
                           </div>
-                          <p className="text-xs text-muted-foreground truncate">{mentor.user?.university_id}</p>
+                          <p className="text-xs text-muted-foreground truncate">{resolveUniversityName(mentor.user?.university_id, (mentor.user as Profile & { university?: { name: string } } | undefined)?.university?.name)}</p>
                         </div>
                         <div className="flex items-center gap-3 text-xs text-muted-foreground flex-shrink-0">
                           {mentor.rating > 0 && (
