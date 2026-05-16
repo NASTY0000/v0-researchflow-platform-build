@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, use } from 'react'
+import { useEffect, useState, use, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/card'
@@ -9,7 +9,7 @@ import { Loader2, CheckCircle2, AlertCircle, Users } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { acceptInvitation } from '@/lib/actions/invitations'
 
-export default function JoinPage() {
+function JoinPageInner() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const token = searchParams.get('token')
@@ -116,3 +116,26 @@ export default function JoinPage() {
     </div>
   )
 }
+
+export default function JoinPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center"
+        style={{ backgroundColor: '#05010F' }}>
+        <div className="text-center space-y-4">
+          <div
+            className="w-12 h-12 rounded-full animate-spin mx-auto"
+            style={{
+              border: '3px solid rgba(124,58,237,0.2)',
+              borderTopColor: '#7C3AED'
+            }}
+          />
+          <p style={{ color: '#7C6A9C' }}>Loading invitation...</p>
+        </div>
+      </div>
+    }>
+      <JoinPageInner />
+    </Suspense>
+  )
+}
+
