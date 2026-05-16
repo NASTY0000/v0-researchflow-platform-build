@@ -1,6 +1,10 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import {
+  AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell,
+} from 'recharts'
 import ReactCrop, { type Crop, centerCrop, makeAspectCrop } from 'react-image-crop'
 import 'react-image-crop/dist/ReactCrop.css'
 import { createClient } from '@/lib/supabase/client'
@@ -17,7 +21,8 @@ import {
   User, Mail, Building2, GraduationCap, Calendar,
   Edit, Save, X, Plus, Award, BookOpen, Briefcase, FileText,
   Eye, Star, ExternalLink, Trash2, CheckCircle2, FolderOpen,
-  Users, MessageSquare, ListChecks, Zap, Shield, TrendingUp, Loader2
+  Users, MessageSquare, ListChecks, Zap, Shield, TrendingUp, Loader2,
+  BarChart3, Lightbulb,
 } from 'lucide-react'
 import type { Profile, PortfolioItem, PortfolioItemType, University } from '@/lib/types/database'
 import { AkiliScoreCard } from '@/components/akili/AkiliScoreCard'
@@ -36,6 +41,24 @@ interface MentorInfo {
   total_sessions: number
   specialty: string | null
   tier: string | null
+}
+
+interface AkiliEvent {
+  id: string
+  action: string
+  points_earned: number
+  created_at: string
+}
+
+interface AnalyticsData {
+  profileViews: number
+  ideaViews: number
+  collaborationRequests: number
+  leaderboardRank: number | null
+  scoreHistory: { week: string; score: number }[]
+  dimensionBreakdown: { name: string; value: number; color: string }[]
+  recentEvents: AkiliEvent[]
+  ideasPerformance: { title: string; views: number; matches: number }[]
 }
 
 export default function ProfilePage() {
@@ -80,11 +103,115 @@ export default function ProfilePage() {
     date_year: '',
   })
 
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null)
+  const [analyticsLoading, setAnalyticsLoading] = useState(false)
+
   const supabase = createClient()
 
   useEffect(() => {
     loadAll()
   }, [])
+
+  async function loadAnalytics(userId: string) {
+    setAnalyticsLoading(true)
+    const now = new Date()
+
+    // Build 12-week date range
+    const weeks: string[] = []
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now)
+      d.setDate(d.getDate() - i * 7)
+      weeks.push(d.toISOString().split('T')[0])
+    }
+
+    const [eventsResult, ideasResult, connectionsResult, rankResult] = await Promise.all([
+      supabase
+        .from('akili_score_events')
+        .select('id, action, points_earned, created_at, dimension')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(100),
+      supabase
+        .from('ideas')
+        .select('id, title, view_count, match_count')
+        .eq('user_id', userId)
+        .order('view_count', { ascending: false })
+        .limit(5),
+      supabase
+        .from('connections')
+        .select('id', { count: 'exact', head: true })
+        .eq('receiver_id', userId)
+        .eq('status', 'pending'),
+      supabase
+        .from('profiles')
+        .select('id, akili_score')
+        .order('akili_score', { ascending: false })
+        .limit(200),
+    ])
+
+    const events = (eventsResult.data || []) as (AkiliEvent & { dimension?: string })[]
+
+    // Score history by week (running cumulative from events)
+    const scoreByWeek: Record<string, number> = {}
+    for (const wk of weeks) scoreByWeek[wk] = 0
+    for (const ev of events) {
+      const evDate = ev.created_at.split('T')[0]
+      // find the week bucket
+      for (let i = weeks.length - 1; i >= 0; i--) {
+        if (evDate >= weeks[i]) {
+          scoreByWeek[weeks[i]] = (scoreByWeek[weeks[i]] || 0) + (ev.points_earned || 0)
+          break
+        }
+      }
+    }
+    // Make cumulative
+    let running = 0
+    const scoreHistory = weeks.map(wk => {
+      running += scoreByWeek[wk]
+      const label = new Date(wk).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+      return { week: label, score: running }
+    })
+
+    // Dimension breakdown
+    const DIMENSION_COLORS: Record<string, string> = {
+      knowledge: '#A855F7',
+      collaboration: '#06B6D4',
+      mentorship: '#C084FC',
+      technical: '#818CF8',
+      other: '#4A3F6B',
+    }
+    const dimMap: Record<string, number> = {}
+    for (const ev of events) {
+      const dim = ev.dimension || 'other'
+      dimMap[dim] = (dimMap[dim] || 0) + (ev.points_earned || 0)
+    }
+    const dimensionBreakdown = Object.entries(dimMap).map(([name, value]) => ({
+      name: name.charAt(0).toUpperCase() + name.slice(1),
+      value,
+      color: DIMENSION_COLORS[name] || '#4A3F6B',
+    }))
+
+    // Leaderboard rank
+    const allProfiles = (rankResult.data || []) as { id: string; akili_score: number }[]
+    const rankIdx = allProfiles.findIndex(p => p.id === userId)
+    const leaderboardRank = rankIdx >= 0 ? rankIdx + 1 : null
+
+    setAnalyticsData({
+      profileViews: 0, // placeholder — profile_views from profile itself
+      ideaViews: 0,
+      collaborationRequests: connectionsResult.count || 0,
+      leaderboardRank,
+      scoreHistory,
+      dimensionBreakdown,
+      recentEvents: events.slice(0, 8),
+      ideasPerformance: (ideasResult.data || []).map(i => ({
+        title: i.title,
+        views: (i as { view_count?: number }).view_count || 0,
+        matches: (i as { match_count?: number }).match_count || 0,
+      })),
+    })
+    setAnalyticsLoading(false)
+  }
 
   async function loadAll() {
     setIsLoading(true)
@@ -659,11 +786,17 @@ export default function ProfilePage() {
       <AkiliScoreCard userId={profile.id} />
 
       {/* Tabs */}
-      <Tabs defaultValue="skills" className="space-y-4">
+      <Tabs defaultValue="skills" className="space-y-4" onValueChange={(v) => {
+        if (v === 'analytics' && !analyticsData && profile) loadAnalytics(profile.id)
+      }}>
         <TabsList>
           <TabsTrigger value="skills">Skills & Interests</TabsTrigger>
           <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
           <TabsTrigger value="activity">Activity</TabsTrigger>
+          <TabsTrigger value="analytics">
+            <BarChart3 className="w-3.5 h-3.5 mr-1.5" />
+            Analytics
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="skills" className="space-y-4">
@@ -968,6 +1101,186 @@ export default function ProfilePage() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="analytics" className="space-y-6">
+          {analyticsLoading ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          ) : analyticsData ? (
+            <>
+              {/* Stat cards */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Card>
+                  <CardContent className="p-5 flex flex-col items-center text-center gap-2">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <Eye className="w-5 h-5 text-primary" />
+                    </div>
+                    <p className="text-3xl font-bold">{profile.portfolio_views || 0}</p>
+                    <p className="text-xs text-muted-foreground">Profile Views</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-5 flex flex-col items-center text-center gap-2">
+                    <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center">
+                      <Lightbulb className="w-5 h-5 text-cyan-500" />
+                    </div>
+                    <p className="text-3xl font-bold">{analyticsData.ideasPerformance.reduce((a, i) => a + i.views, 0)}</p>
+                    <p className="text-xs text-muted-foreground">Idea Views</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-5 flex flex-col items-center text-center gap-2">
+                    <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center">
+                      <Users className="w-5 h-5 text-violet-500" />
+                    </div>
+                    <p className="text-3xl font-bold">{analyticsData.collaborationRequests}</p>
+                    <p className="text-xs text-muted-foreground">Pending Requests</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-5 flex flex-col items-center text-center gap-2">
+                    <div className="w-10 h-10 rounded-xl bg-yellow-500/10 flex items-center justify-center">
+                      <TrendingUp className="w-5 h-5 text-yellow-500" />
+                    </div>
+                    <p className="text-3xl font-bold">
+                      {analyticsData.leaderboardRank ? `#${analyticsData.leaderboardRank}` : '—'}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Leaderboard Rank</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Score growth chart */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5 text-primary" />
+                    Akili Score Growth
+                  </CardTitle>
+                  <CardDescription>Points earned over the last 12 weeks</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={220}>
+                    <AreaChart data={analyticsData.scoreHistory} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="akiliGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#A855F7" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="#A855F7" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <XAxis dataKey="week" tick={{ fontSize: 10, fill: '#7C6A9C' }} tickLine={false} axisLine={false} interval={2} />
+                      <YAxis tick={{ fontSize: 10, fill: '#7C6A9C' }} tickLine={false} axisLine={false} />
+                      <Tooltip
+                        contentStyle={{ background: '#1a1625', border: '1px solid rgba(139,92,246,0.3)', borderRadius: 8, fontSize: 12 }}
+                        labelStyle={{ color: '#C4B5D8' }}
+                        itemStyle={{ color: '#A855F7' }}
+                      />
+                      <Area type="monotone" dataKey="score" stroke="#A855F7" strokeWidth={2} fill="url(#akiliGrad)" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                {/* Dimension breakdown */}
+                {analyticsData.dimensionBreakdown.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">Score Dimensions</CardTitle>
+                      <CardDescription>Breakdown by contribution type</CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex items-center gap-6">
+                      <ResponsiveContainer width={120} height={120}>
+                        <PieChart>
+                          <Pie data={analyticsData.dimensionBreakdown} cx="50%" cy="50%" innerRadius={30} outerRadius={55} dataKey="value" strokeWidth={0}>
+                            {analyticsData.dimensionBreakdown.map((entry, idx) => (
+                              <Cell key={idx} fill={entry.color} />
+                            ))}
+                          </Pie>
+                        </PieChart>
+                      </ResponsiveContainer>
+                      <div className="space-y-2 flex-1">
+                        {analyticsData.dimensionBreakdown.map((d) => (
+                          <div key={d.name} className="flex items-center justify-between text-sm">
+                            <div className="flex items-center gap-2">
+                              <div className="w-2.5 h-2.5 rounded-full" style={{ background: d.color }} />
+                              <span className="text-muted-foreground">{d.name}</span>
+                            </div>
+                            <span className="font-medium">{d.value} pts</span>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Recent Akili events */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Recent Activity</CardTitle>
+                    <CardDescription>Latest Akili Score events</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {analyticsData.recentEvents.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">No recent activity.</p>
+                    ) : (
+                      analyticsData.recentEvents.map(ev => (
+                        <div key={ev.id} className="flex items-center justify-between py-1.5 border-b last:border-0 border-border/50">
+                          <div>
+                            <p className="text-sm font-medium capitalize">{ev.action.replace(/_/g, ' ')}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {new Date(ev.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                            </p>
+                          </div>
+                          <span className="text-sm font-semibold text-primary">+{ev.points_earned}</span>
+                        </div>
+                      ))
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Ideas performance */}
+              {analyticsData.ideasPerformance.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Lightbulb className="w-5 h-5 text-primary" />
+                      Ideas Performance
+                    </CardTitle>
+                    <CardDescription>Views and matches for your posted ideas</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-1">
+                      <div className="grid grid-cols-12 text-xs text-muted-foreground py-1 px-2">
+                        <span className="col-span-7">Title</span>
+                        <span className="col-span-2 text-right">Views</span>
+                        <span className="col-span-3 text-right">Matches</span>
+                      </div>
+                      {analyticsData.ideasPerformance.map((idea, i) => (
+                        <div key={i} className="grid grid-cols-12 text-sm py-2 px-2 rounded-lg hover:bg-muted/50 transition-colors">
+                          <span className="col-span-7 font-medium truncate pr-2">{idea.title}</span>
+                          <span className="col-span-2 text-right text-muted-foreground">{idea.views}</span>
+                          <span className="col-span-3 text-right">
+                            <span className="inline-flex items-center gap-1 text-primary">
+                              <Users className="w-3 h-3" />{idea.matches}
+                            </span>
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </>
+          ) : (
+            <div className="text-center py-16">
+              <BarChart3 className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
+              <p className="text-muted-foreground">Click the Analytics tab to load your data.</p>
+            </div>
+          )}
         </TabsContent>
       </Tabs>
     </div>

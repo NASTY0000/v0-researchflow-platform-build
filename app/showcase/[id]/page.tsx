@@ -72,6 +72,7 @@ export default function ShowcaseEntryPage({
   const [isLoading, setIsLoading] = useState(true)
   const [pdfFullscreen, setPdfFullscreen] = useState(false)
   const [citationCopied, setCitationCopied] = useState(false)
+  const [citationFormat, setCitationFormat] = useState<'apa' | 'mla' | 'harvard'>('apa')
   const [linkCopied, setLinkCopied] = useState(false)
   const [downloadCount, setDownloadCount] = useState(0)
 
@@ -179,8 +180,46 @@ export default function ShowcaseEntryPage({
     return `${allAuthors[0]}. (${year}). ${entry.title}. ResearchFlow Showcase. ${url}`
   }
 
+  function getMlaCitation() {
+    if (!entry) return ""
+    const allAuthors = [
+      entry.author?.full_name || 'Unknown Author',
+      ...collaboratorProfiles.map(p => p.full_name || 'Unknown'),
+    ]
+    const year = entry.published_at ? new Date(entry.published_at).getFullYear() : new Date().getFullYear()
+    const url = getPageUrl()
+    const authorStr = allAuthors.length === 1
+      ? allAuthors[0]
+      : allAuthors.length === 2
+        ? `${allAuthors[0]}, and ${allAuthors[1]}`
+        : `${allAuthors[0]}, et al.`
+    return `${authorStr}. "${entry.title}." ResearchFlow Showcase, ${year}, ${url}.`
+  }
+
+  function getHarvardCitation() {
+    if (!entry) return ""
+    const allAuthors = [
+      getApaAuthorName(entry.author?.full_name),
+      ...collaboratorProfiles.map(p => getApaAuthorName(p.full_name)),
+    ]
+    const year = entry.published_at ? new Date(entry.published_at).getFullYear() : new Date().getFullYear()
+    const url = getPageUrl()
+    const authorStr = allAuthors.length === 1
+      ? allAuthors[0]
+      : allAuthors.length === 2
+        ? `${allAuthors[0]} and ${allAuthors[1]}`
+        : `${allAuthors[0]} et al.`
+    return `${authorStr} (${year}) '${entry.title}', ResearchFlow Showcase. Available at: ${url}`
+  }
+
+  function getActiveCitationText() {
+    if (citationFormat === 'mla') return getMlaCitation()
+    if (citationFormat === 'harvard') return getHarvardCitation()
+    return getCitationText()
+  }
+
   function copyCitation() {
-    navigator.clipboard.writeText(getCitationText()).then(() => {
+    navigator.clipboard.writeText(getActiveCitationText()).then(() => {
       setCitationCopied(true)
       toast.success("Citation copied to clipboard!")
       setTimeout(() => setCitationCopied(false), 2000)
@@ -417,12 +456,29 @@ export default function ShowcaseEntryPage({
         {/* CITATION SECTION */}
         <div className="space-y-3">
           <h2 className="text-lg font-semibold">Cite This Research</h2>
+          {/* Format tabs */}
+          <div className="flex gap-1 p-1 rounded-lg w-fit" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(139,92,246,0.15)' }}>
+            {(['apa', 'mla', 'harvard'] as const).map(fmt => (
+              <button
+                key={fmt}
+                onClick={() => { setCitationFormat(fmt); setCitationCopied(false) }}
+                className="px-4 py-1.5 rounded-md text-sm font-medium transition-all"
+                style={{
+                  background: citationFormat === fmt ? 'rgba(124,58,237,0.3)' : 'transparent',
+                  color: citationFormat === fmt ? '#C4B5FD' : '#7C6A9C',
+                  border: citationFormat === fmt ? '1px solid rgba(139,92,246,0.4)' : '1px solid transparent',
+                }}
+              >
+                {fmt.toUpperCase()}
+              </button>
+            ))}
+          </div>
           <div
             className="rounded-xl p-5 relative"
             style={{ background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(139,92,246,0.25)' }}
           >
             <p className="text-sm leading-relaxed pr-10" style={{ color: '#C4B5D8', fontFamily: 'monospace' }}>
-              {getCitationText()}
+              {getActiveCitationText()}
             </p>
             <button
               onClick={copyCitation}
@@ -433,7 +489,11 @@ export default function ShowcaseEntryPage({
               {citationCopied ? <CheckCircle2 className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
             </button>
           </div>
-          <p className="text-xs" style={{ color: '#7C6A9C' }}>APA Format</p>
+          <p className="text-xs" style={{ color: '#7C6A9C' }}>
+            {citationFormat === 'apa' && 'APA 7th Edition Format'}
+            {citationFormat === 'mla' && 'MLA 9th Edition Format'}
+            {citationFormat === 'harvard' && 'Harvard Referencing Format'}
+          </p>
         </div>
 
         {/* DOWNLOAD & SHARE SECTION */}

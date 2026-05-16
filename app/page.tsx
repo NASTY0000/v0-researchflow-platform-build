@@ -11,6 +11,8 @@ import {
   Rocket,
   Star,
   Zap,
+  User,
+  Award,
 } from 'lucide-react'
 import {
   GlobalIllustrations,
@@ -19,6 +21,7 @@ import {
   StatsIllustrations,
   FooterIllustrations
 } from '@/components/landing/floating-illustrations'
+import { FaqSection } from '@/components/landing/faq-section'
 
 const features = [
   { icon: Lightbulb, title: 'Idea Board', description: 'Share your research ideas and discover opportunities to collaborate with peers across Africa.', color: '#A855F7' },
@@ -32,21 +35,21 @@ const features = [
 
 const testimonials = [
   {
-    quote: "ResearchFlow helped me find collaborators for my thesis on renewable energy. We published our first paper together!",
-    author: "Amara Okonkwo",
-    role: "PhD Candidate, University of Lagos",
+    quote: "Within two weeks of joining ResearchFlow, I had three collaborators for my climate adaptation study. We submitted to a peer-reviewed journal six months later — something I could not have done alone.",
+    author: "Amara Okafor",
+    role: "PhD Candidate, University of Ibadan",
     initial: "A",
   },
   {
-    quote: "The mentor network is incredible. I got guidance from a professor at UCT that completely transformed my research approach.",
-    author: "Kwame Asante",
-    role: "Masters Student, KNUST",
-    initial: "K",
+    quote: "The Akili Score system genuinely motivates students to contribute meaningfully. My lab has seen a 40% increase in cross-departmental project proposals since we started using ResearchFlow.",
+    author: "Dr. Chukwuemeka Adeyemi",
+    role: "Associate Professor, Obafemi Awolowo University",
+    initial: "C",
   },
   {
-    quote: "Finally, a platform built for African researchers by people who understand our unique challenges and opportunities.",
-    author: "Dr. Fatima Hassan",
-    role: "Faculty Mentor, Cairo University",
+    quote: "As a female researcher in northern Nigeria, finding a mentor felt impossible. ResearchFlow connected me with a senior researcher in Nairobi in days. That relationship changed my career.",
+    author: "Fatima Al-Hassan",
+    role: "Masters Student, Ahmadu Bello University",
     initial: "F",
   },
 ]
@@ -192,17 +195,46 @@ export default function LandingPage() {
             <p className="text-[#7C6A9C]">Join thousands of researchers already collaborating on ResearchFlow.</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-10">
+          <div className="grid md:grid-cols-3 gap-6">
             {[
-              { step: '01', title: 'Create Your Profile', description: 'Sign up with your university email, add your skills and research interests.' },
-              { step: '02', title: 'Find Your Match', description: 'Browse ideas, get matched with collaborators, or connect with mentors.' },
-              { step: '03', title: 'Start Collaborating', description: 'Form teams, manage projects, and publish your research together.' },
+              {
+                step: '01',
+                icon: User,
+                iconColor: '#A855F7',
+                title: 'Create Your Profile',
+                description: 'Sign up with your university email, add your skills, research interests, and what you\'re looking to achieve. Your profile is your academic identity on ResearchFlow.',
+              },
+              {
+                step: '02',
+                icon: Users,
+                iconColor: '#06B6D4',
+                title: 'Find Your Match',
+                description: 'Our smart algorithm surfaces collaborators, ideas, and mentors tailored to your research goals. Browse opportunities or let matches come to you.',
+              },
+              {
+                step: '03',
+                icon: Award,
+                iconColor: '#C084FC',
+                title: 'Publish & Grow',
+                description: 'Form teams, manage projects with built-in tools, earn Akili Score points, and publish your completed research to the African academic community.',
+              },
             ].map((item, i) => (
-              <div key={item.step} className={`relative animate-fade-up stagger-${i + 1}`}>
-                <div className="text-7xl font-black font-heading mb-4 text-violet-600/12 tracking-tighter">{item.step}</div>
-                <div className="w-10 h-0.5 mb-4 rounded bg-gradient-to-r from-violet-600 to-cyan-500" />
-                <h3 className="text-xl font-semibold font-heading mb-2">{item.title}</h3>
-                <p className="text-[#7C6A9C]">{item.description}</p>
+              <div
+                key={item.step}
+                className={`relative p-8 rounded-2xl animate-fade-up stagger-${i + 1} bg-white/[0.03] border border-violet-500/15 hover:border-violet-500/35 transition-all duration-300`}
+              >
+                <div className="flex items-center gap-4 mb-5">
+                  <div
+                    className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
+                    style={{ background: `${item.iconColor}18`, border: `1px solid ${item.iconColor}30` }}
+                  >
+                    <item.icon className="w-6 h-6" style={{ color: item.iconColor }} />
+                  </div>
+                  <span className="text-4xl font-black font-heading text-violet-600/20 tracking-tighter leading-none">{item.step}</span>
+                </div>
+                <div className="w-8 h-0.5 mb-4 rounded bg-gradient-to-r from-violet-600 to-cyan-500" />
+                <h3 className="text-xl font-semibold font-heading mb-3">{item.title}</h3>
+                <p className="text-[#7C6A9C] text-sm leading-relaxed">{item.description}</p>
               </div>
             ))}
           </div>
@@ -247,6 +279,9 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* FAQ Section */}
+      <FaqSection />
 
       {/* CTA Section */}
       <section className="py-24 px-4 relative">
