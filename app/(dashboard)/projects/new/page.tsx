@@ -159,6 +159,20 @@ export default function NewProjectPage() {
     // Award Akili points
     await awardAkiliPoints(user.id, 'postResearchIdea', 15, `Created project: "${title.trim()}"`, project.id)
 
+    // Auto-create 7 research phases
+    const phaseNames = [
+      'Topic Refinement', 'Literature Review', 'Methodology Design',
+      'Data Collection', 'Data Analysis', 'Writing and Review', 'Showcase Submission',
+    ]
+    await supabase.from('project_phases').insert(
+      phaseNames.map((name, i) => ({
+        project_id: project.id,
+        phase_number: i + 1,
+        phase_name: name,
+        status: i === 0 ? 'in_progress' : 'not_started',
+      }))
+    )
+
     router.push(`/projects/${project.id}`)
   }
 

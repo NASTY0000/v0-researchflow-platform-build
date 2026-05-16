@@ -25,6 +25,9 @@ import {
   GraduationCap,
   CheckCircle2,
   AlertCircle,
+  Video,
+  ExternalLink,
+  Link2,
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import type { MentorAvailability, MentorSession, Profile } from "@/lib/types/database"
@@ -57,6 +60,11 @@ export function MentorSessions({ projectId, currentUserId }: MentorSessionsProps
   const [slotStart, setSlotStart] = useState("09:00")
   const [slotEnd, setSlotEnd] = useState("10:00")
   const [isSavingSlot, setIsSavingSlot] = useState(false)
+
+  // Meeting link
+  const [meetingLinkSession, setMeetingLinkSession] = useState<SessionWithParticipants | null>(null)
+  const [meetingLinkInput, setMeetingLinkInput] = useState("")
+  const [isSavingLink, setIsSavingLink] = useState(false)
 
   // Student: book session
   const [showBooking, setShowBooking] = useState(false)
@@ -258,6 +266,41 @@ export function MentorSessions({ projectId, currentUserId }: MentorSessionsProps
     loadData()
   }
 
+  async function handleSaveMeetingLink() {
+    if (!meetingLinkSession || !currentUserId) return
+    const url = meetingLinkInput.trim()
+    if (url && !url.startsWith('http')) { toast.error("Please enter a valid URL"); return }
+
+    setIsSavingLink(true)
+    const supabase = createClient()
+    const { error } = await supabase
+      .from("mentor_sessions")
+      .update({ meeting_link: url || null })
+      .eq("id", meetingLinkSession.id)
+
+    if (!error && url) {
+      // Notify student
+      await supabase.from("notifications").insert({
+        user_id: meetingLinkSession.student_id,
+        type: "session_reminder",
+        title: "Meeting link added",
+        message: `Your mentor has added a meeting link for your session on ${new Date(meetingLinkSession.scheduled_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}. You can now join from your workspace.`,
+        link: `/projects/${projectId}`,
+        is_read: false,
+      })
+      toast.success("Meeting link saved and student notified")
+    } else if (!error) {
+      toast.success("Meeting link removed")
+    } else {
+      toast.error("Failed to save meeting link")
+    }
+
+    setIsSavingLink(false)
+    setMeetingLinkSession(null)
+    setMeetingLinkInput("")
+    loadData()
+  }
+
   // Sessions that need rating (student's past sessions, not yet rated)
   const needsRating = sessions.filter(
     (s) =>
@@ -416,6 +459,38 @@ export function MentorSessions({ projectId, currentUserId }: MentorSessionsProps
                           Notes: {session.notes}
                         </p>
                       )}
+                      {/* Meeting link row */}
+                      <div className="flex items-center gap-2 mt-2">
+                        {(session as SessionWithParticipants & { meeting_link?: string }).meeting_link ? (
+                          <Button
+                            size="sm"
+                            className="gap-1 h-7 text-xs"
+                            style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}
+                            onClick={() => window.open((session as SessionWithParticipants & { meeting_link?: string }).meeting_link!, '_blank')}
+                          >
+                            <Video className="h-3 w-3" />
+                            Join Session
+                            <ExternalLink className="h-3 w-3" />
+                          </Button>
+                        ) : (
+                          <>
+                            {isMentor && session.mentor_id === currentUserId ? (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="gap-1 h-7 text-xs"
+                                style={{ color: '#7C6A9C', border: '1px solid rgba(139,92,246,0.2)' }}
+                                onClick={() => { setMeetingLinkSession(session); setMeetingLinkInput("") }}
+                              >
+                                <Link2 className="h-3 w-3" />
+                                Add meeting link
+                              </Button>
+                            ) : (
+                              <span className="text-xs" style={{ color: '#4A3F6B' }}>Awaiting meeting link</span>
+                            )}
+                          </>
+                        )}
+                      </div>
                       {session.student_rating && (
                         <div className="flex items-center gap-1 mt-2">
                           {Array.from({ length: 5 }).map((_, i) => (
@@ -559,6 +634,36 @@ export function MentorSessions({ projectId, currentUserId }: MentorSessionsProps
               style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}
             >
               {isBooking ? <><Loader2 className="h-4 w-4 mr-1 animate-spin" />Booking...</> : 'Confirm Booking'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Meeting Link Dialog */}
+      <Dialog open={!!meetingLinkSession} onOpenChange={(open) => { if (!open) { setMeetingLinkSession(null); setMeetingLinkInput("") } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Meeting Link</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <p className="text-sm text-muted-foreground">
+              Paste a Google Meet, Zoom, or any video call link for this session.
+            </p>
+            <Input
+              type="url"
+              placeholder="https://meet.google.com/xxx-xxxx-xxx"
+              value={meetingLinkInput}
+              onChange={e => setMeetingLinkInput(e.target.value)}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setMeetingLinkSession(null); setMeetingLinkInput("") }}>Cancel</Button>
+            <Button
+              disabled={isSavingLink}
+              onClick={handleSaveMeetingLink}
+              style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}
+            >
+              {isSavingLink ? <><Loader2 className="h-4 w-4 mr-1 animate-spin" />Saving...</> : 'Save Link'}
             </Button>
           </DialogFooter>
         </DialogContent>

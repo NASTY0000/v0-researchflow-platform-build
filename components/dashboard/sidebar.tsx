@@ -28,6 +28,7 @@ import {
   Store,
   MessageSquare,
   Award,
+  Trophy,
   Settings,
   LogOut,
   ChevronUp,
@@ -87,6 +88,11 @@ const resourceNavItems = [
     title: 'Showcase',
     href: '/showcase',
     icon: Award,
+  },
+  {
+    title: 'Leaderboard',
+    href: '/leaderboard',
+    icon: Trophy,
   },
 ]
 
