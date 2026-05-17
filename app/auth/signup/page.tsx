@@ -214,7 +214,17 @@ export default function SignUpPage() {
 
           {error && (
             <Alert variant="destructive" className="mb-5">
-              <AlertDescription>{error}</AlertDescription>
+              <AlertDescription>
+                {error}
+                {error.toLowerCase().includes('already') && (
+                  <span className="block mt-1 text-xs opacity-80">
+                    Having trouble? Check your email for a verification link, or contact{' '}
+                    <a href="mailto:support@researchflowafrica.com" className="underline">
+                      support@researchflowafrica.com
+                    </a>
+                  </span>
+                )}
+              </AlertDescription>
             </Alert>
           )}
 

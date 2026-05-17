@@ -33,6 +33,24 @@ export async function signUp(formData: FormData) {
   }
 
   if (data?.user?.identities?.length === 0) {
+    // Email exists in auth — check if they finished onboarding
+    const { data: existingProfile } = await supabase
+      .from('profiles')
+      .select('onboarding_completed, id')
+      .eq('email', email)
+      .single()
+
+    if (!existingProfile || !existingProfile.onboarding_completed) {
+      // Incomplete registration — resend verification so they can continue
+      await supabase.auth.resend({ type: 'signup', email })
+      return {
+        success: true,
+        email,
+        requiresVerification: true,
+        message: "We've resent your verification email. Please check your inbox.",
+      }
+    }
+
     return { error: 'An account with this email already exists. Please sign in instead.' }
   }
 
