@@ -22,8 +22,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (!isAdmin) redirect('/dashboard')
 
   // Fetch pending counts for sidebar badges
+  // Exclude admin users' mentor profiles from the pending count
   const [mentorCount, showcaseCount, reportCount] = await Promise.all([
-    supabase.from('mentor_profiles').select('id', { count: 'exact', head: true }).eq('is_verified', false),
+    supabase
+      .from('mentor_profiles')
+      .select('id', { count: 'exact', head: true })
+      .eq('is_verified', false)
+      .eq('verification_status', 'pending')
+      .neq('user_id', user.id),
     supabase.from('showcase_submissions').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
     supabase.from('content_reports').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
   ])

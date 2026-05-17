@@ -55,7 +55,7 @@ export default function AdminOverviewPage() {
       supabase.from('projects').select('id', { count: 'exact', head: true }).gte('created_at', monthStart).eq('status', 'active'),
       supabase.from('teams').select('id', { count: 'exact', head: true }).gte('created_at', monthStart),
       supabase.from('showcase_submissions').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
-      supabase.from('mentor_profiles').select('id', { count: 'exact', head: true }).eq('is_verified', false),
+      supabase.from('mentor_profiles').select('id', { count: 'exact', head: true }).eq('is_verified', false).eq('verification_status', 'pending'),
       supabase.from('profiles').select('id', { count: 'exact', head: true }).gte('updated_at', thirtyDaysAgo),
       supabase.from('profiles').select('id, full_name, email, avatar_url, created_at').order('created_at', { ascending: false }).limit(7),
       supabase.from('research_ideas').select('id, title, created_at').order('created_at', { ascending: false }).limit(7),
