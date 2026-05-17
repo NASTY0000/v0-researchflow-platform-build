@@ -33,9 +33,10 @@ import {
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import type { Match, Profile } from "@/lib/types/database"
+import { AkiliScoreBadge } from "@/components/akili/AkiliScoreBadge"
 
 interface MatchWithProfile extends Match {
-  matched_user: Profile & { university?: { name: string } }
+  matched_user: Profile
 }
 
 export default function MatchesPage() {
@@ -62,10 +63,7 @@ export default function MatchesPage() {
       .from("matches")
       .select(`
         *,
-        matched_user:profiles!matches_matched_user_id_fkey(
-          *,
-          university:universities(name)
-        )
+        matched_user:profiles!matches_matched_user_id_fkey(*)
       `)
       .eq("user_id", user.id)
       .neq("status", "dismissed")
@@ -100,9 +98,10 @@ export default function MatchesPage() {
     // Find potential matches based on skills and interests
     const { data: potentialMatches } = await supabase
       .from("profiles")
-      .select("*, university:universities(name)")
+      .select("*")
       .neq("id", user.id)
       .eq("public_profile", true)
+      .eq("onboarding_completed", true)
       .limit(20)
 
     if (!potentialMatches) {
@@ -303,6 +302,9 @@ export default function MatchesPage() {
                           <p className="text-sm text-muted-foreground">
                             {match.matched_user?.department || "Researcher"}
                           </p>
+                          <div className="mt-1">
+                            <AkiliScoreBadge score={match.matched_user?.akili_score || 0} />
+                          </div>
                         </div>
                       </div>
                       <Button
@@ -326,10 +328,10 @@ export default function MatchesPage() {
 
                     {/* Info */}
                     <div className="space-y-2 mb-4 text-sm">
-                      {match.matched_user?.university && (
+                      {match.matched_user?.university_id && (
                         <p className="flex items-center gap-2 text-muted-foreground">
                           <Building2 className="h-4 w-4" />
-                          {match.matched_user.university.name}
+                          {match.matched_user.university_id}
                         </p>
                       )}
                       {match.matched_user?.academic_level && (

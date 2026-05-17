@@ -96,8 +96,42 @@ export interface Profile {
   public_profile: boolean
   created_at: string
   updated_at: string
+  is_admin: boolean
+  is_suspended: boolean
+  suspended_until: string | null
+  suspension_reason: string | null
+  // Privacy settings
+  profile_visibility: 'public' | 'university_only' | 'connections_only'
+  show_availability: boolean
+  allow_dm_from_non_connections: boolean
+  appear_in_search: boolean
+  // Account status
+  account_status: 'active' | 'suspended' | 'deleted'
+  deletion_requested_at: string | null
+  data_export_requested_at: string | null
+  // Email preferences
+  email_digest: boolean
+  email_marketing: boolean
+  // Notification preferences (JSONB: { [type]: { whatsapp: bool, sms: bool } })
+  notification_prefs: Record<string, { whatsapp: boolean; sms: boolean }>
+  // Akili Score fields (added via akili_score_migration.sql)
+  akili_score: number
+  akili_dimension_knowledge: number
+  akili_dimension_collaboration: number
+  akili_dimension_mentorship: number
+  akili_dimension_technical: number
   // Joined fields
   university?: University
+}
+
+export interface AkiliScoreEvent {
+  id: string
+  user_id: string
+  event_type: string
+  points_earned: number
+  description: string | null
+  related_id: string | null
+  created_at: string
 }
 
 export interface MentorProfile {
@@ -367,6 +401,28 @@ export interface ShowcaseEntry {
   user_has_liked?: boolean
 }
 
+export type ShowcaseSubmissionStatus = 'pending' | 'approved' | 'needs_revision' | 'rejected'
+
+export interface ShowcaseSubmission {
+  id: string
+  project_id: string | null
+  submitted_by: string
+  title: string
+  abstract: string
+  research_area_tags: string[]
+  methodology_tags: string[]
+  pdf_url: string | null
+  visibility: 'public' | 'university'
+  status: ShowcaseSubmissionStatus
+  admin_notes: string | null
+  submitted_at: string
+  reviewed_at: string | null
+  reviewed_by: string | null
+  // Joined
+  submitter?: Profile
+  project?: Project
+}
+
 export interface ProjectFile {
   id: string
   project_id: string
@@ -379,6 +435,100 @@ export interface ProjectFile {
   created_at: string
   // Joined fields
   uploader?: Profile
+}
+
+export interface MentorshipRequest {
+  id: string
+  mentor_id: string
+  student_id: string
+  project_id: string | null
+  message: string | null
+  brief_url: string | null
+  status: 'pending' | 'accepted' | 'declined'
+  decline_message: string | null
+  created_at: string
+  updated_at: string
+  // Joined fields
+  mentor?: Profile
+  student?: Profile
+  project?: Project
+}
+
+export interface MentorAvailability {
+  id: string
+  mentor_id: string
+  available_date: string
+  start_time: string
+  end_time: string
+  is_booked: boolean
+  booked_by: string | null
+  project_id: string | null
+  agenda: string | null
+  created_at: string
+  // Joined fields
+  mentor?: Profile
+  booker?: Profile
+}
+
+export interface MentorSession {
+  id: string
+  mentor_id: string
+  student_id: string
+  project_id: string | null
+  availability_slot_id: string | null
+  scheduled_at: string
+  agenda: string | null
+  notes: string | null
+  status: 'upcoming' | 'completed' | 'cancelled'
+  student_rating: number | null
+  student_feedback: string | null
+  rating_completed: boolean
+  created_at: string
+  updated_at: string
+  // Joined fields
+  mentor?: Profile
+  student?: Profile
+}
+
+// Admin-specific types
+
+export interface ContentReport {
+  id: string
+  reporter_id: string | null
+  content_type: 'idea' | 'task' | 'message' | 'showcase' | 'comment' | 'profile'
+  content_id: string
+  reason: string
+  description: string | null
+  status: 'pending' | 'resolved' | 'dismissed'
+  resolved_by: string | null
+  resolved_at: string | null
+  created_at: string
+  // Joined
+  reporter?: Profile
+}
+
+export interface Broadcast {
+  id: string
+  sent_by: string
+  title: string
+  message: string
+  audience: 'all' | 'university' | 'role'
+  audience_filter: string | null
+  recipient_count: number
+  sent_at: string
+  // Joined
+  sender?: Profile
+}
+
+export interface UniversityRecord {
+  id: string
+  name: string
+  country: string
+  type: 'Federal' | 'State' | 'Private'
+  email_domain: string | null
+  is_active: boolean
+  created_at: string
+  updated_at: string
 }
 
 // Onboarding form data

@@ -1,12 +1,13 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, type ChangeEvent } from "react"
 import Link from "next/link"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   Select,
   SelectContent,
@@ -23,23 +24,30 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
   BookOpen,
   Search,
   Star,
   Clock,
-  Calendar,
   GraduationCap,
   Building2,
   MessageSquare,
   Loader2,
-  Filter,
+  Paperclip,
+  CheckCircle2,
+  FolderKanban,
+  Briefcase,
+  Award,
+  ArrowRight,
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
-import type { MentorProfile, Profile } from "@/lib/types/database"
+import type { MentorProfile, Profile, Project } from "@/lib/types/database"
+import { AkiliScoreBadge } from "@/components/akili/AkiliScoreBadge"
+import { toast } from "sonner"
 
 interface MentorWithProfile extends MentorProfile {
-  profile: Profile & { university?: { name: string } }
+  profile: Profile
 }
 
 const EXPERTISE_AREAS = [
@@ -55,14 +63,54 @@ const EXPERTISE_AREAS = [
   "Field Research",
 ]
 
+const MENTOR_TIERS = [
+  {
+    id: "faculty",
+    label: "Tier 1: Registered Faculty",
+    icon: GraduationCap,
+    description: "Academic staff at a recognised university or research institution.",
+    color: "#F59E0B",
+    bg: "rgba(245,158,11,0.08)",
+    border: "rgba(245,158,11,0.3)",
+  },
+  {
+    id: "postgraduate",
+    label: "Tier 2: Postgraduate Student",
+    icon: BookOpen,
+    description: "Masters or PhD students with research experience who can guide undergraduates.",
+    color: "#A855F7",
+    bg: "rgba(168,85,247,0.08)",
+    border: "rgba(168,85,247,0.3)",
+  },
+  {
+    id: "industry",
+    label: "Tier 3: Industry Professional",
+    icon: Briefcase,
+    description: "Working professionals with domain expertise relevant to African research.",
+    color: "#22C55E",
+    bg: "rgba(34,197,94,0.08)",
+    border: "rgba(34,197,94,0.3)",
+  },
+]
+
 export default function MentorsPage() {
   const [mentors, setMentors] = useState<MentorWithProfile[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedArea, setSelectedArea] = useState("All Areas")
   const [selectedMentor, setSelectedMentor] = useState<MentorWithProfile | null>(null)
+  const [currentUserRoles, setCurrentUserRoles] = useState<string[]>([])
+  const [showBecomeMentorModal, setShowBecomeMentorModal] = useState(false)
+  const [applyingTier, setApplyingTier] = useState<string | null>(null)
+
+  // Request modal state
+  const [userProjects, setUserProjects] = useState<Project[]>([])
+  const [selectedProjectId, setSelectedProjectId] = useState("")
   const [requestMessage, setRequestMessage] = useState("")
+  const [briefFile, setBriefFile] = useState<File | null>(null)
+  const [briefError, setBriefError] = useState<string | null>(null)
   const [isRequesting, setIsRequesting] = useState(false)
+  const [requestSuccess, setRequestSuccess] = useState(false)
 
   useEffect(() => {
     loadMentors()
@@ -72,14 +120,21 @@ export default function MentorsPage() {
     setIsLoading(true)
     const supabase = createClient()
 
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("roles")
+        .eq("id", user.id)
+        .single()
+      if (profile?.roles) setCurrentUserRoles(profile.roles)
+    }
+
     let query = supabase
       .from("mentor_profiles")
       .select(`
         *,
-        profile:profiles!mentor_profiles_user_id_fkey(
-          *,
-          university:universities(name)
-        )
+        profile:profiles!mentor_profiles_user_id_fkey(*)
       `)
       .eq("is_accepting_mentees", true)
       .order("rating", { ascending: false })
@@ -107,42 +162,245 @@ export default function MentorsPage() {
     setIsLoading(false)
   }
 
+  async function openRequestModal(mentor: MentorWithProfile) {
+    setSelectedMentor(mentor)
+    setRequestSuccess(false)
+    setSelectedProjectId("")
+    setRequestMessage("")
+    setBriefFile(null)
+    setBriefError(null)
+
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    const { data: memberRows } = await supabase
+      .from("team_members")
+      .select("team_id")
+      .eq("user_id", user.id)
+
+    if (memberRows && memberRows.length > 0) {
+      const teamIds = memberRows.map((r: { team_id: string }) => r.team_id)
+      const { data: projects } = await supabase
+        .from("projects")
+        .select("id, title, status")
+        .in("team_id", teamIds)
+        .eq("status", "active")
+        .order("created_at", { ascending: false })
+
+      setUserProjects((projects as Project[]) || [])
+    } else {
+      setUserProjects([])
+    }
+  }
+
+  function handleFileChange(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    setBriefError(null)
+    if (!file) { setBriefFile(null); return }
+    if (file.type !== "application/pdf") {
+      setBriefError("Only PDF files are accepted.")
+      setBriefFile(null)
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setBriefError("File must be under 5 MB.")
+      setBriefFile(null)
+      return
+    }
+    setBriefFile(file)
+  }
+
   async function handleRequestMentorship() {
     if (!selectedMentor) return
+    if (userProjects.length > 0 && !selectedProjectId) {
+      toast.error("Please select a project.")
+      return
+    }
 
     setIsRequesting(true)
     const supabase = createClient()
-
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
+    if (!user) { setIsRequesting(false); return }
+
+    let briefUrl: string | null = null
+    if (briefFile) {
+      const fileName = `${user.id}/${Date.now()}_${briefFile.name}`
+      const { data: uploadData } = await supabase.storage
+        .from("mentor-briefs")
+        .upload(fileName, briefFile, { upsert: false })
+      if (uploadData) {
+        const { data: publicUrl } = supabase.storage
+          .from("mentor-briefs")
+          .getPublicUrl(uploadData.path)
+        briefUrl = publicUrl.publicUrl
+      }
+    }
+
+    const { error } = await supabase.from("mentorship_requests").insert({
+      mentor_id: selectedMentor.user_id,
+      student_id: user.id,
+      project_id: selectedProjectId || null,
+      message: requestMessage.trim() || null,
+      brief_url: briefUrl,
+      status: "pending",
+    })
+
+    if (error) {
+      toast.error("Failed to send request. Please try again.")
       setIsRequesting(false)
       return
     }
 
-    // Create mentorship session request
-    await supabase.from("mentorship_sessions").insert({
-      mentor_id: selectedMentor.user_id,
-      mentee_id: user.id,
-      status: "requested",
-      notes: requestMessage || "I would like to request mentorship.",
-    })
-
-    // Create notification for mentor
     await supabase.from("notifications").insert({
       user_id: selectedMentor.user_id,
       type: "mentorship_request",
       title: "New Mentorship Request",
-      message: "Someone has requested your mentorship",
-      link: "/mentors/requests",
+      message: "A student has requested your mentorship",
+      link: "/dashboard",
     })
 
-    setSelectedMentor(null)
-    setRequestMessage("")
+    setRequestSuccess(true)
     setIsRequesting(false)
+  }
+
+  function closeModal() {
+    setSelectedMentor(null)
+    setRequestSuccess(false)
+  }
+
+  function handleBecomeMentorClick() {
+    if (currentUserRoles.includes("mentor")) {
+      window.location.href = "/mentor-dashboard"
+    } else {
+      setShowBecomeMentorModal(true)
+    }
+  }
+
+  async function applyAsMentor(tierId: string) {
+    setApplyingTier(tierId)
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { setApplyingTier(null); return }
+
+    // Check if user is admin for instant approval
+    const { data: profileData } = await supabase
+      .from("profiles")
+      .select("is_admin, roles")
+      .eq("id", user.id)
+      .single()
+
+    const isAdmin = profileData?.is_admin === true || profileData?.roles?.includes("admin")
+
+    // 1. Add 'mentor' to roles
+    const updatedRoles = Array.from(new Set([...currentUserRoles, "mentor"]))
+    const { error: rolesError } = await supabase
+      .from("profiles")
+      .update({ roles: updatedRoles })
+      .eq("id", user.id)
+
+    if (rolesError) {
+      toast.error("Failed to apply. Please try again.")
+      setApplyingTier(null)
+      return
+    }
+
+    // 2. Upsert mentor_profiles — instant approval for admins, pending for everyone else
+    const tierNumber = tierId === "faculty" ? 1 : tierId === "postgraduate" ? 2 : 3
+    await supabase.from("mentor_profiles").upsert(
+      {
+        user_id: user.id,
+        tier: tierNumber,
+        is_verified: isAdmin,
+        specializations: [],
+        mentorship_areas: [],
+        available_slots: isAdmin ? 10 : 0,
+        slots_used: 0,
+        total_sessions: 0,
+        rating: 0,
+        review_count: 0,
+      },
+      { onConflict: "user_id" }
+    )
+
+    setCurrentUserRoles(updatedRoles)
+    setApplyingTier(null)
+    setShowBecomeMentorModal(false)
+
+    // 3. Admins skip verification and go straight to dashboard
+    if (isAdmin) {
+      toast.success("Mentor profile approved instantly!")
+      window.location.href = "/mentor-dashboard"
+    } else {
+      window.location.href = "/mentor-verification"
+    }
   }
 
   return (
     <div className="space-y-6">
+      {/* Become a Mentor Modal */}
+      {showBecomeMentorModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden" style={{ background: '#0F0A1E', border: '1px solid rgba(139,92,246,0.3)' }}>
+            <div className="flex items-center justify-between p-6" style={{ borderBottom: '1px solid rgba(139,92,246,0.15)' }}>
+              <div>
+                <h2 className="text-xl font-bold font-heading">Become a Mentor</h2>
+                <p className="text-sm mt-0.5" style={{ color: '#7C6A9C' }}>Choose the tier that matches your background</p>
+              </div>
+              <button
+                onClick={() => setShowBecomeMentorModal(false)}
+                className="w-8 h-8 rounded-lg flex items-center justify-center"
+                style={{ color: '#7C6A9C', background: 'rgba(255,255,255,0.05)' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-6 space-y-3">
+              {MENTOR_TIERS.map((tier) => {
+                const Icon = tier.icon
+                return (
+                  <div
+                    key={tier.id}
+                    className="flex items-center gap-4 p-4 rounded-xl"
+                    style={{ background: tier.bg, border: `1px solid ${tier.border}` }}
+                  >
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                      style={{ background: `${tier.bg}`, border: `1px solid ${tier.border}` }}
+                    >
+                      <Icon className="w-5 h-5" style={{ color: tier.color }} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm" style={{ color: tier.color }}>{tier.label}</p>
+                      <p className="text-xs mt-0.5" style={{ color: '#9D8BB8' }}>{tier.description}</p>
+                    </div>
+                    <Button
+                      size="sm"
+                      onClick={() => applyAsMentor(tier.id)}
+                      disabled={!!applyingTier}
+                      style={{ background: `linear-gradient(135deg, ${tier.color}55, ${tier.color}33)`, border: `1px solid ${tier.border}`, color: tier.color, flexShrink: 0 }}
+                    >
+                      {applyingTier === tier.id ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <>Apply <ArrowRight className="w-3 h-3 ml-1" /></>
+                      )}
+                    </Button>
+                  </div>
+                )
+              })}
+            </div>
+
+            <div className="px-6 pb-6">
+              <p className="text-xs text-center" style={{ color: '#7C6A9C' }}>
+                After applying, complete your mentor verification profile in Settings. Your application will be reviewed by the ResearchFlow team.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -154,8 +412,12 @@ export default function MentorsPage() {
             Connect with experienced researchers for guidance and support
           </p>
         </div>
-        <Button variant="outline" asChild>
-          <Link href="/mentors/become">Become a Mentor</Link>
+        <Button
+          variant="outline"
+          onClick={handleBecomeMentorClick}
+          style={{ border: '1px solid rgba(168,85,247,0.4)', color: '#C084FC' }}
+        >
+          {currentUserRoles.includes("mentor") ? "Mentor Dashboard" : "Become a Mentor"}
         </Button>
       </div>
 
@@ -227,21 +489,22 @@ export default function MentorsPage() {
                         <span className="truncate">{mentor.profile.department}</span>
                       </p>
                     )}
-                    {mentor.profile?.university && (
+                    {mentor.profile?.university_id && (
                       <p className="text-sm text-muted-foreground flex items-center gap-1">
                         <Building2 className="h-3 w-3 shrink-0" />
-                        <span className="truncate">{mentor.profile.university.name}</span>
+                        <span className="truncate">{mentor.profile.university_id}</span>
                       </p>
                     )}
+                    <div className="mt-1.5">
+                      <AkiliScoreBadge score={mentor.profile?.akili_score || 0} />
+                    </div>
                   </div>
                 </div>
 
-                {/* Bio */}
                 {mentor.bio && (
                   <p className="text-sm text-muted-foreground line-clamp-2 mb-4">{mentor.bio}</p>
                 )}
 
-                {/* Expertise */}
                 {mentor.expertise_areas && mentor.expertise_areas.length > 0 && (
                   <div className="flex flex-wrap gap-1 mb-4">
                     {mentor.expertise_areas.slice(0, 3).map((area) => (
@@ -257,7 +520,6 @@ export default function MentorsPage() {
                   </div>
                 )}
 
-                {/* Stats */}
                 <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
                   {mentor.rating && (
                     <span className="flex items-center gap-1">
@@ -279,11 +541,10 @@ export default function MentorsPage() {
                   )}
                 </div>
 
-                {/* Actions */}
                 <div className="flex gap-2 pt-4 border-t">
                   <Button
                     className="flex-1"
-                    onClick={() => setSelectedMentor(mentor)}
+                    onClick={() => openRequestModal(mentor)}
                   >
                     Request Mentorship
                   </Button>
@@ -305,59 +566,144 @@ export default function MentorsPage() {
                 ? "Try adjusting your filters"
                 : "No mentors are currently available"}
             </p>
-            <Button variant="outline" asChild>
-              <Link href="/mentors/become">Become a Mentor</Link>
+            <Button
+              variant="outline"
+              onClick={handleBecomeMentorClick}
+              style={{ border: '1px solid rgba(168,85,247,0.4)', color: '#C084FC' }}
+            >
+              {currentUserRoles.includes("mentor") ? "Mentor Dashboard" : "Become a Mentor"}
             </Button>
           </CardContent>
         </Card>
       )}
 
-      {/* Request Dialog */}
-      <Dialog open={!!selectedMentor} onOpenChange={() => setSelectedMentor(null)}>
-        <DialogContent>
+      {/* Request Modal */}
+      <Dialog open={!!selectedMentor} onOpenChange={closeModal}>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Request Mentorship</DialogTitle>
             <DialogDescription>
-              Send a message to {selectedMentor?.profile?.full_name} explaining what you&apos;re looking for.
+              Send a request to {selectedMentor?.profile?.full_name}.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="flex items-center gap-4 p-4 bg-muted rounded-lg">
-              <Avatar className="h-12 w-12">
-                <AvatarImage src={selectedMentor?.profile?.avatar_url || undefined} />
-                <AvatarFallback className="bg-primary/10 text-primary">
-                  {selectedMentor?.profile?.full_name?.charAt(0) || "?"}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <h4 className="font-semibold">{selectedMentor?.profile?.full_name}</h4>
-                <p className="text-sm text-muted-foreground">
-                  {selectedMentor?.profile?.department}
-                </p>
-              </div>
+
+          {requestSuccess ? (
+            <div className="py-6 text-center space-y-3">
+              <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto" />
+              <p className="font-medium">
+                Request sent to {selectedMentor?.profile?.full_name}.
+              </p>
+              <p className="text-sm text-muted-foreground">
+                You&apos;ll be notified when they respond.
+              </p>
+              <Button onClick={closeModal} className="mt-2">Done</Button>
             </div>
-            <Textarea
-              placeholder="Introduce yourself and describe what kind of guidance you're seeking..."
-              value={requestMessage}
-              onChange={(e) => setRequestMessage(e.target.value)}
-              rows={4}
-            />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setSelectedMentor(null)}>
-              Cancel
-            </Button>
-            <Button onClick={handleRequestMentorship} disabled={isRequesting}>
-              {isRequesting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Sending...
-                </>
-              ) : (
-                "Send Request"
-              )}
-            </Button>
-          </DialogFooter>
+          ) : (
+            <>
+              {/* Mentor preview */}
+              <div className="flex items-center gap-4 p-4 bg-muted rounded-lg">
+                <Avatar className="h-12 w-12">
+                  <AvatarImage src={selectedMentor?.profile?.avatar_url || undefined} />
+                  <AvatarFallback className="bg-primary/10 text-primary">
+                    {selectedMentor?.profile?.full_name?.charAt(0) || "?"}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <h4 className="font-semibold">{selectedMentor?.profile?.full_name}</h4>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedMentor?.profile?.department}
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                {/* Project selector */}
+                <div className="space-y-2">
+                  <Label>Select Project</Label>
+                  {userProjects.length === 0 ? (
+                    <div className="flex items-start gap-2 p-3 rounded-lg bg-muted text-sm text-muted-foreground">
+                      <FolderKanban className="h-4 w-4 mt-0.5 shrink-0" />
+                      <span>
+                        You need an active project to request mentorship.{" "}
+                        <Link href="/ideas/new" className="text-primary underline" onClick={closeModal}>
+                          Post a research idea first.
+                        </Link>
+                      </span>
+                    </div>
+                  ) : (
+                    <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose a project..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {userProjects.map((p) => (
+                          <SelectItem key={p.id} value={p.id}>
+                            {p.title}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+
+                {/* Message */}
+                <div className="space-y-2">
+                  <Label>
+                    Message
+                    <span className="ml-2 text-xs text-muted-foreground font-normal">
+                      {requestMessage.length}/200
+                    </span>
+                  </Label>
+                  <Textarea
+                    placeholder="Briefly describe what you need guidance on..."
+                    value={requestMessage}
+                    onChange={(e) => setRequestMessage(e.target.value.slice(0, 200))}
+                    rows={3}
+                  />
+                </div>
+
+                {/* File upload */}
+                <div className="space-y-2">
+                  <Label>Attach Project Brief <span className="text-muted-foreground font-normal">(optional, PDF only, max 5 MB)</span></Label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-md border text-sm text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors">
+                      <Paperclip className="h-4 w-4" />
+                      {briefFile ? briefFile.name : "Choose PDF file"}
+                    </div>
+                    <input
+                      type="file"
+                      accept="application/pdf"
+                      className="hidden"
+                      onChange={handleFileChange}
+                    />
+                  </label>
+                  {briefError && (
+                    <p className="text-xs text-destructive">{briefError}</p>
+                  )}
+                </div>
+              </div>
+
+              <DialogFooter className="gap-2">
+                <Button variant="outline" onClick={closeModal}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleRequestMentorship}
+                  disabled={isRequesting || (userProjects.length > 0 && !selectedProjectId)}
+                  style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}
+                >
+                  {isRequesting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    "Send Request"
+                  )}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </div>

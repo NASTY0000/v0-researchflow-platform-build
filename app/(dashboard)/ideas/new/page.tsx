@@ -9,36 +9,14 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { ArrowLeft, Lightbulb, X, Plus, Loader2 } from "lucide-react"
+import { ArrowLeft, Lightbulb, Loader2 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
-
-const RESEARCH_AREAS = [
-  "Computer Science",
-  "Data Science",
-  "Artificial Intelligence",
-  "Machine Learning",
-  "Biotechnology",
-  "Environmental Science",
-  "Public Health",
-  "Economics",
-  "Social Sciences",
-  "Engineering",
-  "Mathematics",
-  "Physics",
-  "Chemistry",
-  "Medicine",
-  "Agriculture",
-  "Education",
-  "Other",
-]
+import { postResearchIdea } from "@/lib/actions/akili"
+import { generateMatchesForNewIdea } from "@/lib/actions/matching"
+import { TagInput } from "@/components/ui/tag-input"
+import { RESEARCH_AREAS, SKILLS_LIST, LOOKING_FOR_OPTIONS } from "@/lib/constants/tags"
 
 const ROLES = [
   "Data Scientist",
@@ -67,36 +45,12 @@ export default function NewIdeaPage() {
   // Form state
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
-  const [researchArea, setResearchArea] = useState("")
+  const [researchArea, setResearchArea] = useState<string[]>([])
   const [collaborationType, setCollaborationType] = useState("open")
   const [estimatedDuration, setEstimatedDuration] = useState("")
   const [tags, setTags] = useState<string[]>([])
-  const [tagInput, setTagInput] = useState("")
   const [rolesNeeded, setRolesNeeded] = useState<string[]>([])
   const [skillsNeeded, setSkillsNeeded] = useState<string[]>([])
-  const [skillInput, setSkillInput] = useState("")
-
-  function addTag() {
-    if (tagInput.trim() && !tags.includes(tagInput.trim()) && tags.length < 5) {
-      setTags([...tags, tagInput.trim()])
-      setTagInput("")
-    }
-  }
-
-  function removeTag(tag: string) {
-    setTags(tags.filter((t) => t !== tag))
-  }
-
-  function addSkill() {
-    if (skillInput.trim() && !skillsNeeded.includes(skillInput.trim()) && skillsNeeded.length < 10) {
-      setSkillsNeeded([...skillsNeeded, skillInput.trim()])
-      setSkillInput("")
-    }
-  }
-
-  function removeSkill(skill: string) {
-    setSkillsNeeded(skillsNeeded.filter((s) => s !== skill))
-  }
 
   function toggleRole(role: string) {
     if (rolesNeeded.includes(role)) {
@@ -110,7 +64,7 @@ export default function NewIdeaPage() {
     e.preventDefault()
     setError(null)
 
-    if (!title.trim() || !description.trim() || !researchArea) {
+    if (!title.trim() || !description.trim() || researchArea.length === 0) {
       setError("Please fill in all required fields")
       return
     }
@@ -133,7 +87,7 @@ export default function NewIdeaPage() {
           author_id: user.id,
           title: title.trim(),
           description: description.trim(),
-          research_area: researchArea,
+          research_area: researchArea[0],
           collaboration_type: collaborationType,
           estimated_duration: estimatedDuration || null,
           tags,
@@ -151,6 +105,8 @@ export default function NewIdeaPage() {
         return
       }
 
+      await postResearchIdea(user.id, data.id)
+      generateMatchesForNewIdea(data.id, user.id).catch(() => {})
       router.push(`/ideas/${data.id}`)
     } catch (err) {
       console.error("Error:", err)
@@ -221,52 +177,26 @@ export default function NewIdeaPage() {
 
             {/* Research Area */}
             <div className="space-y-2">
-              <Label htmlFor="area">Research Area *</Label>
-              <Select value={researchArea} onValueChange={setResearchArea}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select research area" />
-                </SelectTrigger>
-                <SelectContent>
-                  {RESEARCH_AREAS.map((area) => (
-                    <SelectItem key={area} value={area}>
-                      {area}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label>Research Area *</Label>
+              <TagInput
+                options={RESEARCH_AREAS}
+                value={researchArea}
+                onChange={setResearchArea}
+                placeholder="Search research area..."
+                maxItems={1}
+              />
             </div>
 
             {/* Tags */}
             <div className="space-y-2">
               <Label>Tags (up to 5)</Label>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Add a tag"
-                  value={tagInput}
-                  onChange={(e) => setTagInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault()
-                      addTag()
-                    }
-                  }}
-                />
-                <Button type="button" variant="outline" onClick={addTag} disabled={tags.length >= 5}>
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-              {tags.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {tags.map((tag) => (
-                    <Badge key={tag} variant="secondary" className="gap-1">
-                      {tag}
-                      <button type="button" onClick={() => removeTag(tag)} className="hover:text-destructive">
-                        <X className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-              )}
+              <TagInput
+                options={[]}
+                value={tags}
+                onChange={setTags}
+                placeholder="Type a tag and press Enter..."
+                maxItems={5}
+              />
             </div>
 
             {/* Collaboration Type */}
@@ -311,34 +241,13 @@ export default function NewIdeaPage() {
             {/* Skills Needed */}
             <div className="space-y-2">
               <Label>Skills Needed (up to 10)</Label>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Add a required skill"
-                  value={skillInput}
-                  onChange={(e) => setSkillInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault()
-                      addSkill()
-                    }
-                  }}
-                />
-                <Button type="button" variant="outline" onClick={addSkill} disabled={skillsNeeded.length >= 10}>
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-              {skillsNeeded.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {skillsNeeded.map((skill) => (
-                    <Badge key={skill} variant="secondary" className="gap-1">
-                      {skill}
-                      <button type="button" onClick={() => removeSkill(skill)} className="hover:text-destructive">
-                        <X className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-              )}
+              <TagInput
+                options={SKILLS_LIST}
+                value={skillsNeeded}
+                onChange={setSkillsNeeded}
+                placeholder="Search skills..."
+                maxItems={10}
+              />
             </div>
 
             {/* Estimated Duration */}

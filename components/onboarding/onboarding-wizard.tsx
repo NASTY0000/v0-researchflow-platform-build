@@ -26,7 +26,9 @@ import {
 } from 'lucide-react'
 import type { Profile, University, AcademicLevel } from '@/lib/types/database'
 import { completeOnboarding, updateProfile } from '@/lib/actions/auth'
-import { ALL_RESEARCH_INTERESTS, SKILLS_OFFERED, COLLABORATOR_TYPES, USER_ROLES, type ExtendedUserRole } from '@/lib/data/research-data'
+import { USER_ROLES, type ExtendedUserRole } from '@/lib/data/research-data'
+import { TagInput } from '@/components/ui/tag-input'
+import { RESEARCH_AREAS, SKILLS_LIST, LOOKING_FOR_OPTIONS } from '@/lib/constants/tags'
 import { COUNTRIES, ALL_NIGERIAN_UNIVERSITIES } from '@/lib/data/universities'
 
 const STEPS = [
@@ -472,86 +474,17 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
               <CardHeader>
                 <CardTitle className="text-2xl font-heading" style={{ color: '#F3F0FF' }}>Research Interests</CardTitle>
                 <CardDescription style={{ color: '#7C6A9C' }}>
-                  Select your research areas (at least 1 required)
+                  Select your research areas or type to add a custom one (at least 1 required)
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Search */}
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#7C6A9C' }} />
-                  <Input
-                    value={interestSearch}
-                    onChange={(e) => setInterestSearch(e.target.value)}
-                    placeholder="Search research areas..."
-                    className="pl-10"
-                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(139,92,246,0.25)', color: '#F3F0FF' }}
-                  />
-                </div>
-
-                {/* Selected count */}
-                <div className="text-sm" style={{ color: '#7C6A9C' }}>
-                  {researchInterests.length} selected
-                </div>
-
-                {/* Tags grid - scrollable */}
-                <div className="max-h-80 overflow-y-auto pr-2 -mr-2">
-                  <div className="flex flex-wrap gap-2">
-                    {filteredInterests.map((area) => (
-                      <Badge
-                        key={area}
-                        className="cursor-pointer transition-all text-sm py-1.5 px-3"
-                        onClick={() => toggleArrayItem(researchInterests, setResearchInterests, area)}
-                        style={researchInterests.includes(area)
-                          ? { background: 'rgba(124,58,237,0.3)', border: '1px solid rgba(168,85,247,0.6)', color: '#C084FC' }
-                          : { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(139,92,246,0.2)', color: '#7C6A9C' }
-                        }
-                      >
-                        {area}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Custom interests */}
-                {researchInterests.filter(i => !ALL_RESEARCH_INTERESTS.includes(i)).length > 0 && (
-                  <div className="space-y-2">
-                    <Label style={{ color: '#7C6A9C' }}>Custom Interests</Label>
-                    <div className="flex flex-wrap gap-2">
-                      {researchInterests.filter(i => !ALL_RESEARCH_INTERESTS.includes(i)).map((interest) => (
-                        <Badge key={interest} className="gap-1 py-1.5 px-3" style={{ background: 'rgba(6,182,212,0.2)', border: '1px solid rgba(6,182,212,0.4)', color: '#06B6D4' }}>
-                          {interest}
-                          <button onClick={() => toggleArrayItem(researchInterests, setResearchInterests, interest)}>
-                            <X className="w-3 h-3" />
-                          </button>
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Add custom */}
-                <div className="flex gap-2">
-                  <Input
-                    value={customInterest}
-                    onChange={(e) => setCustomInterest(e.target.value)}
-                    placeholder="Add custom research area"
-                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(139,92,246,0.25)', color: '#F3F0FF' }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault()
-                        addCustomItem(customInterest, researchInterests, setResearchInterests, setCustomInterest)
-                      }
-                    }}
-                  />
-                  <Button 
-                    variant="outline"
-                    size="icon"
-                    onClick={() => addCustomItem(customInterest, researchInterests, setResearchInterests, setCustomInterest)}
-                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(139,92,246,0.25)' }}
-                  >
-                    <Plus className="w-4 h-4" />
-                  </Button>
-                </div>
+              <CardContent>
+                <TagInput
+                  value={researchInterests}
+                  onChange={setResearchInterests}
+                  options={RESEARCH_AREAS}
+                  placeholder="Search research areas..."
+                  maxItems={10}
+                />
               </CardContent>
             </Card>
           )}
@@ -567,134 +500,38 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
               </CardHeader>
               <CardContent className="space-y-8">
                 {/* Your Skills */}
-                <div className="space-y-4">
+                <div className="space-y-3">
                   <div>
                     <Label className="text-lg font-medium" style={{ color: '#F3F0FF' }}>Your Skills</Label>
-                    <p className="text-sm mt-1" style={{ color: '#7C6A9C' }}>Select the skills you can offer</p>
+                    <p className="text-sm mt-1" style={{ color: '#7C6A9C' }}>Select the skills you can offer, or type to add a custom skill</p>
                   </div>
-                  
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#7C6A9C' }} />
-                    <Input
-                      value={skillSearch}
-                      onChange={(e) => setSkillSearch(e.target.value)}
-                      placeholder="Search skills..."
-                      className="pl-10"
-                      style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(139,92,246,0.25)', color: '#F3F0FF' }}
-                    />
-                  </div>
-
-                  <div className="text-sm" style={{ color: '#7C6A9C' }}>
-                    {skills.length} selected
-                  </div>
-
-                  <div className="max-h-60 overflow-y-auto pr-2 -mr-2">
-                    <div className="flex flex-wrap gap-2">
-                      {filteredSkills.map((skill) => (
-                        <Badge
-                          key={skill}
-                          className="cursor-pointer transition-all text-sm py-1.5 px-3"
-                          onClick={() => toggleArrayItem(skills, setSkills, skill)}
-                          style={skills.includes(skill)
-                            ? { background: 'rgba(124,58,237,0.3)', border: '1px solid rgba(168,85,247,0.6)', color: '#C084FC' }
-                            : { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(139,92,246,0.2)', color: '#7C6A9C' }
-                          }
-                        >
-                          {skill}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <Input
-                      value={customSkill}
-                      onChange={(e) => setCustomSkill(e.target.value)}
-                      placeholder="Add custom skill"
-                      style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(139,92,246,0.25)', color: '#F3F0FF' }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault()
-                          addCustomItem(customSkill, skills, setSkills, setCustomSkill)
-                        }
-                      }}
-                    />
-                    <Button 
-                      variant="outline"
-                      size="icon"
-                      onClick={() => addCustomItem(customSkill, skills, setSkills, setCustomSkill)}
-                      style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(139,92,246,0.25)' }}
-                    >
-                      <Plus className="w-4 h-4" />
-                    </Button>
-                  </div>
+                  <TagInput
+                    value={skills}
+                    onChange={setSkills}
+                    options={SKILLS_LIST}
+                    placeholder="Search skills..."
+                    maxItems={15}
+                  />
                 </div>
 
                 {/* Divider */}
                 <div className="h-px" style={{ background: 'rgba(139,92,246,0.2)' }} />
 
                 {/* Looking For */}
-                <div className="space-y-4">
+                <div className="space-y-3">
                   <div>
                     <Label className="text-lg font-medium" style={{ color: '#F3F0FF' }}>What are you looking for in collaborators? *</Label>
-                    <p className="text-sm mt-1" style={{ color: '#7C6A9C' }}>Select at least 1 (tap to select, tap again to deselect)</p>
+                    <p className="text-sm mt-1" style={{ color: lookingFor.length === 0 ? '#EF4444' : '#7C6A9C' }}>
+                      {lookingFor.length === 0 ? 'At least 1 required' : `${lookingFor.length} selected`}
+                    </p>
                   </div>
-                  
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#7C6A9C' }} />
-                    <Input
-                      value={lookingForSearch}
-                      onChange={(e) => setLookingForSearch(e.target.value)}
-                      placeholder="Search collaborator types..."
-                      className="pl-10"
-                      style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(139,92,246,0.25)', color: '#F3F0FF' }}
-                    />
-                  </div>
-
-                  <div className="text-sm" style={{ color: lookingFor.length === 0 ? '#EF4444' : '#7C6A9C' }}>
-                    {lookingFor.length} selected {lookingFor.length === 0 && '(minimum 1 required)'}
-                  </div>
-
-                  <div className="max-h-60 overflow-y-auto pr-2 -mr-2">
-                    <div className="flex flex-wrap gap-2">
-                      {filteredLookingFor.map((item) => (
-                        <Badge
-                          key={item}
-                          className="cursor-pointer transition-all text-sm py-1.5 px-3"
-                          onClick={() => toggleArrayItem(lookingFor, setLookingFor, item)}
-                          style={lookingFor.includes(item)
-                            ? { background: 'rgba(6,182,212,0.3)', border: '1px solid rgba(6,182,212,0.6)', color: '#06B6D4' }
-                            : { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(139,92,246,0.2)', color: '#7C6A9C' }
-                          }
-                        >
-                          {item}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <Input
-                      value={customLookingFor}
-                      onChange={(e) => setCustomLookingFor(e.target.value)}
-                      placeholder="Add what you're looking for"
-                      style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(139,92,246,0.25)', color: '#F3F0FF' }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault()
-                          addCustomItem(customLookingFor, lookingFor, setLookingFor, setCustomLookingFor)
-                        }
-                      }}
-                    />
-                    <Button 
-                      variant="outline"
-                      size="icon"
-                      onClick={() => addCustomItem(customLookingFor, lookingFor, setLookingFor, setCustomLookingFor)}
-                      style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(139,92,246,0.25)' }}
-                    >
-                      <Plus className="w-4 h-4" />
-                    </Button>
-                  </div>
+                  <TagInput
+                    value={lookingFor}
+                    onChange={setLookingFor}
+                    options={LOOKING_FOR_OPTIONS}
+                    placeholder="Search collaborator types..."
+                    maxItems={10}
+                  />
                 </div>
 
                 {/* Divider */}

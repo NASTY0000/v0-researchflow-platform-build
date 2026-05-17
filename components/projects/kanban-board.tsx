@@ -40,7 +40,9 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { createClient } from "@/lib/supabase/client"
 import type { Task, Profile } from "@/lib/types/database"
+import { completeAssignedTask } from "@/lib/actions/akili"
 import { format } from "date-fns"
+import { toast } from "sonner"
 
 interface KanbanBoardProps {
   projectId: string
@@ -142,8 +144,14 @@ export function KanbanBoard({ projectId, teamId, tasks: initialTasks }: KanbanBo
     const supabase = createClient()
 
     await supabase.from("tasks").update({ status: newStatus }).eq("id", taskId)
-
     setTasks(tasks.map((t) => (t.id === taskId ? { ...t, status: newStatus } : t)))
+
+    if (newStatus === "done") {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        await completeAssignedTask(user.id, taskId)
+      }
+    }
   }
 
   async function handleDeleteTask(taskId: string) {
@@ -162,10 +170,16 @@ export function KanbanBoard({ projectId, teamId, tasks: initialTasks }: KanbanBo
 
   function handleDrop(e: React.DragEvent, columnId: string) {
     e.preventDefault()
-    if (draggedTask) {
-      handleStatusChange(draggedTask.id, columnId)
+    if (!draggedTask) return
+
+    if (!navigator.onLine) {
+      toast.error('Moving tasks requires internet connection. Please reconnect and try again.')
       setDraggedTask(null)
+      return
     }
+
+    handleStatusChange(draggedTask.id, columnId)
+    setDraggedTask(null)
   }
 
   function getTasksByColumn(columnId: string) {

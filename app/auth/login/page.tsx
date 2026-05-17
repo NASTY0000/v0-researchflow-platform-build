@@ -1,13 +1,14 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Loader2, Mail, Lock, Play } from 'lucide-react'
+import { Loader2, Mail, Lock, Play, ArrowLeft } from 'lucide-react'
 import { signIn, signInWithGoogle } from '@/lib/actions/auth'
 
 const DEMO_EMAIL = 'demo@researchflow.app'
@@ -31,20 +32,30 @@ export default function LoginPage() {
   const [isDemoLoading, setIsDemoLoading] = useState(false)
   const emailRef = useRef<HTMLInputElement>(null)
   const passwordRef = useRef<HTMLInputElement>(null)
+  const router = useRouter()
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const urlError = params.get('error')
+    if (urlError === 'suspended') {
+      setError('Your account has been suspended. Contact support@researchflowafrica.com')
+    } else if (urlError === 'auth_failed') {
+      setError('Authentication failed. Please try again.')
+    }
+  }, [])
+
+  async function handleSubmit(formData: FormData) {
     setIsLoading(true)
     setError(null)
-    
-    const formData = new FormData(e.currentTarget)
     const result = await signIn(formData)
-    
     if (result?.error) {
       setError(result.error)
       setIsLoading(false)
     } else if (result?.redirectTo) {
+      setIsLoading(false)
       window.location.href = result.redirectTo
+    } else {
+      setIsLoading(false)
     }
   }
 
@@ -57,31 +68,19 @@ export default function LoginPage() {
       formData.append('email', DEMO_EMAIL)
       formData.append('password', DEMO_PASSWORD)
       const result = await signIn(formData)
-      if (result?.error) {
-        setError(result.error)
-        setIsDemoLoading(false)
-      } else if (result?.redirectTo) {
-        window.location.href = result.redirectTo
-      }
+      if (result?.error) { setError(result.error); setIsDemoLoading(false) }
     } catch {
       setError('Failed to load demo account.')
       setIsDemoLoading(false)
     }
   }
 
-  const inputStyle = {
-    background: 'rgba(255,255,255,0.05)',
-    border: '1px solid rgba(139,92,246,0.25)',
-    color: '#F3F0FF',
-    borderRadius: '8px',
-  }
-
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: '#05010F' }}>
+    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
       {/* Background glows */}
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-1/4 -left-32 w-80 h-80 rounded-full" style={{ background: 'radial-gradient(ellipse,rgba(124,58,237,0.18),transparent 70%)' }} />
-        <div className="absolute bottom-1/4 -right-32 w-80 h-80 rounded-full" style={{ background: 'radial-gradient(ellipse,rgba(168,85,247,0.12),transparent 70%)' }} />
+        <div className="absolute top-1/4 -left-32 w-80 h-80 rounded-full" style={{ background: 'radial-gradient(ellipse,rgba(109,40,217,0.15),transparent 70%)' }} />
+        <div className="absolute bottom-1/4 -right-32 w-80 h-80 rounded-full" style={{ background: 'radial-gradient(ellipse,rgba(168,85,247,0.10),transparent 70%)' }} />
       </div>
 
       <div className="w-full max-w-md relative animate-fade-up">
@@ -96,38 +95,38 @@ export default function LoginPage() {
         </div>
 
         {/* Card */}
-        <div className="p-8 rounded-2xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(139,92,246,0.2)', backdropFilter: 'blur(16px)' }}>
+        <div className="p-8 rounded-2xl bg-card border border-border backdrop-blur-xl">
           <h1 className="text-2xl font-bold font-heading mb-1" style={{ letterSpacing: '-0.02em' }}>Welcome back</h1>
-          <p className="text-sm mb-6" style={{ color: '#7C6A9C' }}>Enter your credentials to access your account</p>
+          <p className="text-sm mb-6 text-muted-foreground">Enter your credentials to access your account</p>
 
           {error && (
-            <Alert variant="destructive" className="mb-5" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)' }}>
+            <Alert variant="destructive" className="mb-5">
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form action={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="email" className="text-sm font-medium" style={{ color: '#7C6A9C' }}>Email</Label>
+              <Label htmlFor="email" className="text-sm font-medium text-muted-foreground">Email</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#7C6A9C' }} />
-                <Input ref={emailRef} id="email" name="email" type="email" placeholder="you@university.edu" required className="pl-10" style={inputStyle} />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input ref={emailRef} id="email" name="email" type="email" placeholder="you@university.edu" required className="pl-10" />
               </div>
             </div>
 
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-sm font-medium" style={{ color: '#7C6A9C' }}>Password</Label>
-                <Link href="/auth/forgot-password" className="text-xs" style={{ color: '#A855F7' }}>Forgot password?</Link>
+                <Label htmlFor="password" className="text-sm font-medium text-muted-foreground">Password</Label>
+                <Link href="/auth/forgot-password" className="text-xs text-primary">Forgot password?</Link>
               </div>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#7C6A9C' }} />
-                <Input ref={passwordRef} id="password" name="password" type="password" placeholder="Enter your password" required className="pl-10" style={inputStyle} />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input ref={passwordRef} id="password" name="password" type="password" placeholder="Enter your password" required className="pl-10" />
               </div>
             </div>
 
             <Button type="submit" className="w-full h-10" disabled={isLoading || isGoogleLoading || isDemoLoading}
-              style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', boxShadow: '0 0 20px rgba(124,58,237,0.35)', border: 'none', borderRadius: '8px', color: '#F3F0FF' }}>
+              style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', boxShadow: '0 0 20px rgba(124,58,237,0.35)', border: 'none', borderRadius: '8px', color: '#fff' }}>
               {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Signing in...</> : 'Sign in'}
             </Button>
           </form>
@@ -135,48 +134,45 @@ export default function LoginPage() {
           {/* Divider */}
           <div className="relative my-5">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full" style={{ borderTop: '1px solid rgba(139,92,246,0.2)' }} />
+              <span className="w-full border-t border-border" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="px-3 text-xs" style={{ background: 'rgba(255,255,255,0)', color: '#7C6A9C', letterSpacing: '0.1em' }}>Or continue with</span>
+              <span className="px-3 text-xs bg-card text-muted-foreground" style={{ letterSpacing: '0.1em' }}>Or continue with</span>
             </div>
           </div>
 
           {/* Google */}
-          <form onSubmit={async (e) => {
-            e.preventDefault()
-            setIsGoogleLoading(true)
-            setError(null)
+          <form action={async () => {
+            setIsGoogleLoading(true); setError(null)
             const result = await signInWithGoogle()
-            if (result?.error) {
-              setError(result.error)
-              setIsGoogleLoading(false)
-            } else if (result?.url) {
-              window.location.href = result.url
-            }
+            if (result?.error) { setError(result.error); setIsGoogleLoading(false) }
+            else if (result?.url) { window.location.href = result.url }
           }} className="mb-3">
-            <Button type="submit" variant="outline" className="w-full h-10" disabled={isLoading || isGoogleLoading || isDemoLoading}
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(139,92,246,0.25)', color: '#F3F0FF', borderRadius: '8px' }}>
+            <Button type="submit" variant="outline" className="w-full h-10" disabled={isLoading || isGoogleLoading || isDemoLoading}>
               {isGoogleLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Connecting...</> : <><GoogleIcon className="mr-2 h-4 w-4" />Continue with Google</>}
             </Button>
           </form>
 
           {/* Demo */}
-          <Button type="button" variant="outline" className="w-full h-10" onClick={handleDemoLogin}
-            disabled={isLoading || isGoogleLoading || isDemoLoading}
-            style={{ background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(168,85,247,0.25)', color: '#C084FC', borderRadius: '8px' }}>
+          <Button type="button" variant="outline" className="w-full h-10 text-primary border-primary/30 hover:bg-primary/10" onClick={handleDemoLogin}
+            disabled={isLoading || isGoogleLoading || isDemoLoading}>
             {isDemoLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Loading demo...</> : <><Play className="mr-2 h-4 w-4" />Try Demo Account</>}
           </Button>
 
-          <p className="text-xs text-center mt-3" style={{ color: '#7C6A9C' }}>
+          <p className="text-xs text-center mt-3 text-muted-foreground">
             Demo: demo@researchflow.app / demo123456
           </p>
         </div>
 
-        <p className="text-center text-sm mt-6" style={{ color: '#7C6A9C' }}>
+        <p className="text-center text-sm mt-6 text-muted-foreground">
           Don&apos;t have an account?{' '}
-          <Link href="/auth/signup" className="font-medium" style={{ color: '#A855F7' }}>Sign up</Link>
+          <Link href="/auth/signup" className="font-medium text-primary">Sign up</Link>
         </p>
+
+        <Link href="/" className="text-sm text-muted-foreground hover:text-primary flex items-center gap-1 justify-center mt-4">
+          <ArrowLeft className="w-3 h-3" />
+          Back to Home
+        </Link>
       </div>
     </div>
   )

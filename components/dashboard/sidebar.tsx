@@ -18,23 +18,27 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import Image from 'next/image'
-import { 
+import {
   LayoutDashboard,
   Lightbulb,
   Users,
   FolderKanban,
   GraduationCap,
+  BookOpen,
   Store,
   MessageSquare,
   Award,
+  Trophy,
   Settings,
   LogOut,
   ChevronUp,
   User,
   Shield,
+  UserCheck,
 } from 'lucide-react'
 import type { Profile } from '@/lib/types/database'
 import { signOut } from '@/lib/actions/auth'
+import { AkiliScoreBadge } from '@/components/akili/AkiliScoreBadge'
 
 const mainNavItems = [
   {
@@ -53,6 +57,11 @@ const mainNavItems = [
     icon: Users,
   },
   {
+    title: 'My Network',
+    href: '/network',
+    icon: UserCheck,
+  },
+  {
     title: 'My Projects',
     href: '/projects',
     icon: FolderKanban,
@@ -63,7 +72,7 @@ const resourceNavItems = [
   {
     title: 'Mentor Directory',
     href: '/mentors',
-    icon: GraduationCap,
+    icon: BookOpen,
   },
   {
     title: 'Marketplace',
@@ -79,6 +88,11 @@ const resourceNavItems = [
     title: 'Showcase',
     href: '/showcase',
     icon: Award,
+  },
+  {
+    title: 'Leaderboard',
+    href: '/leaderboard',
+    icon: Trophy,
   },
 ]
 
@@ -113,7 +127,7 @@ export function DashboardSidebar({ profile }: DashboardSidebarProps) {
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold font-heading gradient-text-cyan">ResearchFlow</span>
-                  <span className="truncate text-xs" style={{ color: '#7C6A9C' }}>Collaborate & Discover</span>
+                  <span className="truncate text-xs text-muted-foreground">Collaborate & Discover</span>
                 </div>
               </Link>
             </SidebarMenuButton>
@@ -166,7 +180,29 @@ export function DashboardSidebar({ profile }: DashboardSidebarProps) {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {profile.roles?.includes('admin') && (
+        {profile.roles?.includes('mentor') && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Mentoring</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={pathname === '/mentor-dashboard' || pathname.startsWith('/mentor-dashboard/')}
+                    tooltip="Mentor Dashboard"
+                  >
+                    <Link href="/mentor-dashboard">
+                      <GraduationCap />
+                      <span>Mentor Dashboard</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+
+        {(profile.is_admin === true || profile.roles?.includes('admin')) && (
           <SidebarGroup>
             <SidebarGroupLabel>Admin</SidebarGroupLabel>
             <SidebarGroupContent>
@@ -207,6 +243,9 @@ export function DashboardSidebar({ profile }: DashboardSidebarProps) {
                   <div className="grid flex-1 text-left text-sm leading-tight">
                     <span className="truncate font-semibold">{profile.full_name}</span>
                     <span className="truncate text-xs text-muted-foreground">{profile.email}</span>
+                    <span className="mt-0.5">
+                      <AkiliScoreBadge score={profile.akili_score || 0} showTitle={false} size="sm" />
+                    </span>
                   </div>
                   <ChevronUp className="ml-auto size-4" />
                 </SidebarMenuButton>

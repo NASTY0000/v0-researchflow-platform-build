@@ -1,6 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
+import {
+  AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell,
+} from 'recharts'
+import ReactCrop, { type Crop, centerCrop, makeAspectCrop } from 'react-image-crop'
+import 'react-image-crop/dist/ReactCrop.css'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,16 +17,61 @@ import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Label } from '@/components/ui/label'
-import { 
-  User, Mail, Building2, GraduationCap, Calendar, MapPin,
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { TagInput } from '@/components/ui/tag-input'
+import { RESEARCH_AREAS, SKILLS_LIST } from '@/lib/constants/tags'
+import {
+  User, Mail, Building2, GraduationCap, Calendar,
   Edit, Save, X, Plus, Award, BookOpen, Briefcase, FileText,
-  Eye, Users, Star, ExternalLink
+  Eye, Star, ExternalLink, Trash2, CheckCircle2, FolderOpen,
+  Users, MessageSquare, ListChecks, Zap, Shield, TrendingUp, Loader2,
+  BarChart3, Lightbulb,
 } from 'lucide-react'
-import type { Profile, PortfolioItem, University } from '@/lib/types/database'
+import type { Profile, PortfolioItem, PortfolioItemType, University } from '@/lib/types/database'
+import { AkiliScoreCard } from '@/components/akili/AkiliScoreCard'
+import { getAkiliNarrative } from '@/lib/utils/akili'
+
+interface ActivityStats {
+  activeProjects: number
+  completedProjects: number
+  mentorshipSessions: number
+  tasksCompleted: number
+}
+
+interface MentorInfo {
+  is_verified: boolean
+  rating: number
+  total_sessions: number
+  specialty: string | null
+  tier: string | null
+}
+
+interface AkiliEvent {
+  id: string
+  event_type: string
+  points_earned: number
+  created_at: string
+}
+
+interface AnalyticsData {
+  profileViews: number
+  ideaViews: number
+  collaborationRequests: number
+  leaderboardRank: number | null
+  scoreHistory: { week: string; score: number }[]
+  dimensionBreakdown: { name: string; value: number; color: string }[]
+  recentEvents: AkiliEvent[]
+  ideasPerformance: { title: string; views: number; matches: number }[]
+}
 
 export default function ProfilePage() {
+  const router = useRouter()
   const [profile, setProfile] = useState<Profile & { university?: University } | null>(null)
   const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([])
+  const [activityStats, setActivityStats] = useState<ActivityStats>({
+    activeProjects: 0, completedProjects: 0, mentorshipSessions: 0, tasksCompleted: 0
+  })
+  const [mentorInfo, setMentorInfo] = useState<MentorInfo | null>(null)
   const [isEditing, setIsEditing] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
@@ -28,62 +80,221 @@ export default function ProfilePage() {
     bio: '',
     department: '',
     academic_level: '',
+    research_interests: [] as string[],
+    skills: [] as string[],
   })
+
+  const [universityName, setUniversityName] = useState('')
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
+  const [avatarError, setAvatarError] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Crop modal state
+  const [cropSrc, setCropSrc] = useState<string | null>(null)
+  const [crop, setCrop] = useState<Crop>()
+  const [completedCrop, setCompletedCrop] = useState<Crop | null>(null)
+  const imgRef = useRef<HTMLImageElement>(null)
+
+  // Portfolio modal state
+  const [showPortfolioModal, setShowPortfolioModal] = useState(false)
+  const [editingItem, setEditingItem] = useState<PortfolioItem | null>(null)
+  const [deletingItemId, setDeletingItemId] = useState<string | null>(null)
+  const [portfolioSaving, setPortfolioSaving] = useState(false)
+  const [portfolioForm, setPortfolioForm] = useState({
+    item_type: 'publication' as PortfolioItemType,
+    title: '',
+    description: '',
+    url: '',
+    date_month: '',
+    date_year: '',
+  })
+
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null)
+  const [analyticsLoading, setAnalyticsLoading] = useState(false)
+
   const supabase = createClient()
 
   useEffect(() => {
-    loadProfile()
-    loadPortfolio()
+    loadAll()
   }, [])
 
-  async function loadProfile() {
-    setIsLoading(true)
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
+  async function loadAnalytics(userId: string) {
+    setAnalyticsLoading(true)
+    const now = new Date()
 
-  const { data } = await supabase
-  .from('profiles')
-  .select('*')
-  .eq('id', user.id)
-  .single()
-
-
-    if (data) {
-      setProfile(data as Profile & { university?: University })
-      setEditForm({
-        full_name: data.full_name || '',
-        bio: data.bio || '',
-        department: data.department || '',
-        academic_level: data.academic_level || '',
-      })
+    // Build 12-week date range
+    const weeks: string[] = []
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now)
+      d.setDate(d.getDate() - i * 7)
+      weeks.push(d.toISOString().split('T')[0])
     }
-    setIsLoading(false)
+
+    const [eventsResult, ideasResult, connectionsResult, rankResult] = await Promise.all([
+      supabase
+        .from('akili_score_events')
+        .select('id, event_type, points_earned, created_at, dimension')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(100),
+      supabase
+        .from('ideas')
+        .select('id, title, view_count, match_count')
+        .eq('user_id', userId)
+        .order('view_count', { ascending: false })
+        .limit(5),
+      supabase
+        .from('connections')
+        .select('id', { count: 'exact', head: true })
+        .eq('receiver_id', userId)
+        .eq('status', 'pending'),
+      supabase
+        .from('profiles')
+        .select('id, akili_score')
+        .order('akili_score', { ascending: false })
+        .limit(200),
+    ])
+
+    const events = (eventsResult.data || []) as (AkiliEvent & { dimension?: string })[]
+
+    // Score history by week (running cumulative from events)
+    const scoreByWeek: Record<string, number> = {}
+    for (const wk of weeks) scoreByWeek[wk] = 0
+    for (const ev of events) {
+      const evDate = ev.created_at.split('T')[0]
+      // find the week bucket
+      for (let i = weeks.length - 1; i >= 0; i--) {
+        if (evDate >= weeks[i]) {
+          scoreByWeek[weeks[i]] = (scoreByWeek[weeks[i]] || 0) + (ev.points_earned || 0)
+          break
+        }
+      }
+    }
+    // Make cumulative
+    let running = 0
+    const scoreHistory = weeks.map(wk => {
+      running += scoreByWeek[wk]
+      const label = new Date(wk).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+      return { week: label, score: running }
+    })
+
+    // Dimension breakdown
+    const DIMENSION_COLORS: Record<string, string> = {
+      knowledge: '#A855F7',
+      collaboration: '#06B6D4',
+      mentorship: '#C084FC',
+      technical: '#818CF8',
+      other: '#4A3F6B',
+    }
+    const dimMap: Record<string, number> = {}
+    for (const ev of events) {
+      const dim = ev.dimension || 'other'
+      dimMap[dim] = (dimMap[dim] || 0) + (ev.points_earned || 0)
+    }
+    const dimensionBreakdown = Object.entries(dimMap).map(([name, value]) => ({
+      name: name.charAt(0).toUpperCase() + name.slice(1),
+      value,
+      color: DIMENSION_COLORS[name] || '#4A3F6B',
+    }))
+
+    // Leaderboard rank
+    const allProfiles = (rankResult.data || []) as { id: string; akili_score: number }[]
+    const rankIdx = allProfiles.findIndex(p => p.id === userId)
+    const leaderboardRank = rankIdx >= 0 ? rankIdx + 1 : null
+
+    setAnalyticsData({
+      profileViews: 0, // placeholder — profile_views from profile itself
+      ideaViews: 0,
+      collaborationRequests: connectionsResult.count || 0,
+      leaderboardRank,
+      scoreHistory,
+      dimensionBreakdown,
+      recentEvents: events.slice(0, 8),
+      ideasPerformance: (ideasResult.data || []).map(i => ({
+        title: i.title,
+        views: (i as { view_count?: number }).view_count || 0,
+        matches: (i as { match_count?: number }).match_count || 0,
+      })),
+    })
+    setAnalyticsLoading(false)
   }
 
-  async function loadPortfolio() {
+  async function loadAll() {
+    setIsLoading(true)
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
+    if (!user) { setIsLoading(false); return }
 
-    const { data } = await supabase
-      .from('portfolio_items')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('date', { ascending: false })
+    const [profileResult, portfolioResult] = await Promise.all([
+      supabase.from('profiles').select('*').eq('id', user.id).single(),
+      supabase.from('portfolio_items').select('*').eq('user_id', user.id).order('date', { ascending: false })
+    ])
 
-    if (data) {
-      setPortfolioItems(data)
+    if (profileResult.data) {
+      setProfile(profileResult.data as Profile & { university?: University })
+      setEditForm({
+        full_name: profileResult.data.full_name || '',
+        bio: profileResult.data.bio || '',
+        department: profileResult.data.department || '',
+        academic_level: profileResult.data.academic_level || '',
+        research_interests: profileResult.data.research_interests || [],
+        skills: profileResult.data.skills || [],
+      })
+
+      // Resolve university UUID to name if needed
+      const uid = profileResult.data.university_id
+      if (uid) {
+        if (uid.includes('-')) {
+          const { data: uni } = await supabase.from('universities').select('name').eq('id', uid).single()
+          setUniversityName(uni?.name || uid)
+        } else {
+          setUniversityName(uid)
+        }
+      }
     }
+
+    if (portfolioResult.data) setPortfolioItems(portfolioResult.data)
+
+    // Load activity stats
+    const [teamMembersResult, tasksResult, mentorResult] = await Promise.all([
+      supabase.from('team_members').select('project_id, projects!inner(id, status)').eq('user_id', user.id),
+      supabase.from('tasks').select('id, status').eq('assigned_to', user.id),
+      supabase.from('mentor_profiles').select('*').eq('user_id', user.id).single()
+    ])
+
+    if (teamMembersResult.data) {
+      const members = teamMembersResult.data as Array<{ project_id: string; projects: { id: string; status: string } }>
+      setActivityStats(prev => ({
+        ...prev,
+        activeProjects: members.filter(m => m.projects?.status === 'active').length,
+        completedProjects: members.filter(m => m.projects?.status === 'completed').length,
+      }))
+    }
+
+    if (tasksResult.data) {
+      setActivityStats(prev => ({
+        ...prev,
+        tasksCompleted: tasksResult.data.filter((t: { id: string; status: string }) => t.status === 'completed').length
+      }))
+    }
+
+    // Load mentorship sessions count
+    const { count: sessionCount } = await supabase
+      .from('mentor_sessions')
+      .select('*', { count: 'exact', head: true })
+      .or(`student_id.eq.${user.id},mentor_id.eq.${user.id}`)
+      .eq('status', 'completed')
+
+    setActivityStats(prev => ({ ...prev, mentorshipSessions: sessionCount || 0 }))
+
+    if (mentorResult.data) setMentorInfo(mentorResult.data)
+
+    setIsLoading(false)
   }
 
   async function saveProfile() {
     if (!profile) return
     setIsSaving(true)
-
-    const { error } = await supabase
-      .from('profiles')
-      .update(editForm)
-      .eq('id', profile.id)
-
+    const { error } = await supabase.from('profiles').update(editForm).eq('id', profile.id)
     if (!error) {
       setProfile({ ...profile, ...editForm })
       setIsEditing(false)
@@ -91,13 +302,150 @@ export default function ProfilePage() {
     setIsSaving(false)
   }
 
+  function handleAvatarFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 5 * 1024 * 1024) {
+      setAvatarError('Image must be under 5MB')
+      return
+    }
+    setAvatarError(null)
+    const reader = new FileReader()
+    reader.onload = () => setCropSrc(reader.result as string)
+    reader.readAsDataURL(file)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  const onImageLoad = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
+    const { width, height } = e.currentTarget
+    const centered = centerCrop(
+      makeAspectCrop({ unit: '%', width: 90 }, 1, width, height),
+      width,
+      height
+    )
+    setCrop(centered)
+    setCompletedCrop(centered)
+  }, [])
+
+  async function handleCropAndUpload() {
+    if (!completedCrop || !imgRef.current || !profile) return
+    setIsUploadingAvatar(true)
+    setAvatarError(null)
+
+    const canvas = document.createElement('canvas')
+    const size = 400
+    canvas.width = size
+    canvas.height = size
+    const ctx = canvas.getContext('2d')
+    if (!ctx) { setIsUploadingAvatar(false); return }
+
+    const img = imgRef.current
+    const scaleX = img.naturalWidth / img.width
+    const scaleY = img.naturalHeight / img.height
+    const pixelCrop = {
+      x: completedCrop.x * (completedCrop.unit === '%' ? img.width / 100 : 1) * scaleX,
+      y: completedCrop.y * (completedCrop.unit === '%' ? img.height / 100 : 1) * scaleY,
+      width: completedCrop.width * (completedCrop.unit === '%' ? img.width / 100 : 1) * scaleX,
+      height: completedCrop.height * (completedCrop.unit === '%' ? img.height / 100 : 1) * scaleY,
+    }
+
+    ctx.beginPath()
+    ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2)
+    ctx.clip()
+    ctx.drawImage(img, pixelCrop.x, pixelCrop.y, pixelCrop.width, pixelCrop.height, 0, 0, size, size)
+
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.92))
+    if (!blob) { setIsUploadingAvatar(false); return }
+
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { setIsUploadingAvatar(false); return }
+
+    const filePath = `${user.id}/${Date.now()}.jpg`
+    const { error: uploadError } = await supabase.storage.from('avatars').upload(filePath, blob, {
+      upsert: true,
+      contentType: 'image/jpeg',
+    })
+
+    if (uploadError) {
+      console.error('Upload error:', uploadError)
+      setAvatarError(uploadError.message)
+      setIsUploadingAvatar(false)
+      return
+    }
+
+    const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(filePath)
+    const publicUrl = urlData.publicUrl
+
+    await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', user.id)
+    setProfile({ ...profile, avatar_url: publicUrl })
+    setCropSrc(null)
+    setIsUploadingAvatar(false)
+  }
+
+  function openAddModal() {
+    setEditingItem(null)
+    setPortfolioForm({ item_type: 'publication', title: '', description: '', url: '', date_month: '', date_year: '' })
+    setShowPortfolioModal(true)
+  }
+
+  function openEditModal(item: PortfolioItem) {
+    setEditingItem(item)
+    const d = item.date ? new Date(item.date) : null
+    setPortfolioForm({
+      item_type: item.item_type,
+      title: item.title,
+      description: item.description || '',
+      url: item.url || '',
+      date_month: d ? String(d.getMonth() + 1).padStart(2, '0') : '',
+      date_year: d ? String(d.getFullYear()) : '',
+    })
+    setShowPortfolioModal(true)
+  }
+
+  async function savePortfolioItem() {
+    if (!portfolioForm.title.trim() || !profile) return
+    setPortfolioSaving(true)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { setPortfolioSaving(false); return }
+
+    let dateStr: string | null = null
+    if (portfolioForm.date_year) {
+      const month = portfolioForm.date_month || '01'
+      dateStr = `${portfolioForm.date_year}-${month}-01`
+    }
+
+    const payload = {
+      item_type: portfolioForm.item_type,
+      title: portfolioForm.title.trim(),
+      description: portfolioForm.description.trim() || null,
+      url: portfolioForm.url.trim() || null,
+      date: dateStr,
+      user_id: user.id,
+    }
+
+    if (editingItem) {
+      const { data } = await supabase.from('portfolio_items').update(payload).eq('id', editingItem.id).select().single()
+      if (data) setPortfolioItems(prev => prev.map(i => i.id === editingItem.id ? data : i))
+    } else {
+      const { data } = await supabase.from('portfolio_items').insert(payload).select().single()
+      if (data) setPortfolioItems(prev => [data, ...prev])
+    }
+
+    setShowPortfolioModal(false)
+    setPortfolioSaving(false)
+  }
+
+  async function deletePortfolioItem(id: string) {
+    await supabase.from('portfolio_items').delete().eq('id', id)
+    setPortfolioItems(prev => prev.filter(i => i.id !== id))
+    setDeletingItemId(null)
+  }
+
   const getAcademicLevelLabel = (level: string) => {
     const labels: Record<string, string> = {
-      'undergraduate': 'Undergraduate',
-      'masters': 'Masters Student',
-      'phd': 'PhD Candidate',
-      'postdoc': 'Postdoctoral',
-      'faculty': 'Faculty'
+      'undergraduate': 'Undergraduate', 'masters': 'Masters Student',
+      'phd': 'PhD Candidate', 'postdoc': 'Postdoctoral', 'faculty': 'Faculty'
     }
     return labels[level] || level
   }
@@ -144,61 +492,239 @@ export default function ProfilePage() {
 
   return (
     <div className="space-y-6">
+      {/* Portfolio Modal */}
+      {showPortfolioModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="bg-background border rounded-2xl shadow-2xl w-full max-w-lg">
+            <div className="flex items-center justify-between p-6 border-b">
+              <h2 className="text-lg font-semibold">{editingItem ? 'Edit Portfolio Item' : 'Add Portfolio Item'}</h2>
+              <Button variant="ghost" size="icon" onClick={() => setShowPortfolioModal(false)}>
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <Label>Type</Label>
+                <Select value={portfolioForm.item_type} onValueChange={(v) => setPortfolioForm(f => ({ ...f, item_type: v as PortfolioItemType }))}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="publication">Publication</SelectItem>
+                    <SelectItem value="presentation">Presentation</SelectItem>
+                    <SelectItem value="project">Project</SelectItem>
+                    <SelectItem value="award">Award</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Title <span className="text-destructive">*</span></Label>
+                <Input
+                  className="mt-1"
+                  value={portfolioForm.title}
+                  onChange={(e) => setPortfolioForm(f => ({ ...f, title: e.target.value }))}
+                  placeholder="e.g., Machine Learning in Climate Research"
+                />
+              </div>
+              <div>
+                <Label>Description <span className="text-muted-foreground text-xs">({portfolioForm.description.length}/300)</span></Label>
+                <Textarea
+                  className="mt-1"
+                  value={portfolioForm.description}
+                  onChange={(e) => setPortfolioForm(f => ({ ...f, description: e.target.value.slice(0, 300) }))}
+                  placeholder="Brief description of this item..."
+                  rows={3}
+                />
+              </div>
+              <div>
+                <Label>URL <span className="text-muted-foreground text-xs">(optional)</span></Label>
+                <Input
+                  className="mt-1"
+                  value={portfolioForm.url}
+                  onChange={(e) => setPortfolioForm(f => ({ ...f, url: e.target.value }))}
+                  placeholder="https://..."
+                  type="url"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Month</Label>
+                  <Select value={portfolioForm.date_month} onValueChange={(v) => setPortfolioForm(f => ({ ...f, date_month: v }))}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Month" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {['01','02','03','04','05','06','07','08','09','10','11','12'].map((m, i) => (
+                        <SelectItem key={m} value={m}>
+                          {new Date(2000, i).toLocaleDateString('en-US', { month: 'long' })}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Year</Label>
+                  <Select value={portfolioForm.date_year} onValueChange={(v) => setPortfolioForm(f => ({ ...f, date_year: v }))}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Year" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from({ length: 30 }, (_, i) => String(new Date().getFullYear() - i)).map(y => (
+                        <SelectItem key={y} value={y}>{y}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-3 p-6 border-t">
+              <Button onClick={savePortfolioItem} disabled={!portfolioForm.title.trim() || portfolioSaving} className="flex-1">
+                <Save className="w-4 h-4 mr-2" />
+                {portfolioSaving ? 'Saving...' : editingItem ? 'Save Changes' : 'Add Item'}
+              </Button>
+              <Button variant="outline" onClick={() => setShowPortfolioModal(false)}>Cancel</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirm */}
+      {deletingItemId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="bg-background border rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4">
+            <h3 className="font-semibold text-lg">Delete Portfolio Item</h3>
+            <p className="text-sm text-muted-foreground">This action cannot be undone.</p>
+            <div className="flex gap-3">
+              <Button variant="destructive" onClick={() => deletePortfolioItem(deletingItemId)} className="flex-1">Delete</Button>
+              <Button variant="outline" onClick={() => setDeletingItemId(null)} className="flex-1">Cancel</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Crop Modal */}
+      {cropSrc && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="bg-background border rounded-2xl shadow-2xl w-full max-w-lg">
+            <div className="flex items-center justify-between p-5 border-b">
+              <h2 className="text-lg font-semibold">Crop Photo</h2>
+              <Button variant="ghost" size="icon" onClick={() => setCropSrc(null)}>
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+            <div className="p-5 flex justify-center">
+              <ReactCrop
+                crop={crop}
+                onChange={(c) => setCrop(c)}
+                onComplete={(c) => setCompletedCrop(c)}
+                aspect={1}
+                circularCrop
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  ref={imgRef}
+                  src={cropSrc}
+                  alt="Crop preview"
+                  onLoad={onImageLoad}
+                  style={{ maxHeight: '60vh', maxWidth: '100%' }}
+                />
+              </ReactCrop>
+            </div>
+            <div className="flex gap-3 p-5 border-t">
+              <Button
+                onClick={handleCropAndUpload}
+                disabled={isUploadingAvatar}
+                style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}
+                className="flex-1"
+              >
+                {isUploadingAvatar ? (
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Uploading...</>
+                ) : (
+                  'Crop & Upload'
+                )}
+              </Button>
+              <Button variant="outline" onClick={() => setCropSrc(null)}>Cancel</Button>
+            </div>
+            {avatarError && <p className="text-xs text-destructive px-5 pb-4">{avatarError}</p>}
+          </div>
+        </div>
+      )}
+
       {/* Header Card */}
       <Card>
         <CardContent className="p-8">
           <div className="flex flex-col md:flex-row items-start gap-6">
-            {/* Avatar */}
             <div className="relative">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={handleAvatarFileSelect}
+              />
               <Avatar className="w-24 h-24">
                 <AvatarImage src={profile.avatar_url || undefined} />
                 <AvatarFallback className="text-2xl">
                   {profile.full_name?.charAt(0) || 'U'}
                 </AvatarFallback>
               </Avatar>
-              <Button size="icon" variant="outline" className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full">
+              {isUploadingAvatar && (
+                <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50">
+                  <Loader2 className="w-6 h-6 animate-spin text-white" />
+                </div>
+              )}
+              <Button
+                size="icon"
+                variant="outline"
+                className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploadingAvatar}
+              >
                 <Edit className="w-3 h-3" />
               </Button>
             </div>
+            {avatarError && (
+              <p className="text-xs text-destructive mt-1">{avatarError}</p>
+            )}
 
-            {/* Info */}
             <div className="flex-1 space-y-4">
               {isEditing ? (
                 <div className="space-y-4">
                   <div>
                     <Label>Full Name</Label>
-                    <Input
-                      value={editForm.full_name}
-                      onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
-                      placeholder="Your full name"
-                    />
+                    <Input value={editForm.full_name} onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })} placeholder="Your full name" />
                   </div>
                   <div>
                     <Label>Bio</Label>
-                    <Textarea
-                      value={editForm.bio}
-                      onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })}
-                      placeholder="Tell us about yourself and your research interests..."
-                      rows={3}
-                    />
+                    <Textarea value={editForm.bio} onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })} placeholder="Tell us about yourself and your research interests..." rows={3} />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label>Department</Label>
-                      <Input
-                        value={editForm.department}
-                        onChange={(e) => setEditForm({ ...editForm, department: e.target.value })}
-                        placeholder="e.g., Computer Science"
-                      />
+                      <Input value={editForm.department} onChange={(e) => setEditForm({ ...editForm, department: e.target.value })} placeholder="e.g., Computer Science" />
                     </div>
                     <div>
                       <Label>Academic Level</Label>
-                      <Input
-                        value={editForm.academic_level}
-                        onChange={(e) => setEditForm({ ...editForm, academic_level: e.target.value })}
-                        placeholder="e.g., undergraduate"
-                      />
+                      <Input value={editForm.academic_level} onChange={(e) => setEditForm({ ...editForm, academic_level: e.target.value })} placeholder="e.g., undergraduate" />
                     </div>
+                  </div>
+                  <div>
+                    <Label className="mb-1.5 block">Research Interests</Label>
+                    <TagInput
+                      options={RESEARCH_AREAS}
+                      value={editForm.research_interests}
+                      onChange={(tags) => setEditForm({ ...editForm, research_interests: tags })}
+                      placeholder="Search research areas..."
+                    />
+                  </div>
+                  <div>
+                    <Label className="mb-1.5 block">Skills</Label>
+                    <TagInput
+                      options={SKILLS_LIST}
+                      value={editForm.skills}
+                      onChange={(tags) => setEditForm({ ...editForm, skills: tags })}
+                      placeholder="Search or add skills..."
+                    />
                   </div>
                   <div className="flex gap-2">
                     <Button onClick={saveProfile} disabled={isSaving}>
@@ -206,8 +732,7 @@ export default function ProfilePage() {
                       {isSaving ? 'Saving...' : 'Save Changes'}
                     </Button>
                     <Button variant="outline" onClick={() => setIsEditing(false)}>
-                      <X className="w-4 h-4 mr-2" />
-                      Cancel
+                      <X className="w-4 h-4 mr-2" />Cancel
                     </Button>
                   </div>
                 </div>
@@ -215,7 +740,15 @@ export default function ProfilePage() {
                 <>
                   <div className="flex items-start justify-between">
                     <div>
-                      <h1 className="text-2xl font-bold font-heading">{profile.full_name}</h1>
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <h1 className="text-2xl font-bold font-heading">{profile.full_name}</h1>
+                        {profile.akili_score > 0 && (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-sm font-semibold bg-primary/10 text-primary border border-primary/20">
+                            <Zap className="w-3.5 h-3.5" />
+                            {profile.akili_score.toLocaleString()} · {getAkiliNarrative(profile.akili_score).title}
+                          </span>
+                        )}
+                      </div>
                       <p className="text-muted-foreground flex items-center gap-2 mt-1">
                         <GraduationCap className="w-4 h-4" />
                         {getAcademicLevelLabel(profile.academic_level || '')}
@@ -223,24 +756,19 @@ export default function ProfilePage() {
                       </p>
                     </div>
                     <Button variant="outline" onClick={() => setIsEditing(true)}>
-                      <Edit className="w-4 h-4 mr-2" />
-                      Edit Profile
+                      <Edit className="w-4 h-4 mr-2" />Edit Profile
                     </Button>
                   </div>
 
-                  {profile.bio && (
-                    <p className="text-muted-foreground">{profile.bio}</p>
-                  )}
+                  {profile.bio && <p className="text-muted-foreground">{profile.bio}</p>}
 
                   <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                     <span className="flex items-center gap-1">
-                      <Mail className="w-4 h-4" />
-                      {profile.email}
+                      <Mail className="w-4 h-4" />{profile.email}
                     </span>
-                    {profile.university && (
+                    {universityName && (
                       <span className="flex items-center gap-1">
-                        <Building2 className="w-4 h-4" />
-                        {profile.university.name}
+                        <Building2 className="w-4 h-4" />{universityName}
                       </span>
                     )}
                     <span className="flex items-center gap-1">
@@ -249,7 +777,6 @@ export default function ProfilePage() {
                     </span>
                   </div>
 
-                  {/* Roles */}
                   <div className="flex flex-wrap gap-2">
                     {profile.roles?.map(role => (
                       <Badge key={role} variant="secondary">
@@ -261,7 +788,6 @@ export default function ProfilePage() {
               )}
             </div>
 
-            {/* Stats */}
             {!isEditing && (
               <div className="flex md:flex-col gap-4 md:gap-2 text-center md:text-right">
                 <div>
@@ -282,17 +808,25 @@ export default function ProfilePage() {
         </CardContent>
       </Card>
 
+      {/* Akili Score */}
+      <AkiliScoreCard userId={profile.id} />
+
       {/* Tabs */}
-      <Tabs defaultValue="skills" className="space-y-4">
+      <Tabs defaultValue="skills" className="space-y-4" onValueChange={(v) => {
+        if (v === 'analytics' && !analyticsData && profile) loadAnalytics(profile.id)
+      }}>
         <TabsList>
           <TabsTrigger value="skills">Skills & Interests</TabsTrigger>
           <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
           <TabsTrigger value="activity">Activity</TabsTrigger>
+          <TabsTrigger value="analytics">
+            <BarChart3 className="w-3.5 h-3.5 mr-1.5" />
+            Analytics
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="skills" className="space-y-4">
           <div className="grid md:grid-cols-2 gap-6">
-            {/* Research Interests */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Research Interests</CardTitle>
@@ -302,9 +836,7 @@ export default function ProfilePage() {
                 {profile.research_interests && profile.research_interests.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
                     {profile.research_interests.map(interest => (
-                      <Badge key={interest} variant="outline" className="bg-primary/5">
-                        {interest}
-                      </Badge>
+                      <Badge key={interest} variant="outline" className="bg-primary/5">{interest}</Badge>
                     ))}
                   </div>
                 ) : (
@@ -313,7 +845,6 @@ export default function ProfilePage() {
               </CardContent>
             </Card>
 
-            {/* Skills */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Skills Offered</CardTitle>
@@ -323,9 +854,7 @@ export default function ProfilePage() {
                 {profile.skills && profile.skills.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
                     {profile.skills.map(skill => (
-                      <Badge key={skill} variant="secondary">
-                        {skill}
-                      </Badge>
+                      <Badge key={skill} variant="secondary">{skill}</Badge>
                     ))}
                   </div>
                 ) : (
@@ -334,7 +863,6 @@ export default function ProfilePage() {
               </CardContent>
             </Card>
 
-            {/* Looking For */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Looking For</CardTitle>
@@ -344,9 +872,7 @@ export default function ProfilePage() {
                 {profile.looking_for && profile.looking_for.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
                     {profile.looking_for.map(item => (
-                      <Badge key={item} variant="outline" className="bg-accent/5">
-                        {item}
-                      </Badge>
+                      <Badge key={item} variant="outline" className="bg-accent/5">{item}</Badge>
                     ))}
                   </div>
                 ) : (
@@ -355,7 +881,6 @@ export default function ProfilePage() {
               </CardContent>
             </Card>
 
-            {/* Availability */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Availability</CardTitle>
@@ -364,9 +889,7 @@ export default function ProfilePage() {
               <CardContent>
                 <div className="flex items-center gap-2">
                   <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                    <span className="text-lg font-bold text-primary">
-                      {profile.weekly_hours_available || 0}
-                    </span>
+                    <span className="text-lg font-bold text-primary">{profile.weekly_hours_available || 0}</span>
                   </div>
                   <div>
                     <p className="font-medium">hours per week</p>
@@ -384,9 +907,8 @@ export default function ProfilePage() {
               <h3 className="text-lg font-medium">Portfolio Items</h3>
               <p className="text-sm text-muted-foreground">Showcase your work and achievements</p>
             </div>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Item
+            <Button onClick={openAddModal}>
+              <Plus className="w-4 h-4 mr-2" />Add Item
             </Button>
           </div>
 
@@ -394,12 +916,9 @@ export default function ProfilePage() {
             <Card className="p-8 text-center">
               <Award className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
               <h3 className="font-medium mb-2">No portfolio items yet</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Add your publications, projects, awards, and other achievements
-              </p>
-              <Button>
-                <Plus className="w-4 h-4 mr-2" />
-                Add Your First Item
+              <p className="text-sm text-muted-foreground mb-4">Add your publications, projects, awards, and other achievements</p>
+              <Button onClick={openAddModal}>
+                <Plus className="w-4 h-4 mr-2" />Add Your First Item
               </Button>
             </Card>
           ) : (
@@ -420,9 +939,15 @@ export default function ProfilePage() {
                           </CardDescription>
                         </div>
                       </div>
-                      {item.is_featured && (
-                        <Badge variant="secondary" className="text-xs">Featured</Badge>
-                      )}
+                      <div className="flex items-center gap-1">
+                        {item.is_featured && <Badge variant="secondary" className="text-xs">Featured</Badge>}
+                        <Button size="icon" variant="ghost" className="w-7 h-7" onClick={() => openEditModal(item)}>
+                          <Edit className="w-3 h-3" />
+                        </Button>
+                        <Button size="icon" variant="ghost" className="w-7 h-7 text-destructive hover:text-destructive" onClick={() => setDeletingItemId(item.id)}>
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent>
@@ -450,14 +975,338 @@ export default function ProfilePage() {
           )}
         </TabsContent>
 
-        <TabsContent value="activity">
-          <Card className="p-8 text-center">
-            <Eye className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
-            <h3 className="font-medium mb-2">Activity feed coming soon</h3>
-            <p className="text-sm text-muted-foreground">
-              Track your research contributions, connections, and project milestones
-            </p>
+        <TabsContent value="activity" className="space-y-6">
+          {/* Stats Grid */}
+          <div className={`grid gap-4 ${profile.roles?.includes('mentor') ? 'grid-cols-2 md:grid-cols-4' : 'grid-cols-2 md:grid-cols-3'}`}>
+            <Card>
+              <CardContent className="p-5 flex flex-col items-center text-center gap-2">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <FolderOpen className="w-5 h-5 text-primary" />
+                </div>
+                <p className="text-3xl font-bold">{activityStats.activeProjects}</p>
+                <p className="text-xs text-muted-foreground">Active Projects</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-5 flex flex-col items-center text-center gap-2">
+                <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center">
+                  <CheckCircle2 className="w-5 h-5 text-green-500" />
+                </div>
+                <p className="text-3xl font-bold">{activityStats.completedProjects}</p>
+                <p className="text-xs text-muted-foreground">Completed Projects</p>
+              </CardContent>
+            </Card>
+            {profile.roles?.includes('mentor') && (
+              <Card>
+                <CardContent className="p-5 flex flex-col items-center text-center gap-2">
+                  <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
+                    <Users className="w-5 h-5 text-accent" />
+                  </div>
+                  <p className="text-3xl font-bold">{activityStats.mentorshipSessions}</p>
+                  <p className="text-xs text-muted-foreground">Mentorship Sessions</p>
+                </CardContent>
+              </Card>
+            )}
+            <Card>
+              <CardContent className="p-5 flex flex-col items-center text-center gap-2">
+                <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center">
+                  <ListChecks className="w-5 h-5 text-orange-500" />
+                </div>
+                <p className="text-3xl font-bold">{activityStats.tasksCompleted}</p>
+                <p className="text-xs text-muted-foreground">Tasks Completed</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Akili Score */}
+          <AkiliScoreCard userId={profile.id} limit={10} />
+
+          {/* Mentor Section */}
+          {mentorInfo ? (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Shield className="w-5 h-5 text-primary" />
+                  Mentor Profile
+                </CardTitle>
+                <CardDescription>Your mentorship activity and status</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center gap-3 flex-wrap">
+                  {mentorInfo.is_verified ? (
+                    <Badge className="bg-green-500/15 text-green-600 border-green-500/20 hover:bg-green-500/20">
+                      <CheckCircle2 className="w-3 h-3 mr-1" />Approved
+                    </Badge>
+                  ) : (
+                    <Badge className="bg-amber-500/15 text-amber-600 border-amber-500/20 hover:bg-amber-500/20">
+                      Pending Verification
+                    </Badge>
+                  )}
+                  {mentorInfo.tier && (
+                    <Badge variant="secondary">{mentorInfo.tier}</Badge>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="text-center p-3 rounded-xl bg-muted/50">
+                    <p className="text-2xl font-bold text-primary">{mentorInfo.total_sessions}</p>
+                    <p className="text-xs text-muted-foreground">Total Sessions</p>
+                  </div>
+                  <div className="text-center p-3 rounded-xl bg-muted/50">
+                    <div className="flex items-center justify-center gap-1">
+                      <p className="text-2xl font-bold">{mentorInfo.rating > 0 ? mentorInfo.rating.toFixed(1) : '—'}</p>
+                      {mentorInfo.rating > 0 && <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />}
+                    </div>
+                    <p className="text-xs text-muted-foreground">Avg Rating</p>
+                  </div>
+                  {mentorInfo.specialty && (
+                    <div className="text-center p-3 rounded-xl bg-muted/50">
+                      <p className="text-sm font-semibold truncate">{mentorInfo.specialty}</p>
+                      <p className="text-xs text-muted-foreground">Specialty</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ) : profile.roles?.includes('mentor') ? (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Shield className="w-5 h-5 text-primary" />
+                  Mentor Profile
+                </CardTitle>
+                <CardDescription>Your mentorship application status</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <Badge className="bg-red-500/15 text-red-600 border-red-500/20 hover:bg-red-500/20">
+                    Application Not Approved
+                  </Badge>
+                </div>
+                <p className="text-sm text-muted-foreground">Your mentor application was not approved. You may resubmit with updated documents.</p>
+                <Button variant="outline" asChild>
+                  <a href="/mentor-verification">Re-upload Documents</a>
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="border-dashed">
+              <CardContent className="p-6 text-center">
+                <Shield className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
+                <h3 className="font-medium mb-1">Become a Mentor</h3>
+                <p className="text-sm text-muted-foreground mb-4">Share your expertise and earn Akili points by mentoring other researchers</p>
+                <Button variant="outline" asChild>
+                  <a href="/mentors">Explore Mentorship</a>
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Research Output */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-primary" />
+                Research Output
+              </CardTitle>
+              <CardDescription>Your published and contributed works</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="text-center p-3 rounded-xl bg-muted/50">
+                  <p className="text-2xl font-bold">{portfolioItems.filter(i => i.item_type === 'publication').length}</p>
+                  <p className="text-xs text-muted-foreground">Publications</p>
+                </div>
+                <div className="text-center p-3 rounded-xl bg-muted/50">
+                  <p className="text-2xl font-bold">{portfolioItems.filter(i => i.item_type === 'presentation').length}</p>
+                  <p className="text-xs text-muted-foreground">Presentations</p>
+                </div>
+                <div className="text-center p-3 rounded-xl bg-muted/50">
+                  <p className="text-2xl font-bold">{portfolioItems.filter(i => ['award','certificate'].includes(i.item_type)).length}</p>
+                  <p className="text-xs text-muted-foreground">Awards & Certs</p>
+                </div>
+              </div>
+            </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="analytics" className="space-y-6">
+          {analyticsLoading ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          ) : analyticsData ? (
+            <>
+              {/* Stat cards */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Card>
+                  <CardContent className="p-5 flex flex-col items-center text-center gap-2">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <Eye className="w-5 h-5 text-primary" />
+                    </div>
+                    <p className="text-3xl font-bold">{profile.portfolio_views || 0}</p>
+                    <p className="text-xs text-muted-foreground">Profile Views</p>
+                  </CardContent>
+                </Card>
+                <Card className="cursor-pointer hover:border-primary/40 transition-colors" onClick={() => router.push('/ideas')}>
+                  <CardContent className="p-5 flex flex-col items-center text-center gap-2">
+                    <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center">
+                      <Lightbulb className="w-5 h-5 text-cyan-500" />
+                    </div>
+                    <p className="text-3xl font-bold">{analyticsData.ideasPerformance.reduce((a, i) => a + i.views, 0)}</p>
+                    <p className="text-xs text-muted-foreground">Idea Views</p>
+                  </CardContent>
+                </Card>
+                <Card className="cursor-pointer hover:border-primary/40 transition-colors" onClick={() => router.push('/network')}>
+                  <CardContent className="p-5 flex flex-col items-center text-center gap-2">
+                    <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center">
+                      <Users className="w-5 h-5 text-violet-500" />
+                    </div>
+                    <p className="text-3xl font-bold">{analyticsData.collaborationRequests}</p>
+                    <p className="text-xs text-muted-foreground">Pending Requests</p>
+                  </CardContent>
+                </Card>
+                <Card className="cursor-pointer hover:border-primary/40 transition-colors" onClick={() => router.push('/leaderboard')}>
+                  <CardContent className="p-5 flex flex-col items-center text-center gap-2">
+                    <div className="w-10 h-10 rounded-xl bg-yellow-500/10 flex items-center justify-center">
+                      <TrendingUp className="w-5 h-5 text-yellow-500" />
+                    </div>
+                    <p className="text-3xl font-bold">
+                      {analyticsData.leaderboardRank ? `#${analyticsData.leaderboardRank}` : '—'}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Leaderboard Rank</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Score growth chart */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5 text-primary" />
+                    Akili Score Growth
+                  </CardTitle>
+                  <CardDescription>Points earned over the last 12 weeks</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={220}>
+                    <AreaChart data={analyticsData.scoreHistory} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="akiliGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#A855F7" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="#A855F7" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <XAxis dataKey="week" tick={{ fontSize: 10, fill: '#7C6A9C' }} tickLine={false} axisLine={false} interval={2} />
+                      <YAxis tick={{ fontSize: 10, fill: '#7C6A9C' }} tickLine={false} axisLine={false} />
+                      <Tooltip
+                        contentStyle={{ background: '#1a1625', border: '1px solid rgba(139,92,246,0.3)', borderRadius: 8, fontSize: 12 }}
+                        labelStyle={{ color: '#C4B5D8' }}
+                        itemStyle={{ color: '#A855F7' }}
+                      />
+                      <Area type="monotone" dataKey="score" stroke="#A855F7" strokeWidth={2} fill="url(#akiliGrad)" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                {/* Dimension breakdown */}
+                {analyticsData.dimensionBreakdown.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">Score Dimensions</CardTitle>
+                      <CardDescription>Breakdown by contribution type</CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex items-center gap-6">
+                      <ResponsiveContainer width={120} height={120}>
+                        <PieChart>
+                          <Pie data={analyticsData.dimensionBreakdown} cx="50%" cy="50%" innerRadius={30} outerRadius={55} dataKey="value" strokeWidth={0}>
+                            {analyticsData.dimensionBreakdown.map((entry, idx) => (
+                              <Cell key={idx} fill={entry.color} />
+                            ))}
+                          </Pie>
+                        </PieChart>
+                      </ResponsiveContainer>
+                      <div className="space-y-2 flex-1">
+                        {analyticsData.dimensionBreakdown.map((d) => (
+                          <div key={d.name} className="flex items-center justify-between text-sm">
+                            <div className="flex items-center gap-2">
+                              <div className="w-2.5 h-2.5 rounded-full" style={{ background: d.color }} />
+                              <span className="text-muted-foreground">{d.name}</span>
+                            </div>
+                            <span className="font-medium">{d.value} pts</span>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Recent Akili events */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Recent Activity</CardTitle>
+                    <CardDescription>Latest Akili Score events</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {analyticsData.recentEvents.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">No Akili events yet. Complete your profile and post ideas to earn points!</p>
+                    ) : (
+                      analyticsData.recentEvents.map(ev => (
+                        <div key={ev.id} className="flex items-center justify-between py-1.5 border-b last:border-0 border-border/50">
+                          <div>
+                            <p className="text-sm font-medium capitalize">{ev.event_type.replace(/_/g, ' ')}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {new Date(ev.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                            </p>
+                          </div>
+                          <span className="text-sm font-semibold text-primary">+{ev.points_earned}</span>
+                        </div>
+                      ))
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Ideas performance */}
+              {analyticsData.ideasPerformance.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Lightbulb className="w-5 h-5 text-primary" />
+                      Ideas Performance
+                    </CardTitle>
+                    <CardDescription>Views and matches for your posted ideas</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-1">
+                      <div className="grid grid-cols-12 text-xs text-muted-foreground py-1 px-2">
+                        <span className="col-span-7">Title</span>
+                        <span className="col-span-2 text-right">Views</span>
+                        <span className="col-span-3 text-right">Matches</span>
+                      </div>
+                      {analyticsData.ideasPerformance.map((idea, i) => (
+                        <div key={i} className="grid grid-cols-12 text-sm py-2 px-2 rounded-lg hover:bg-muted/50 transition-colors">
+                          <span className="col-span-7 font-medium truncate pr-2">{idea.title}</span>
+                          <span className="col-span-2 text-right text-muted-foreground">{idea.views}</span>
+                          <span className="col-span-3 text-right">
+                            <span className="inline-flex items-center gap-1 text-primary">
+                              <Users className="w-3 h-3" />{idea.matches}
+                            </span>
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </>
+          ) : (
+            <div className="text-center py-16">
+              <BarChart3 className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
+              <p className="text-muted-foreground">Click the Analytics tab to load your data.</p>
+            </div>
+          )}
         </TabsContent>
       </Tabs>
     </div>

@@ -17,13 +17,10 @@ import {
 import {
   Lightbulb,
   Search,
-  Filter,
-  TrendingUp,
   Eye,
   Clock,
   Users,
   Plus,
-  ArrowUpRight,
   ChevronUp,
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
@@ -61,6 +58,40 @@ const COLLABORATION_TYPES = [
 interface IdeaWithAuthor extends ResearchIdea {
   author: Profile
   has_upvoted?: boolean
+  matchScore?: number
+}
+
+function calculateMatchScore(
+  userSkills: string[],
+  ideaSkillsNeeded: string[],
+  userDept: string,
+  ideaOwnerDept: string,
+): number {
+  if (!ideaSkillsNeeded.length) return 0
+  const matching = userSkills.filter(s => ideaSkillsNeeded.includes(s)).length
+  let score = Math.round((matching / ideaSkillsNeeded.length) * 100)
+  if (userDept && ideaOwnerDept && userDept === ideaOwnerDept) {
+    score = Math.min(100, score + 15)
+  }
+  return score
+}
+
+function MatchBadge({ score }: { score: number }) {
+  if (score <= 0) return null
+  const [bg, color, border] =
+    score >= 70
+      ? ['rgba(16,185,129,0.15)', '#10B981', 'rgba(16,185,129,0.3)']
+      : score >= 40
+      ? ['rgba(245,158,11,0.15)', '#F59E0B', 'rgba(245,158,11,0.3)']
+      : ['rgba(124,58,237,0.15)', '#A855F7', 'rgba(124,58,237,0.3)']
+  return (
+    <Badge
+      className="text-xs font-semibold"
+      style={{ background: bg, color, border: `1px solid ${border}` }}
+    >
+      {score}% match
+    </Badge>
+  )
 }
 
 export default function IdeasPage() {
@@ -71,13 +102,29 @@ export default function IdeasPage() {
   const [selectedType, setSelectedType] = useState("all")
   const [sortBy, setSortBy] = useState("recent")
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [userSkills, setUserSkills] = useState<string[]>([])
+  const [userDept, setUserDept] = useState("")
 
   const loadIdeas = useCallback(async () => {
     setIsLoading(true)
     const supabase = createClient()
 
     const { data: { user } } = await supabase.auth.getUser()
-    if (user) setCurrentUserId(user.id)
+    if (user) {
+      setCurrentUserId(user.id)
+      // Fetch user profile for match scoring (only if not already loaded)
+      if (userSkills.length === 0) {
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("skills, department")
+          .eq("id", user.id)
+          .single()
+        if (prof) {
+          setUserSkills(prof.skills || [])
+          setUserDept(prof.department || "")
+        }
+      }
+    }
 
     let query = supabase
       .from("research_ideas")
@@ -87,20 +134,17 @@ export default function IdeasPage() {
       `)
       .eq("status", "open")
 
-    // Apply filters
     if (selectedArea !== "All Areas") {
       query = query.eq("research_area", selectedArea)
     }
-
     if (selectedType !== "all") {
       query = query.eq("collaboration_type", selectedType)
     }
-
     if (searchQuery) {
       query = query.or(`title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`)
     }
 
-    // Apply sorting
+    // DB-level sorting (skip for best_match — we sort client-side)
     if (sortBy === "recent") {
       query = query.order("created_at", { ascending: false })
     } else if (sortBy === "popular") {
@@ -112,27 +156,41 @@ export default function IdeasPage() {
     const { data, error } = await query.limit(50)
 
     if (data && !error) {
-      // Check which ideas the user has upvoted
+      let processed = data as IdeaWithAuthor[]
+
+      // Check upvotes
       if (user) {
         const { data: upvotes } = await supabase
           .from("idea_upvotes")
           .select("idea_id")
           .eq("user_id", user.id)
-
-        const upvotedIds = new Set(upvotes?.map((u) => u.idea_id) || [])
-        setIdeas(
-          data.map((idea) => ({
-            ...idea,
-            has_upvoted: upvotedIds.has(idea.id),
-          }))
-        )
-      } else {
-        setIdeas(data)
+        const upvotedIds = new Set(upvotes?.map(u => u.idea_id) || [])
+        processed = processed.map(idea => ({ ...idea, has_upvoted: upvotedIds.has(idea.id) }))
       }
+
+      // Compute match scores using the latest skills/dept from state or freshly fetched
+      const skills = userSkills
+      const dept = userDept
+      processed = processed.map(idea => ({
+        ...idea,
+        matchScore: calculateMatchScore(
+          skills,
+          idea.skills_needed || [],
+          dept,
+          (idea.author as Profile)?.department || "",
+        ),
+      }))
+
+      // Client-side sort for best_match
+      if (sortBy === "best_match") {
+        processed = [...processed].sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0))
+      }
+
+      setIdeas(processed)
     }
 
     setIsLoading(false)
-  }, [selectedArea, selectedType, searchQuery, sortBy])
+  }, [selectedArea, selectedType, searchQuery, sortBy, userSkills, userDept])
 
   useEffect(() => {
     loadIdeas()
@@ -140,28 +198,15 @@ export default function IdeasPage() {
 
   async function handleUpvote(ideaId: string, currentUpvotes: number, hasUpvoted: boolean) {
     if (!currentUserId) return
-
     const supabase = createClient()
 
     if (hasUpvoted) {
-      // Remove upvote
       await supabase.from("idea_upvotes").delete().eq("idea_id", ideaId).eq("user_id", currentUserId)
-
-      await supabase
-        .from("research_ideas")
-        .update({ upvotes: currentUpvotes - 1 })
-        .eq("id", ideaId)
+      await supabase.from("research_ideas").update({ upvotes: currentUpvotes - 1 }).eq("id", ideaId)
     } else {
-      // Add upvote
       await supabase.from("idea_upvotes").insert({ idea_id: ideaId, user_id: currentUserId })
-
-      await supabase
-        .from("research_ideas")
-        .update({ upvotes: currentUpvotes + 1 })
-        .eq("id", ideaId)
+      await supabase.from("research_ideas").update({ upvotes: currentUpvotes + 1 }).eq("id", ideaId)
     }
-
-    // Refresh ideas
     loadIdeas()
   }
 
@@ -190,7 +235,7 @@ export default function IdeasPage() {
               <Input
                 placeholder="Search ideas..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={e => setSearchQuery(e.target.value)}
                 className="pl-10"
               />
             </div>
@@ -199,10 +244,8 @@ export default function IdeasPage() {
                 <SelectValue placeholder="Research Area" />
               </SelectTrigger>
               <SelectContent>
-                {RESEARCH_AREAS.map((area) => (
-                  <SelectItem key={area} value={area}>
-                    {area}
-                  </SelectItem>
+                {RESEARCH_AREAS.map(area => (
+                  <SelectItem key={area} value={area}>{area}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -211,21 +254,22 @@ export default function IdeasPage() {
                 <SelectValue placeholder="Collaboration Type" />
               </SelectTrigger>
               <SelectContent>
-                {COLLABORATION_TYPES.map((type) => (
-                  <SelectItem key={type.value} value={type.value}>
-                    {type.label}
-                  </SelectItem>
+                {COLLABORATION_TYPES.map(type => (
+                  <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
             <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-full md:w-[150px]">
+              <SelectTrigger className="w-full md:w-[160px]">
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="recent">Most Recent</SelectItem>
                 <SelectItem value="popular">Most Popular</SelectItem>
                 <SelectItem value="views">Most Viewed</SelectItem>
+                {userSkills.length > 0 && (
+                  <SelectItem value="best_match">Best Match</SelectItem>
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -247,8 +291,8 @@ export default function IdeasPage() {
         </div>
       ) : ideas.length > 0 ? (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {ideas.map((idea) => (
-            <Card key={idea.id} className="hover:border-primary/50 transition-all group">
+          {ideas.map(idea => (
+            <Card key={idea.id} className="hover:border-primary/50 transition-all group relative">
               <CardContent className="p-6">
                 <div className="flex items-start justify-between gap-2 mb-3">
                   <Link href={`/ideas/${idea.id}`} className="flex-1">
@@ -256,30 +300,30 @@ export default function IdeasPage() {
                       {idea.title}
                     </h3>
                   </Link>
-                  {idea.is_featured && (
-                    <Badge variant="default" className="bg-yellow-500/20 text-yellow-500 border-yellow-500/30">
-                      Featured
-                    </Badge>
-                  )}
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    {idea.is_featured && (
+                      <Badge variant="default" className="bg-yellow-500/20 text-yellow-500 border-yellow-500/30">
+                        Featured
+                      </Badge>
+                    )}
+                    {(idea.matchScore || 0) > 0 && (
+                      <MatchBadge score={idea.matchScore!} />
+                    )}
+                  </div>
                 </div>
 
                 <p className="text-muted-foreground text-sm line-clamp-3 mb-4">{idea.description}</p>
 
                 <div className="flex flex-wrap gap-1.5 mb-4">
                   <Badge variant="secondary">{idea.research_area}</Badge>
-                  {idea.tags?.slice(0, 2).map((tag) => (
-                    <Badge key={tag} variant="outline" className="text-xs">
-                      {tag}
-                    </Badge>
+                  {idea.tags?.slice(0, 2).map(tag => (
+                    <Badge key={tag} variant="outline" className="text-xs">{tag}</Badge>
                   ))}
                   {(idea.tags?.length || 0) > 2 && (
-                    <Badge variant="outline" className="text-xs">
-                      +{(idea.tags?.length || 0) - 2}
-                    </Badge>
+                    <Badge variant="outline" className="text-xs">+{(idea.tags?.length || 0) - 2}</Badge>
                   )}
                 </div>
 
-                {/* Roles Needed */}
                 {idea.roles_needed && idea.roles_needed.length > 0 && (
                   <div className="flex items-center gap-2 mb-4 text-sm">
                     <Users className="h-4 w-4 text-muted-foreground" />
@@ -303,13 +347,11 @@ export default function IdeasPage() {
 
                   <div className="flex items-center gap-3 text-sm text-muted-foreground">
                     <button
-                      onClick={(e) => {
+                      onClick={e => {
                         e.preventDefault()
                         handleUpvote(idea.id, idea.upvotes || 0, idea.has_upvoted || false)
                       }}
-                      className={`flex items-center gap-1 hover:text-primary transition-colors ${
-                        idea.has_upvoted ? "text-primary" : ""
-                      }`}
+                      className={`flex items-center gap-1 hover:text-primary transition-colors ${idea.has_upvoted ? "text-primary" : ""}`}
                     >
                       <ChevronUp className={`h-4 w-4 ${idea.has_upvoted ? "fill-primary" : ""}`} />
                       {idea.upvotes || 0}

@@ -1,15 +1,18 @@
 import type { Metadata, Viewport } from 'next'
 import { DM_Sans, Syne } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
+import { Toaster } from 'sonner'
+import { InstallPrompt } from '@/components/ui/InstallPrompt'
+import { ThemeProvider } from '@/components/theme-provider'
 import './globals.css'
 
-const dmSans = DM_Sans({ 
+const dmSans = DM_Sans({
   subsets: ['latin'],
   weight: ['400', '500'],
   variable: '--font-sans',
 })
 
-const syne = Syne({ 
+const syne = Syne({
   subsets: ['latin'],
   weight: ['700', '800'],
   variable: '--font-heading',
@@ -23,7 +26,7 @@ export const metadata: Metadata = {
   icons: {
     icon: '/icon.svg',
     shortcut: '/icon.svg',
-    apple: '/icon.svg',
+    apple: '/apple-icon.png',
   },
   openGraph: {
     title: 'ResearchFlow | Collaborate. Discover. Publish.',
@@ -44,10 +47,36 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="dark" style={{ backgroundColor: '#05010F' }}>
-      <body className={`${dmSans.variable} ${syne.variable} font-sans antialiased`} style={{ backgroundColor: '#05010F' }}>
-        {children}
-        {process.env.NODE_ENV === 'production' && <Analytics />}
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#7C3AED" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="ResearchFlow" />
+      </head>
+      <body className={`${dmSans.variable} ${syne.variable} font-sans antialiased`}>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
+          {children}
+          <InstallPrompt />
+          <Toaster position="bottom-right" theme="dark" />
+          {process.env.NODE_ENV === 'production' && <Analytics />}
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `
+                if ('serviceWorker' in navigator) {
+                  navigator.serviceWorker
+                    .getRegistrations()
+                    .then(function(registrations) {
+                      for (let r of registrations) {
+                        r.unregister()
+                      }
+                    })
+                }
+              `,
+            }}
+          />
+        </ThemeProvider>
       </body>
     </html>
   )

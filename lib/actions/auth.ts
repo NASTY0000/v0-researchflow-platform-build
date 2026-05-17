@@ -2,6 +2,9 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { completeOnboardingWithAllSkills } from '@/lib/actions/akili'
+import { generateMatchesOnOnboarding } from '@/lib/actions/matching'
+import { checkRateLimit } from '@/lib/rate-limit'
 
 export async function signUp(formData: FormData) {
   const supabase = await createClient()
@@ -9,6 +12,11 @@ export async function signUp(formData: FormData) {
   const email = formData.get('email') as string
   const password = formData.get('password') as string
   const fullName = formData.get('fullName') as string
+
+  const limit = await checkRateLimit(email, 'signup', 5, 3600)
+  if (!limit.allowed) {
+    return { error: 'Too many signup attempts. Please try again in an hour.' }
+  }
 
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -24,26 +32,55 @@ export async function signUp(formData: FormData) {
     return { error: error.message }
   }
 
-  // Check if user was auto-confirmed (email confirmation disabled in Supabase)
-  // or if the session exists (meaning they can proceed without OTP)
-  if (data?.session) {
-    // User is auto-confirmed, redirect to onboarding
-    revalidatePath('/', 'layout')
-    return { success: true, redirectTo: '/onboarding' }
-  }
-
-  // Check if user already exists
   if (data?.user?.identities?.length === 0) {
+    // Email exists in auth — check if they finished onboarding
+    const { data: existingProfile } = await supabase
+      .from('profiles')
+      .select('onboarding_completed, id')
+      .eq('email', email)
+      .single()
+
+    if (!existingProfile || !existingProfile.onboarding_completed) {
+      // Incomplete registration — resend verification so they can continue
+      await supabase.auth.resend({ type: 'signup', email })
+      return {
+        success: true,
+        email,
+        requiresVerification: true,
+        message: "We've resent your verification email. Please check your inbox.",
+      }
+    }
+
     return { error: 'An account with this email already exists. Please sign in instead.' }
   }
 
-  return { success: true, email, requiresVerification: true, message: 'Verification code sent to your email' }
+  if (data?.session && data.user) {
+    await supabase.from('profiles').upsert({
+      id: data.user.id,
+      full_name: fullName,
+      email: email,
+      onboarding_completed: false,
+      onboarding_step: 0,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'id' })
+
+    revalidatePath('/', 'layout')
+    return { success: true, redirectTo: '/onboarding', showVerifyBanner: true }
+  }
+
+  return {
+    success: true,
+    email,
+    requiresVerification: true,
+    message: 'Verification code sent to your email',
+  }
 }
 
 export async function verifyOtp(email: string, token: string) {
   const supabase = await createClient()
 
-  const { error } = await supabase.auth.verifyOtp({
+  const { data, error } = await supabase.auth.verifyOtp({
     email,
     token,
     type: 'signup',
@@ -53,11 +90,28 @@ export async function verifyOtp(email: string, token: string) {
     return { error: error.message }
   }
 
+  if (data?.user) {
+    await supabase.from('profiles').upsert({
+      id: data.user.id,
+      email: data.user.email,
+      full_name: data.user.user_metadata?.full_name || '',
+      onboarding_completed: false,
+      onboarding_step: 0,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'id' })
+  }
+
   revalidatePath('/', 'layout')
   return { success: true, redirectTo: '/onboarding' }
 }
 
 export async function resendOtp(email: string) {
+  const limit = await checkRateLimit(email, 'otp_resend', 3, 3600)
+  if (!limit.allowed) {
+    return { error: 'Too many resend attempts. Please wait before requesting another code.' }
+  }
+
   const supabase = await createClient()
 
   const { error } = await supabase.auth.resend({
@@ -78,6 +132,11 @@ export async function signIn(formData: FormData) {
   const email = formData.get('email') as string
   const password = formData.get('password') as string
 
+  const limit = await checkRateLimit(email, 'signin', 10, 900)
+  if (!limit.allowed) {
+    return { error: 'Too many login attempts. Please wait 15 minutes before trying again.' }
+  }
+
   const { error } = await supabase.auth.signInWithPassword({
     email,
     password,
@@ -88,17 +147,17 @@ export async function signIn(formData: FormData) {
   }
 
   revalidatePath('/', 'layout')
-  
-  // Check if user needs to complete onboarding
+
   const { data: { user } } = await supabase.auth.getUser()
+
   if (user) {
     const { data: profile } = await supabase
       .from('profiles')
       .select('onboarding_completed')
       .eq('id', user.id)
       .single()
-    
-    if (profile && !profile.onboarding_completed) {
+
+    if (!profile || !profile.onboarding_completed) {
       return { success: true, redirectTo: '/onboarding' }
     }
   }
@@ -115,8 +174,9 @@ export async function signOut() {
 
 export async function signInWithGoogle() {
   const supabase = await createClient()
-  
-  const redirectUrl = process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ?? 
+
+  const redirectUrl =
+    process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ??
     `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/callback`
 
   const { data, error } = await supabase.auth.signInWithOAuth({
@@ -150,15 +210,12 @@ export async function getUser() {
 export async function getProfile() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  
+
   if (!user) return null
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select(`
-      *,
-      university:universities(*)
-    `)
+    .select('*')
     .eq('id', user.id)
     .single()
 
@@ -168,14 +225,17 @@ export async function getProfile() {
 export async function updateProfile(data: Record<string, unknown>) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  
+
   if (!user) {
     return { error: 'Not authenticated' }
   }
 
   const { error } = await supabase
     .from('profiles')
-    .update(data)
+    .update({
+      ...data,
+      updated_at: new Date().toISOString(),
+    })
     .eq('id', user.id)
 
   if (error) {
@@ -189,7 +249,7 @@ export async function updateProfile(data: Record<string, unknown>) {
 export async function completeOnboarding(data: Record<string, unknown>) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  
+
   if (!user) {
     return { error: 'Not authenticated' }
   }
@@ -200,6 +260,7 @@ export async function completeOnboarding(data: Record<string, unknown>) {
       ...data,
       onboarding_completed: true,
       onboarding_step: 5,
+      updated_at: new Date().toISOString(),
     })
     .eq('id', user.id)
 
@@ -208,12 +269,25 @@ export async function completeOnboarding(data: Record<string, unknown>) {
   }
 
   revalidatePath('/dashboard', 'layout')
-  
-  // Check if user selected mentor role - redirect to verification
+
+  await completeOnboardingWithAllSkills(user.id)
+  generateMatchesOnOnboarding(user.id).catch(() => {})
+
+  // Award Akili points for completing onboarding
+  await supabase.from('akili_score_events').insert({
+    user_id: user.id,
+    event_type: 'onboarding_complete',
+    points_earned: 10,
+    dimension: 'knowledge',
+    description: 'Completed profile setup',
+  }).then(() =>
+    supabase.from('profiles').update({ akili_score: 10 }).eq('id', user.id)
+  ).catch(() => {})
+
   const roles = data.roles as string[] | undefined
   if (roles && roles.includes('mentor')) {
     return { success: true, redirectTo: '/mentor-verification' }
   }
-  
+
   return { success: true, redirectTo: '/dashboard' }
 }

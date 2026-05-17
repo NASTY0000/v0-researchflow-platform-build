@@ -36,8 +36,14 @@ import {
   Crown,
   GraduationCap,
   Loader2,
+  Search,
+  Send,
 } from "lucide-react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { Project, Team, Profile } from "@/lib/types/database"
+import { inviteByEmail } from "@/lib/actions/invitations"
+import { createClient } from "@/lib/supabase/client"
+import { toast } from "sonner"
 
 interface ProjectTeamProps {
   project: Project & {
@@ -56,26 +62,60 @@ const ROLES = [
 
 export function ProjectTeam({ project, currentUserId }: ProjectTeamProps) {
   const [showInvite, setShowInvite] = useState(false)
+  const [inviteMode, setInviteMode] = useState<"search" | "email">("search")
+  const [searchQuery, setSearchQuery] = useState("")
+  const [searchResults, setSearchResults] = useState<Profile[]>([])
+  const [isSearching, setIsSearching] = useState(false)
   const [inviteEmail, setInviteEmail] = useState("")
   const [inviteRole, setInviteRole] = useState("contributor")
   const [isInviting, setIsInviting] = useState(false)
+  const [inviteSent, setInviteSent] = useState<string | null>(null)
 
   const members = project.team?.team_members || []
   const isLead = members.find((m) => m.user.id === currentUserId)?.role === "lead"
 
-  async function handleInvite() {
-    if (!inviteEmail.trim()) return
+  async function handleSearch(q: string) {
+    setSearchQuery(q)
+    if (q.trim().length < 2) { setSearchResults([]); return }
+    setIsSearching(true)
+    const supabase = createClient()
+    const { data } = await supabase
+      .from("profiles")
+      .select("id, full_name, department, avatar_url, email")
+      .ilike("full_name", `%${q.trim()}%`)
+      .eq("public_profile", true)
+      .limit(5)
+    setSearchResults((data as Profile[]) || [])
+    setIsSearching(false)
+  }
 
+  async function handleInviteUser(user: Profile) {
+    if (!project.id) return
     setIsInviting(true)
-    // In a real app, send invite email/notification
-    console.log("Inviting:", inviteEmail, "as", inviteRole)
+    const result = await inviteByEmail(project.id, user.email!, inviteRole)
+    if (result.error) { toast.error(result.error); setIsInviting(false); return }
+    toast.success(`${user.full_name} added to the project!`)
+    setShowInvite(false)
+    setSearchQuery("")
+    setSearchResults([])
+    setIsInviting(false)
+  }
 
-    setTimeout(() => {
-      setIsInviting(false)
+  async function handleEmailInvite() {
+    if (!inviteEmail.trim() || !project.id) return
+    setIsInviting(true)
+    const result = await inviteByEmail(project.id, inviteEmail.trim(), inviteRole)
+    if (result.error) { toast.error(result.error); setIsInviting(false); return }
+
+    if (result.existing) {
+      toast.success(`${result.name} added to the project!`)
       setShowInvite(false)
-      setInviteEmail("")
-      setInviteRole("contributor")
-    }, 1000)
+    } else {
+      setInviteSent(inviteEmail.trim())
+      toast.success(`Invitation sent to ${inviteEmail.trim()}. They have 7 days to accept.`)
+    }
+    setInviteEmail("")
+    setIsInviting(false)
   }
 
   function getRoleBadgeColor(role: string) {
@@ -107,54 +147,98 @@ export function ProjectTeam({ project, currentUserId }: ProjectTeamProps) {
                     Invite Member
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="max-w-md">
                   <DialogHeader>
                     <DialogTitle>Invite Team Member</DialogTitle>
                     <DialogDescription>
-                      Send an invitation to join this research project.
+                      Search for existing users or invite by email.
                     </DialogDescription>
                   </DialogHeader>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Email Address</label>
+
+                  <Tabs value={inviteMode} onValueChange={(v) => setInviteMode(v as "search" | "email")}>
+                    <TabsList className="w-full">
+                      <TabsTrigger value="search" className="flex-1 gap-1"><Search className="h-3 w-3" />Find User</TabsTrigger>
+                      <TabsTrigger value="email" className="flex-1 gap-1"><Mail className="h-3 w-3" />By Email</TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="search" className="space-y-3 mt-3">
                       <Input
-                        type="email"
-                        placeholder="colleague@university.edu"
-                        value={inviteEmail}
-                        onChange={(e) => setInviteEmail(e.target.value)}
+                        placeholder="Search by name..."
+                        value={searchQuery}
+                        onChange={(e) => handleSearch(e.target.value)}
                       />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Role</label>
-                      <Select value={inviteRole} onValueChange={setInviteRole}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {ROLES.map((role) => (
-                            <SelectItem key={role.value} value={role.value}>
-                              {role.label}
-                            </SelectItem>
+                      {isSearching && <p className="text-xs text-center text-muted-foreground">Searching...</p>}
+                      {searchResults.length > 0 && (
+                        <div className="space-y-1 max-h-48 overflow-y-auto">
+                          {searchResults.map(u => (
+                            <div key={u.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50">
+                              <div>
+                                <p className="text-sm font-medium">{u.full_name}</p>
+                                <p className="text-xs text-muted-foreground">{u.department || u.email}</p>
+                              </div>
+                              <Button size="sm" onClick={() => handleInviteUser(u)} disabled={isInviting}>
+                                Add
+                              </Button>
+                            </div>
                           ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <DialogFooter>
-                    <Button variant="outline" onClick={() => setShowInvite(false)}>
-                      Cancel
-                    </Button>
-                    <Button onClick={handleInvite} disabled={isInviting || !inviteEmail.trim()}>
-                      {isInviting ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Sending...
-                        </>
-                      ) : (
-                        "Send Invite"
+                        </div>
                       )}
-                    </Button>
-                  </DialogFooter>
+                      {searchQuery.length >= 2 && !isSearching && searchResults.length === 0 && (
+                        <p className="text-xs text-center text-muted-foreground">No users found. Try inviting by email.</p>
+                      )}
+                    </TabsContent>
+
+                    <TabsContent value="email" className="space-y-3 mt-3">
+                      {inviteSent ? (
+                        <div className="py-4 text-center space-y-2">
+                          <Send className="h-8 w-8 mx-auto text-primary" />
+                          <p className="text-sm font-medium">Invitation sent!</p>
+                          <p className="text-xs text-muted-foreground">
+                            Sent to <strong>{inviteSent}</strong>. They have 7 days to accept.
+                          </p>
+                          <Button size="sm" variant="outline" onClick={() => setInviteSent(null)}>
+                            Invite another
+                          </Button>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">Email Address</label>
+                            <Input
+                              type="email"
+                              placeholder="colleague@university.edu"
+                              value={inviteEmail}
+                              onChange={(e) => setInviteEmail(e.target.value)}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">Role</label>
+                            <Select value={inviteRole} onValueChange={setInviteRole}>
+                              <SelectTrigger><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                {ROLES.map((role) => (
+                                  <SelectItem key={role.value} value={role.value}>{role.label}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </>
+                      )}
+                    </TabsContent>
+                  </Tabs>
+
+                  {!inviteSent && (
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => { setShowInvite(false); setInviteSent(null) }}>
+                        Cancel
+                      </Button>
+                      {inviteMode === "email" && (
+                        <Button onClick={handleEmailInvite} disabled={isInviting || !inviteEmail.trim()}>
+                          {isInviting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Sending...</> : "Send Invite"}
+                        </Button>
+                      )}
+                    </DialogFooter>
+                  )}
                 </DialogContent>
               </Dialog>
             )}

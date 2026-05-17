@@ -46,6 +46,9 @@ export async function updateSession(request: NextRequest) {
     '/settings',
     '/mentor-verification',
     '/admin',
+    '/profile',
+    '/matches',
+    '/notifications',
   ]
 
   const isProtectedRoute = protectedRoutes.some(
@@ -70,6 +73,24 @@ export async function updateSession(request: NextRequest) {
     url.search = ''
     return NextResponse.redirect(url)
   }
+
+  // Admin route protection — check admin role in DB
+  if (pathname.startsWith('/admin') && user) {
+    const { data: adminProfile } = await supabase
+      .from('profiles')
+      .select('roles, is_admin')
+      .eq('id', user.id)
+      .single()
+
+    const isAdmin = adminProfile?.is_admin === true || adminProfile?.roles?.includes('admin')
+    if (!isAdmin) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/dashboard'
+      url.search = ''
+      return NextResponse.redirect(url)
+    }
+  }
+
 
   return supabaseResponse
 }
