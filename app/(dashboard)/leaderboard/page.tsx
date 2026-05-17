@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -321,19 +322,23 @@ export default function LeaderboardPage() {
                       {index + 4}
                     </div>
                   )}
-                  <Avatar className="w-9 h-9">
-                    <AvatarImage src={user.avatar_url || undefined} />
-                    <AvatarFallback>
-                      {user.full_name?.charAt(0) || '?'}
-                    </AvatarFallback>
-                  </Avatar>
+                  <Link href={`/profile/${user.id}`} className="hover:opacity-80 transition-opacity flex-shrink-0">
+                    <Avatar className="w-9 h-9">
+                      <AvatarImage src={user.avatar_url || undefined} />
+                      <AvatarFallback>
+                        {user.full_name?.charAt(0) || '?'}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Link>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm truncate">
-                      {user.full_name || 'Anonymous'}
-                      {user.id === currentUserId && (
-                        <span className="ml-2 text-xs text-primary">(you)</span>
-                      )}
-                    </p>
+                    <Link href={`/profile/${user.id}`} className="hover:text-primary transition-colors">
+                      <p className="font-medium text-sm truncate">
+                        {user.full_name || 'Anonymous'}
+                        {user.id === currentUserId && (
+                          <span className="ml-2 text-xs text-primary">(you)</span>
+                        )}
+                      </p>
+                    </Link>
                     <p className="text-xs text-muted-foreground truncate">
                       {user.department}
                       {user.department && getUniversity(user.university_id) && ' · '}

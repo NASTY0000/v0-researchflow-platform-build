@@ -5,6 +5,7 @@ import { ArrowLeft, GraduationCap, BookOpen, ExternalLink, Zap, Award, Briefcase
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { AkiliScoreCard } from '@/components/akili/AkiliScoreCard'
+import { ProfileActions } from '@/components/profile/profile-actions'
 import type { PortfolioItem } from '@/lib/types/database'
 
 interface Props {
@@ -34,6 +35,13 @@ export default async function PublicProfilePage({ params }: Props) {
   if (!profileResult.data) notFound()
   const profile = profileResult.data
   const portfolioItems: PortfolioItem[] = portfolioResult.data || []
+
+  // Increment profile views (fire and forget)
+  supabase
+    .from('profiles')
+    .update({ portfolio_views: (profile.portfolio_views || 0) + 1 })
+    .eq('id', id)
+    .then(() => {})
 
   const getInitials = (name: string | null) => {
     if (!name) return 'U'
@@ -102,6 +110,8 @@ export default async function PublicProfilePage({ params }: Props) {
         {profile.bio && (
           <p className="mt-5 text-sm leading-relaxed" style={{ color: '#C4B5D8' }}>{profile.bio}</p>
         )}
+
+        <ProfileActions targetUserId={profile.id} targetName={profile.full_name} />
       </div>
 
       {/* Research interests */}

@@ -475,14 +475,18 @@ export default function MentorsPage() {
             <Card key={mentor.id} className="hover:border-primary/50 transition-colors">
               <CardContent className="p-6">
                 <div className="flex items-start gap-4 mb-4">
-                  <Avatar className="h-14 w-14">
-                    <AvatarImage src={mentor.profile?.avatar_url || undefined} />
-                    <AvatarFallback className="bg-primary/10 text-primary text-lg">
-                      {mentor.profile?.full_name?.charAt(0) || "?"}
-                    </AvatarFallback>
-                  </Avatar>
+                  <Link href={`/profile/${mentor.user_id}`} className="hover:opacity-80 transition-opacity flex-shrink-0">
+                    <Avatar className="h-14 w-14">
+                      <AvatarImage src={mentor.profile?.avatar_url || undefined} />
+                      <AvatarFallback className="bg-primary/10 text-primary text-lg">
+                        {mentor.profile?.full_name?.charAt(0) || "?"}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Link>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold truncate">{mentor.profile?.full_name}</h3>
+                    <Link href={`/profile/${mentor.user_id}`} className="hover:text-primary transition-colors">
+                      <h3 className="font-semibold truncate">{mentor.profile?.full_name}</h3>
+                    </Link>
                     {mentor.profile?.department && (
                       <p className="text-sm text-muted-foreground flex items-center gap-1">
                         <GraduationCap className="h-3 w-3 shrink-0" />
