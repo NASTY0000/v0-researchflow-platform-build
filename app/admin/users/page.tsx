@@ -25,6 +25,7 @@ import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import type { Profile } from '@/lib/types/database'
 import { resolveUniversityName } from '@/lib/utils/university'
+import { loadAdminUsers } from '@/lib/actions/admin'
 
 const PAGE_SIZE = 50
 
@@ -36,12 +37,13 @@ type SuspendForm = {
 
 export default function AdminUsersPage() {
   const router = useRouter()
-  const [users, setUsers] = useState<Profile[]>([])
+  const [users, setUsers] = useState<any[]>([])
   const [totalCount, setTotalCount] = useState(0)
   const [page, setPage] = useState(0)
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState('all')
-  const [statusFilter, setStatusFilter] = useState('active')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [queryError, setQueryError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   const [suspendTarget, setSuspendTarget] = useState<Profile | null>(null)
@@ -53,48 +55,28 @@ export default function AdminUsersPage() {
   const [saving, setSaving] = useState(false)
   const supabase = createClient()
 
+
   const loadUsers = useCallback(async () => {
     setIsLoading(true)
+    setQueryError(null)
 
-    // Build base filter conditions
-    const applyFilters = (q: ReturnType<typeof supabase.from>) => {
-      if (search.trim()) {
-        q = q.or(`full_name.ilike.%${search.trim()}%,email.ilike.%${search.trim()}%`)
-      }
-      if (roleFilter !== 'all') q = q.contains('roles', [roleFilter])
-      if (statusFilter === 'suspended') q = q.eq('is_suspended', true)
-      else if (statusFilter === 'active') q = q.eq('is_suspended', false).eq('onboarding_completed', true)
-      else if (statusFilter === 'onboarding') q = q.eq('onboarding_completed', false)
-      return q
+    const result = await loadAdminUsers({
+      search,
+      roleFilter,
+      statusFilter,
+      page,
+      pageSize: PAGE_SIZE,
+    })
+
+    if (result.error) {
+      setQueryError(result.error)
+      setUsers([])
+      setTotalCount(0)
+    } else {
+      setUsers(result.users)
+      setTotalCount(result.count)
     }
 
-    // Step 1: Get count without join (join can skew exact count)
-    const countQ = applyFilters(supabase.from('profiles').select('id', { count: 'exact', head: true }))
-    const { count } = await countQ
-    setTotalCount(count || 0)
-
-    // Step 2: Get paginated data
-    const dataQ = applyFilters(
-      supabase.from('profiles').select('*')
-    ).order('created_at', { ascending: false }).range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1)
-    const { data: profiles } = await dataQ
-
-    if (profiles) {
-      // Step 3: Resolve UUID university_ids separately
-      const uuidIds = profiles
-        .map(p => p.university_id)
-        .filter((uid): uid is string => !!uid && /^[0-9a-f]{8}-[0-9a-f]{4}/.test(uid))
-      const uniMap = new Map<string, string>()
-      if (uuidIds.length > 0) {
-        const { data: unis } = await supabase.from('universities').select('id, name').in('id', uuidIds)
-        unis?.forEach(u => uniMap.set(u.id, u.name))
-      }
-      const enriched = profiles.map(p => ({
-        ...p,
-        university_id: uniMap.get(p.university_id ?? '') || p.university_id,
-      }))
-      setUsers(enriched as Profile[])
-    }
     setIsLoading(false)
   }, [search, roleFilter, statusFilter, page])
 
@@ -269,6 +251,13 @@ export default function AdminUsersPage() {
         </div>
       )}
 
+      {/* Query Error */}
+      {queryError && (
+        <div className="text-destructive p-4 rounded-lg border border-destructive/30 bg-destructive/10 text-sm">
+          Error loading users: {queryError}
+        </div>
+      )}
+
       {/* Filters */}
       <Card>
         <CardContent className="p-4">
@@ -356,7 +345,7 @@ export default function AdminUsersPage() {
                       </div>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground max-w-36 truncate">
-                      {resolveUniversityName(user.university_id)}
+                      {user.universityName || '—'}
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
