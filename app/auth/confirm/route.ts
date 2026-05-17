@@ -10,39 +10,49 @@ export async function GET(request: NextRequest) {
   const next = searchParams.get('next')
     ?? '/dashboard'
 
-  if (token_hash && type) {
-    const supabase = await createClient()
+  if (!token_hash || !type) {
+    return NextResponse.redirect(
+      `${origin}/auth/login?error=invalid_link`
+    )
+  }
 
-    const { error } = await supabase.auth.verifyOtp({
-      type: type as any,
-      token_hash,
-    })
+  const supabase = await createClient()
 
-    if (!error) {
-      const { data: { user } } =
-        await supabase.auth.getUser()
+  const { error } = await supabase.auth.verifyOtp({
+    type: type as any,
+    token_hash,
+  })
 
-      if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('onboarding_completed')
-          .eq('id', user.id)
-          .single()
+  if (error) {
+    console.error('Email verification error:', error)
+    return NextResponse.redirect(
+      `${origin}/auth/login?error=link_expired`
+    )
+  }
 
-        if (!profile?.onboarding_completed) {
-          return NextResponse.redirect(
-            `${origin}/onboarding`
-          )
-        }
+  // For recovery type go directly to next
+  // without checking onboarding
+  if (type === 'recovery') {
+    return NextResponse.redirect(`${origin}${next}`)
+  }
 
-        return NextResponse.redirect(
-          `${origin}/dashboard`
-        )
-      }
+  // For all other types check onboarding
+  const { data: { user } } =
+    await supabase.auth.getUser()
+
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('onboarding_completed')
+      .eq('id', user.id)
+      .single()
+
+    if (!profile?.onboarding_completed) {
+      return NextResponse.redirect(
+        `${origin}/onboarding`
+      )
     }
   }
 
-  return NextResponse.redirect(
-    `${origin}/auth/login?error=invalid_link`
-  )
+  return NextResponse.redirect(`${origin}${next}`)
 }
