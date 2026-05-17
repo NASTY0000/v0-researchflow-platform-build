@@ -3,7 +3,6 @@ import { DM_Sans, Syne } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { Toaster } from 'sonner'
 import { InstallPrompt } from '@/components/ui/InstallPrompt'
-import { OfflineBanner } from '@/components/ui/offline-banner'
 import { ThemeProvider } from '@/components/theme-provider'
 import './globals.css'
 
@@ -58,7 +57,6 @@ export default function RootLayout({
       </head>
       <body className={`${dmSans.variable} ${syne.variable} font-sans antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
-          <OfflineBanner />
           {children}
           <InstallPrompt />
           <Toaster position="bottom-right" theme="dark" />
@@ -67,17 +65,13 @@ export default function RootLayout({
             dangerouslySetInnerHTML={{
               __html: `
                 if ('serviceWorker' in navigator) {
-                  window.addEventListener('load', function() {
-                    navigator.serviceWorker
-                      .register('/sw.js')
-                      .then(function(reg) {
-                        // Force update on every load
-                        reg.update()
-                      })
-                      .catch(function(err) {
-                        console.log('SW failed:', err)
-                      })
-                  })
+                  navigator.serviceWorker
+                    .getRegistrations()
+                    .then(function(registrations) {
+                      for (let r of registrations) {
+                        r.unregister()
+                      }
+                    })
                 }
               `,
             }}
