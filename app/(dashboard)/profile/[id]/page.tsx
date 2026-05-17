@@ -1,11 +1,12 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, GraduationCap, BookOpen, ExternalLink, Zap, Award, Briefcase, FileText, Star } from 'lucide-react'
+import { GraduationCap, BookOpen, ExternalLink, Zap, Award, Briefcase, FileText, Star } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { AkiliScoreCard } from '@/components/akili/AkiliScoreCard'
 import { ProfileActions } from '@/components/profile/profile-actions'
+import { BackButton } from '@/components/ui/back-button'
 import type { PortfolioItem } from '@/lib/types/database'
 
 interface Props {
@@ -56,9 +57,7 @@ export default async function PublicProfilePage({ params }: Props) {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      <Link href="/matches" className="inline-flex items-center gap-2 text-sm" style={{ color: '#A855F7' }}>
-        <ArrowLeft className="w-4 h-4" /> Back
-      </Link>
+      <BackButton />
 
       {/* Profile header */}
       <div className="p-6 rounded-2xl" style={cardStyle}>

@@ -114,8 +114,9 @@ export default function LeaderboardPage() {
         <div className="grid grid-cols-3 gap-3 items-end mb-8">
 
           {/* 2ND PLACE — SILVER */}
-          <div
-            className="relative rounded-2xl overflow-hidden border-2 border-gray-400 dark:border-gray-500 cursor-pointer hover:scale-105 transition-transform duration-300"
+          <Link
+            href={top3[1]?.id ? `/profile/${top3[1].id}` : '#'}
+            className="relative rounded-2xl overflow-hidden border-2 border-gray-400 dark:border-gray-500 block cursor-pointer hover:scale-[1.06] transition-transform duration-300"
             style={{
               background: 'linear-gradient(135deg, #E5E7EB, #9CA3AF, #6B7280)',
               minHeight: '260px',
@@ -167,11 +168,12 @@ export default function LeaderboardPage() {
                 {getTitle(top3[1]?.akili_score || 0)}
               </Badge>
             </div>
-          </div>
+          </Link>
 
           {/* 1ST PLACE — GOLD (center, tallest) */}
-          <div
-            className="relative rounded-2xl overflow-hidden border-2 border-yellow-400 cursor-pointer z-10 hover:scale-[1.05] transition-transform duration-300"
+          <Link
+            href={top3[0]?.id ? `/profile/${top3[0].id}` : '#'}
+            className="relative rounded-2xl overflow-hidden border-2 border-yellow-400 cursor-pointer z-10 hover:scale-[1.05] transition-transform duration-300 block"
             style={{
               background: 'linear-gradient(135deg, #FCD34D, #F59E0B, #D97706, #92400E)',
               minHeight: '310px',
@@ -231,11 +233,12 @@ export default function LeaderboardPage() {
                 {getTitle(top3[0]?.akili_score || 0)}
               </Badge>
             </div>
-          </div>
+          </Link>
 
           {/* 3RD PLACE — BRONZE */}
-          <div
-            className="relative rounded-2xl overflow-hidden border-2 border-amber-600 dark:border-amber-700 cursor-pointer hover:scale-105 transition-transform duration-300"
+          <Link
+            href={top3[2]?.id ? `/profile/${top3[2].id}` : '#'}
+            className="relative rounded-2xl overflow-hidden border-2 border-amber-600 dark:border-amber-700 cursor-pointer hover:scale-105 transition-transform duration-300 block"
             style={{
               background: 'linear-gradient(135deg, #FCD34D, #D97706, #92400E, #78350F)',
               minHeight: '240px',
@@ -287,7 +290,7 @@ export default function LeaderboardPage() {
                 {getTitle(top3[2]?.akili_score || 0)}
               </Badge>
             </div>
-          </div>
+          </Link>
 
         </div>
       )}

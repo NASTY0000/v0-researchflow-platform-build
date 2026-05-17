@@ -101,9 +101,9 @@ export default function EditIdeaPage({ params }: { params: Promise<{ id: string 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
-        <Link href={`/ideas/${id}`} className="inline-flex items-center gap-2 text-sm mb-4" style={{ color: '#A855F7' }}>
+        <button onClick={() => router.back()} className="inline-flex items-center gap-2 text-sm mb-4" style={{ color: '#A855F7' }}>
           <ArrowLeft className="w-4 h-4" /> Back to Idea
-        </Link>
+        </button>
         <h1 className="text-2xl font-bold font-heading mt-4" style={{ letterSpacing: '-0.02em' }}>Edit Idea</h1>
       </div>
 

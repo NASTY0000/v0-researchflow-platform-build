@@ -254,10 +254,8 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
 
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" asChild>
-          <Link href="/ideas">
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
+        <Button variant="ghost" size="icon" onClick={() => router.back()}>
+          <ArrowLeft className="h-5 w-5" />
         </Button>
         <Badge variant="secondary">{idea.research_area}</Badge>
         {idea.is_featured && (
