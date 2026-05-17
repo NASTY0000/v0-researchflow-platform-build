@@ -302,7 +302,7 @@ export default function LeaderboardPage() {
             </p>
           ) : (
             <div className="space-y-2">
-              {users.map((user, index) => (
+              {users.slice(3).map((user, index) => (
                 <div
                   key={user.id}
                   className={`flex items-center gap-4 p-3 rounded-lg transition-colors
@@ -311,9 +311,15 @@ export default function LeaderboardPage() {
                       : 'hover:bg-muted/40'
                     }`}
                 >
-                  <span className="w-8 text-center font-bold text-muted-foreground">
-                    #{index + 1}
-                  </span>
+                  {user.id === currentUserId ? (
+                    <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-sm bg-gradient-to-br from-yellow-400/20 to-yellow-600/40 border border-yellow-500/40 text-yellow-400 shadow-inner">
+                      {index + 4}
+                    </div>
+                  ) : (
+                    <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-sm bg-gradient-to-br from-purple-500/20 to-purple-900/40 border border-purple-500/30 text-purple-300 shadow-inner">
+                      {index + 4}
+                    </div>
+                  )}
                   <Avatar className="w-9 h-9">
                     <AvatarImage src={user.avatar_url || undefined} />
                     <AvatarFallback>
