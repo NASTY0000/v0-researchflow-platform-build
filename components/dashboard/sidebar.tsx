@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/sidebar'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { ResearchFlowLogo } from '@/components/ui/researchflow-logo'
+import Image from 'next/image'
 import {
   LayoutDashboard,
   Lightbulb,
@@ -115,7 +115,9 @@ export function DashboardSidebar({ profile }: DashboardSidebarProps) {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link href="/dashboard">
-                <ResearchFlowLogo size={32} showText={false} />
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg overflow-hidden">
+                  <Image src="/icon.svg" alt="ResearchFlow" width={32} height={32} className="size-8" />
+                </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold font-heading gradient-text-cyan">ResearchFlow</span>
                   <span className="truncate text-xs text-muted-foreground">Collaborate & Discover</span>

@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
-import { ResearchFlowLogo } from '@/components/ui/researchflow-logo'
 import {
   Users,
   Lightbulb,
@@ -73,7 +72,9 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Link href="/" className="flex items-center gap-2.5">
-              <ResearchFlowLogo size={36} showText={false} />
+              <div className="w-9 h-9 rounded-xl overflow-hidden">
+                <Image src="/icon.svg" alt="ResearchFlow" width={36} height={36} className="w-9 h-9" />
+              </div>
               <span className="text-xl font-bold font-heading gradient-text-cyan">ResearchFlow</span>
             </Link>
 
