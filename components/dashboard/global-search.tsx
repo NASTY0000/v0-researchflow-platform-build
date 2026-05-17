@@ -94,6 +94,7 @@ export function GlobalSearch() {
         .select('id, full_name, department, avatar_url, akili_score')
         .or(`full_name.ilike.%${term}%,department.ilike.%${term}%`)
         .eq('public_profile', true)
+        .eq('onboarding_completed', true)
         .limit(5),
       supabase
         .from('research_ideas')

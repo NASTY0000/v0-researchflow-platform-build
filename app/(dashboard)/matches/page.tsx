@@ -101,6 +101,7 @@ export default function MatchesPage() {
       .select("*")
       .neq("id", user.id)
       .eq("public_profile", true)
+      .eq("onboarding_completed", true)
       .limit(20)
 
     if (!potentialMatches) {

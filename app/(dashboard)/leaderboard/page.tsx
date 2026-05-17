@@ -59,6 +59,7 @@ export default function LeaderboardPage() {
         const { data, error: fetchError } = await supabase
           .from('profiles')
           .select('id, full_name, avatar_url, department, university_id, akili_score, akili_dimension_knowledge, akili_dimension_collaboration, akili_dimension_mentorship, akili_dimension_technical')
+          .eq('onboarding_completed', true)
           .order('akili_score', { ascending: false })
           .limit(50)
 

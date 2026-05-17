@@ -41,7 +41,7 @@ export default function AdminUsersPage() {
   const [page, setPage] = useState(0)
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState('all')
-  const [statusFilter, setStatusFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState('active')
   const [isLoading, setIsLoading] = useState(true)
 
   const [suspendTarget, setSuspendTarget] = useState<Profile | null>(null)

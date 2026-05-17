@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
@@ -33,6 +33,16 @@ export default function LoginPage() {
   const emailRef = useRef<HTMLInputElement>(null)
   const passwordRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const urlError = params.get('error')
+    if (urlError === 'suspended') {
+      setError('Your account has been suspended. Contact support@researchflowafrica.com')
+    } else if (urlError === 'auth_failed') {
+      setError('Authentication failed. Please try again.')
+    }
+  }, [])
 
   async function handleSubmit(formData: FormData) {
     setIsLoading(true)

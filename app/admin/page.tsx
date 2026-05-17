@@ -51,7 +51,7 @@ export default function AdminOverviewPage() {
       showcaseResult, mentorsResult, mauResult,
       profilesResult, ideasResult, teamsActivityResult,
     ] = await Promise.all([
-      supabase.from('profiles').select('id, roles', { count: 'exact' }),
+      supabase.from('profiles').select('id, roles', { count: 'exact' }).eq('onboarding_completed', true),
       supabase.from('projects').select('id', { count: 'exact', head: true }).gte('created_at', monthStart).eq('status', 'active'),
       supabase.from('teams').select('id', { count: 'exact', head: true }).gte('created_at', monthStart),
       supabase.from('showcase_submissions').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
