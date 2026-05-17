@@ -7,8 +7,7 @@ export async function GET(request: NextRequest) {
 
   const token_hash = searchParams.get('token_hash')
   const type = searchParams.get('type')
-  const next = searchParams.get('next')
-    ?? '/dashboard'
+  const next = searchParams.get('next') ?? '/dashboard'
 
   if (!token_hash || !type) {
     return NextResponse.redirect(
@@ -24,19 +23,16 @@ export async function GET(request: NextRequest) {
   })
 
   if (error) {
-    console.error('Email verification error:', error)
+    console.error('Verification error:', error.message)
     return NextResponse.redirect(
       `${origin}/auth/login?error=link_expired`
     )
   }
 
-  // For recovery type go directly to next
-  // without checking onboarding
   if (type === 'recovery') {
     return NextResponse.redirect(`${origin}${next}`)
   }
 
-  // For all other types check onboarding
   const { data: { user } } =
     await supabase.auth.getUser()
 
