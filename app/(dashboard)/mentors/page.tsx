@@ -475,8 +475,8 @@ export default function MentorsPage() {
             <Card key={mentor.id} className="hover:border-primary/50 transition-colors">
               <CardContent className="p-6">
                 <div className="flex items-start gap-4 mb-4">
-                  <Link href={`/profile/${mentor.user_id}`} className="hover:opacity-80 transition-opacity flex-shrink-0">
-                    <Avatar className="h-14 w-14">
+                  <Link href={`/profile/${mentor.user_id}`} className="flex-shrink-0 group">
+                    <Avatar className="h-14 w-14 cursor-pointer group-hover:ring-2 group-hover:ring-primary/50 transition-all duration-200">
                       <AvatarImage src={mentor.profile?.avatar_url || undefined} />
                       <AvatarFallback className="bg-primary/10 text-primary text-lg">
                         {mentor.profile?.full_name?.charAt(0) || "?"}
@@ -484,7 +484,7 @@ export default function MentorsPage() {
                     </Avatar>
                   </Link>
                   <div className="flex-1 min-w-0">
-                    <Link href={`/profile/${mentor.user_id}`} className="hover:text-primary transition-colors">
+                    <Link href={`/profile/${mentor.user_id}`} className="hover:text-primary hover:underline transition-colors">
                       <h3 className="font-semibold truncate">{mentor.profile?.full_name}</h3>
                     </Link>
                     {mentor.profile?.department && (

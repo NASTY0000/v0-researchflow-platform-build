@@ -488,14 +488,14 @@ export default function MarketplacePage() {
 
                 {/* Poster & actions */}
                 <div className="flex items-center justify-between pt-4 border-t">
-                  <Link href={`/profile/${task.posted_by}`} className="flex items-center gap-2 hover:opacity-80 transition-opacity group">
-                    <Avatar className="h-6 w-6">
+                  <Link href={`/profile/${task.posted_by}`} className="flex items-center gap-2 group">
+                    <Avatar className="h-6 w-6 cursor-pointer group-hover:ring-2 group-hover:ring-primary/50 transition-all duration-200">
                       <AvatarImage src={task.poster?.avatar_url || undefined} />
                       <AvatarFallback className="text-xs bg-primary/10 text-primary">
                         {task.poster?.full_name?.charAt(0) || "?"}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="text-sm truncate max-w-[100px] group-hover:text-primary transition-colors">
+                    <span className="text-sm truncate max-w-[100px] group-hover:text-primary group-hover:underline transition-colors">
                       {task.poster?.full_name || "Anonymous"}
                     </span>
                   </Link>

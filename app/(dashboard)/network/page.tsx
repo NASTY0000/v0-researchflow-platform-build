@@ -248,14 +248,14 @@ export default function NetworkPage() {
                 return (
                   <Card key={conn.id} style={cardStyle}>
                     <CardContent className="p-4 flex items-center gap-3">
-                      <Link href={`/profile/${other.id}`} className="hover:opacity-80 transition-opacity flex-shrink-0">
-                        <Avatar className="h-12 w-12">
+                      <Link href={`/profile/${other.id}`} className="flex-shrink-0 group">
+                        <Avatar className="h-12 w-12 cursor-pointer group-hover:ring-2 group-hover:ring-primary/50 transition-all duration-200">
                           <AvatarImage src={other.avatar_url || undefined} />
                           <AvatarFallback>{getInitials(other.full_name)}</AvatarFallback>
                         </Avatar>
                       </Link>
                       <div className="flex-1 min-w-0">
-                        <Link href={`/profile/${other.id}`} className="hover:text-primary transition-colors">
+                        <Link href={`/profile/${other.id}`} className="hover:text-primary hover:underline transition-colors">
                           <p className="font-medium truncate" style={{ color: '#E2D9F3' }}>{other.full_name}</p>
                         </Link>
                         <p className="text-xs truncate" style={{ color: '#7C6A9C' }}>{other.department || other.bio?.slice(0, 60) || 'Researcher'}</p>

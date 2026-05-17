@@ -391,8 +391,8 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center gap-4">
-                <Link href={`/profile/${idea.author_id}`} className="hover:opacity-80 transition-opacity">
-                  <Avatar className="h-14 w-14">
+                <Link href={`/profile/${idea.author_id}`} className="flex-shrink-0 group">
+                  <Avatar className="h-14 w-14 cursor-pointer group-hover:ring-2 group-hover:ring-primary/50 transition-all duration-200">
                     <AvatarImage src={idea.author?.avatar_url || undefined} />
                     <AvatarFallback className="bg-primary/10 text-primary text-lg">
                       {idea.author?.full_name?.charAt(0) || "?"}
@@ -400,7 +400,7 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
                   </Avatar>
                 </Link>
                 <div>
-                  <Link href={`/profile/${idea.author_id}`} className="hover:text-primary transition-colors">
+                  <Link href={`/profile/${idea.author_id}`} className="hover:text-primary hover:underline transition-colors">
                     <h4 className="font-semibold">{idea.author?.full_name || "Anonymous"}</h4>
                   </Link>
                   {idea.author?.department && (

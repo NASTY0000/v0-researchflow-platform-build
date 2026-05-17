@@ -28,7 +28,7 @@ export function UserAvatar({
   }[size]
 
   const avatar = (
-    <Avatar className={cn(sizeClass, className)}>
+    <Avatar className={cn(sizeClass, 'cursor-pointer ring-0 hover:ring-2 hover:ring-primary/50 transition-all duration-200', className)}>
       <AvatarImage src={avatarUrl || undefined} />
       <AvatarFallback>{name?.charAt(0) || '?'}</AvatarFallback>
     </Avatar>

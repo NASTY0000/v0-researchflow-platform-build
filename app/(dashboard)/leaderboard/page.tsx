@@ -322,8 +322,8 @@ export default function LeaderboardPage() {
                       {index + 4}
                     </div>
                   )}
-                  <Link href={`/profile/${user.id}`} className="hover:opacity-80 transition-opacity flex-shrink-0">
-                    <Avatar className="w-9 h-9">
+                  <Link href={`/profile/${user.id}`} className="flex-shrink-0 group">
+                    <Avatar className="w-9 h-9 cursor-pointer group-hover:ring-2 group-hover:ring-primary/50 transition-all duration-200">
                       <AvatarImage src={user.avatar_url || undefined} />
                       <AvatarFallback>
                         {user.full_name?.charAt(0) || '?'}
@@ -331,7 +331,7 @@ export default function LeaderboardPage() {
                     </Avatar>
                   </Link>
                   <div className="flex-1 min-w-0">
-                    <Link href={`/profile/${user.id}`} className="hover:text-primary transition-colors">
+                    <Link href={`/profile/${user.id}`} className="hover:text-primary hover:underline transition-colors">
                       <p className="font-medium text-sm truncate">
                         {user.full_name || 'Anonymous'}
                         {user.id === currentUserId && (
