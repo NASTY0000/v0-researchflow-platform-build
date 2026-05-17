@@ -71,7 +71,8 @@ export default function RootLayout({
                     navigator.serviceWorker
                       .register('/sw.js')
                       .then(function(reg) {
-                        console.log('SW registered:', reg.scope)
+                        // Force update on every load
+                        reg.update()
                       })
                       .catch(function(err) {
                         console.log('SW failed:', err)
