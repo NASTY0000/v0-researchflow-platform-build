@@ -34,7 +34,7 @@ import {
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import type { Project, Profile } from "@/lib/types/database"
-import { awardAkiliPoints } from "@/lib/actions/akili"
+import { phaseCompleted, allPhasesCompleted } from "@/lib/actions/akili"
 import { ShowcaseSubmit } from "./showcase-submit"
 import { toast } from "sonner"
 
@@ -159,9 +159,9 @@ export function ProjectRoadmap({ project, currentUserId = null, isOwner = false 
     }
 
     // Award Akili points (+30 per phase, +75 bonus for all 7 complete)
-    await awardAkiliPoints(currentUserId, "completeLiteratureReview", 30, `Completed phase: ${phase.phase_name}`, project.id)
+    phaseCompleted(currentUserId, project.id, phase.phase_number, phase.phase_name).catch(() => {})
     if (completedCount + 1 === 7) {
-      await awardAkiliPoints(currentUserId, "ideaFormsActiveTeam", 75, "Completed all 7 research phases!", project.id)
+      allPhasesCompleted(currentUserId, project.id).catch(() => {})
       toast.success("All phases complete! +75 bonus Akili points!")
     } else {
       toast.success(`Phase complete! +30 Akili points`)

@@ -182,7 +182,7 @@ export function MentorDashboard({ userId }: MentorDashboardProps) {
         message: 'Your mentorship request has been accepted!',
         link: '/dashboard',
       })
-      await acceptMentorshipRequest(userId, requestId)
+      acceptMentorshipRequest(userId, req.student_id, requestId).catch(() => {})
     }
 
     toast.success('Request accepted! +15 Akili Points earned.')

@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { ArrowLeft, Plus, X, Loader2 } from 'lucide-react'
-import { awardAkiliPoints } from '@/lib/actions/akili'
+import { postResearchIdea, joinProjectAsCollaborator } from '@/lib/actions/akili'
 
 const RESEARCH_AREAS = [
   'Computer Science', 'Data Science', 'Artificial Intelligence', 'Machine Learning',
@@ -156,8 +156,9 @@ export default function NewProjectPage() {
       return
     }
 
-    // Award Akili points
-    await awardAkiliPoints(user.id, 'postResearchIdea', 15, `Created project: "${title.trim()}"`, project.id)
+    // Award Akili points for creating project and auto-joining as leader
+    postResearchIdea(user.id, project.id).catch(() => {})
+    joinProjectAsCollaborator(user.id, project.id).catch(() => {})
 
     // Auto-create 7 research phases
     const phaseNames = [

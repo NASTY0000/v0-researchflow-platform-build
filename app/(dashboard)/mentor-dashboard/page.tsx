@@ -20,6 +20,7 @@ import {
   GraduationCap, MessageSquare,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { acceptMentorshipRequest } from '@/lib/actions/akili'
 import type { MentorProfile, MentorshipRequest, MentorAvailability, Profile, Project } from '@/lib/types/database'
 
 type RequestWithStudent = MentorshipRequest & {
@@ -127,6 +128,9 @@ export default function MentorDashboardPage() {
     }
 
     if (action === 'accepted') {
+      if (request && currentUserId) {
+        acceptMentorshipRequest(currentUserId, request.student_id, requestId).catch(() => {})
+      }
       setPendingRequests((prev) => prev.filter((r) => r.id !== requestId))
       setActiveRequests((prev) => [...prev, request!])
     } else {

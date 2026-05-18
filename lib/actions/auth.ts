@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import { completeOnboardingWithAllSkills } from '@/lib/actions/akili'
+import { completeOnboardingWithAllSkills, onboardingComplete } from '@/lib/actions/akili'
 import { generateMatchesOnOnboarding } from '@/lib/actions/matching'
 import { checkRateLimit } from '@/lib/rate-limit'
 
@@ -270,19 +270,10 @@ export async function completeOnboarding(data: Record<string, unknown>) {
 
   revalidatePath('/dashboard', 'layout')
 
-  await completeOnboardingWithAllSkills(user.id)
+  // Fire-and-forget: match generation and Akili points never block the redirect
   generateMatchesOnOnboarding(user.id).catch(() => {})
-
-  // Award Akili points for completing onboarding
-  await supabase.from('akili_score_events').insert({
-    user_id: user.id,
-    event_type: 'onboarding_complete',
-    points_earned: 10,
-    dimension: 'knowledge',
-    description: 'Completed profile setup',
-  }).then(() =>
-    supabase.from('profiles').update({ akili_score: 10 }).eq('id', user.id)
-  ).catch(() => {})
+  onboardingComplete(user.id).catch(() => {})
+  completeOnboardingWithAllSkills(user.id).catch(() => {})
 
   const roles = data.roles as string[] | undefined
   if (roles && roles.includes('mentor')) {

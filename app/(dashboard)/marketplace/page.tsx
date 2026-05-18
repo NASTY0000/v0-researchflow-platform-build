@@ -39,7 +39,7 @@ import {
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import type { MarketplaceTask, Profile } from "@/lib/types/database"
-import { awardAkiliPoints } from "@/lib/actions/akili"
+import { completeMarketplaceTask } from "@/lib/actions/akili"
 import { formatDistanceToNow } from "date-fns"
 import { toast } from "sonner"
 
@@ -235,21 +235,8 @@ export default function MarketplacePage() {
       .eq("id", manageTask.id)
 
     if (manageTask.assigned_to) {
-      await awardAkiliPoints(
-        manageTask.assigned_to,
-        "completeMarketplaceTask",
-        reward,
-        `Completed marketplace task: "${manageTask.title}"`,
-        manageTask.id,
-      )
-      await awardAkiliPoints(
-        manageTask.assigned_to,
-        "completeMarketplaceTask",
-        10,
-        `Technical bonus for completing: "${manageTask.title}"`,
-        manageTask.id,
-      )
-      toast.success(`Task complete! ${reward + 10} Akili Points awarded to the researcher.`)
+      completeMarketplaceTask(manageTask.assigned_to, manageTask.id).catch(() => {})
+      toast.success(`Task complete! Akili points awarded to the researcher.`)
     } else {
       toast.success("Task marked as complete.")
     }
