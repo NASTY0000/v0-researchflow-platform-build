@@ -1,3 +1,5 @@
+import { AKILI_TIERS } from '@/lib/constants/akili'
+
 export type AkiliDimension = 'knowledge' | 'collaboration' | 'mentorship' | 'technical'
 
 const KNOWLEDGE_EVENTS = [
@@ -33,35 +35,19 @@ export function getDimensionForEvent(eventType: string): AkiliDimension {
   return 'knowledge'
 }
 
+const NARRATIVES: Record<string, string> = {
+  'Emerging Researcher':    'Just beginning the research journey on ResearchFlow',
+  'Active Contributor':     'Building connections and contributing to real research work',
+  'Collaborative Researcher': 'Consistently moving research projects forward with others',
+  'Research Builder':       'A trusted contributor whose work is shaping research outcomes',
+  'Research Leader':        'Recognised by peers for sustained high-quality contributions',
+  'Research Expert':        'An established expert whose collaborations and outputs speak for themselves',
+  'Research Champion':      'Among the top contributors on ResearchFlow — a pillar of African research',
+}
+
 export function getAkiliNarrative(score: number): { title: string; narrative: string } {
-  if (score < 1000) return {
-    title: 'Emerging Researcher',
-    narrative: 'Just beginning the research journey on ResearchFlow',
-  }
-  if (score < 2500) return {
-    title: 'Active Contributor',
-    narrative: 'Building connections and contributing to real research work',
-  }
-  if (score < 5000) return {
-    title: 'Collaborative Researcher',
-    narrative: 'Consistently moving research projects forward with others',
-  }
-  if (score < 8000) return {
-    title: 'Research Builder',
-    narrative: 'A trusted contributor whose work is shaping research outcomes',
-  }
-  if (score < 12000) return {
-    title: 'Research Leader',
-    narrative: 'Recognised by peers for sustained high-quality contributions',
-  }
-  if (score < 20000) return {
-    title: 'Research Expert',
-    narrative: 'An established expert whose collaborations and outputs speak for themselves',
-  }
-  return {
-    title: 'Research Champion',
-    narrative: 'Among the top contributors on ResearchFlow — a pillar of African research',
-  }
+  const tier = AKILI_TIERS.find(t => score >= t.min && score <= t.max) ?? AKILI_TIERS[0]
+  return { title: tier.title, narrative: NARRATIVES[tier.title] ?? '' }
 }
 
 export function getDimensionBadge(dimension: AkiliDimension, score: number): string {

@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Crown, Medal, Award } from 'lucide-react'
+import { getAkiliTitle } from '@/lib/constants/akili'
 
 interface LeaderboardUser {
   id: string
@@ -21,15 +22,6 @@ interface LeaderboardUser {
   akili_dimension_technical: number
 }
 
-function getTitle(score: number): string {
-  if (score >= 20000) return 'Research Champion'
-  if (score >= 12000) return 'Research Expert'
-  if (score >= 8000) return 'Research Leader'
-  if (score >= 5000) return 'Research Builder'
-  if (score >= 2500) return 'Collaborative Researcher'
-  if (score >= 1000) return 'Active Contributor'
-  return 'Emerging Researcher'
-}
 
 function getUniversity(uid: string | null | undefined): string {
   if (!uid) return ''
@@ -165,7 +157,7 @@ export default function LeaderboardPage() {
               </div>
               <span className="text-xs text-gray-200 font-medium drop-shadow-sm text-center">🥈 Runner Up</span>
               <Badge className="text-xs bg-white/20 text-white border-white/30">
-                {getTitle(top3[1]?.akili_score || 0)}
+                {getAkiliTitle(top3[1]?.akili_score || 0)}
               </Badge>
             </div>
           </Link>
@@ -230,7 +222,7 @@ export default function LeaderboardPage() {
               </div>
               <span className="text-sm text-yellow-100 font-bold drop-shadow-md text-center">🥇 Champion</span>
               <Badge className="text-xs bg-white/25 text-white border-white/40 font-medium">
-                {getTitle(top3[0]?.akili_score || 0)}
+                {getAkiliTitle(top3[0]?.akili_score || 0)}
               </Badge>
             </div>
           </Link>
@@ -287,7 +279,7 @@ export default function LeaderboardPage() {
               </div>
               <span className="text-xs text-amber-100 font-medium drop-shadow-sm text-center">🥉 Third Place</span>
               <Badge className="text-xs bg-white/20 text-white border-white/30">
-                {getTitle(top3[2]?.akili_score || 0)}
+                {getAkiliTitle(top3[2]?.akili_score || 0)}
               </Badge>
             </div>
           </Link>
@@ -353,7 +345,7 @@ export default function LeaderboardPage() {
                       {user.akili_score.toLocaleString()}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {getTitle(user.akili_score)}
+                      {getAkiliTitle(user.akili_score)}
                     </p>
                   </div>
                 </div>
