@@ -617,14 +617,18 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center gap-4">
-                <Avatar className="h-14 w-14">
-                  <AvatarImage src={idea.author?.avatar_url || undefined} />
-                  <AvatarFallback className="bg-primary/10 text-primary text-lg">
-                    {idea.author?.full_name?.charAt(0) || "?"}
-                  </AvatarFallback>
-                </Avatar>
+                <Link href={`/profile/${idea.author_id}`} className="flex-shrink-0">
+                  <Avatar className="h-14 w-14 cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all duration-200">
+                    <AvatarImage src={idea.author?.avatar_url || undefined} />
+                    <AvatarFallback className="bg-primary/10 text-primary text-lg">
+                      {idea.author?.full_name?.charAt(0) || "?"}
+                    </AvatarFallback>
+                  </Avatar>
+                </Link>
                 <div>
-                  <h4 className="font-semibold">{idea.author?.full_name || "Anonymous"}</h4>
+                  <Link href={`/profile/${idea.author_id}`} className="hover:text-primary hover:underline transition-colors">
+                    <h4 className="font-semibold">{idea.author?.full_name || "Anonymous"}</h4>
+                  </Link>
                   {idea.author?.department && (
                     <p className="text-sm text-muted-foreground flex items-center gap-1">
                       <GraduationCap className="h-3 w-3" />

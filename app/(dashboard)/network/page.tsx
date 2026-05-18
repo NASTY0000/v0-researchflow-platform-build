@@ -252,12 +252,16 @@ export default function NetworkPage() {
                 return (
                   <Card key={conn.id} style={cardStyle}>
                     <CardContent className="p-4 flex items-center gap-3">
-                      <Avatar className="h-12 w-12">
-                        <AvatarImage src={other.avatar_url || undefined} />
-                        <AvatarFallback>{getInitials(other.full_name)}</AvatarFallback>
-                      </Avatar>
+                      <Link href={`/profile/${other.id}`}>
+                        <Avatar className="h-12 w-12 cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all">
+                          <AvatarImage src={other.avatar_url || undefined} />
+                          <AvatarFallback>{getInitials(other.full_name)}</AvatarFallback>
+                        </Avatar>
+                      </Link>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate" style={{ color: '#E2D9F3' }}>{other.full_name}</p>
+                        <Link href={`/profile/${other.id}`} className="hover:text-primary transition-colors">
+                          <p className="font-medium truncate" style={{ color: '#E2D9F3' }}>{other.full_name}</p>
+                        </Link>
                         <p className="text-xs truncate" style={{ color: '#7C6A9C' }}>{other.department || other.bio?.slice(0, 60) || 'Researcher'}</p>
                       </div>
                       <Link href={`/profile/${other.id}`}>
@@ -292,12 +296,16 @@ export default function NetworkPage() {
                     <Card key={conn.id} style={cardStyle}>
                       <CardContent className="p-4">
                         <div className="flex items-start gap-3">
-                          <Avatar className="h-10 w-10">
-                            <AvatarImage src={requester.avatar_url || undefined} />
-                            <AvatarFallback>{getInitials(requester.full_name)}</AvatarFallback>
-                          </Avatar>
+                          <Link href={`/profile/${requester.id}`}>
+                            <Avatar className="h-10 w-10 cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all">
+                              <AvatarImage src={requester.avatar_url || undefined} />
+                              <AvatarFallback>{getInitials(requester.full_name)}</AvatarFallback>
+                            </Avatar>
+                          </Link>
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium" style={{ color: '#E2D9F3' }}>{requester.full_name}</p>
+                            <Link href={`/profile/${requester.id}`} className="hover:text-primary transition-colors">
+                              <p className="font-medium" style={{ color: '#E2D9F3' }}>{requester.full_name}</p>
+                            </Link>
                             <p className="text-xs" style={{ color: '#7C6A9C' }}>{requester.department || 'Researcher'}</p>
                             {conn.message && (
                               <p className="text-sm mt-2 p-2 rounded-lg" style={{ background: 'rgba(124,58,237,0.1)', color: '#C4B5FD', fontSize: '13px' }}>
@@ -353,12 +361,16 @@ export default function NetworkPage() {
                   return (
                     <Card key={conn.id} style={cardStyle}>
                       <CardContent className="p-4 flex items-center gap-3">
-                        <Avatar className="h-10 w-10">
-                          <AvatarImage src={recipient.avatar_url || undefined} />
-                          <AvatarFallback>{getInitials(recipient.full_name)}</AvatarFallback>
-                        </Avatar>
+                        <Link href={`/profile/${recipient.id}`}>
+                          <Avatar className="h-10 w-10 cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all">
+                            <AvatarImage src={recipient.avatar_url || undefined} />
+                            <AvatarFallback>{getInitials(recipient.full_name)}</AvatarFallback>
+                          </Avatar>
+                        </Link>
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium" style={{ color: '#E2D9F3' }}>{recipient.full_name}</p>
+                          <Link href={`/profile/${recipient.id}`} className="hover:text-primary transition-colors">
+                            <p className="font-medium" style={{ color: '#E2D9F3' }}>{recipient.full_name}</p>
+                          </Link>
                           <p className="text-xs" style={{ color: '#7C6A9C' }}>Awaiting response</p>
                         </div>
                         <Button
@@ -409,12 +421,16 @@ export default function NetworkPage() {
                   <Card key={suggestion.id} style={cardStyle}>
                     <CardContent className="p-4 space-y-3">
                       <div className="flex items-start gap-3">
-                        <Avatar className="h-12 w-12">
-                          <AvatarImage src={person.avatar_url || undefined} />
-                          <AvatarFallback>{getInitials(person.full_name)}</AvatarFallback>
-                        </Avatar>
+                        <Link href={`/profile/${person.id}`}>
+                          <Avatar className="h-12 w-12 cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all">
+                            <AvatarImage src={person.avatar_url || undefined} />
+                            <AvatarFallback>{getInitials(person.full_name)}</AvatarFallback>
+                          </Avatar>
+                        </Link>
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium" style={{ color: '#E2D9F3' }}>{person.full_name}</p>
+                          <Link href={`/profile/${person.id}`} className="hover:text-primary transition-colors">
+                            <p className="font-medium" style={{ color: '#E2D9F3' }}>{person.full_name}</p>
+                          </Link>
                           <p className="text-xs" style={{ color: '#7C6A9C' }}>{person.department || 'Researcher'}</p>
                           <div className="flex items-center gap-1 mt-1">
                             <div className="h-1.5 w-1.5 rounded-full" style={{ background: '#10B981' }} />

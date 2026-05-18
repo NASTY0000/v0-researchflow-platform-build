@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Crown, Medal, Award } from 'lucide-react'
+import Link from 'next/link'
 
 interface LeaderboardUser {
   id: string
@@ -138,15 +139,19 @@ export default function LeaderboardPage() {
                 2
               </div>
               <Medal className="w-7 h-7 text-gray-200" />
-              <Avatar className="w-14 h-14 border-2 border-white/50 shadow-lg">
-                <AvatarImage src={top3[1]?.avatar_url || undefined} />
-                <AvatarFallback className="bg-gray-500 text-white font-bold">
-                  {top3[1]?.full_name?.charAt(0) || '?'}
-                </AvatarFallback>
-              </Avatar>
-              <p className="font-bold text-sm text-white text-center leading-tight drop-shadow-md">
-                {top3[1]?.full_name || 'Anonymous'}
-              </p>
+              <Link href={`/profile/${top3[1]?.id}`} className="hover:opacity-90 transition-opacity">
+                <Avatar className="w-14 h-14 border-2 border-white/50 shadow-lg cursor-pointer hover:ring-2 hover:ring-white/50 transition-all">
+                  <AvatarImage src={top3[1]?.avatar_url || undefined} />
+                  <AvatarFallback className="bg-gray-500 text-white font-bold">
+                    {top3[1]?.full_name?.charAt(0) || '?'}
+                  </AvatarFallback>
+                </Avatar>
+              </Link>
+              <Link href={`/profile/${top3[1]?.id}`} className="hover:underline">
+                <p className="font-bold text-sm text-white text-center leading-tight drop-shadow-md">
+                  {top3[1]?.full_name || 'Anonymous'}
+                </p>
+              </Link>
               {getUniversity(top3[1]?.university_id) && (
                 <p className="text-xs text-gray-200 text-center truncate w-full drop-shadow-sm">
                   {getUniversity(top3[1]?.university_id)}
@@ -202,15 +207,19 @@ export default function LeaderboardPage() {
               }}>
                 <Crown className="w-10 h-10 text-yellow-200 drop-shadow-lg" />
               </div>
-              <Avatar className="w-20 h-20 border-4 border-yellow-200/70 shadow-xl">
-                <AvatarImage src={top3[0]?.avatar_url || undefined} />
-                <AvatarFallback className="bg-yellow-600 text-white font-black text-2xl">
-                  {top3[0]?.full_name?.charAt(0) || '?'}
-                </AvatarFallback>
-              </Avatar>
-              <p className="font-black text-base text-white text-center leading-tight drop-shadow-lg">
-                {top3[0]?.full_name || 'Anonymous'}
-              </p>
+              <Link href={`/profile/${top3[0]?.id}`} className="hover:opacity-90 transition-opacity">
+                <Avatar className="w-20 h-20 border-4 border-yellow-200/70 shadow-xl cursor-pointer hover:ring-2 hover:ring-yellow-200/70 transition-all">
+                  <AvatarImage src={top3[0]?.avatar_url || undefined} />
+                  <AvatarFallback className="bg-yellow-600 text-white font-black text-2xl">
+                    {top3[0]?.full_name?.charAt(0) || '?'}
+                  </AvatarFallback>
+                </Avatar>
+              </Link>
+              <Link href={`/profile/${top3[0]?.id}`} className="hover:underline">
+                <p className="font-black text-base text-white text-center leading-tight drop-shadow-lg">
+                  {top3[0]?.full_name || 'Anonymous'}
+                </p>
+              </Link>
               {getUniversity(top3[0]?.university_id) && (
                 <p className="text-xs text-yellow-100 text-center truncate w-full drop-shadow-sm">
                   {getUniversity(top3[0]?.university_id)}
@@ -258,15 +267,19 @@ export default function LeaderboardPage() {
                 3
               </div>
               <Award className="w-7 h-7 text-amber-200" />
-              <Avatar className="w-14 h-14 border-2 border-white/50 shadow-lg">
-                <AvatarImage src={top3[2]?.avatar_url || undefined} />
-                <AvatarFallback className="bg-amber-700 text-white font-bold">
-                  {top3[2]?.full_name?.charAt(0) || '?'}
-                </AvatarFallback>
-              </Avatar>
-              <p className="font-bold text-sm text-white text-center leading-tight drop-shadow-md">
-                {top3[2]?.full_name || 'Anonymous'}
-              </p>
+              <Link href={`/profile/${top3[2]?.id}`} className="hover:opacity-90 transition-opacity">
+                <Avatar className="w-14 h-14 border-2 border-white/50 shadow-lg cursor-pointer hover:ring-2 hover:ring-white/50 transition-all">
+                  <AvatarImage src={top3[2]?.avatar_url || undefined} />
+                  <AvatarFallback className="bg-amber-700 text-white font-bold">
+                    {top3[2]?.full_name?.charAt(0) || '?'}
+                  </AvatarFallback>
+                </Avatar>
+              </Link>
+              <Link href={`/profile/${top3[2]?.id}`} className="hover:underline">
+                <p className="font-bold text-sm text-white text-center leading-tight drop-shadow-md">
+                  {top3[2]?.full_name || 'Anonymous'}
+                </p>
+              </Link>
               {getUniversity(top3[2]?.university_id) && (
                 <p className="text-xs text-amber-100 text-center truncate w-full drop-shadow-sm">
                   {getUniversity(top3[2]?.university_id)}
@@ -321,19 +334,23 @@ export default function LeaderboardPage() {
                       {index + 4}
                     </div>
                   )}
-                  <Avatar className="w-9 h-9">
-                    <AvatarImage src={user.avatar_url || undefined} />
-                    <AvatarFallback>
-                      {user.full_name?.charAt(0) || '?'}
-                    </AvatarFallback>
-                  </Avatar>
+                  <Link href={`/profile/${user.id}`}>
+                    <Avatar className="w-9 h-9 cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all">
+                      <AvatarImage src={user.avatar_url || undefined} />
+                      <AvatarFallback>
+                        {user.full_name?.charAt(0) || '?'}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Link>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm truncate">
-                      {user.full_name || 'Anonymous'}
-                      {user.id === currentUserId && (
-                        <span className="ml-2 text-xs text-primary">(you)</span>
-                      )}
-                    </p>
+                    <Link href={`/profile/${user.id}`} className="hover:text-primary transition-colors">
+                      <p className="font-medium text-sm truncate">
+                        {user.full_name || 'Anonymous'}
+                        {user.id === currentUserId && (
+                          <span className="ml-2 text-xs text-primary">(you)</span>
+                        )}
+                      </p>
+                    </Link>
                     <p className="text-xs text-muted-foreground truncate">
                       {user.department}
                       {user.department && getUniversity(user.university_id) && ' · '}

@@ -291,14 +291,18 @@ export default function MatchesPage() {
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center gap-3">
-                        <Avatar className="h-14 w-14">
-                          <AvatarImage src={match.matched_user?.avatar_url || undefined} />
-                          <AvatarFallback className="bg-primary/10 text-primary text-lg">
-                            {match.matched_user?.full_name?.charAt(0) || "?"}
-                          </AvatarFallback>
-                        </Avatar>
+                        <Link href={`/profile/${match.matched_user_id}`}>
+                          <Avatar className="h-14 w-14 cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all">
+                            <AvatarImage src={match.matched_user?.avatar_url || undefined} />
+                            <AvatarFallback className="bg-primary/10 text-primary text-lg">
+                              {match.matched_user?.full_name?.charAt(0) || "?"}
+                            </AvatarFallback>
+                          </Avatar>
+                        </Link>
                         <div>
-                          <h3 className="font-semibold">{match.matched_user?.full_name}</h3>
+                          <Link href={`/profile/${match.matched_user_id}`} className="hover:text-primary transition-colors">
+                            <h3 className="font-semibold">{match.matched_user?.full_name}</h3>
+                          </Link>
                           <p className="text-sm text-muted-foreground">
                             {match.matched_user?.department || "Researcher"}
                           </p>
