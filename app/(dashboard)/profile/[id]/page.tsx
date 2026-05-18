@@ -1,16 +1,23 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { GraduationCap, BookOpen, ExternalLink, Zap, Award, Briefcase, FileText, Star } from 'lucide-react'
+import { GraduationCap, BookOpen, ExternalLink, Award, Briefcase, FileText, Star } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
-import { AkiliScoreCard } from '@/components/akili/AkiliScoreCard'
 import { ProfileActions } from '@/components/profile/profile-actions'
 import { BackButton } from '@/components/ui/back-button'
+import { AkiliBreakdownSheet } from '@/components/profile/akili-breakdown-sheet'
+import { getEarnedBadges } from '@/lib/actions/profile'
+import { formatDistanceToNow } from 'date-fns'
 import type { PortfolioItem } from '@/lib/types/database'
 
 interface Props {
   params: Promise<{ id: string }>
+}
+
+function getPrimaryRole(roles: string[] | null | undefined): string {
+  const priority = ['mentor', 'technical_expert', 'collaborator', 'student_researcher']
+  return priority.find(r => roles?.includes(r)) || 'student_researcher'
 }
 
 function getPortfolioIcon(type: string) {
@@ -36,6 +43,13 @@ export default async function PublicProfilePage({ params }: Props) {
   if (!profileResult.data) notFound()
   const profile = profileResult.data
   const portfolioItems: PortfolioItem[] = portfolioResult.data || []
+
+  // Earned badges (runs after profile load)
+  const earnedBadges = await getEarnedBadges(
+    profile.id,
+    profile.akili_score || 0,
+    profile.connections_count || 0,
+  )
 
   // Increment profile views (fire and forget)
   supabase
@@ -69,18 +83,9 @@ export default async function PublicProfilePage({ params }: Props) {
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-3 flex-wrap">
-              <h1 className="text-2xl font-bold font-heading" style={{ letterSpacing: '-0.02em' }}>
-                {profile.full_name || 'Researcher'}
-              </h1>
-              {profile.akili_score > 0 && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold"
-                  style={{ background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(168,85,247,0.25)', color: '#C084FC' }}>
-                  <Zap className="w-3 h-3" />
-                  {profile.akili_score.toLocaleString()} Akili
-                </span>
-              )}
-            </div>
+            <h1 className="text-2xl font-bold font-heading" style={{ letterSpacing: '-0.02em' }}>
+              {profile.full_name || 'Researcher'}
+            </h1>
             {profile.department && (
               <p className="text-sm mt-0.5" style={{ color: '#7C6A9C' }}>{profile.department}</p>
             )}
@@ -90,6 +95,35 @@ export default async function PublicProfilePage({ params }: Props) {
                 {profile.university_id}
               </p>
             )}
+
+            {/* Research Trajectory Status */}
+            <div className="flex flex-wrap items-center gap-2 mt-3">
+              {(profile.current_focus || profile.research_interests?.[0]) && (
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                  <span className="text-primary/80 text-xs font-medium">Investigating:</span>
+                  <span className="text-foreground text-xs font-semibold">
+                    {profile.current_focus || profile.research_interests[0]}
+                  </span>
+                </div>
+              )}
+              {profile.looking_for?.[0] && (
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-teal-500/10 border border-teal-500/20">
+                  <span className="text-teal-400/80 text-xs font-medium">Seeking:</span>
+                  <span className="text-foreground text-xs font-semibold">{profile.looking_for[0]}</span>
+                </div>
+              )}
+              {profile.updated_at && (
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted border border-border">
+                  <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                  <span className="text-muted-foreground text-xs">
+                    Active {formatDistanceToNow(new Date(profile.updated_at), { addSuffix: true })}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Primary role + earned badges */}
             <div className="flex flex-wrap items-center gap-2 mt-2">
               {profile.academic_level && (
                 <span className="text-xs px-2.5 py-0.5 rounded-full capitalize"
@@ -97,9 +131,12 @@ export default async function PublicProfilePage({ params }: Props) {
                   {profile.academic_level.replace('_', ' ')}
                 </span>
               )}
-              {profile.roles?.map((role: string) => (
-                <Badge key={role} variant="secondary" className="text-xs">
-                  {role.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
+              <Badge variant="secondary" className="text-xs px-3 py-1">
+                {getPrimaryRole(profile.roles).replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
+              </Badge>
+              {earnedBadges.map(badge => (
+                <Badge key={badge} className="text-xs bg-yellow-500/10 text-yellow-500 border border-yellow-500/30">
+                  ✦ {badge}
                 </Badge>
               ))}
             </div>
@@ -109,6 +146,18 @@ export default async function PublicProfilePage({ params }: Props) {
         {profile.bio && (
           <p className="mt-5 text-sm leading-relaxed" style={{ color: '#C4B5D8' }}>{profile.bio}</p>
         )}
+
+        {/* Akili Score breakdown (client component) */}
+        <div className="mt-4">
+          <AkiliBreakdownSheet
+            userId={profile.id}
+            score={profile.akili_score || 0}
+            dimensionKnowledge={profile.akili_dimension_knowledge || 0}
+            dimensionCollaboration={profile.akili_dimension_collaboration || 0}
+            dimensionMentorship={profile.akili_dimension_mentorship || 0}
+            dimensionTechnical={profile.akili_dimension_technical || 0}
+          />
+        </div>
 
         <ProfileActions targetUserId={profile.id} targetName={profile.full_name} />
       </div>
@@ -193,9 +242,6 @@ export default async function PublicProfilePage({ params }: Props) {
           </div>
         </div>
       )}
-
-      {/* Akili Score */}
-      <AkiliScoreCard userId={profile.id} />
     </div>
   )
 }

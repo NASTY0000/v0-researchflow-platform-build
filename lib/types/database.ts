@@ -82,6 +82,7 @@ export interface Profile {
   department: string | null
   academic_level: AcademicLevel | null
   bio: string | null
+  current_focus: string | null
   roles: UserRole[]
   research_interests: string[]
   skills: string[]

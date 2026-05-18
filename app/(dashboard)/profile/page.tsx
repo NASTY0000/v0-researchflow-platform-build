@@ -30,6 +30,7 @@ import {
 import type { Profile, PortfolioItem, PortfolioItemType, University } from '@/lib/types/database'
 import { AkiliScoreCard } from '@/components/akili/AkiliScoreCard'
 import { getAkiliNarrative } from '@/lib/utils/akili'
+import { formatDistanceToNow } from 'date-fns'
 
 interface ActivityStats {
   activeProjects: number
@@ -82,6 +83,7 @@ export default function ProfilePage() {
     academic_level: '',
     research_interests: [] as string[],
     skills: [] as string[],
+    current_focus: '',
   })
 
   const [universityName, setUniversityName] = useState('')
@@ -238,6 +240,7 @@ export default function ProfilePage() {
         academic_level: profileResult.data.academic_level || '',
         research_interests: profileResult.data.research_interests || [],
         skills: profileResult.data.skills || [],
+        current_focus: profileResult.data.current_focus || '',
       })
 
       // Resolve university UUID to name if needed
@@ -698,6 +701,10 @@ export default function ProfilePage() {
                     <Label>Bio</Label>
                     <Textarea value={editForm.bio} onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })} placeholder="Tell us about yourself and your research interests..." rows={3} />
                   </div>
+                  <div>
+                    <Label>Currently Investigating</Label>
+                    <Input value={editForm.current_focus} onChange={(e) => setEditForm({ ...editForm, current_focus: e.target.value })} placeholder="e.g., Machine learning for malaria detection" />
+                  </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label>Department</Label>
@@ -762,6 +769,33 @@ export default function ProfilePage() {
 
                   {profile.bio && <p className="text-muted-foreground">{profile.bio}</p>}
 
+                  {/* Research Trajectory Status */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    {(profile.current_focus || profile.research_interests?.[0]) && (
+                      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20">
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                        <span className="text-primary/80 text-xs font-medium">Investigating:</span>
+                        <span className="text-foreground text-xs font-semibold">
+                          {profile.current_focus || profile.research_interests[0]}
+                        </span>
+                      </div>
+                    )}
+                    {profile.looking_for?.[0] && (
+                      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-teal-500/10 border border-teal-500/20">
+                        <span className="text-teal-400/80 text-xs font-medium">Seeking:</span>
+                        <span className="text-foreground text-xs font-semibold">{profile.looking_for[0]}</span>
+                      </div>
+                    )}
+                    {profile.updated_at && (
+                      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted border border-border">
+                        <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                        <span className="text-muted-foreground text-xs">
+                          Active {formatDistanceToNow(new Date(profile.updated_at), { addSuffix: true })}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
                   <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                     <span className="flex items-center gap-1">
                       <Mail className="w-4 h-4" />{profile.email}
@@ -778,11 +812,12 @@ export default function ProfilePage() {
                   </div>
 
                   <div className="flex flex-wrap gap-2">
-                    {profile.roles?.map(role => (
-                      <Badge key={role} variant="secondary">
-                        {role.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                      </Badge>
-                    ))}
+                    <Badge variant="secondary" className="text-sm px-3 py-1">
+                      {(profile.roles?.includes('mentor') ? 'Mentor'
+                        : profile.roles?.includes('technical_expert') ? 'Technical Expert'
+                        : profile.roles?.includes('collaborator') ? 'Collaborator'
+                        : 'Student Researcher')}
+                    </Badge>
                   </div>
                 </>
               )}
