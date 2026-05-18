@@ -25,7 +25,7 @@ import {
   Edit, Save, X, Plus, Award, BookOpen, Briefcase, FileText,
   Eye, Star, ExternalLink, Trash2, CheckCircle2, FolderOpen,
   Users, MessageSquare, ListChecks, Zap, Shield, TrendingUp, Loader2,
-  BarChart3, Lightbulb,
+  BarChart3, Lightbulb, Code,
 } from 'lucide-react'
 import type { Profile, PortfolioItem, PortfolioItemType, University } from '@/lib/types/database'
 import { AkiliScoreCard } from '@/components/akili/AkiliScoreCard'
@@ -748,8 +748,25 @@ export default function ProfilePage() {
                 <>
                   <div className="flex items-start justify-between">
                     <div>
-                      <div className="flex items-center gap-3 flex-wrap">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <h1 className="text-2xl font-bold font-heading">{profile.full_name}</h1>
+                        <div className="flex items-center gap-1">
+                          {profile.is_admin && (
+                            <div title="Platform Admin" className="w-5 h-5 rounded-full bg-yellow-500/20 border border-yellow-500/40 flex items-center justify-center">
+                              <Shield className="w-3 h-3 text-yellow-500" />
+                            </div>
+                          )}
+                          {profile.roles?.includes('mentor') && mentorInfo?.is_verified && (
+                            <div title="Verified Mentor" className="w-5 h-5 rounded-full bg-teal-500/20 border border-teal-500/40 flex items-center justify-center">
+                              <GraduationCap className="w-3 h-3 text-teal-400" />
+                            </div>
+                          )}
+                          {profile.roles?.includes('technical_expert') && (
+                            <div title="Technical Expert" className="w-5 h-5 rounded-full bg-blue-500/20 border border-blue-500/40 flex items-center justify-center">
+                              <Code className="w-3 h-3 text-blue-400" />
+                            </div>
+                          )}
+                        </div>
                         {profile.akili_score > 0 && (
                           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-sm font-semibold bg-primary/10 text-primary border border-primary/20">
                             <Zap className="w-3.5 h-3.5" />
@@ -786,10 +803,15 @@ export default function ProfilePage() {
                   </div>
 
                   <div className="flex flex-wrap gap-2">
-                    {profile.roles?.map(role => (
-                      <Badge key={role} variant="secondary">
-                        {role.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                      </Badge>
+                    {profile.academic_level && (
+                      <span className="bg-primary/15 text-primary border border-primary/25 rounded-full px-3 py-1 text-xs font-semibold">
+                        {getAcademicLevelLabel(profile.academic_level)}
+                      </span>
+                    )}
+                    {profile.roles?.filter((role: string) => !['admin', 'mentor', 'technical_expert'].includes(role)).map((role: string) => (
+                      <span key={role} className="bg-primary/15 text-primary border border-primary/25 rounded-full px-3 py-1 text-xs font-semibold">
+                        {role === 'student_researcher' ? 'Student Researcher' : role.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                      </span>
                     ))}
                   </div>
                 </>
@@ -842,10 +864,15 @@ export default function ProfilePage() {
               </CardHeader>
               <CardContent>
                 {profile.research_interests && profile.research_interests.length > 0 ? (
-                  <div className="flex flex-wrap gap-2">
-                    {profile.research_interests.map(interest => (
-                      <Badge key={interest} variant="outline" className="bg-primary/5">{interest}</Badge>
-                    ))}
+                  <div className="space-y-2">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Research Interests</p>
+                    <div className="flex flex-wrap gap-2">
+                      {profile.research_interests.map(interest => (
+                        <span key={interest} className="border border-violet-500 bg-transparent text-violet-400 rounded-full px-3 py-1 text-xs font-medium hover:bg-violet-500/10 transition-colors">
+                          {interest}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 ) : (
                   <p className="text-sm text-muted-foreground">No research interests added yet.</p>
@@ -860,10 +887,15 @@ export default function ProfilePage() {
               </CardHeader>
               <CardContent>
                 {profile.skills && profile.skills.length > 0 ? (
-                  <div className="flex flex-wrap gap-2">
-                    {profile.skills.map(skill => (
-                      <Badge key={skill} variant="secondary">{skill}</Badge>
-                    ))}
+                  <div className="space-y-2">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Skills</p>
+                    <div className="flex flex-wrap gap-2">
+                      {profile.skills.map(skill => (
+                        <span key={skill} className="bg-primary/10 text-primary border border-primary/20 rounded-full px-3 py-1 text-xs font-medium">
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 ) : (
                   <p className="text-sm text-muted-foreground">No skills added yet.</p>
@@ -878,10 +910,15 @@ export default function ProfilePage() {
               </CardHeader>
               <CardContent>
                 {profile.looking_for && profile.looking_for.length > 0 ? (
-                  <div className="flex flex-wrap gap-2">
-                    {profile.looking_for.map(item => (
-                      <Badge key={item} variant="outline" className="bg-accent/5">{item}</Badge>
-                    ))}
+                  <div className="space-y-2">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Looking For</p>
+                    <div className="flex flex-wrap gap-2">
+                      {profile.looking_for.map(item => (
+                        <span key={item} className="border border-teal-500/50 bg-transparent text-teal-400 rounded-full px-3 py-1 text-xs font-medium hover:bg-teal-500/10 transition-colors">
+                          {item}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 ) : (
                   <p className="text-sm text-muted-foreground">Not specified.</p>

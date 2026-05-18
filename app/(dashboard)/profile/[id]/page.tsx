@@ -13,6 +13,8 @@ import {
   UserPlus,
   GraduationCap,
   Building2,
+  Shield,
+  Code,
 } from 'lucide-react'
 import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
@@ -27,7 +29,15 @@ export default function PublicProfilePage() {
   const [loading, setLoading] = useState(true)
   const [isConnected, setIsConnected] = useState(false)
   const [connectionSent, setConnectionSent] = useState(false)
+  const [mentorVerified, setMentorVerified] = useState(false)
   const supabase = createClient()
+
+  const ACADEMIC_LEVEL_LABELS: Record<string, string> = {
+    undergraduate: 'Undergraduate', masters: 'Masters Student',
+    phd: 'PhD Candidate', postdoc: 'Postdoctoral', faculty: 'Faculty',
+  }
+  const STATUS_ROLES = ['student_researcher', 'collaborator']
+  const PERMISSION_ROLES = ['admin', 'mentor', 'technical_expert']
 
   useEffect(() => {
     loadProfile()
@@ -63,6 +73,14 @@ export default function PublicProfilePage() {
     }
 
     setProfile({ ...data, universityName })
+
+    // Check mentor verified status
+    const { data: mentorProfile } = await supabase
+      .from('mentor_profiles')
+      .select('is_verified')
+      .eq('user_id', userId)
+      .maybeSingle()
+    setMentorVerified(mentorProfile?.is_verified === true)
 
     // Increment profile views
     supabase
@@ -160,10 +178,29 @@ export default function PublicProfilePage() {
 
             <div className="flex-1 space-y-3">
               <div>
-                <h1 className="text-2xl font-bold">{profile.full_name}</h1>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h1 className="text-2xl font-bold">{profile.full_name}</h1>
+                  <div className="flex items-center gap-1">
+                    {profile.is_admin && (
+                      <div title="Platform Admin" className="w-5 h-5 rounded-full bg-yellow-500/20 border border-yellow-500/40 flex items-center justify-center">
+                        <Shield className="w-3 h-3 text-yellow-500" />
+                      </div>
+                    )}
+                    {profile.roles?.includes('mentor') && mentorVerified && (
+                      <div title="Verified Mentor" className="w-5 h-5 rounded-full bg-teal-500/20 border border-teal-500/40 flex items-center justify-center">
+                        <GraduationCap className="w-3 h-3 text-teal-400" />
+                      </div>
+                    )}
+                    {profile.roles?.includes('technical_expert') && (
+                      <div title="Technical Expert" className="w-5 h-5 rounded-full bg-blue-500/20 border border-blue-500/40 flex items-center justify-center">
+                        <Code className="w-3 h-3 text-blue-400" />
+                      </div>
+                    )}
+                  </div>
+                </div>
                 <p className="text-muted-foreground flex items-center gap-2 mt-1">
                   <GraduationCap className="w-4 h-4" />
-                  {profile.academic_level?.replace(/_/g, ' ')}
+                  {ACADEMIC_LEVEL_LABELS[profile.academic_level] || profile.academic_level?.replace(/_/g, ' ')}
                   {profile.department && ` · ${profile.department}`}
                 </p>
                 {profile.universityName && (
@@ -171,6 +208,21 @@ export default function PublicProfilePage() {
                     <Building2 className="w-4 h-4" />
                     {profile.universityName}
                   </p>
+                )}
+                {/* Status badge pills */}
+                {(profile.academic_level || profile.roles?.some((r: string) => STATUS_ROLES.includes(r))) && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {profile.academic_level && (
+                      <span className="bg-primary/15 text-primary border border-primary/20 rounded-full px-3 py-1 text-xs font-medium">
+                        {ACADEMIC_LEVEL_LABELS[profile.academic_level] || profile.academic_level}
+                      </span>
+                    )}
+                    {profile.roles?.filter((r: string) => STATUS_ROLES.includes(r)).map((role: string) => (
+                      <span key={role} className="bg-primary/15 text-primary border border-primary/20 rounded-full px-3 py-1 text-xs font-medium">
+                        {role === 'student_researcher' ? 'Student Researcher' : role.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
+                      </span>
+                    ))}
+                  </div>
                 )}
               </div>
 
@@ -262,11 +314,15 @@ export default function PublicProfilePage() {
       {profile.skills?.length > 0 && (
         <Card>
           <CardContent className="p-6">
-            <h3 className="font-semibold mb-3">Skills</h3>
-            <div className="flex flex-wrap gap-2">
-              {profile.skills.map((s: string) => (
-                <Badge key={s} variant="secondary">{s}</Badge>
-              ))}
+            <div className="space-y-2">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Skills</p>
+              <div className="flex flex-wrap gap-2">
+                {profile.skills.map((s: string) => (
+                  <span key={s} className="bg-primary/10 text-primary border border-primary/20 rounded-full px-3 py-1 text-xs font-medium">
+                    {s}
+                  </span>
+                ))}
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -276,11 +332,15 @@ export default function PublicProfilePage() {
       {profile.research_interests?.length > 0 && (
         <Card>
           <CardContent className="p-6">
-            <h3 className="font-semibold mb-3">Research Interests</h3>
-            <div className="flex flex-wrap gap-2">
-              {profile.research_interests.map((r: string) => (
-                <Badge key={r} variant="outline" className="bg-primary/5">{r}</Badge>
-              ))}
+            <div className="space-y-2">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Research Interests</p>
+              <div className="flex flex-wrap gap-2">
+                {profile.research_interests.map((r: string) => (
+                  <span key={r} className="border border-violet-500 bg-transparent text-violet-400 rounded-full px-3 py-1 text-xs font-medium hover:bg-violet-500/10 transition-colors">
+                    {r}
+                  </span>
+                ))}
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -290,13 +350,15 @@ export default function PublicProfilePage() {
       {profile.looking_for?.length > 0 && (
         <Card>
           <CardContent className="p-6">
-            <h3 className="font-semibold mb-3">Looking For</h3>
-            <div className="flex flex-wrap gap-2">
-              {profile.looking_for.map((item: string) => (
-                <Badge key={item} variant="outline" className="bg-green-500/5 text-green-500 border-green-500/20">
-                  {item}
-                </Badge>
-              ))}
+            <div className="space-y-2">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Looking For</p>
+              <div className="flex flex-wrap gap-2">
+                {profile.looking_for.map((item: string) => (
+                  <span key={item} className="border border-teal-500/50 bg-transparent text-teal-400 rounded-full px-3 py-1 text-xs font-medium hover:bg-teal-500/10 transition-colors">
+                    {item}
+                  </span>
+                ))}
+              </div>
             </div>
           </CardContent>
         </Card>
