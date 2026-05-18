@@ -30,6 +30,7 @@ import {
 import type { Profile, PortfolioItem, PortfolioItemType, University } from '@/lib/types/database'
 import { AkiliScoreCard } from '@/components/akili/AkiliScoreCard'
 import { getAkiliNarrative } from '@/lib/utils/akili'
+import { ProfileNeuralBg } from '@/components/ui/profile-neural-bg'
 
 interface ActivityStats {
   activeProjects: number
@@ -651,8 +652,15 @@ export default function ProfilePage() {
       )}
 
       {/* Header Card */}
-      <Card>
-        <CardContent className="p-8">
+      <Card className="overflow-hidden relative border-primary/20 shadow-[0_0_40px_rgba(124,58,237,0.15),0_0_80px_rgba(124,58,237,0.05)]">
+        <div className="absolute inset-0" style={{ zIndex: 0 }}>
+          <ProfileNeuralBg />
+        </div>
+        <div className="absolute inset-0 rounded-xl" style={{
+          background: 'linear-gradient(135deg, rgba(5,1,15,0.85) 0%, rgba(18,8,31,0.75) 50%, rgba(5,1,15,0.85) 100%)',
+          zIndex: 1,
+        }} />
+        <CardContent className="relative p-8" style={{ zIndex: 2 }}>
           <div className="flex flex-col md:flex-row items-start gap-6">
             <div className="relative">
               <input

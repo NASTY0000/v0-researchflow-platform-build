@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
+import { ProfileNeuralBg } from '@/components/ui/profile-neural-bg'
 
 export default function PublicProfilePage() {
   const params = useParams()
@@ -140,8 +141,15 @@ export default function PublicProfilePage() {
       </Button>
 
       {/* Profile Header */}
-      <Card>
-        <CardContent className="p-6">
+      <Card className="overflow-hidden relative border-primary/20 shadow-[0_0_40px_rgba(124,58,237,0.15),0_0_80px_rgba(124,58,237,0.05)]">
+        <div className="absolute inset-0" style={{ zIndex: 0 }}>
+          <ProfileNeuralBg />
+        </div>
+        <div className="absolute inset-0 rounded-xl" style={{
+          background: 'linear-gradient(135deg, rgba(5,1,15,0.85) 0%, rgba(18,8,31,0.75) 50%, rgba(5,1,15,0.85) 100%)',
+          zIndex: 1,
+        }} />
+        <CardContent className="relative p-6" style={{ zIndex: 2 }}>
           <div className="flex flex-col sm:flex-row items-start gap-5">
             <Avatar className="w-20 h-20 border-2 border-primary/20">
               <AvatarImage src={profile.avatar_url} />
