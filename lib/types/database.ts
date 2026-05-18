@@ -42,17 +42,18 @@ export type MessageType = 'text' | 'file' | 'system'
 
 export type ConversationType = 'direct' | 'team' | 'project'
 
-export type NotificationType = 
-  | 'connection_request' 
-  | 'connection_accepted' 
-  | 'team_invite' 
-  | 'task_assigned' 
-  | 'task_completed' 
-  | 'message' 
+export type NotificationType =
+  | 'new_message'
+  | 'connection_request'
+  | 'connection_accepted'
+  | 'team_invite'
+  | 'task_assigned'
+  | 'task_completed'
+  | 'message'
   | 'mention'
-  | 'session_reminder' 
-  | 'match_found' 
-  | 'idea_comment' 
+  | 'session_reminder'
+  | 'match_found'
+  | 'idea_comment'
   | 'system'
 
 export type PortfolioItemType = 'publication' | 'project' | 'certificate' | 'award' | 'presentation' | 'other'

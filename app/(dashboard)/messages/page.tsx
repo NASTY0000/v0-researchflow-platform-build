@@ -3,11 +3,9 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Send, MessageSquare, Search } from 'lucide-react'
+import { Send, MessageSquare, Search, ArrowLeft } from 'lucide-react'
+import Link from 'next/link'
 import type { Profile } from '@/lib/types/database'
 import { formatDistanceToNow } from 'date-fns'
 
@@ -26,12 +24,6 @@ type ConversationSummary = {
   unreadCount: number
 }
 
-const cardStyle = {
-  background: 'rgba(255,255,255,0.03)',
-  border: '1px solid rgba(139,92,246,0.15)',
-  borderRadius: '16px',
-}
-
 export default function MessagesPage() {
   const searchParams = useSearchParams()
   const targetUserId = searchParams.get('user')
@@ -46,8 +38,20 @@ export default function MessagesPage() {
   const [newMessage, setNewMessage] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
+  const [isMobile, setIsMobile] = useState(false)
+  const [showChat, setShowChat] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
+  // Detect mobile
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
+
+  // Load current user
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user) setCurrentUserId(user.id)
@@ -77,7 +81,6 @@ export default function MessagesPage() {
       }
     }
 
-    // Include targetUserId even if no messages yet
     const idsToLoad = [...new Set([...Array.from(convMap.keys()), ...(targetUserId ? [targetUserId] : [])])]
     if (idsToLoad.length === 0) {
       setIsLoading(false)
@@ -102,13 +105,13 @@ export default function MessagesPage() {
         )
       setConversations(convos)
 
-      // Auto-select: targetUserId takes precedence, then first conversation
       const autoId = targetUserId ?? convos[0]?.user.id
       if (autoId && !selectedUserId) {
         const autoProfile = profiles.find(p => p.id === autoId)
         if (autoProfile) {
           setSelectedUserId(autoId)
           setSelectedUser(autoProfile as Profile)
+          if (targetUserId) setShowChat(true)
         }
       } else if (selectedUserId) {
         const existing = profiles.find(p => p.id === selectedUserId)
@@ -160,9 +163,11 @@ export default function MessagesPage() {
             (msg.sender_id === selectedUserId && msg.recipient_id === currentUserId)
           if (!relevant || !active) return
 
-          // Avoid duplicate if optimistic message already added
           setMessages(prev => {
-            const isDup = prev.some(m => m.id === msg.id || (m.id.startsWith('tmp-') && m.content === msg.content && m.sender_id === msg.sender_id))
+            const isDup = prev.some(m =>
+              m.id === msg.id ||
+              (m.id.startsWith('tmp-') && m.content === msg.content && m.sender_id === msg.sender_id)
+            )
             if (isDup) return prev.map(m => (m.id.startsWith('tmp-') && m.content === msg.content ? msg : m))
             return [...prev, msg]
           })
@@ -179,6 +184,7 @@ export default function MessagesPage() {
     }
   }, [currentUserId, selectedUserId, supabase])
 
+  // Scroll to bottom on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
@@ -187,14 +193,17 @@ export default function MessagesPage() {
     setSelectedUserId(user.id)
     setSelectedUser(user)
     setMessages([])
+    if (isMobile) setShowChat(true)
   }
 
-  async function sendMessage(e: React.FormEvent) {
-    e.preventDefault()
+  async function sendMessage() {
     if (!newMessage.trim() || !currentUserId || !selectedUserId) return
 
     const content = newMessage.trim()
     setNewMessage('')
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto'
+    }
 
     const optimistic: DirectMessage = {
       id: `tmp-${Date.now()}`,
@@ -212,6 +221,22 @@ export default function MessagesPage() {
       content,
     })
 
+    // In-app notification for recipient
+    const { data: senderProfile } = await supabase
+      .from('profiles')
+      .select('full_name')
+      .eq('id', currentUserId)
+      .single()
+
+    supabase.from('notifications').insert({
+      user_id: selectedUserId,
+      type: 'new_message',
+      title: 'New message',
+      message: `${senderProfile?.full_name || 'Someone'} sent you a message`,
+      link: `/messages?user=${currentUserId}`,
+      is_read: false,
+    }).then(() => {})
+
     loadConversations()
   }
 
@@ -219,166 +244,208 @@ export default function MessagesPage() {
     !searchQuery || c.user.full_name?.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
+  const showLeftPanel = !isMobile || !showChat
+  const showRightPanel = !isMobile || showChat
+
   return (
-    <div className="h-[calc(100vh-8rem)] flex gap-4">
-      {/* Conversations list */}
-      <div className="w-80 flex flex-col shrink-0" style={cardStyle}>
-        <div className="p-4 border-b" style={{ borderColor: 'rgba(139,92,246,0.15)' }}>
-          <h2 className="font-semibold font-heading mb-3">Messages</h2>
+    <div className="flex h-[calc(100vh-4rem)] overflow-hidden rounded-xl border border-border">
+
+      {/* LEFT PANEL — Conversation list */}
+      <div className={`${showLeftPanel ? 'flex' : 'hidden'} w-full md:w-80 lg:w-96 flex-col border-r border-border bg-card`}>
+        <div className="p-4 border-b border-border">
+          <h2 className="font-semibold text-lg mb-3">Messages</h2>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
+            <input
+              type="text"
               placeholder="Search conversations..."
-              className="pl-10"
+              className="w-full pl-10 pr-4 py-2 text-sm rounded-lg border border-border bg-background outline-none focus:ring-2 focus:ring-primary/30"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
             />
           </div>
         </div>
-        <ScrollArea className="flex-1">
-          <div className="p-2 space-y-1">
-            {isLoading ? (
-              Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="flex items-center gap-3 p-3 animate-pulse">
-                  <div className="w-10 h-10 rounded-full bg-muted" />
-                  <div className="flex-1 space-y-2">
-                    <div className="h-4 bg-muted rounded w-3/4" />
-                    <div className="h-3 bg-muted rounded w-1/2" />
-                  </div>
+
+        <div className="flex-1 overflow-y-auto">
+          {isLoading ? (
+            Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-3 p-4 animate-pulse border-b border-border/50">
+                <div className="w-11 h-11 rounded-full bg-muted shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 bg-muted rounded w-3/4" />
+                  <div className="h-3 bg-muted rounded w-1/2" />
                 </div>
-              ))
-            ) : filteredConversations.length === 0 ? (
-              <div className="p-8 text-center">
-                <MessageSquare className="w-10 h-10 mx-auto mb-3 opacity-20" />
-                <p className="text-sm text-muted-foreground">No messages yet</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Visit a researcher&apos;s profile to start a conversation
-                </p>
               </div>
-            ) : (
-              filteredConversations.map(conv => (
-                <button
-                  key={conv.user.id}
-                  onClick={() => handleSelectUser(conv.user)}
-                  className={`w-full flex items-center gap-3 p-3 rounded-xl text-left transition-colors ${
-                    selectedUserId === conv.user.id
-                      ? 'bg-primary/10 border border-primary/20'
-                      : 'hover:bg-muted/40'
-                  }`}
-                >
-                  <div className="relative flex-shrink-0">
-                    <Avatar className="w-10 h-10">
-                      <AvatarImage src={conv.user.avatar_url || undefined} />
-                      <AvatarFallback className="text-sm">
-                        {conv.user.full_name?.charAt(0) || 'U'}
-                      </AvatarFallback>
-                    </Avatar>
+            ))
+          ) : filteredConversations.length === 0 ? (
+            <div className="p-8 text-center text-muted-foreground text-sm space-y-1">
+              <MessageSquare className="w-10 h-10 mx-auto mb-3 opacity-20" />
+              <p>No conversations yet.</p>
+              <p>Visit someone&apos;s profile and click Message to start chatting.</p>
+            </div>
+          ) : (
+            filteredConversations.map(conv => (
+              <button
+                key={conv.user.id}
+                onClick={() => handleSelectUser(conv.user)}
+                className={`w-full flex items-center gap-3 p-4 hover:bg-muted/40 transition-colors text-left border-b border-border/50 ${
+                  selectedUserId === conv.user.id && !isMobile
+                    ? 'bg-primary/5 border-l-2 border-l-primary'
+                    : ''
+                }`}
+              >
+                <div className="relative shrink-0">
+                  <Avatar className="w-11 h-11">
+                    <AvatarImage src={conv.user.avatar_url || undefined} />
+                    <AvatarFallback className="text-sm">
+                      {conv.user.full_name?.charAt(0) || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                  {conv.unreadCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-primary text-primary-foreground rounded-full text-[10px] flex items-center justify-center font-bold">
+                      {conv.unreadCount > 9 ? '9+' : conv.unreadCount}
+                    </span>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className={`text-sm truncate ${conv.unreadCount > 0 ? 'font-semibold' : 'font-medium'}`}>
+                      {conv.user.full_name || 'Researcher'}
+                    </p>
+                    {conv.lastMessage && (
+                      <p className="text-xs text-muted-foreground shrink-0">
+                        {formatDistanceToNow(new Date(conv.lastMessage.created_at), { addSuffix: false })}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between gap-2 mt-0.5">
+                    <p className="text-xs text-muted-foreground truncate">
+                      {conv.lastMessage
+                        ? `${conv.lastMessage.sender_id === currentUserId ? 'You: ' : ''}${conv.lastMessage.content}`
+                        : 'Start a conversation'
+                      }
+                    </p>
                     {conv.unreadCount > 0 && (
-                      <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-primary text-primary-foreground rounded-full text-[10px] flex items-center justify-center font-bold">
-                        {conv.unreadCount > 9 ? '9+' : conv.unreadCount}
+                      <span className="shrink-0 bg-primary text-primary-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium">
+                        {conv.unreadCount}
                       </span>
                     )}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-1">
-                      <p className={`text-sm truncate ${conv.unreadCount > 0 ? 'font-semibold' : 'font-medium'}`}>
-                        {conv.user.full_name || 'Researcher'}
-                      </p>
-                      {conv.lastMessage && (
-                        <span className="text-[10px] text-muted-foreground flex-shrink-0">
-                          {formatDistanceToNow(new Date(conv.lastMessage.created_at), { addSuffix: false })}
-                        </span>
-                      )}
-                    </div>
-                    {conv.lastMessage && (
-                      <p className="text-xs text-muted-foreground truncate mt-0.5">
-                        {conv.lastMessage.sender_id === currentUserId ? 'You: ' : ''}
-                        {conv.lastMessage.content}
-                      </p>
-                    )}
-                  </div>
-                </button>
-              ))
-            )}
-          </div>
-        </ScrollArea>
+                </div>
+              </button>
+            ))
+          )}
+        </div>
       </div>
 
-      {/* Chat area */}
-      <div className="flex-1 flex flex-col overflow-hidden" style={cardStyle}>
+      {/* RIGHT PANEL — Active chat */}
+      <div className={`${showRightPanel ? 'flex' : 'hidden'} flex-1 flex-col bg-background`}>
         {selectedUser ? (
           <>
-            <div className="flex items-center gap-3 p-4 border-b flex-shrink-0" style={{ borderColor: 'rgba(139,92,246,0.15)' }}>
-              <Avatar className="w-10 h-10">
-                <AvatarImage src={selectedUser.avatar_url || undefined} />
-                <AvatarFallback>{selectedUser.full_name?.charAt(0) || 'U'}</AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="font-semibold">{selectedUser.full_name || 'Researcher'}</p>
-                <p className="text-xs text-muted-foreground capitalize">{selectedUser.department || selectedUser.academic_level?.replace(/_/g, ' ') || ''}</p>
-              </div>
+            {/* Chat header */}
+            <div className="flex items-center gap-3 p-4 border-b border-border bg-card shrink-0">
+              {isMobile && (
+                <button
+                  onClick={() => setShowChat(false)}
+                  className="p-1.5 rounded-lg hover:bg-muted transition-colors shrink-0"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </button>
+              )}
+              <Link
+                href={`/profile/${selectedUserId}`}
+                className="flex items-center gap-3 hover:opacity-80 transition-opacity flex-1 min-w-0"
+              >
+                <Avatar className="w-9 h-9 shrink-0">
+                  <AvatarImage src={selectedUser.avatar_url || undefined} />
+                  <AvatarFallback>{selectedUser.full_name?.charAt(0) || 'U'}</AvatarFallback>
+                </Avatar>
+                <div className="min-w-0">
+                  <p className="font-semibold text-sm truncate">{selectedUser.full_name || 'Researcher'}</p>
+                  <p className="text-xs text-muted-foreground">Tap to view profile</p>
+                </div>
+              </Link>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4">
-              <div className="space-y-3">
-                {messages.length === 0 ? (
-                  <div className="text-center py-16">
-                    <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                    <p className="text-sm text-muted-foreground">No messages yet</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Say hello to {selectedUser.full_name?.split(' ')[0] || 'them'}!
-                    </p>
-                  </div>
-                ) : (
-                  messages.map((msg, i) => {
-                    const isOwn = msg.sender_id === currentUserId
-                    const isLast = i === messages.length - 1
-                    const showTime = isLast || messages[i + 1].sender_id !== msg.sender_id
-                    return (
-                      <div key={msg.id} className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-[70%] flex flex-col gap-1 ${isOwn ? 'items-end' : 'items-start'}`}>
-                          <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
-                            isOwn
-                              ? 'bg-primary text-primary-foreground rounded-br-sm'
-                              : 'bg-muted rounded-bl-sm'
-                          }`}>
-                            {msg.content}
-                          </div>
-                          {showTime && (
-                            <p className="text-[10px] text-muted-foreground px-1">
-                              {new Date(msg.created_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
-                            </p>
-                          )}
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {messages.length === 0 ? (
+                <div className="text-center py-16">
+                  <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                  <p className="text-sm text-muted-foreground">No messages yet</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Say hello to {selectedUser.full_name?.split(' ')[0] || 'them'}!
+                  </p>
+                </div>
+              ) : (
+                messages.map((msg, i) => {
+                  const isOwn = msg.sender_id === currentUserId
+                  const isLast = i === messages.length - 1
+                  const showTime = isLast || messages[i + 1]?.sender_id !== msg.sender_id
+                  return (
+                    <div key={msg.id} className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`max-w-[75%] flex flex-col gap-1 ${isOwn ? 'items-end' : 'items-start'}`}>
+                        <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
+                          isOwn
+                            ? 'bg-primary text-primary-foreground rounded-br-sm'
+                            : 'bg-muted text-foreground rounded-bl-sm'
+                        }`}>
+                          {msg.content}
                         </div>
+                        {showTime && (
+                          <p className={`text-[10px] text-muted-foreground px-1 ${isOwn ? 'text-right' : ''}`}>
+                            {formatDistanceToNow(new Date(msg.created_at), { addSuffix: true })}
+                          </p>
+                        )}
                       </div>
-                    )
-                  })
-                )}
-                <div ref={messagesEndRef} />
-              </div>
+                    </div>
+                  )
+                })
+              )}
+              <div ref={messagesEndRef} />
             </div>
 
-            <div className="p-4 border-t flex-shrink-0" style={{ borderColor: 'rgba(139,92,246,0.15)' }}>
-              <form onSubmit={sendMessage} className="flex items-center gap-2">
-                <Input
+            {/* Input */}
+            <div className="p-3 border-t border-border bg-card shrink-0">
+              <div className="flex items-end gap-2">
+                <textarea
+                  ref={textareaRef}
                   value={newMessage}
-                  onChange={e => setNewMessage(e.target.value)}
+                  onChange={e => {
+                    setNewMessage(e.target.value)
+                    e.target.style.height = 'auto'
+                    e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px'
+                  }}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault()
+                      sendMessage()
+                    }
+                  }}
                   placeholder={`Message ${selectedUser.full_name?.split(' ')[0] || 'researcher'}…`}
-                  className="flex-1"
+                  rows={1}
+                  className="flex-1 resize-none rounded-2xl border border-border bg-background px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30 min-h-[44px] max-h-[120px]"
                 />
-                <Button type="submit" size="icon" disabled={!newMessage.trim()}>
+                <button
+                  onClick={sendMessage}
+                  disabled={!newMessage.trim()}
+                  className="w-11 h-11 rounded-full bg-primary text-primary-foreground flex items-center justify-center shrink-0 disabled:opacity-40 hover:opacity-90 transition-opacity"
+                >
                   <Send className="w-4 h-4" />
-                </Button>
-              </form>
+                </button>
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-1 ml-1">
+                Enter to send · Shift+Enter for newline
+              </p>
             </div>
           </>
         ) : (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center">
-              <MessageSquare className="w-16 h-16 mx-auto mb-4 opacity-20" />
-              <h3 className="text-lg font-medium">Your Messages</h3>
-              <p className="text-sm text-muted-foreground mt-2 max-w-xs">
-                Select a conversation or visit a researcher&apos;s profile to start messaging
+          <div className="hidden md:flex flex-1 items-center justify-center text-center p-8">
+            <div className="space-y-3">
+              <MessageSquare className="w-12 h-12 text-muted-foreground/30 mx-auto" />
+              <p className="font-medium">Select a conversation</p>
+              <p className="text-sm text-muted-foreground max-w-xs">
+                Choose from your conversations or visit a profile to message someone new
               </p>
             </div>
           </div>
