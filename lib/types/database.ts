@@ -167,6 +167,7 @@ export interface ResearchIdea {
   status: IdeaStatus
   upvotes: number
   views: number
+  comments_count: number
   is_featured: boolean
   created_at: string
   updated_at: string

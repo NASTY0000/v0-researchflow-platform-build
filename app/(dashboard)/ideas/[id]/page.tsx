@@ -32,11 +32,24 @@ import {
   Loader2,
   GraduationCap,
   Building2,
+  Send,
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import type { ResearchIdea, Profile } from "@/lib/types/database"
 import { formatDistanceToNow, format } from "date-fns"
 import { Input } from "@/components/ui/input"
+
+type IdeaComment = {
+  id: string
+  idea_id: string
+  author_id: string
+  content: string
+  parent_id: string | null
+  upvotes: number
+  created_at: string
+  author?: Profile
+  user_has_upvoted?: boolean
+}
 
 interface IdeaWithAuthor extends ResearchIdea {
   author: Profile
@@ -57,6 +70,10 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
   const [flagReason, setFlagReason] = useState("")
   const [isFlagging, setIsFlagging] = useState(false)
   const [shareCopied, setShareCopied] = useState(false)
+  const [comments, setComments] = useState<IdeaComment[]>([])
+  const [newComment, setNewComment] = useState("")
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false)
+  const [replyTo, setReplyTo] = useState<{ id: string; authorName: string } | null>(null)
 
   useEffect(() => {
     async function loadIdea() {
@@ -113,6 +130,30 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
           .single()
 
         setHasUpvoted(!!upvote)
+      }
+
+      // Load comments
+      const { data: commentData } = await supabase
+        .from('idea_comments')
+        .select('*, author:profiles!idea_comments_author_id_fkey(*)')
+        .eq('idea_id', id)
+        .order('created_at', { ascending: true })
+
+      if (commentData) {
+        const enriched = user
+          ? await Promise.all(
+              commentData.map(async (c) => {
+                const { data: upvote } = await supabase
+                  .from('idea_comment_upvotes')
+                  .select('id')
+                  .eq('comment_id', c.id)
+                  .eq('user_id', user.id)
+                  .maybeSingle()
+                return { ...c, user_has_upvoted: !!upvote }
+              })
+            )
+          : commentData
+        setComments(enriched as IdeaComment[])
       }
 
       setIsLoading(false)
@@ -205,6 +246,47 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
     setIsFlagging(false)
     setShowFlagDialog(false)
     setFlagReason("")
+  }
+
+  async function handleSubmitComment() {
+    if (!newComment.trim() || !currentUserId || !idea) return
+    setIsSubmittingComment(true)
+    const supabase = createClient()
+
+    const { data: inserted } = await supabase
+      .from('idea_comments')
+      .insert({
+        idea_id: id,
+        author_id: currentUserId,
+        content: newComment.trim(),
+        parent_id: replyTo?.id || null,
+      })
+      .select('*, author:profiles!idea_comments_author_id_fkey(*)')
+      .single()
+
+    if (inserted) {
+      setComments(prev => [...prev, { ...inserted, user_has_upvoted: false } as IdeaComment])
+      setIdea({ ...idea, comments_count: (idea.comments_count || 0) + 1 })
+    }
+
+    setNewComment("")
+    setReplyTo(null)
+    setIsSubmittingComment(false)
+  }
+
+  async function handleCommentUpvote(commentId: string, currentUpvotes: number, hasUpvoted: boolean) {
+    if (!currentUserId) return
+    const supabase = createClient()
+
+    if (hasUpvoted) {
+      await supabase.from('idea_comment_upvotes').delete().eq('comment_id', commentId).eq('user_id', currentUserId)
+      await supabase.from('idea_comments').update({ upvotes: currentUpvotes - 1 }).eq('id', commentId)
+      setComments(prev => prev.map(c => c.id === commentId ? { ...c, upvotes: c.upvotes - 1, user_has_upvoted: false } : c))
+    } else {
+      await supabase.from('idea_comment_upvotes').insert({ comment_id: commentId, user_id: currentUserId })
+      await supabase.from('idea_comments').update({ upvotes: currentUpvotes + 1 }).eq('id', commentId)
+      setComments(prev => prev.map(c => c.id === commentId ? { ...c, upvotes: c.upvotes + 1, user_has_upvoted: true } : c))
+    }
   }
 
   if (isLoading) {
@@ -380,6 +462,150 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
               </div>
             </CardContent>
           </Card>
+
+          {/* Comments */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <MessageSquare className="h-4 w-4" />
+                Discussion ({comments.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Comment input */}
+              {currentUserId ? (
+                <div className="space-y-2">
+                  {replyTo && (
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 px-3 py-1.5 rounded-lg">
+                      <span>Replying to <strong>{replyTo.authorName}</strong></span>
+                      <button onClick={() => setReplyTo(null)} className="ml-auto hover:text-foreground">✕</button>
+                    </div>
+                  )}
+                  <div className="flex gap-2">
+                    <Textarea
+                      placeholder="Share your thoughts or ask a question..."
+                      value={newComment}
+                      onChange={e => setNewComment(e.target.value)}
+                      rows={2}
+                      className="flex-1 resize-none"
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' && e.ctrlKey) {
+                          e.preventDefault()
+                          handleSubmitComment()
+                        }
+                      }}
+                    />
+                    <Button
+                      size="icon"
+                      onClick={handleSubmitComment}
+                      disabled={!newComment.trim() || isSubmittingComment}
+                      className="self-end"
+                    >
+                      {isSubmittingComment ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Ctrl+Enter to submit</p>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-2">
+                  Sign in to join the discussion
+                </p>
+              )}
+
+              {/* Comment threads */}
+              {comments.length === 0 ? (
+                <div className="text-center py-6">
+                  <MessageSquare className="h-10 w-10 text-muted-foreground/30 mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground">No comments yet. Be the first to share your thoughts!</p>
+                </div>
+              ) : (
+                <div className="space-y-3 pt-2">
+                  {comments.filter(c => !c.parent_id).map(comment => (
+                    <div key={comment.id} className="space-y-2">
+                      <div className="flex gap-3">
+                        <Link href={`/profile/${comment.author_id}`} className="flex-shrink-0">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={comment.author?.avatar_url || undefined} />
+                            <AvatarFallback className="text-xs bg-primary/10 text-primary">
+                              {comment.author?.full_name?.charAt(0) || '?'}
+                            </AvatarFallback>
+                          </Avatar>
+                        </Link>
+                        <div className="flex-1 min-w-0">
+                          <div className="bg-muted/40 rounded-xl px-3 py-2">
+                            <div className="flex items-baseline gap-2 mb-1">
+                              <Link href={`/profile/${comment.author_id}`} className="text-sm font-medium hover:text-primary transition-colors">
+                                {comment.author?.full_name || 'Researcher'}
+                              </Link>
+                              <span className="text-[11px] text-muted-foreground">
+                                {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
+                              </span>
+                            </div>
+                            <p className="text-sm text-foreground/90 whitespace-pre-wrap">{comment.content}</p>
+                          </div>
+                          <div className="flex items-center gap-3 mt-1 px-1">
+                            <button
+                              onClick={() => handleCommentUpvote(comment.id, comment.upvotes, comment.user_has_upvoted || false)}
+                              disabled={!currentUserId}
+                              className={`flex items-center gap-1 text-xs transition-colors ${comment.user_has_upvoted ? 'text-primary' : 'text-muted-foreground hover:text-primary'}`}
+                            >
+                              <ChevronUp className={`h-3.5 w-3.5 ${comment.user_has_upvoted ? 'fill-primary' : ''}`} />
+                              {comment.upvotes || 0}
+                            </button>
+                            {currentUserId && (
+                              <button
+                                onClick={() => setReplyTo({ id: comment.id, authorName: comment.author?.full_name || 'Researcher' })}
+                                className="text-xs text-muted-foreground hover:text-primary transition-colors"
+                              >
+                                Reply
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Replies */}
+                      {comments.filter(r => r.parent_id === comment.id).map(reply => (
+                        <div key={reply.id} className="flex gap-3 pl-10">
+                          <Link href={`/profile/${reply.author_id}`} className="flex-shrink-0">
+                            <Avatar className="h-7 w-7">
+                              <AvatarImage src={reply.author?.avatar_url || undefined} />
+                              <AvatarFallback className="text-xs bg-primary/10 text-primary">
+                                {reply.author?.full_name?.charAt(0) || '?'}
+                              </AvatarFallback>
+                            </Avatar>
+                          </Link>
+                          <div className="flex-1 min-w-0">
+                            <div className="bg-muted/30 rounded-xl px-3 py-2">
+                              <div className="flex items-baseline gap-2 mb-1">
+                                <Link href={`/profile/${reply.author_id}`} className="text-sm font-medium hover:text-primary transition-colors">
+                                  {reply.author?.full_name || 'Researcher'}
+                                </Link>
+                                <span className="text-[11px] text-muted-foreground">
+                                  {formatDistanceToNow(new Date(reply.created_at), { addSuffix: true })}
+                                </span>
+                              </div>
+                              <p className="text-sm text-foreground/90 whitespace-pre-wrap">{reply.content}</p>
+                            </div>
+                            <div className="flex items-center gap-3 mt-1 px-1">
+                              <button
+                                onClick={() => handleCommentUpvote(reply.id, reply.upvotes, reply.user_has_upvoted || false)}
+                                disabled={!currentUserId}
+                                className={`flex items-center gap-1 text-xs transition-colors ${reply.user_has_upvoted ? 'text-primary' : 'text-muted-foreground hover:text-primary'}`}
+                              >
+                                <ChevronUp className={`h-3.5 w-3.5 ${reply.user_has_upvoted ? 'fill-primary' : ''}`} />
+                                {reply.upvotes || 0}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
         {/* Sidebar */}
@@ -489,7 +715,7 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
           {/* Stats Card */}
           <Card>
             <CardContent className="p-4">
-              <div className="grid grid-cols-3 text-center divide-x divide-border">
+              <div className="grid grid-cols-4 text-center divide-x divide-border">
                 <div className="px-2">
                   <p className="text-2xl font-bold text-primary">{idea.upvotes || 0}</p>
                   <p className="text-xs text-muted-foreground">Upvotes</p>
@@ -497,6 +723,10 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
                 <div className="px-2">
                   <p className="text-2xl font-bold">{idea.views || 0}</p>
                   <p className="text-xs text-muted-foreground">Views</p>
+                </div>
+                <div className="px-2">
+                  <p className="text-2xl font-bold">{comments.length}</p>
+                  <p className="text-xs text-muted-foreground">Comments</p>
                 </div>
                 <div className="px-2">
                   <p className="text-2xl font-bold">{idea.roles_needed?.length || 0}</p>

@@ -162,3 +162,14 @@ export async function matchedToProjectForSkills(userId: string, projectId: strin
 export async function projectUsingSkillsReachesShowcase(userId: string, projectId: string) {
   await awardAkiliPoints(userId, 'projectUsingSkillsReachesShowcase', 60, 'A project using your skills reached the showcase', projectId)
 }
+
+export async function connectionAccepted(requesterId: string, acceptorId: string) {
+  await Promise.all([
+    awardAkiliPoints(requesterId, 'connectionAccepted', 5, 'Your connection request was accepted'),
+    awardAkiliPoints(acceptorId, 'connectionAccepted', 5, 'You accepted a connection request'),
+  ])
+}
+
+export async function onboardingComplete(userId: string) {
+  await awardAkiliPoints(userId, 'onboardingComplete', 10, 'Completed onboarding')
+}

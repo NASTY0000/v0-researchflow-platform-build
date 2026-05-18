@@ -28,6 +28,8 @@ import {
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import type { Profile } from '@/lib/types/database'
+import { connectionAccepted } from '@/lib/actions/akili'
+import { notifyConnectionAccepted } from '@/lib/actions/email'
 import { toast } from 'sonner'
 
 interface Connection {
@@ -135,6 +137,8 @@ export default function NetworkPage() {
         link: '/network',
         is_read: false,
       })
+      connectionAccepted(requesterId, userId!).catch(() => {})
+      notifyConnectionAccepted(requesterId, userId!).catch(() => {})
       toast.success('Connection accepted!')
       loadAll()
     } else {

@@ -22,6 +22,7 @@ import {
   Users,
   Plus,
   ChevronUp,
+  MessageSquare,
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import type { ResearchIdea, Profile } from "@/lib/types/database"
@@ -359,6 +360,10 @@ export default function IdeasPage() {
                     <span className="flex items-center gap-1">
                       <Eye className="h-4 w-4" />
                       {idea.views || 0}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <MessageSquare className="h-4 w-4" />
+                      {(idea as ResearchIdea & { comments_count?: number }).comments_count || 0}
                     </span>
                     <span className="flex items-center gap-1">
                       <Clock className="h-4 w-4" />

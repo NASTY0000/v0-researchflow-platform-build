@@ -11,6 +11,8 @@ import { Label } from '@/components/ui/label'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { FileText, Check, X, RefreshCw, Eye, ArrowLeft, ExternalLink, Calendar } from 'lucide-react'
 import type { ShowcaseSubmission } from '@/lib/types/database'
+import { showcaseApproved } from '@/lib/actions/akili'
+import { notifyShowcaseApproved } from '@/lib/actions/email'
 
 type Action = 'approve' | 'revise' | 'reject' | null
 
@@ -83,6 +85,11 @@ export default function AdminShowcasePage() {
       message: messages[resolvedAction],
       link: '/showcase',
     })
+
+    if (resolvedAction === 'approve') {
+      showcaseApproved(selected.submitted_by, selected.id).catch(() => {})
+      notifyShowcaseApproved(selected.submitted_by, selected.title, selected.id).catch(() => {})
+    }
 
     setSelected(null)
     setAction(null)
