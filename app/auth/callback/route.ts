@@ -5,34 +5,44 @@ export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
 
   const code = searchParams.get('code')
+  const error = searchParams.get('error')
+  const errorCode = searchParams.get('error_code')
+  const errorDescription = searchParams.get('error_description')
+
+  // Handle OAuth errors and cancellations
+  if (error || errorCode) {
+    console.log('OAuth error:', { error, errorCode, errorDescription })
+    return NextResponse.redirect(`${origin}/auth/login?cleared=true`)
+  }
 
   if (code) {
     const supabase = await createClient()
 
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
 
-    if (!error) {
-      const { data: { user } } = await supabase.auth.getUser()
-
-      if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('onboarding_completed')
-          .eq('id', user.id)
-          .single()
-
-        if (!profile?.onboarding_completed) {
-          return NextResponse.redirect(`${origin}/onboarding`)
-        }
-
-        return NextResponse.redirect(`${origin}/dashboard`)
-      }
+    if (exchangeError) {
+      console.error('Exchange error:', exchangeError.message)
+      return NextResponse.redirect(`${origin}/auth/login?error=auth_failed`)
     }
 
-    // Auth failed
-    return NextResponse.redirect(`${origin}/auth/login?error=oauth_failed`)
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('onboarding_completed')
+        .eq('id', user.id)
+        .maybeSingle()
+
+      if (!profile?.onboarding_completed) {
+        return NextResponse.redirect(`${origin}/onboarding`)
+      }
+
+      return NextResponse.redirect(`${origin}/dashboard`)
+    }
+
+    return NextResponse.redirect(`${origin}/auth/login?error=auth_failed`)
   }
 
-  // No code - redirect to login
-  return NextResponse.redirect(`${origin}/auth/login`)
+  return NextResponse.redirect(`${origin}/auth/login?cleared=true`)
 }
