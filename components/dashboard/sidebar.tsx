@@ -36,6 +36,7 @@ import {
   Shield,
   UserCheck,
   Bookmark,
+  Sparkles,
 } from 'lucide-react'
 import type { Profile } from '@/lib/types/database'
 import { signOut } from '@/lib/actions/auth'
@@ -84,6 +85,11 @@ const resourceNavItems = [
     title: 'Marketplace',
     href: '/marketplace',
     icon: Store,
+  },
+  {
+    title: 'AI Assistant',
+    href: '/assistant',
+    icon: Sparkles,
   },
   {
     title: 'Messages',

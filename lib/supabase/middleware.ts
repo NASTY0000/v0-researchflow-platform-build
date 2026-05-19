@@ -50,6 +50,7 @@ export async function updateSession(request: NextRequest) {
     '/notifications',
     '/network',
     '/saved',
+    '/assistant',
   ]
 
   const isProtectedRoute = protectedRoutes.some(
