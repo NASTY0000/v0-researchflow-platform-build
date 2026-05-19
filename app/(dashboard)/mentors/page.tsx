@@ -42,6 +42,7 @@ import {
   ArrowRight,
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
+import { BookmarkButton } from "@/components/ui/bookmark-button"
 import type { MentorProfile, Profile, Project } from "@/lib/types/database"
 import { AkiliScoreBadge } from "@/components/akili/AkiliScoreBadge"
 import { toast } from "sonner"
@@ -555,6 +556,7 @@ export default function MentorsPage() {
                   <Button variant="outline" asChild>
                     <Link href={`/profile/${mentor.user_id}`}>Profile</Link>
                   </Button>
+                  <BookmarkButton contentType="mentor" contentId={mentor.id} size="sm" />
                 </div>
               </CardContent>
             </Card>

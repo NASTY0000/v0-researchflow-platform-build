@@ -19,6 +19,8 @@ import {
 import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
 import { ProfileNeuralBg } from '@/components/ui/profile-neural-bg'
+import { BookmarkButton } from '@/components/ui/bookmark-button'
+import { FollowButton } from '@/components/ui/follow-button'
 
 export default function PublicProfilePage() {
   const params = useParams()
@@ -262,9 +264,21 @@ export default function PublicProfilePage() {
                 </div>
               )}
 
+              {/* Follower / following counts */}
+              <div className="flex gap-4 text-sm">
+                <button className="hover:text-primary transition-colors">
+                  <span className="font-bold">{profile.followers_count || 0}</span>
+                  <span className="text-muted-foreground ml-1">Followers</span>
+                </button>
+                <button className="hover:text-primary transition-colors">
+                  <span className="font-bold">{profile.following_count || 0}</span>
+                  <span className="text-muted-foreground ml-1">Following</span>
+                </button>
+              </div>
+
               {/* Action buttons */}
               {!isOwnProfile && currentUserId && (
-                <div className="flex gap-3 flex-wrap pt-2">
+                <div className="flex gap-2 flex-wrap pt-2 items-center">
                   {isConnected ? (
                     <Badge variant="secondary">✓ Connected</Badge>
                   ) : connectionSent ? (
@@ -281,13 +295,28 @@ export default function PublicProfilePage() {
                       Message
                     </Link>
                   </Button>
+                  <FollowButton targetUserId={userId} />
+                  <BookmarkButton contentType="profile" contentId={userId} />
                 </div>
               )}
 
               {isOwnProfile && (
-                <Button size="sm" variant="outline" asChild>
-                  <Link href="/profile">Edit Profile</Link>
-                </Button>
+                <div className="flex gap-2 pt-2 flex-wrap">
+                  <Button size="sm" variant="outline" asChild>
+                    <Link href="/profile">Edit Profile</Link>
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      const url = `https://researchflowafrica.com/researcher/${userId}`
+                      navigator.clipboard?.writeText(url)
+                    }}
+                    title="Copy public profile link"
+                  >
+                    Share Profile
+                  </Button>
+                </div>
               )}
             </div>
 

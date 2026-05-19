@@ -38,6 +38,7 @@ import { createClient } from "@/lib/supabase/client"
 import type { ResearchIdea, Profile } from "@/lib/types/database"
 import { formatDistanceToNow, format } from "date-fns"
 import { Input } from "@/components/ui/input"
+import { BookmarkButton } from "@/components/ui/bookmark-button"
 
 type IdeaComment = {
   id: string
@@ -453,6 +454,10 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
                   <Share2 className="mr-2 h-4 w-4" />
                   {shareCopied ? 'Copied!' : 'Share'}
                 </Button>
+
+                {currentUserId && idea && (
+                  <BookmarkButton contentType="idea" contentId={idea.id} />
+                )}
 
                 {currentUserId && !isAuthor && (
                   <Button variant="ghost" size="icon" onClick={() => setShowFlagDialog(true)}>

@@ -780,9 +780,22 @@ export default function ProfilePage() {
                         {profile.department && ` · ${profile.department}`}
                       </p>
                     </div>
-                    <Button variant="outline" onClick={() => setIsEditing(true)}>
-                      <Edit className="w-4 h-4 mr-2" />Edit Profile
-                    </Button>
+                    <div className="flex gap-2 flex-wrap">
+                      <Button variant="outline" onClick={() => setIsEditing(true)}>
+                        <Edit className="w-4 h-4 mr-2" />Edit Profile
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          const url = `https://researchflowafrica.com/researcher/${profile.id}`
+                          navigator.clipboard?.writeText(url)
+                        }}
+                        title="Copy public profile link"
+                      >
+                        Share Profile
+                      </Button>
+                    </div>
                   </div>
 
                   {profile.bio && <p className="text-muted-foreground">{profile.bio}</p>}

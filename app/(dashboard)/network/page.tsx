@@ -63,12 +63,19 @@ function getInitials(name: string | null) {
   return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
 }
 
+interface FollowedUser {
+  id: string
+  following_id: string
+  followed_user: Profile
+}
+
 export default function NetworkPage() {
   const [userId, setUserId] = useState<string | null>(null)
   const [myNetwork, setMyNetwork] = useState<Connection[]>([])
   const [incoming, setIncoming] = useState<Connection[]>([])
   const [outgoing, setOutgoing] = useState<Connection[]>([])
   const [suggestions, setSuggestions] = useState<MatchSuggestion[]>([])
+  const [following, setFollowing] = useState<FollowedUser[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [connectTarget, setConnectTarget] = useState<MatchSuggestion | null>(null)
@@ -117,7 +124,24 @@ export default function NetworkPage() {
     if (incomingRes.data) setIncoming(incomingRes.data)
     if (outgoingRes.data) setOutgoing(outgoingRes.data)
     if (suggestionsRes.data) setSuggestions(suggestionsRes.data as MatchSuggestion[])
+
+    // Load following
+    const { data: followingData } = await supabase
+      .from('follows')
+      .select('id, following_id, followed_user:profiles!follows_following_id_fkey(*)')
+      .eq('follower_id', user.id)
+      .order('created_at', { ascending: false })
+    if (followingData) setFollowing(followingData as unknown as FollowedUser[])
+
     setIsLoading(false)
+  }
+
+  async function unfollowUser(followingId: string) {
+    if (!userId) return
+    const supabase = createClient()
+    await supabase.from('follows').delete().eq('follower_id', userId).eq('following_id', followingId)
+    supabase.rpc('decrement_follow_counts', { follower: userId, followed: followingId }).then(() => {})
+    setFollowing(prev => prev.filter(f => f.following_id !== followingId))
   }
 
   async function acceptConnection(connectionId: string, requesterId: string) {
@@ -231,6 +255,9 @@ export default function NetworkPage() {
           </TabsTrigger>
           <TabsTrigger value="suggestions">
             Suggestions <Badge className="ml-2 text-xs">{suggestions.length}</Badge>
+          </TabsTrigger>
+          <TabsTrigger value="following">
+            Following <Badge className="ml-2 text-xs">{following.length}</Badge>
           </TabsTrigger>
         </TabsList>
 
@@ -467,6 +494,70 @@ export default function NetworkPage() {
                             View Profile
                           </Button>
                         </Link>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )
+              })}
+            </div>
+          )}
+        </TabsContent>
+
+        {/* Following */}
+        <TabsContent value="following" className="mt-4 space-y-4">
+          {following.length === 0 ? (
+            <Card style={cardStyle}>
+              <CardContent className="py-16 text-center">
+                <UserPlus className="h-12 w-12 mx-auto mb-4 opacity-30" style={{ color: '#7C6A9C' }} />
+                <p className="font-medium" style={{ color: '#E2D9F3' }}>Not following anyone yet</p>
+                <p className="text-sm mt-1" style={{ color: '#7C6A9C' }}>Visit a researcher&apos;s profile and click Follow</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2">
+              {following.map(f => {
+                const person = f.followed_user
+                if (!person) return null
+                return (
+                  <Card key={f.id} style={cardStyle}>
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-3 mb-3">
+                        <Link href={`/profile/${person.id}`}>
+                          <Avatar className="h-12 w-12 cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all">
+                            <AvatarImage src={person.avatar_url || undefined} />
+                            <AvatarFallback>{getInitials(person.full_name)}</AvatarFallback>
+                          </Avatar>
+                        </Link>
+                        <div className="flex-1 min-w-0">
+                          <Link href={`/profile/${person.id}`} className="font-medium text-sm hover:text-primary transition-colors" style={{ color: '#E2D9F3' }}>
+                            {person.full_name}
+                          </Link>
+                          {person.department && (
+                            <p className="text-xs truncate" style={{ color: '#7C6A9C' }}>{person.department}</p>
+                          )}
+                        </div>
+                      </div>
+                      {person.research_interests && person.research_interests.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mb-3">
+                          {person.research_interests.slice(0, 3).map((r: string) => (
+                            <Badge key={r} variant="outline" className="text-xs">{r}</Badge>
+                          ))}
+                        </div>
+                      )}
+                      <div className="flex gap-2">
+                        <Link href={`/profile/${person.id}`} className="flex-1">
+                          <Button size="sm" variant="outline" className="w-full" style={{ border: '1px solid rgba(139,92,246,0.3)', color: '#A78BFA', background: 'transparent', fontSize: '12px' }}>
+                            View Profile
+                          </Button>
+                        </Link>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => unfollowUser(f.following_id)}
+                          className="text-muted-foreground hover:text-destructive text-xs"
+                        >
+                          Unfollow
+                        </Button>
                       </div>
                     </CardContent>
                   </Card>

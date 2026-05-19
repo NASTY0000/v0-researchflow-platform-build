@@ -44,6 +44,7 @@ export type ConversationType = 'direct' | 'team' | 'project'
 
 export type NotificationType =
   | 'new_message'
+  | 'new_follower'
   | 'connection_request'
   | 'connection_accepted'
   | 'team_invite'
