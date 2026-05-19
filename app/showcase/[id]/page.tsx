@@ -32,6 +32,7 @@ import { createClient } from "@/lib/supabase/client"
 import { toast } from "sonner"
 import type { ShowcaseEntry, Profile } from "@/lib/types/database"
 import { showcaseDownloaded25Times } from "@/lib/actions/akili"
+import { BookmarkButton } from "@/components/ui/bookmark-button"
 
 type ShowcaseWithAuthor = ShowcaseEntry & {
   author: Profile | null
@@ -523,10 +524,15 @@ export default function ShowcaseEntryPage({
           className="rounded-xl p-5 space-y-4"
           style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(139,92,246,0.15)' }}
         >
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <Share2 className="h-5 w-5" style={{ color: '#A855F7' }} />
-            Download & Share
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold flex items-center gap-2">
+              <Share2 className="h-5 w-5" style={{ color: '#A855F7' }} />
+              Download & Share
+            </h2>
+            {isLoggedIn && entry && (
+              <BookmarkButton contentType="showcase" contentId={entry.id} />
+            )}
+          </div>
           <div className="flex flex-wrap gap-3">
             {entry.document_url && (
               <Button

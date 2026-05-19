@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { notifyMatchFound } from '@/lib/actions/email'
 
 function calcSkillScore(
   userSkills: string[],
@@ -89,10 +90,15 @@ export async function generateMatchesOnOnboarding(userId: string) {
   }
 
   if (inserts.length > 0) {
-    await supabase.from('matches').upsert(inserts, {
+    const { data: upserted } = await supabase.from('matches').upsert(inserts, {
       onConflict: 'user_id,matched_user_id',
       ignoreDuplicates: true,
-    })
+    }).select('user_id,matched_user_id,match_type,match_score')
+
+    if (upserted && upserted.length > 0) {
+      const top = upserted[0]
+      notifyMatchFound(top.user_id, top.matched_user_id, top.match_type, top.match_score).catch(() => {})
+    }
   }
 }
 

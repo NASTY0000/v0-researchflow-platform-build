@@ -35,6 +35,7 @@ import {
   User,
   Shield,
   UserCheck,
+  Bookmark,
 } from 'lucide-react'
 import type { Profile } from '@/lib/types/database'
 import { signOut } from '@/lib/actions/auth'
@@ -60,6 +61,11 @@ const mainNavItems = [
     title: 'My Network',
     href: '/network',
     icon: UserCheck,
+  },
+  {
+    title: 'Saved',
+    href: '/saved',
+    icon: Bookmark,
   },
   {
     title: 'My Projects',
