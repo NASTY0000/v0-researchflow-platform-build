@@ -38,7 +38,7 @@ export async function signUp(formData: FormData) {
       .from('profiles')
       .select('onboarding_completed, id')
       .eq('email', email)
-      .single()
+      .maybeSingle()
 
     if (!existingProfile || !existingProfile.onboarding_completed) {
       // Incomplete registration — resend verification so they can continue
@@ -155,7 +155,7 @@ export async function signIn(formData: FormData) {
       .from('profiles')
       .select('onboarding_completed')
       .eq('id', user.id)
-      .single()
+      .maybeSingle()
 
     if (!profile || !profile.onboarding_completed) {
       return { success: true, redirectTo: '/onboarding' }
@@ -217,7 +217,7 @@ export async function getProfile() {
     .from('profiles')
     .select('*')
     .eq('id', user.id)
-    .single()
+    .maybeSingle()
 
   return profile
 }
