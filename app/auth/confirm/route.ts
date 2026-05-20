@@ -41,9 +41,24 @@ export async function GET(request: NextRequest) {
       .from('profiles')
       .select('onboarding_completed')
       .eq('id', user.id)
-      .single()
+      .maybeSingle() // Changed from .single() to .maybeSingle()
 
-    if (!profile?.onboarding_completed) {
+    if (!profile) {
+      // Profile doesn't exist yet, create it
+      await supabase.from('profiles').upsert({
+        id: user.id,
+        email: user.email,
+        full_name: user.user_metadata?.full_name || '',
+        onboarding_completed: false,
+        onboarding_step: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'id' })
+      
+      return NextResponse.redirect(`${origin}/onboarding`)
+    }
+
+    if (!profile.onboarding_completed) {
       return NextResponse.redirect(
         `${origin}/onboarding`
       )
