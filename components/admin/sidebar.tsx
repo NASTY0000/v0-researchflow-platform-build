@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/sidebar'
 import {
   LayoutDashboard, Users, Shield, FileText, AlertTriangle,
-  Building2, BarChart3, Megaphone, ArrowLeft,
+  Building2, BarChart3, Megaphone, ArrowLeft, DollarSign,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import Image from 'next/image'
@@ -23,6 +23,8 @@ const adminNavItems = [
   { title: 'Universities', href: '/admin/universities', icon: Building2 },
   { title: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
   { title: 'Broadcast', href: '/admin/broadcast', icon: Megaphone },
+  { title: 'Grants', href: '/admin/grants', icon: DollarSign },
+  { title: 'Grant Applications', href: '/admin/grants/applications', icon: FileText },
 ]
 
 interface AdminSidebarProps {

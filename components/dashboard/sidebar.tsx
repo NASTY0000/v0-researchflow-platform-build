@@ -37,6 +37,7 @@ import {
   UserCheck,
   Bookmark,
   Sparkles,
+  DollarSign,
 } from 'lucide-react'
 import type { Profile } from '@/lib/types/database'
 import { signOut } from '@/lib/actions/auth'
@@ -90,6 +91,11 @@ const resourceNavItems = [
     title: 'AI Assistant',
     href: '/assistant',
     icon: Sparkles,
+  },
+  {
+    title: 'Grants',
+    href: '/grants',
+    icon: DollarSign,
   },
   {
     title: 'Messages',
