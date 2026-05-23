@@ -8,7 +8,6 @@ import type { Profile, University } from '@/lib/types/database'
 
 export default function OnboardingPage() {
   const router = useRouter()
-  const [sessionReady, setSessionReady] = useState(false)
   const [loading, setLoading] = useState(true)
   const [pageError, setPageError] = useState<string | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -19,30 +18,13 @@ export default function OnboardingPage() {
       try {
         const supabase = createClient()
 
-        // First confirm a session exists (fast, reads from cookie)
-        const { data: { session } } = await supabase.auth.getSession()
-
-        // Then verify it's valid server-side
         const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-        if (authError) {
-          setPageError('Auth error: ' + authError.message)
-          return
-        }
-
         if (authError || !user) {
-          // For email signup flow, redirect to signup not login
-          if (!session) {
-            router.push('/auth/signup')
-          } else {
-            router.push('/auth/login')
-          }
+          router.push('/auth/signup')
           return
         }
 
-        setSessionReady(true)
-
-        // Fetch profile and universities in parallel
         const [profileResult, universitiesResult] = await Promise.all([
           supabase.from('profiles').select('*').eq('id', user.id).maybeSingle(),
           supabase.from('universities').select('*').order('name'),
@@ -55,7 +37,6 @@ export default function OnboardingPage() {
           return
         }
 
-        // Google OAuth users may have no profile row yet — create one
         if (!fetchedProfile) {
           const { data: created, error: insertError } = await supabase
             .from('profiles')
@@ -119,7 +100,7 @@ export default function OnboardingPage() {
     )
   }
 
-  if (!sessionReady || loading) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="w-10 h-10 rounded-full animate-spin border-4 border-primary border-t-transparent" />
