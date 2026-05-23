@@ -8,6 +8,7 @@ import type { Profile, University } from '@/lib/types/database'
 
 export default function OnboardingPage() {
   const router = useRouter()
+  const [sessionReady, setSessionReady] = useState(false)
   const [loading, setLoading] = useState(true)
   const [pageError, setPageError] = useState<string | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -17,6 +18,11 @@ export default function OnboardingPage() {
     async function init() {
       try {
         const supabase = createClient()
+
+        // First confirm a session exists (fast, reads from cookie)
+        const { data: { session } } = await supabase.auth.getSession()
+
+        // Then verify it's valid server-side
         const { data: { user }, error: authError } = await supabase.auth.getUser()
 
         if (authError) {
@@ -24,10 +30,17 @@ export default function OnboardingPage() {
           return
         }
 
-        if (!user) {
-          router.push('/auth/login')
+        if (authError || !user) {
+          // For email signup flow, redirect to signup not login
+          if (!session) {
+            router.push('/auth/signup')
+          } else {
+            router.push('/auth/login')
+          }
           return
         }
+
+        setSessionReady(true)
 
         // Fetch profile and universities in parallel
         const [profileResult, universitiesResult] = await Promise.all([
@@ -106,7 +119,7 @@ export default function OnboardingPage() {
     )
   }
 
-  if (loading) {
+  if (!sessionReady || loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="w-10 h-10 rounded-full animate-spin border-4 border-primary border-t-transparent" />
