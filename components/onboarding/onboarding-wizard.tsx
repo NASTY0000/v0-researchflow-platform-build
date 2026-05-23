@@ -26,7 +26,7 @@ import {
 } from 'lucide-react'
 import type { Profile, University, AcademicLevel } from '@/lib/types/database'
 import { completeOnboarding, updateProfile } from '@/lib/actions/auth'
-import { USER_ROLES, type ExtendedUserRole } from '@/lib/data/research-data'
+import { USER_ROLES, ALL_RESEARCH_INTERESTS, type ExtendedUserRole } from '@/lib/data/research-data'
 import { TagInput } from '@/components/ui/tag-input'
 import { RESEARCH_AREAS, SKILLS_LIST, LOOKING_FOR_OPTIONS } from '@/lib/constants/tags'
 import { COUNTRIES, ALL_NIGERIAN_UNIVERSITIES } from '@/lib/data/universities'
