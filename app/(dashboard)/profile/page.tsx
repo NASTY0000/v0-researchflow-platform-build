@@ -18,8 +18,11 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { TagInput } from '@/components/ui/tag-input'
-import { RESEARCH_AREAS, SKILLS_LIST } from '@/lib/constants/tags'
+import ChipSelector from '@/components/ui/chip-selector'
+import {
+  RESEARCH_AREAS, RESEARCH_AREAS_FEATURED,
+  SKILLS_OFFERED, SKILLS_FEATURED,
+} from '@/lib/constants/onboarding'
 import {
   User, Mail, Building2, GraduationCap, Calendar,
   Edit, Save, X, Plus, Award, BookOpen, Briefcase, FileText,
@@ -717,21 +720,59 @@ export default function ProfilePage() {
                     </div>
                   </div>
                   <div>
-                    <Label className="mb-1.5 block">Research Interests</Label>
-                    <TagInput
-                      options={RESEARCH_AREAS}
-                      value={editForm.research_interests}
-                      onChange={(tags) => setEditForm({ ...editForm, research_interests: tags })}
-                      placeholder="Search research areas..."
+                    <Label className="mb-2 block">
+                      Research Interests
+                      {editForm.research_interests.length > 0 && (
+                        <span className="ml-2 text-xs text-primary font-normal">{editForm.research_interests.length} selected</span>
+                      )}
+                    </Label>
+                    <ChipSelector
+                      featuredOptions={RESEARCH_AREAS_FEATURED}
+                      allOptions={RESEARCH_AREAS}
+                      selected={editForm.research_interests}
+                      maxSelections={10}
+                      onToggle={(item) => setEditForm(f => ({
+                        ...f,
+                        research_interests: f.research_interests.includes(item)
+                          ? f.research_interests.filter(i => i !== item)
+                          : f.research_interests.length < 10
+                          ? [...f.research_interests, item]
+                          : f.research_interests,
+                      }))}
+                      onAddCustom={(item) => setEditForm(f => ({
+                        ...f,
+                        research_interests: f.research_interests.length < 10
+                          ? [...f.research_interests, item]
+                          : f.research_interests,
+                      }))}
                     />
                   </div>
                   <div>
-                    <Label className="mb-1.5 block">Skills</Label>
-                    <TagInput
-                      options={SKILLS_LIST}
-                      value={editForm.skills}
-                      onChange={(tags) => setEditForm({ ...editForm, skills: tags })}
-                      placeholder="Search or add skills..."
+                    <Label className="mb-2 block">
+                      Skills
+                      {editForm.skills.length > 0 && (
+                        <span className="ml-2 text-xs text-primary font-normal">{editForm.skills.length} selected</span>
+                      )}
+                    </Label>
+                    <ChipSelector
+                      featuredOptions={SKILLS_FEATURED}
+                      allOptions={SKILLS_OFFERED}
+                      selected={editForm.skills}
+                      maxSelections={15}
+                      onToggle={(item) => setEditForm(f => ({
+                        ...f,
+                        skills: f.skills.includes(item)
+                          ? f.skills.filter(i => i !== item)
+                          : f.skills.length < 15
+                          ? [...f.skills, item]
+                          : f.skills,
+                      }))}
+                      onAddCustom={(item) => setEditForm(f => ({
+                        ...f,
+                        skills: f.skills.length < 15
+                          ? [...f.skills, item]
+                          : f.skills,
+                      }))}
                     />
                   </div>
                   <div className="flex gap-2">
