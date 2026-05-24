@@ -88,6 +88,22 @@ const resourceNavItems = [
     icon: Store,
   },
   {
+    title: 'Forums',
+    href: '/forums',
+    icon: MessageSquare,
+  },
+  {
+    title: 'Challenges',
+    href: '/challenges',
+    icon: Trophy,
+    badge: 'New',
+  },
+  {
+    title: 'Journals & Conferences',
+    href: '/publications',
+    icon: GraduationCap,
+  },
+  {
     title: 'AI Assistant',
     href: '/assistant',
     icon: Sparkles,
@@ -160,8 +176,8 @@ export function DashboardSidebar({ profile }: DashboardSidebarProps) {
             <SidebarMenu>
               {mainNavItems.map((item) => (
                 <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton 
-                    asChild 
+                  <SidebarMenuButton
+                    asChild
                     isActive={pathname === item.href || pathname.startsWith(item.href + '/')}
                     tooltip={item.title}
                   >
@@ -182,14 +198,19 @@ export function DashboardSidebar({ profile }: DashboardSidebarProps) {
             <SidebarMenu>
               {resourceNavItems.map((item) => (
                 <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton 
-                    asChild 
+                  <SidebarMenuButton
+                    asChild
                     isActive={pathname === item.href || pathname.startsWith(item.href + '/')}
                     tooltip={item.title}
                   >
                     <Link href={item.href}>
                       <item.icon />
                       <span>{item.title}</span>
+                      {'badge' in item && item.badge && (
+                        <span className="ml-auto text-[10px] font-semibold bg-primary/20 text-primary px-1.5 py-0.5 rounded-full">
+                          {item.badge}
+                        </span>
+                      )}
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -226,8 +247,8 @@ export function DashboardSidebar({ profile }: DashboardSidebarProps) {
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem>
-                  <SidebarMenuButton 
-                    asChild 
+                  <SidebarMenuButton
+                    asChild
                     isActive={pathname === '/admin' || pathname.startsWith('/admin/')}
                     tooltip="Admin Dashboard"
                   >

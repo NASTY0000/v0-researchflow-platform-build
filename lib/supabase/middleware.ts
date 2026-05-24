@@ -52,6 +52,9 @@ export async function updateSession(request: NextRequest) {
     '/saved',
     '/assistant',
     '/grants',
+    '/forums',
+    '/challenges',
+    '/publications',
   ]
 
   const isProtectedRoute = protectedRoutes.some(
