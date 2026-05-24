@@ -30,6 +30,8 @@ export default function SignUpPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
   const [emailType, setEmailType] = useState<'personal' | 'institutional'>('personal')
+  const [verificationSent, setVerificationSent] = useState(false)
+  const [sentToEmail, setSentToEmail] = useState('')
 
   async function handleSubmit(formData: FormData) {
     setIsLoading(true)
@@ -38,10 +40,21 @@ export default function SignUpPage() {
     formData.set('emailType', emailType)
 
     const result = await signUp(formData)
+
     if (result?.error) {
       setError(result.error)
       setIsLoading(false)
-    } else if (result?.success) {
+      return
+    }
+
+    if (result?.requiresVerification) {
+      setSentToEmail(result.email as string)
+      setVerificationSent(true)
+      setIsLoading(false)
+      return
+    }
+
+    if (result?.success) {
       setStep('done')
       setTimeout(() => router.push((result.redirectTo as string) || '/onboarding'), 1500)
     }
@@ -66,6 +79,42 @@ export default function SignUpPage() {
           <h2 className="text-3xl font-bold font-heading mb-2">Account Created!</h2>
           <p className="text-muted-foreground">Redirecting to onboarding...</p>
           <Loader2 className="w-5 h-5 animate-spin mx-auto mt-4 text-primary" />
+        </div>
+      </div>
+    )
+  }
+
+  // Email verification sent screen
+  if (verificationSent) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+        {bg}
+        <div className="max-w-md w-full text-center space-y-6 relative animate-fade-up">
+          <div className="w-20 h-20 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto">
+            <span className="text-4xl">📧</span>
+          </div>
+
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold font-heading">Check your email</h2>
+            <p className="text-muted-foreground">We sent a verification link to</p>
+            <p className="font-semibold text-primary">{sentToEmail}</p>
+            <p className="text-muted-foreground text-sm">
+              Click the link in the email to verify your account and complete your profile setup.
+            </p>
+          </div>
+
+          <div className="bg-muted rounded-xl p-4 text-sm text-muted-foreground space-y-1 text-left">
+            <p>✉️ Check your spam folder too</p>
+            <p>⏱ Link expires in 24 hours</p>
+            <p>🔒 Your account is secure</p>
+          </div>
+
+          <button
+            onClick={() => { setVerificationSent(false); setError(null) }}
+            className="text-sm text-muted-foreground hover:text-primary transition-colors"
+          >
+            Wrong email? Go back
+          </button>
         </div>
       </div>
     )

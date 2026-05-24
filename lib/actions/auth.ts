@@ -11,7 +11,7 @@ export async function signUp(formData: FormData) {
 
   const email = formData.get('email') as string
   const password = formData.get('password') as string
-  const fullName = formData.get('fullName') as string
+  const fullName = (formData.get('fullName') || formData.get('full_name') || '') as string
 
   const limit = await checkRateLimit(email, 'signup', 5, 3600)
   if (!limit.allowed) {
@@ -22,7 +22,10 @@ export async function signUp(formData: FormData) {
     email,
     password,
     options: {
-      data: { full_name: fullName || '' },
+      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/confirm`,
+      data: {
+        full_name: fullName,
+      },
     },
   })
 
@@ -38,18 +41,24 @@ export async function signUp(formData: FormData) {
     return { error: 'An account with this email already exists. Please sign in instead.' }
   }
 
-  await supabase.from('profiles').upsert({
-    id: data.user.id,
-    email: data.user.email ?? email,
-    full_name: fullName || '',
-    onboarding_completed: false,
-    onboarding_step: 0,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  }, { onConflict: 'id' })
+  // Email confirmation is OFF — session created immediately
+  if (data.session) {
+    await supabase.from('profiles').upsert({
+      id: data.user.id,
+      email: data.user.email ?? email,
+      full_name: fullName,
+      onboarding_completed: false,
+      onboarding_step: 0,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'id' })
 
-  revalidatePath('/', 'layout')
-  return { success: true, redirectTo: '/onboarding' }
+    revalidatePath('/', 'layout')
+    return { success: true, redirectTo: '/onboarding' }
+  }
+
+  // Email confirmation is ON — tell the user to check their inbox
+  return { success: true, requiresVerification: true, email }
 }
 
 export async function verifyOtp(email: string, token: string) {
