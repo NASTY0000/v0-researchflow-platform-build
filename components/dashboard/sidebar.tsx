@@ -36,6 +36,8 @@ import {
   Shield,
   UserCheck,
   Bookmark,
+  Sparkles,
+  DollarSign,
 } from 'lucide-react'
 import type { Profile } from '@/lib/types/database'
 import { signOut } from '@/lib/actions/auth'
@@ -86,6 +88,32 @@ const resourceNavItems = [
     icon: Store,
   },
   {
+    title: 'Forums',
+    href: '/forums',
+    icon: MessageSquare,
+  },
+  {
+    title: 'Challenges',
+    href: '/challenges',
+    icon: Trophy,
+    badge: 'New',
+  },
+  {
+    title: 'Journals & Conferences',
+    href: '/publications',
+    icon: GraduationCap,
+  },
+  {
+    title: 'AI Assistant',
+    href: '/assistant',
+    icon: Sparkles,
+  },
+  {
+    title: 'Grants',
+    href: '/grants',
+    icon: DollarSign,
+  },
+  {
     title: 'Messages',
     href: '/messages',
     icon: MessageSquare,
@@ -112,6 +140,13 @@ export function DashboardSidebar({ profile }: DashboardSidebarProps) {
   const getInitials = (name: string | null) => {
     if (!name) return 'U'
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+  }
+
+  async function handleSignOut() {
+    const result = await signOut()
+    if (result?.redirectTo) {
+      window.location.href = result.redirectTo
+    }
   }
 
   return (
@@ -141,8 +176,8 @@ export function DashboardSidebar({ profile }: DashboardSidebarProps) {
             <SidebarMenu>
               {mainNavItems.map((item) => (
                 <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton 
-                    asChild 
+                  <SidebarMenuButton
+                    asChild
                     isActive={pathname === item.href || pathname.startsWith(item.href + '/')}
                     tooltip={item.title}
                   >
@@ -163,14 +198,19 @@ export function DashboardSidebar({ profile }: DashboardSidebarProps) {
             <SidebarMenu>
               {resourceNavItems.map((item) => (
                 <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton 
-                    asChild 
+                  <SidebarMenuButton
+                    asChild
                     isActive={pathname === item.href || pathname.startsWith(item.href + '/')}
                     tooltip={item.title}
                   >
                     <Link href={item.href}>
                       <item.icon />
                       <span>{item.title}</span>
+                      {'badge' in item && item.badge && (
+                        <span className="ml-auto text-[10px] font-semibold bg-primary/20 text-primary px-1.5 py-0.5 rounded-full">
+                          {item.badge}
+                        </span>
+                      )}
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -207,8 +247,8 @@ export function DashboardSidebar({ profile }: DashboardSidebarProps) {
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem>
-                  <SidebarMenuButton 
-                    asChild 
+                  <SidebarMenuButton
+                    asChild
                     isActive={pathname === '/admin' || pathname.startsWith('/admin/')}
                     tooltip="Admin Dashboard"
                   >
@@ -268,7 +308,7 @@ export function DashboardSidebar({ profile }: DashboardSidebarProps) {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => signOut()}>
+                <DropdownMenuItem onClick={handleSignOut}>
                   <LogOut className="mr-2 h-4 w-4" />
                   Sign out
                 </DropdownMenuItem>

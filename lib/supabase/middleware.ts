@@ -51,6 +51,11 @@ export async function updateSession(request: NextRequest) {
     '/notifications',
     '/network',
     '/saved',
+    '/assistant',
+    '/grants',
+    '/forums',
+    '/challenges',
+    '/publications',
   ]
   const isProtectedRoute = protectedRoutes.some(
     route => pathname.startsWith(route)
