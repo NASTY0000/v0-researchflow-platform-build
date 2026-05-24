@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient()
 
     const { error: verifyError } = await supabase.auth.verifyOtp({
-      type: type as Parameters<typeof supabase.auth.verifyOtp>[0]['type'],
+      type: type === 'signup' ? 'email' : type as Parameters<typeof supabase.auth.verifyOtp>[0]['type'],
       token_hash,
     })
 
