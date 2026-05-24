@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -9,26 +9,20 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { 
-  User, 
-  GraduationCap, 
-  Target, 
+import {
+  User,
+  GraduationCap,
+  Target,
   Clock,
   ArrowRight,
   ArrowLeft,
-  X,
-  Plus,
   Loader2,
   CheckCircle,
-  Search
 } from 'lucide-react'
 import type { Profile, University, AcademicLevel } from '@/lib/types/database'
 import { completeOnboarding, updateProfile } from '@/lib/actions/auth'
 import { USER_ROLES, ALL_RESEARCH_INTERESTS, SKILLS_OFFERED, COLLABORATOR_TYPES, type ExtendedUserRole } from '@/lib/data/research-data'
-import { TagInput } from '@/components/ui/tag-input'
-import { RESEARCH_AREAS, SKILLS_LIST, LOOKING_FOR_OPTIONS } from '@/lib/constants/tags'
 import { COUNTRIES, ALL_NIGERIAN_UNIVERSITIES } from '@/lib/data/universities'
 
 const STEPS = [
@@ -46,6 +40,163 @@ const ACADEMIC_LEVELS: { value: AcademicLevel; label: string }[] = [
   { value: 'postdoc', label: 'Postdoc' },
   { value: 'faculty', label: 'Faculty' },
 ]
+
+// ── ChipSelector ──────────────────────────────────────────────────────────────
+
+function ChipSelector({
+  options,
+  selected,
+  onToggle,
+  maxSelections,
+  onAddCustom,
+}: {
+  options: string[]
+  selected: string[]
+  onToggle: (item: string) => void
+  maxSelections: number
+  onAddCustom?: (item: string) => void
+}) {
+  const [showSearch, setShowSearch] = useState(false)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [filtered, setFiltered] = useState<string[]>([])
+
+  useEffect(() => {
+    if (searchTerm.trim().length > 0) {
+      const results = options.filter(
+        o => o.toLowerCase().includes(searchTerm.toLowerCase()) && !selected.includes(o)
+      )
+      setFiltered(results)
+    } else {
+      setFiltered([])
+    }
+  }, [searchTerm, options, selected])
+
+  function handleSearchSelect(item: string) {
+    onToggle(item)
+    setSearchTerm('')
+    setShowSearch(false)
+  }
+
+  function handleAddCustom() {
+    if (!searchTerm.trim()) return
+    const custom = searchTerm.trim()
+    if (!selected.includes(custom)) onAddCustom?.(custom)
+    setSearchTerm('')
+    setShowSearch(false)
+  }
+
+  const customSelected = selected.filter(s => !options.includes(s))
+
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap gap-2">
+        {options.map(option => {
+          const isSelected = selected.includes(option)
+          const isDisabled = !isSelected && selected.length >= maxSelections
+          return (
+            <button
+              key={option}
+              type="button"
+              disabled={isDisabled}
+              onClick={() => onToggle(option)}
+              className={[
+                'px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-150 border',
+                isSelected
+                  ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                  : isDisabled
+                  ? 'bg-muted text-muted-foreground border-border opacity-40 cursor-not-allowed'
+                  : 'bg-background text-foreground border-border hover:border-primary/50 hover:bg-primary/5 cursor-pointer',
+              ].join(' ')}
+            >
+              {isSelected && <span className="mr-1">✓</span>}
+              {option}
+            </button>
+          )
+        })}
+
+        <button
+          type="button"
+          onClick={() => setShowSearch(true)}
+          className="px-3 py-1.5 rounded-full text-sm font-medium border border-dashed border-primary/40 text-primary/70 hover:border-primary hover:text-primary hover:bg-primary/5 transition-all duration-150"
+        >
+          + Other
+        </button>
+      </div>
+
+      {showSearch && (
+        <div className="space-y-2">
+          <div className="relative">
+            <input
+              autoFocus
+              type="text"
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter') {
+                  if (filtered.length > 0) handleSearchSelect(filtered[0])
+                  else if (searchTerm.trim()) handleAddCustom()
+                }
+                if (e.key === 'Escape') { setShowSearch(false); setSearchTerm('') }
+              }}
+              placeholder="Type to search or add custom..."
+              className="w-full px-4 py-2.5 rounded-xl border border-primary/30 bg-background text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+            />
+            <button
+              type="button"
+              onClick={() => { setShowSearch(false); setSearchTerm('') }}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground text-lg"
+            >
+              ×
+            </button>
+          </div>
+
+          {filtered.length > 0 && (
+            <div className="border border-border rounded-xl overflow-hidden bg-card shadow-sm">
+              {filtered.slice(0, 8).map(item => (
+                <button
+                  key={item}
+                  type="button"
+                  onClick={() => handleSearchSelect(item)}
+                  className="w-full text-left px-4 py-2.5 text-sm hover:bg-primary/5 hover:text-primary transition-colors border-b border-border/50 last:border-0"
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {searchTerm.trim().length > 1 && filtered.length === 0 && (
+            <button
+              type="button"
+              onClick={handleAddCustom}
+              className="w-full px-4 py-2.5 rounded-xl border border-dashed border-primary/40 text-sm text-primary/70 hover:border-primary hover:text-primary hover:bg-primary/5 transition-all text-left"
+            >
+              + Add &quot;{searchTerm}&quot; as custom
+            </button>
+          )}
+        </div>
+      )}
+
+      {customSelected.length > 0 && (
+        <div className="flex flex-wrap gap-2 pt-1">
+          <p className="w-full text-xs text-muted-foreground">Custom selections:</p>
+          {customSelected.map(custom => (
+            <button
+              key={custom}
+              type="button"
+              onClick={() => onToggle(custom)}
+              className="px-3 py-1.5 rounded-full text-sm font-medium bg-teal-500/10 text-teal-500 border border-teal-500/30 hover:bg-teal-500/20 transition-all"
+            >
+              ✓ {custom} ×
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Main wizard ───────────────────────────────────────────────────────────────
 
 interface OnboardingWizardProps {
   initialProfile: Profile | null
@@ -71,51 +222,23 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
   const [skills, setSkills] = useState<string[]>(initialProfile?.skills || [])
   const [lookingFor, setLookingFor] = useState<string[]>(initialProfile?.looking_for || [])
   const [weeklyHours, setWeeklyHours] = useState(initialProfile?.weekly_hours_available || 10)
-  const [customInterest, setCustomInterest] = useState('')
-  const [customSkill, setCustomSkill] = useState('')
-  const [customLookingFor, setCustomLookingFor] = useState('')
-  
-  // Search filters
-  const [interestSearch, setInterestSearch] = useState('')
-  const [skillSearch, setSkillSearch] = useState('')
-  const [lookingForSearch, setLookingForSearch] = useState('')
 
   const progress = ((step - 1) / (STEPS.length - 1)) * 100
 
-  // Filtered lists based on search
-  const filteredInterests = useMemo(() => {
-    if (!interestSearch.trim()) return ALL_RESEARCH_INTERESTS
-    return ALL_RESEARCH_INTERESTS.filter(i => i.toLowerCase().includes(interestSearch.toLowerCase()))
-  }, [interestSearch])
-
-  const filteredSkills = useMemo(() => {
-    if (!skillSearch.trim()) return SKILLS_OFFERED
-    return SKILLS_OFFERED.filter(s => s.toLowerCase().includes(skillSearch.toLowerCase()))
-  }, [skillSearch])
-
-  const filteredLookingFor = useMemo(() => {
-    if (!lookingForSearch.trim()) return COLLABORATOR_TYPES
-    return COLLABORATOR_TYPES.filter(c => c.toLowerCase().includes(lookingForSearch.toLowerCase()))
-  }, [lookingForSearch])
-
-  const toggleArrayItem = (arr: string[], setArr: (arr: string[]) => void, item: string) => {
+  function toggleChip(arr: string[], setArr: (v: string[]) => void, max: number, item: string) {
     if (arr.includes(item)) {
       setArr(arr.filter(i => i !== item))
-    } else {
+    } else if (arr.length < max) {
       setArr([...arr, item])
     }
   }
 
-  const addCustomItem = (value: string, arr: string[], setArr: (arr: string[]) => void, setValue: (v: string) => void) => {
-    if (value.trim() && !arr.includes(value.trim())) {
-      setArr([...arr, value.trim()])
-      setValue('')
-    }
+  function addCustomChip(arr: string[], setArr: (v: string[]) => void, max: number, item: string) {
+    if (!arr.includes(item) && arr.length < max) setArr([...arr, item])
   }
 
   const toggleRole = (role: ExtendedUserRole) => {
     if (role === 'all') {
-      // If selecting 'all', set all roles
       if (roles.includes('all')) {
         setRoles(['student_researcher'])
       } else {
@@ -123,15 +246,10 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
       }
     } else {
       if (roles.includes(role)) {
-        // Don't allow deselecting if it's the last role
-        const filteredRoles = roles.filter(r => r !== role && r !== 'all')
-        if (filteredRoles.length > 0) {
-          setRoles(filteredRoles)
-        }
+        const filtered = roles.filter(r => r !== role && r !== 'all')
+        if (filtered.length > 0) setRoles(filtered)
       } else {
-        // Add the role
         const newRoles = [...roles.filter(r => r !== 'all'), role]
-        // Check if all individual roles are now selected
         if (['student_researcher', 'collaborator', 'technical_expert', 'mentor'].every(r => newRoles.includes(r as ExtendedUserRole))) {
           setRoles([...newRoles, 'all'])
         } else {
@@ -145,26 +263,16 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
     setIsLoading(true)
     setError(null)
 
-    const data: Record<string, unknown> = {
-      onboarding_step: step,
-    }
+    const data: Record<string, unknown> = { onboarding_step: step }
 
-    if (step >= 1) {
-      data.full_name = fullName
-      data.bio = bio
-    }
+    if (step >= 1) { data.full_name = fullName; data.bio = bio }
     if (step >= 2) {
-      // For Nigeria, use universityId as the university name; for others, use customUniversity
-      const universityName = isNigeria ? universityId : customUniversity
-      data.university_id = universityName || null
+      data.university_id = (isNigeria ? universityId : customUniversity) || null
       data.department = department
       data.academic_level = academicLevel || null
-      // Filter out 'all' role for storage
       data.roles = roles.filter(r => r !== 'all')
     }
-    if (step >= 3) {
-      data.research_interests = researchInterests
-    }
+    if (step >= 3) { data.research_interests = researchInterests }
     if (step >= 4) {
       data.skills = skills
       data.looking_for = lookingFor
@@ -172,59 +280,34 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
     }
 
     const result = await updateProfile(data)
-    
-    if (result.error) {
-      setError(result.error)
-      setIsLoading(false)
-      return false
-    }
-
+    if (result.error) { setError(result.error); setIsLoading(false); return false }
     setIsLoading(false)
     return true
   }
 
   const handleNext = async () => {
-    // Validation
-    if (step === 1 && !fullName.trim()) {
-      setError('Please enter your full name')
-      return
-    }
+    if (step === 1 && !fullName.trim()) { setError('Please enter your full name'); return }
     if (step === 2) {
-      // Validate university selection
       const hasUniversity = isNigeria ? universityId.trim() : customUniversity.trim()
-      if (!hasUniversity) {
-        setError('Please select or enter your university')
-        return
-      }
+      if (!hasUniversity) { setError('Please select or enter your university'); return }
     }
-    if (step === 3 && researchInterests.length === 0) {
-      setError('Please select at least one research interest')
-      return
-    }
-    if (step === 4 && lookingFor.length === 0) {
-      setError('Please select at least one thing you are looking for in collaborators')
-      return
-    }
+    if (step === 3 && researchInterests.length === 0) { setError('Please select at least one research interest'); return }
+    if (step === 4 && lookingFor.length === 0) { setError('Please select at least one thing you are looking for in collaborators'); return }
 
     const saved = await saveProgress()
-    if (saved) {
-      setStep(step + 1)
-    }
+    if (saved) setStep(step + 1)
   }
 
-  const handleBack = () => {
-    setStep(step - 1)
-  }
+  const handleBack = () => setStep(step - 1)
 
   const handleComplete = async () => {
     setIsLoading(true)
     setError(null)
 
-    const universityName = isNigeria ? universityId : customUniversity
-    const data = {
+    const result = await completeOnboarding({
       full_name: fullName,
       bio,
-      university_id: universityName || null,
+      university_id: (isNigeria ? universityId : customUniversity) || null,
       department,
       academic_level: academicLevel || null,
       roles: roles.filter(r => r !== 'all'),
@@ -232,19 +315,12 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
       skills,
       looking_for: lookingFor,
       weekly_hours_available: weeklyHours,
-    }
+    })
 
-    const result = await completeOnboarding(data)
-    
-    if (result?.error) {
-      setError(result.error)
-      setIsLoading(false)
-    } else if (result?.redirectTo) {
-      window.location.href = result.redirectTo
-    }
+    if (result?.error) { setError(result.error); setIsLoading(false) }
+    else if (result?.redirectTo) { window.location.href = result.redirectTo }
   }
 
-  // Check if mentor is selected
   const isMentorSelected = roles.includes('mentor') || roles.includes('all')
 
   return (
@@ -258,9 +334,7 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
             </div>
             <span className="text-xl font-bold font-heading gradient-text-cyan">ResearchFlow</span>
           </Link>
-          <div className="text-sm" style={{ color: '#7C6A9C' }}>
-            Step {step} of {STEPS.length}
-          </div>
+          <div className="text-sm" style={{ color: '#7C6A9C' }}>Step {step} of {STEPS.length}</div>
         </div>
       </header>
 
@@ -270,7 +344,7 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
           <div className="flex items-center justify-between mb-4">
             {STEPS.map((s, index) => (
               <div key={s.id} className="flex items-center">
-                <div 
+                <div
                   className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300"
                   style={step >= s.id
                     ? { background: 'linear-gradient(135deg,#7C3AED,#A855F7)', color: '#F3F0FF', boxShadow: '0 0 14px rgba(124,58,237,0.4)' }
@@ -280,7 +354,7 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
                   <s.icon className="w-5 h-5" />
                 </div>
                 {index < STEPS.length - 1 && (
-                  <div 
+                  <div
                     className="hidden sm:block w-16 lg:w-24 h-0.5 mx-2 rounded transition-all duration-300"
                     style={{ background: step > s.id ? 'linear-gradient(90deg,#7C3AED,#A855F7)' : 'rgba(255,255,255,0.06)' }}
                   />
@@ -288,7 +362,6 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
               </div>
             ))}
           </div>
-          {/* Progress bar */}
           <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
             <div className="h-full rounded-full transition-all duration-500" style={{ width: `${progress}%`, background: 'linear-gradient(90deg,#7C3AED,#06B6D4)', boxShadow: '2px 0 8px rgba(124,58,237,0.3)' }} />
           </div>
@@ -309,9 +382,7 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
             <Card style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(139,92,246,0.2)' }}>
               <CardHeader>
                 <CardTitle className="text-2xl font-heading" style={{ color: '#F3F0FF' }}>Tell us about yourself</CardTitle>
-                <CardDescription style={{ color: '#7C6A9C' }}>
-                  Let&apos;s start with your basic information
-                </CardDescription>
+                <CardDescription style={{ color: '#7C6A9C' }}>Let&apos;s start with your basic information</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">
@@ -334,9 +405,7 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
                     rows={4}
                     style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(139,92,246,0.25)', color: '#F3F0FF' }}
                   />
-                  <p className="text-xs" style={{ color: '#7C6A9C' }}>
-                    This will be visible on your profile
-                  </p>
+                  <p className="text-xs" style={{ color: '#7C6A9C' }}>This will be visible on your profile</p>
                 </div>
               </CardContent>
             </Card>
@@ -347,12 +416,9 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
             <Card style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(139,92,246,0.2)' }}>
               <CardHeader>
                 <CardTitle className="text-2xl font-heading" style={{ color: '#F3F0FF' }}>Academic Details & Roles</CardTitle>
-                <CardDescription style={{ color: '#7C6A9C' }}>
-                  Tell us about your academic background and how you want to participate
-                </CardDescription>
+                <CardDescription style={{ color: '#7C6A9C' }}>Tell us about your academic background and how you want to participate</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Country Selection */}
                 <div className="space-y-2">
                   <Label style={{ color: '#7C6A9C' }}>Country *</Label>
                   <Select value={country} onValueChange={(val) => { setCountry(val); setUniversityId(''); setCustomUniversity('') }}>
@@ -367,7 +433,6 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
                   </Select>
                 </div>
 
-                {/* University Selection - Different UI based on country */}
                 <div className="space-y-2">
                   <Label style={{ color: '#7C6A9C' }}>University / Institution *</Label>
                   {isNigeria ? (
@@ -390,10 +455,7 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
                     />
                   )}
                   <p className="text-xs" style={{ color: '#7C6A9C' }}>
-                    {isNigeria 
-                      ? 'Select from the list of Nigerian universities'
-                      : 'Enter the full name of your institution'
-                    }
+                    {isNigeria ? 'Select from the list of Nigerian universities' : 'Enter the full name of your institution'}
                   </p>
                 </div>
 
@@ -416,9 +478,7 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
                     </SelectTrigger>
                     <SelectContent>
                       {ACADEMIC_LEVELS.map((level) => (
-                        <SelectItem key={level.value} value={level.value}>
-                          {level.label}
-                        </SelectItem>
+                        <SelectItem key={level.value} value={level.value}>{level.label}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -439,7 +499,7 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
                         }
                       >
                         <div className="flex items-start gap-3">
-                          <div 
+                          <div
                             className="w-5 h-5 rounded border-2 flex items-center justify-center mt-0.5 flex-shrink-0"
                             style={roles.includes(role.value)
                               ? { background: 'linear-gradient(135deg,#7C3AED,#A855F7)', borderColor: 'transparent' }
@@ -474,16 +534,17 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
               <CardHeader>
                 <CardTitle className="text-2xl font-heading" style={{ color: '#F3F0FF' }}>Research Interests</CardTitle>
                 <CardDescription style={{ color: '#7C6A9C' }}>
-                  Select your research areas or type to add a custom one (at least 1 required)
+                  Select your research areas (up to 10). Tap &quot;+ Other&quot; to search or add a custom one.
+                  {researchInterests.length > 0 && <span style={{ color: '#A855F7' }}> {researchInterests.length} selected</span>}
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <TagInput
-                  value={researchInterests}
-                  onChange={setResearchInterests}
-                  options={RESEARCH_AREAS}
-                  placeholder="Search research areas..."
-                  maxItems={10}
+                <ChipSelector
+                  options={ALL_RESEARCH_INTERESTS}
+                  selected={researchInterests}
+                  maxSelections={10}
+                  onToggle={(item) => toggleChip(researchInterests, setResearchInterests, 10, item)}
+                  onAddCustom={(item) => addCustomChip(researchInterests, setResearchInterests, 10, item)}
                 />
               </CardContent>
             </Card>
@@ -494,27 +555,27 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
             <Card style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(139,92,246,0.2)' }}>
               <CardHeader>
                 <CardTitle className="text-2xl font-heading" style={{ color: '#F3F0FF' }}>Skills & Collaborators</CardTitle>
-                <CardDescription style={{ color: '#7C6A9C' }}>
-                  What skills do you have, and what are you looking for?
-                </CardDescription>
+                <CardDescription style={{ color: '#7C6A9C' }}>What skills do you have, and what are you looking for?</CardDescription>
               </CardHeader>
               <CardContent className="space-y-8">
                 {/* Your Skills */}
                 <div className="space-y-3">
                   <div>
                     <Label className="text-lg font-medium" style={{ color: '#F3F0FF' }}>Your Skills</Label>
-                    <p className="text-sm mt-1" style={{ color: '#7C6A9C' }}>Select the skills you can offer, or type to add a custom skill</p>
+                    <p className="text-sm mt-1" style={{ color: '#7C6A9C' }}>
+                      Select skills you can offer (up to 15). Tap &quot;+ Other&quot; to add a custom skill.
+                      {skills.length > 0 && <span style={{ color: '#A855F7' }}> {skills.length} selected</span>}
+                    </p>
                   </div>
-                  <TagInput
-                    value={skills}
-                    onChange={setSkills}
-                    options={SKILLS_LIST}
-                    placeholder="Search skills..."
-                    maxItems={15}
+                  <ChipSelector
+                    options={SKILLS_OFFERED}
+                    selected={skills}
+                    maxSelections={15}
+                    onToggle={(item) => toggleChip(skills, setSkills, 15, item)}
+                    onAddCustom={(item) => addCustomChip(skills, setSkills, 15, item)}
                   />
                 </div>
 
-                {/* Divider */}
                 <div className="h-px" style={{ background: 'rgba(139,92,246,0.2)' }} />
 
                 {/* Looking For */}
@@ -522,19 +583,21 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
                   <div>
                     <Label className="text-lg font-medium" style={{ color: '#F3F0FF' }}>What are you looking for in collaborators? *</Label>
                     <p className="text-sm mt-1" style={{ color: lookingFor.length === 0 ? '#EF4444' : '#7C6A9C' }}>
-                      {lookingFor.length === 0 ? 'At least 1 required' : `${lookingFor.length} selected`}
+                      {lookingFor.length === 0
+                        ? 'At least 1 required — tap any pill to select'
+                        : <span style={{ color: '#A855F7' }}>{lookingFor.length} selected</span>
+                      }
                     </p>
                   </div>
-                  <TagInput
-                    value={lookingFor}
-                    onChange={setLookingFor}
-                    options={LOOKING_FOR_OPTIONS}
-                    placeholder="Search collaborator types..."
-                    maxItems={10}
+                  <ChipSelector
+                    options={COLLABORATOR_TYPES}
+                    selected={lookingFor}
+                    maxSelections={10}
+                    onToggle={(item) => toggleChip(lookingFor, setLookingFor, 10, item)}
+                    onAddCustom={(item) => addCustomChip(lookingFor, setLookingFor, 10, item)}
                   />
                 </div>
 
-                {/* Divider */}
                 <div className="h-px" style={{ background: 'rgba(139,92,246,0.2)' }} />
 
                 {/* Weekly Hours */}
@@ -562,7 +625,7 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
           {step === 5 && (
             <Card style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(139,92,246,0.2)' }}>
               <CardContent className="py-12 text-center">
-                <div 
+                <div
                   className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"
                   style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', boxShadow: '0 0 30px rgba(124,58,237,0.4)' }}
                 >
@@ -573,7 +636,6 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
                   Your profile is complete. {isMentorSelected && "You'll be prompted to complete mentor verification next. "}
                   Start exploring research ideas, connecting with collaborators, and building your research journey.
                 </p>
-
                 <Button
                   onClick={handleComplete}
                   disabled={isLoading}
@@ -581,15 +643,9 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
                   style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', boxShadow: '0 0 20px rgba(124,58,237,0.35)', border: 'none' }}
                 >
                   {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                      Setting up your profile...
-                    </>
+                    <><Loader2 className="mr-2 h-5 w-5 animate-spin" />Setting up your profile...</>
                   ) : (
-                    <>
-                      {isMentorSelected ? 'Continue to Mentor Verification' : 'Go to Dashboard'}
-                      <ArrowRight className="ml-2 h-5 w-5" />
-                    </>
+                    <>{isMentorSelected ? 'Continue to Mentor Verification' : 'Go to Dashboard'}<ArrowRight className="ml-2 h-5 w-5" /></>
                   )}
                 </Button>
               </CardContent>
@@ -614,15 +670,9 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
                 style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', boxShadow: '0 0 14px rgba(124,58,237,0.3)', border: 'none' }}
               >
                 {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
-                  </>
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Saving...</>
                 ) : (
-                  <>
-                    Next
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </>
+                  <>Next<ArrowRight className="ml-2 h-4 w-4" /></>
                 )}
               </Button>
             </div>
