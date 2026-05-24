@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
     // Brief pause so the session cookie propagates to the browser before the redirect
     await new Promise(r => setTimeout(r, 500))
 
-    return NextResponse.redirect(`${origin}/onboarding`)
+    return NextResponse.redirect(`${origin}/auth/verified`)
   } catch (err: unknown) {
     console.error('Auth confirm error:', err)
     return NextResponse.redirect(`${origin}/auth/signup?error=unexpected`)
