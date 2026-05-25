@@ -48,16 +48,27 @@ export default function ChallengesPage() {
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('all')
   const [difficulty, setDifficulty] = useState('all')
+  const [isAdmin, setIsAdmin] = useState(false)
   const supabase = createClient()
 
   useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return
+      supabase.from('profiles').select('is_admin').eq('id', user.id).single().then(({ data }) => {
+        setIsAdmin(data?.is_admin || false)
+      })
+    })
+  }, [])
+
+  useEffect(() => {
     async function load() {
-      const { data } = await supabase
+      const { data: challengesData, error } = await supabase
         .from('research_challenges')
         .select('*')
         .order('created_at', { ascending: false })
-      setChallenges(data || [])
-      setFiltered(data || [])
+      console.log('Challenges:', challengesData, 'Error:', error)
+      setChallenges(challengesData || [])
+      setFiltered(challengesData || [])
       setLoading(false)
     }
     load()
@@ -139,9 +150,65 @@ export default function ChallengesPage() {
       {/* Challenges */}
       <div className="space-y-4">
         {filtered.length === 0 && (
-          <div className="text-center py-16 text-muted-foreground">
+          <div className="text-center py-16 text-muted-foreground space-y-3">
             <Trophy className="w-12 h-12 mx-auto mb-3 opacity-30" />
             <p>No challenges found</p>
+            {isAdmin && challenges.length === 0 && (
+              <div className="space-y-3">
+                <p className="text-sm">No challenges in database.</p>
+                <Button
+                  onClick={async () => {
+                    await supabase.from('research_challenges').insert([
+                      {
+                        title: 'Africa Climate Solutions Challenge',
+                        description: 'Develop innovative research solutions addressing climate change impacts in African communities.',
+                        problem_statement: 'Climate change disproportionately affects African communities. We need innovative, locally-grounded research that proposes practical solutions for adaptation and mitigation across the continent.',
+                        requirements: ['Must be a student or early-career researcher at an African institution', 'Submission must be original research', 'Research must address a specific African community or region', 'Minimum 1,500 words'],
+                        prize_description: '🥇 $500 + Featured Showcase + 2,000 Akili · 🥈 $200 + 1,000 Akili · 🥉 $100 + 500 Akili',
+                        akili_reward: 2000,
+                        difficulty: 'intermediate',
+                        research_areas: ['Climate Science', 'Environmental Science', 'Agriculture', 'Public Policy'],
+                        status: 'open',
+                        submission_deadline: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(),
+                        is_featured: true,
+                        submission_count: 0,
+                      },
+                      {
+                        title: 'AI for African Healthcare Challenge',
+                        description: 'Use artificial intelligence and data science to solve healthcare challenges in Africa.',
+                        problem_statement: 'Healthcare access and quality remain critical challenges across Africa. This challenge invites researchers to propose AI-driven solutions.',
+                        requirements: ['Open to all African university students', 'Must propose a practical AI application', 'Must address a real healthcare problem'],
+                        prize_description: '🥇 $1,000 + Mentorship + 3,000 Akili · 🥈 $500 + 1,500 Akili',
+                        akili_reward: 3000,
+                        difficulty: 'advanced',
+                        research_areas: ['Artificial Intelligence', 'Public Health', 'Data Science'],
+                        status: 'open',
+                        submission_deadline: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000).toISOString(),
+                        is_featured: true,
+                        submission_count: 0,
+                      },
+                      {
+                        title: 'Agricultural Innovation Research Sprint',
+                        description: 'Fast-track research ideas to improve food security and agricultural productivity in Africa.',
+                        problem_statement: 'Africa faces significant food security challenges. This sprint calls for focused research proposals.',
+                        requirements: ['Research must be Africa-focused', 'Open to all academic levels'],
+                        prize_description: '🥇 $300 + 1,500 Akili · 🥈 $150 + 750 Akili',
+                        akili_reward: 1500,
+                        difficulty: 'beginner',
+                        research_areas: ['Agriculture', 'Food Security', 'Economics'],
+                        status: 'open',
+                        submission_deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+                        is_featured: false,
+                        submission_count: 0,
+                      },
+                    ])
+                    window.location.reload()
+                  }}
+                >
+                  Seed Challenges
+                </Button>
+              </div>
+            )}
           </div>
         )}
         {filtered.map(challenge => {

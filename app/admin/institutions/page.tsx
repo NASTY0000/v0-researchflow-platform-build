@@ -138,8 +138,9 @@ export default function AdminInstitutionsPage() {
 
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => router.back()}>
-            <ArrowLeft className="w-5 h-5" />
+          <Button variant="ghost" size="sm" onClick={() => router.push('/admin')} className="gap-2">
+            <ArrowLeft className="w-4 h-4" />
+            Admin Panel
           </Button>
           <div>
             <h1 className="text-2xl font-bold">Manage Institutions</h1>

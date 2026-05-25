@@ -25,6 +25,7 @@ const adminNavItems = [
   { title: 'Broadcast', href: '/admin/broadcast', icon: Megaphone },
   { title: 'Grants', href: '/admin/grants', icon: DollarSign },
   { title: 'Grant Applications', href: '/admin/grants/applications', icon: FileText },
+  { title: 'Institutions', href: '/admin/institutions', icon: Building2 },
 ]
 
 interface AdminSidebarProps {

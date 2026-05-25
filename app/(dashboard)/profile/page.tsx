@@ -28,7 +28,7 @@ import {
   Edit, Save, X, Plus, Award, BookOpen, Briefcase, FileText,
   Eye, Star, ExternalLink, Trash2, CheckCircle2, FolderOpen,
   Users, MessageSquare, ListChecks, Zap, Shield, TrendingUp, Loader2,
-  BarChart3, Lightbulb, Code,
+  BarChart3, Lightbulb, Code, Share2, Check,
 } from 'lucide-react'
 import type { Profile, PortfolioItem, PortfolioItemType, University } from '@/lib/types/database'
 import { AkiliScoreCard } from '@/components/akili/AkiliScoreCard'
@@ -115,6 +115,7 @@ export default function ProfilePage() {
 
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null)
   const [analyticsLoading, setAnalyticsLoading] = useState(false)
+  const [copied, setCopied] = useState(false)
 
   const supabase = createClient()
 
@@ -494,6 +495,28 @@ export default function ProfilePage() {
     )
   }
 
+  async function handleShareProfile() {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    const profileUrl = `https://researchflowafrica.com/researcher/${user.id}`
+
+    try {
+      await navigator.clipboard.writeText(profileUrl)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      const input = document.createElement('input')
+      input.value = profileUrl
+      document.body.appendChild(input)
+      input.select()
+      document.execCommand('copy')
+      document.body.removeChild(input)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Portfolio Modal */}
@@ -826,15 +849,16 @@ export default function ProfilePage() {
                         <Edit className="w-4 h-4 mr-2" />Edit Profile
                       </Button>
                       <Button
-                        variant="ghost"
+                        variant="outline"
                         size="sm"
-                        onClick={() => {
-                          const url = `https://researchflowafrica.com/researcher/${profile.id}`
-                          navigator.clipboard?.writeText(url)
-                        }}
-                        title="Copy public profile link"
+                        onClick={handleShareProfile}
+                        className="gap-2"
                       >
-                        Share Profile
+                        {copied
+                          ? <Check className="w-4 h-4 text-green-400" />
+                          : <Share2 className="w-4 h-4" />
+                        }
+                        {copied ? 'Link Copied!' : 'Share Profile'}
                       </Button>
                     </div>
                   </div>
