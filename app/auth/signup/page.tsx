@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import Image from 'next/image'
+import { Logo } from '@/components/Logo'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -126,11 +126,8 @@ export default function SignUpPage() {
       {bg}
       <div className="w-full max-w-md relative animate-fade-up">
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-xl overflow-hidden">
-              <Image src="/icon.svg" alt="ResearchFlow" width={40} height={40} className="w-10 h-10" />
-            </div>
-            <span className="text-2xl font-bold font-heading gradient-text-cyan">ResearchFlow</span>
+          <Link href="/" className="inline-flex justify-center">
+            <Logo variant="full" width={120} />
           </Link>
         </div>
 

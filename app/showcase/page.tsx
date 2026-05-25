@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { Logo } from '@/components/Logo'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -64,11 +65,8 @@ export default function ShowcasePage() {
 
       {/* Nav */}
       <nav className="sticky top-0 z-40 px-4 sm:px-6 py-3 flex items-center justify-between bg-background/90 backdrop-blur-xl border-b border-border">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg overflow-hidden">
-            <Image src="/icon.svg" alt="ResearchFlow" width={32} height={32} className="w-8 h-8" />
-          </div>
-          <span className="font-bold font-heading hidden sm:block text-primary">ResearchFlow</span>
+        <Link href="/">
+          <Logo variant="horizontal" width={160} uid="showcase-nav" />
         </Link>
 
         <div className="flex items-center gap-3">
@@ -187,11 +185,8 @@ export default function ShowcasePage() {
       {/* Footer */}
       <footer className="py-10 px-4 sm:px-6 border-t border-border">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg overflow-hidden">
-              <Image src="/icon.svg" alt="ResearchFlow" width={28} height={28} />
-            </div>
-            <span className="font-bold font-heading text-sm text-primary">ResearchFlow</span>
+          <div className="flex items-center">
+            <Logo variant="horizontal" width={140} uid="showcase-footer" />
           </div>
           <div className="flex items-center gap-6 text-sm text-muted-foreground">
             {['About', 'Terms', 'Privacy', 'Contact'].map(item => (

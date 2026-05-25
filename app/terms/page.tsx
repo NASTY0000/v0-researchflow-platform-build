@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
+import { Logo } from '@/components/Logo'
 import { useState, useEffect } from 'react'
 import { ArrowLeft } from 'lucide-react'
 
@@ -42,10 +42,7 @@ export default function TermsPage() {
       {/* Nav */}
       <nav className="sticky top-0 z-40 px-6 py-4 flex items-center justify-between bg-background/90 backdrop-blur-xl border-b border-border">
         <Link href="/" className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg overflow-hidden">
-            <Image src="/icon.svg" alt="ResearchFlow" width={32} height={32} />
-          </div>
-          <span className="font-bold font-heading" style={{ background: 'linear-gradient(135deg,#06B6D4,#A855F7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>ResearchFlow</span>
+          <Logo variant="horizontal" width={160} />
         </Link>
         <Link href="/" className="flex items-center gap-2 text-sm" style={{ color: '#A855F7' }}>
           <ArrowLeft className="h-4 w-4" />

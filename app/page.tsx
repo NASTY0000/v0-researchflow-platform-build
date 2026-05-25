@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
+import { Logo } from '@/components/Logo'
 import {
   ArrowRight,
   Zap,
@@ -198,11 +199,8 @@ export default function LandingPage() {
       <nav className="fixed top-0 left-0 right-0 z-50 bg-background/85 border-b border-border backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <Link href="/" className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl overflow-hidden">
-                <Image src="/icon.svg" alt="ResearchFlow" width={36} height={36} className="w-9 h-9" />
-              </div>
-              <span className="text-xl font-bold font-heading gradient-text-cyan">ResearchFlow</span>
+            <Link href="/">
+              <Logo variant="horizontal" width={160} uid="nav" />
             </Link>
 
             <div className="hidden md:flex items-center gap-8">
@@ -456,11 +454,8 @@ export default function LandingPage() {
       {/* ── Footer ── */}
       <footer className="py-12 px-4 border-t border-border">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg overflow-hidden">
-              <Image src="/icon.svg" alt="ResearchFlow" width={32} height={32} className="w-8 h-8" />
-            </div>
-            <span className="font-bold font-heading gradient-text-cyan">ResearchFlow</span>
+          <div className="flex items-center">
+            <Logo variant="horizontal" width={160} uid="footer" />
           </div>
           <div className="flex items-center gap-6 text-sm text-muted-foreground">
             {['About', 'Terms', 'Privacy', 'Contact'].map(item => (

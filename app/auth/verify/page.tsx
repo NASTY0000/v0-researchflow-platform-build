@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import Image from 'next/image'
+import { Logo } from '@/components/Logo'
 import { Button } from '@/components/ui/button'
 import { Mail, Loader2, RefreshCw, ArrowLeft, KeyRound } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
@@ -112,13 +112,8 @@ function VerifyPageInner() {
 
       <div className="w-full max-w-md relative">
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-xl overflow-hidden">
-              <Image src="/icon.svg" alt="ResearchFlow" width={40} height={40} className="w-10 h-10" />
-            </div>
-            <span className="text-2xl font-bold font-heading" style={{ background: 'linear-gradient(135deg,#06B6D4,#A855F7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-              ResearchFlow
-            </span>
+          <Link href="/" className="inline-flex justify-center">
+            <Logo variant="full" width={120} />
           </Link>
         </div>
 

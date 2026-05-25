@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import Image from 'next/image'
+import { Logo } from '@/components/Logo'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -179,11 +179,8 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
       {/* Header */}
       <header style={{ borderBottom: '1px solid rgba(139,92,246,0.12)', backgroundColor: 'rgba(5,1,15,0.9)', backdropFilter: 'blur(20px)' }}>
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl overflow-hidden">
-              <Image src="/icon.svg" alt="ResearchFlow" width={36} height={36} className="w-9 h-9" />
-            </div>
-            <span className="text-xl font-bold font-heading gradient-text-cyan">ResearchFlow</span>
+          <Link href="/">
+            <Logo variant="horizontal" width={160} />
           </Link>
           <div className="text-sm" style={{ color: '#7C6A9C' }}>Step {step} of {STEPS.length}</div>
         </div>

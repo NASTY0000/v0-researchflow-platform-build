@@ -24,9 +24,8 @@ export const metadata: Metadata = {
   keywords: ['research', 'collaboration', 'African universities', 'students', 'mentorship', 'academic'],
   authors: [{ name: 'ResearchFlow' }],
   icons: {
-    icon: '/icon.svg',
-    shortcut: '/icon.svg',
-    apple: '/apple-icon.png',
+    icon: '/favicon.svg',
+    apple: '/favicon.svg',
   },
   openGraph: {
     title: 'ResearchFlow | Collaborate. Discover. Publish.',

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { Logo } from '@/components/Logo'
 
 export default function VerifiedPage() {
   const router = useRouter()
@@ -129,9 +130,9 @@ export default function VerifiedPage() {
           margin: '0 auto 24px',
         }} />
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-        <h2 style={{ fontSize: '22px', fontWeight: 700, marginBottom: '12px', color: '#C084FC' }}>
-          ResearchFlow
-        </h2>
+        <div style={{ marginBottom: '12px', display: 'flex', justifyContent: 'center' }}>
+          <Logo variant="icon" width={48} />
+        </div>
         <p style={{ color: '#D4D4D8', fontSize: '16px', lineHeight: 1.7 }}>
           {status}
         </p>
