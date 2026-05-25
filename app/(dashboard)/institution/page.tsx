@@ -186,9 +186,38 @@ export default function InstitutionDashboard() {
             <p className="text-sm text-muted-foreground">
               As a platform admin you can create institutions below.
             </p>
-            <Button asChild>
-              <Link href="/admin/institutions">Manage Institutions</Link>
-            </Button>
+            <div className="flex gap-3 flex-wrap justify-center">
+              <Button asChild>
+                <Link href="/admin/institutions">Manage Institutions</Link>
+              </Button>
+              <Button
+                variant="outline"
+                onClick={async () => {
+                  const { data: { user } } = await supabase.auth.getUser()
+                  if (!user) return
+
+                  const { data } = await supabase
+                    .from('institutions')
+                    .insert({
+                      name: 'ResearchFlow',
+                      acronym: 'RF',
+                      country: 'Nigeria',
+                      contact_email: 'abdullateef0822@gmail.com',
+                      subscription_status: 'active',
+                      subscription_plan: 'large',
+                      admin_user_id: user.id,
+                    })
+                    .select()
+                    .single()
+
+                  if (data) {
+                    window.location.reload()
+                  }
+                }}
+              >
+                Create ResearchFlow Institution
+              </Button>
+            </div>
           </div>
         )}
         <div className="bg-muted/50 rounded-xl p-4 text-sm text-muted-foreground">
