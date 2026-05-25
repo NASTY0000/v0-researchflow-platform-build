@@ -38,6 +38,8 @@ import {
   Bookmark,
   Sparkles,
   DollarSign,
+  Building2,
+  FileText,
 } from 'lucide-react'
 import type { Profile } from '@/lib/types/database'
 import { signOut } from '@/lib/actions/auth'
@@ -97,6 +99,16 @@ const resourceNavItems = [
     href: '/challenges',
     icon: Trophy,
     badge: 'New',
+  },
+  {
+    title: 'Institution',
+    href: '/institution',
+    icon: Building2,
+  },
+  {
+    title: 'Agreements',
+    href: '/agreements',
+    icon: FileText,
   },
   {
     title: 'Journals & Conferences',
