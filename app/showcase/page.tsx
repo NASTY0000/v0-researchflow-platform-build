@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Search, BookOpen, Calendar, Eye, ArrowRight, Sparkles, Loader2, Filter } from 'lucide-react'
 import type { ShowcaseEntry, Profile } from '@/lib/types/database'
+import { BaobabLoader } from '@/components/ui/baobab-loader'
 
 type EntryWithAuthor = ShowcaseEntry & { author: Profile | null }
 
@@ -137,7 +138,7 @@ export default function ShowcasePage() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 pb-16">
         {isLoading ? (
           <div className="flex items-center justify-center py-24">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            <BaobabLoader size="sm" />
           </div>
         ) : entries.length === 0 ? (
           <div className="py-20 text-center space-y-4 rounded-2xl border border-dashed border-border">

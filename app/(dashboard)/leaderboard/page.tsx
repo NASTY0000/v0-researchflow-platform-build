@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Crown, Medal, Award } from 'lucide-react'
 import Link from 'next/link'
+import { BaobabLoader } from '@/components/ui/baobab-loader'
 
 interface LeaderboardUser {
   id: string
@@ -83,7 +84,7 @@ export default function LeaderboardPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="w-12 h-12 rounded-full animate-spin border-4 border-primary border-t-transparent" />
+        <BaobabLoader size="md" />
       </div>
     )
   }

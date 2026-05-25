@@ -37,6 +37,7 @@ import { createClient } from '@/lib/supabase/client'
 import type { MentorshipRequest, MentorAvailability, MentorSession, Profile } from '@/lib/types/database'
 import { acceptMentorshipRequest, completeMentorSession, receive4to5StarSessionRating } from '@/lib/actions/akili'
 import { toast } from 'sonner'
+import { BaobabLoader } from '@/components/ui/baobab-loader'
 
 interface ActiveMentorship {
   id: string
@@ -352,7 +353,7 @@ export function MentorDashboard({ userId }: MentorDashboardProps) {
             {requestsLoading ? (
               <Card style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(139,92,246,0.2)' }}>
                 <CardContent className="py-12 text-center">
-                  <Loader2 className="w-8 h-8 mx-auto animate-spin" style={{ color: '#A855F7' }} />
+                  <BaobabLoader size="sm" />
                 </CardContent>
               </Card>
             ) : requests.length === 0 ? (

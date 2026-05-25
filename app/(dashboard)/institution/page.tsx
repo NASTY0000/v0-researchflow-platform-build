@@ -14,6 +14,7 @@ import {
   Trophy, Star, ArrowUpRight
 } from 'lucide-react'
 import Link from 'next/link'
+import { BaobabLoader } from '@/components/ui/baobab-loader'
 
 export default function InstitutionDashboard() {
   const [institution, setInstitution] = useState<any>(null)
@@ -222,7 +223,7 @@ export default function InstitutionDashboard() {
 
   if (loading) return (
     <div className="flex items-center justify-center min-h-[60vh]">
-      <div className="w-8 h-8 rounded-full animate-spin border-4 border-primary border-t-transparent" />
+      <BaobabLoader size="md" />
     </div>
   )
 

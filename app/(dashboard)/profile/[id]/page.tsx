@@ -15,12 +15,16 @@ import {
   Building2,
   Shield,
   Code,
+  Share2,
+  Check,
 } from 'lucide-react'
 import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
+import { shareContent } from '@/lib/utils/share'
 import { ProfileNeuralBg } from '@/components/ui/profile-neural-bg'
 import { BookmarkButton } from '@/components/ui/bookmark-button'
 import { FollowButton } from '@/components/ui/follow-button'
+import { BaobabLoader } from '@/components/ui/baobab-loader'
 
 export default function PublicProfilePage() {
   const params = useParams()
@@ -32,6 +36,7 @@ export default function PublicProfilePage() {
   const [isConnected, setIsConnected] = useState(false)
   const [connectionSent, setConnectionSent] = useState(false)
   const [mentorVerified, setMentorVerified] = useState(false)
+  const [profileShareCopied, setProfileShareCopied] = useState(false)
   const supabase = createClient()
 
   const ACADEMIC_LEVEL_LABELS: Record<string, string> = {
@@ -144,7 +149,7 @@ export default function PublicProfilePage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="w-10 h-10 rounded-full animate-spin border-4 border-primary border-t-transparent" />
+        <BaobabLoader size="md" />
       </div>
     )
   }
@@ -307,14 +312,22 @@ export default function PublicProfilePage() {
                   </Button>
                   <Button
                     size="sm"
-                    variant="ghost"
-                    onClick={() => {
-                      const url = `https://researchflowafrica.com/researcher/${userId}`
-                      navigator.clipboard?.writeText(url)
+                    variant="outline"
+                    onClick={async () => {
+                      const result = await shareContent({
+                        title: `${profile?.full_name} on ResearchFlow`,
+                        text: `Check out ${profile?.full_name}'s research profile on ResearchFlow.`,
+                        url: `https://researchflowafrica.com/researcher/${userId}`,
+                      })
+                      if (result.method === 'clipboard' && result.success) {
+                        setProfileShareCopied(true)
+                        setTimeout(() => setProfileShareCopied(false), 2000)
+                      }
                     }}
-                    title="Copy public profile link"
+                    className="gap-2"
                   >
-                    Share Profile
+                    {profileShareCopied ? <Check className="w-4 h-4 text-green-400" /> : <Share2 className="w-4 h-4" />}
+                    {profileShareCopied ? 'Link Copied!' : 'Share Profile'}
                   </Button>
                 </div>
               )}

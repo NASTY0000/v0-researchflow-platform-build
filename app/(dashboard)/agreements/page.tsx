@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Plus, FileText, Users, CheckCircle, Clock, Edit, Eye } from 'lucide-react'
 import Link from 'next/link'
 import { format } from 'date-fns'
+import { BaobabLoader } from '@/components/ui/baobab-loader'
 
 export default function AgreementsPage() {
   const [agreements, setAgreements] = useState<any[]>([])
@@ -102,7 +103,7 @@ export default function AgreementsPage() {
 
       {loading ? (
         <div className="flex justify-center py-12">
-          <div className="w-8 h-8 rounded-full animate-spin border-4 border-primary border-t-transparent" />
+          <BaobabLoader size="md" />
         </div>
       ) : agreements.length === 0 ? (
         <div className="text-center py-16 space-y-4">

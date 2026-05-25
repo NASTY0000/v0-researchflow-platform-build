@@ -34,6 +34,7 @@ import {
 import { createClient } from "@/lib/supabase/client"
 import type { Match, Profile } from "@/lib/types/database"
 import { AkiliScoreBadge } from "@/components/akili/AkiliScoreBadge"
+import { BaobabLoader } from '@/components/ui/baobab-loader'
 
 interface MatchWithProfile extends Match {
   matched_user: Profile
@@ -231,7 +232,7 @@ export default function MatchesPage() {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center space-y-4">
-          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+          <BaobabLoader size="md" />
           <p className="text-muted-foreground">Finding your matches...</p>
         </div>
       </div>

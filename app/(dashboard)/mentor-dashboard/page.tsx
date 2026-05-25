@@ -22,6 +22,7 @@ import {
 import { toast } from 'sonner'
 import { acceptMentorshipRequest } from '@/lib/actions/akili'
 import type { MentorProfile, MentorshipRequest, MentorAvailability, Profile, Project } from '@/lib/types/database'
+import { BaobabLoader } from '@/components/ui/baobab-loader'
 
 type RequestWithStudent = MentorshipRequest & {
   student: Profile
@@ -202,7 +203,7 @@ export default function MentorDashboardPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[40vh]">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <BaobabLoader size="sm" />
       </div>
     )
   }

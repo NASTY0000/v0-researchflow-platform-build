@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
+import { BaobabLoader } from '@/components/ui/baobab-loader'
   Shield, Bell, Key, Download, Trash2, AlertTriangle,
   Loader2, Check, LogOut, Save, MessageSquare,
   Search, Activity, Sun, Moon, Monitor,
@@ -218,7 +219,7 @@ export default function SettingsPage() {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center space-y-3">
-          <div className="w-10 h-10 rounded-full animate-spin mx-auto border-[3px] border-primary/20 border-t-primary" />
+          <BaobabLoader size="md" />
           <p className="text-muted-foreground">Loading settings…</p>
         </div>
       </div>

@@ -33,7 +33,9 @@ import {
 import type { Profile, PortfolioItem, PortfolioItemType, University } from '@/lib/types/database'
 import { AkiliScoreCard } from '@/components/akili/AkiliScoreCard'
 import { getAkiliNarrative } from '@/lib/utils/akili'
+import { shareContent } from '@/lib/utils/share'
 import { ProfileNeuralBg } from '@/components/ui/profile-neural-bg'
+import { BaobabLoader } from '@/components/ui/baobab-loader'
 
 interface ActivityStats {
   activeProjects: number
@@ -499,19 +501,13 @@ export default function ProfilePage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
-    const profileUrl = `https://researchflowafrica.com/researcher/${user.id}`
+    const result = await shareContent({
+      title: `${profile?.full_name} on ResearchFlow`,
+      text: `Check out ${profile?.full_name}'s research profile on ResearchFlow — Africa's premier research collaboration platform.`,
+      url: `https://researchflowafrica.com/researcher/${user.id}`,
+    })
 
-    try {
-      await navigator.clipboard.writeText(profileUrl)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    } catch {
-      const input = document.createElement('input')
-      input.value = profileUrl
-      document.body.appendChild(input)
-      input.select()
-      document.execCommand('copy')
-      document.body.removeChild(input)
+    if (result.method === 'clipboard' && result.success) {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     }
@@ -1255,7 +1251,7 @@ export default function ProfilePage() {
         <TabsContent value="analytics" className="space-y-6">
           {analyticsLoading ? (
             <div className="flex items-center justify-center py-20">
-              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              <BaobabLoader size="sm" />
             </div>
           ) : analyticsData ? (
             <>
