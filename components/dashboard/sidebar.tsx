@@ -152,15 +152,20 @@ export function DashboardSidebar({ profile }: DashboardSidebarProps) {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
-              <Link href="/dashboard">
-                <Logo variant="horizontal" width={180} />
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+        <Link href="/dashboard" className="block hover:opacity-80 transition-opacity">
+          <div className="flex items-center gap-3 px-4 py-5 mb-2">
+            <Logo variant="icon" width={38} />
+            <div>
+              <div className="text-base font-bold leading-tight">
+                <span className="text-white">Research</span>
+                <span style={{ color: '#FBBF24' }}>Flow</span>
+              </div>
+              <div className="text-xs" style={{ color: '#7C6A9C' }}>
+                Collaborate &amp; Discover
+              </div>
+            </div>
+          </div>
+        </Link>
       </SidebarHeader>
 
       <SidebarContent>
