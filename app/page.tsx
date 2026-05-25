@@ -2,36 +2,161 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import {
-  Users,
-  Lightbulb,
-  BookOpen,
   ArrowRight,
-  GraduationCap,
-  Globe,
-  Rocket,
-  Star,
   Zap,
   User,
+  Users,
   Award,
+  Star,
 } from 'lucide-react'
 import {
   GlobalIllustrations,
-  HeroIllustrations,
   FeaturesIllustrations,
   StatsIllustrations,
   FooterIllustrations
 } from '@/components/landing/floating-illustrations'
 import { FaqSection } from '@/components/landing/faq-section'
+import { BaobabTree } from '@/components/landing/baobab-tree'
+
+// ── Custom SVG feature icons ──────────────────────────────────────────────────
+
+const CollaborateIcon = () => (
+  <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+    <circle cx="16" cy="6" r="3" fill="#7C3AED"/>
+    <circle cx="16" cy="6" r="5" stroke="#7C3AED" strokeWidth="1" fill="none" opacity="0.4"/>
+    <circle cx="6" cy="22" r="2.5" fill="#7C3AED"/>
+    <circle cx="6" cy="22" r="4" stroke="#7C3AED" strokeWidth="1" fill="none" opacity="0.4"/>
+    <circle cx="26" cy="22" r="2.5" fill="#7C3AED"/>
+    <circle cx="26" cy="22" r="4" stroke="#7C3AED" strokeWidth="1" fill="none" opacity="0.4"/>
+    <circle cx="16" cy="18" r="2" fill="#A855F7"/>
+    <path d="M16 9 Q14 13 11 15 Q9 17 6 20" stroke="#7C3AED" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+    <path d="M16 9 Q18 13 21 15 Q23 17 26 20" stroke="#7C3AED" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+    <path d="M16 9 L16 16" stroke="#7C3AED" strokeWidth="1.5" strokeLinecap="round"/>
+    <circle cx="11" cy="15" r="1.5" fill="#C084FC" opacity="0.7"/>
+    <circle cx="21" cy="15" r="1.5" fill="#C084FC" opacity="0.7"/>
+  </svg>
+)
+
+const IdeasIcon = () => (
+  <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+    <rect x="6" y="4" width="16" height="20" rx="2" stroke="#7C3AED" strokeWidth="1.5" fill="none"/>
+    <rect x="6" y="4" width="16" height="20" rx="2" fill="#7C3AED" opacity="0.08"/>
+    <line x1="10" y1="10" x2="18" y2="10" stroke="#7C3AED" strokeWidth="1.5" strokeLinecap="round"/>
+    <line x1="10" y1="14" x2="18" y2="14" stroke="#7C3AED" strokeWidth="1.5" strokeLinecap="round"/>
+    <line x1="10" y1="18" x2="15" y2="18" stroke="#7C3AED" strokeWidth="1.5" strokeLinecap="round"/>
+    <circle cx="25" cy="10" r="4" fill="#FBBF24" opacity="0.9"/>
+    <circle cx="25" cy="10" r="6" stroke="#FBBF24" strokeWidth="1" fill="none" opacity="0.3"/>
+    <line x1="22" y1="10" x2="18" y2="12" stroke="#FBBF24" strokeWidth="1" opacity="0.6"/>
+    <text x="23.5" y="13.5" fontSize="6" fill="white" fontWeight="bold">✦</text>
+  </svg>
+)
+
+const MentorIcon = () => (
+  <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+    <circle cx="16" cy="9" r="5" stroke="#7C3AED" strokeWidth="1.5" fill="none"/>
+    <circle cx="16" cy="9" r="5" fill="#7C3AED" opacity="0.1"/>
+    <path d="M8 28 Q8 20 16 20 Q24 20 24 28" stroke="#7C3AED" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+    <path d="M13 6 L16 4 L19 6" stroke="#FBBF24" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+    <line x1="11" y1="6" x2="21" y2="6" stroke="#FBBF24" strokeWidth="1.5" strokeLinecap="round"/>
+    <circle cx="25" cy="16" r="3" fill="#A855F7" opacity="0.8"/>
+    <path d="M19 12 Q22 13 24 15" stroke="#A855F7" strokeWidth="1" strokeLinecap="round" opacity="0.6" fill="none"/>
+    <circle cx="25" cy="16" r="5" stroke="#A855F7" strokeWidth="0.8" fill="none" opacity="0.3"/>
+  </svg>
+)
+
+const GrantsIcon = () => (
+  <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+    <circle cx="16" cy="16" r="9" stroke="#FBBF24" strokeWidth="1.5" fill="none"/>
+    <circle cx="16" cy="16" r="9" fill="#FBBF24" opacity="0.08"/>
+    <text x="13" y="21" fontSize="11" fill="#FBBF24" fontWeight="bold">$</text>
+    <circle cx="5" cy="8" r="2.5" fill="#7C3AED" opacity="0.8"/>
+    <circle cx="27" cy="8" r="2.5" fill="#7C3AED" opacity="0.8"/>
+    <circle cx="5" cy="24" r="2.5" fill="#7C3AED" opacity="0.8"/>
+    <circle cx="27" cy="24" r="2.5" fill="#7C3AED" opacity="0.8"/>
+    <line x1="7" y1="9" x2="10" y2="11" stroke="#7C3AED" strokeWidth="1" opacity="0.5"/>
+    <line x1="25" y1="9" x2="22" y2="11" stroke="#7C3AED" strokeWidth="1" opacity="0.5"/>
+    <line x1="7" y1="23" x2="10" y2="21" stroke="#7C3AED" strokeWidth="1" opacity="0.5"/>
+    <line x1="25" y1="23" x2="22" y2="21" stroke="#7C3AED" strokeWidth="1" opacity="0.5"/>
+  </svg>
+)
+
+const ReputationIcon = () => (
+  <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+    <path d="M10 20 L10 14 Q10 8 16 8 Q22 8 22 14 L22 20 Z" stroke="#7C3AED" strokeWidth="1.5" fill="#7C3AED" opacity="0.15" strokeLinejoin="round"/>
+    <path d="M10 14 Q6 14 6 10 Q6 6 10 8" stroke="#7C3AED" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+    <path d="M22 14 Q26 14 26 10 Q26 6 22 8" stroke="#7C3AED" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+    <rect x="12" y="20" width="8" height="3" rx="1" fill="#7C3AED" opacity="0.6"/>
+    <rect x="10" y="23" width="12" height="2.5" rx="1" fill="#7C3AED" opacity="0.8"/>
+    <circle cx="16" cy="13" r="3" fill="#FBBF24"/>
+    <circle cx="16" cy="13" r="5" stroke="#FBBF24" strokeWidth="1" fill="none" opacity="0.3"/>
+    <path d="M14 10 Q14 7 12 5" stroke="#7C3AED" strokeWidth="1" strokeLinecap="round" opacity="0.6"/>
+    <path d="M18 10 Q18 7 20 5" stroke="#7C3AED" strokeWidth="1" strokeLinecap="round" opacity="0.6"/>
+    <path d="M16 9 L16 4" stroke="#7C3AED" strokeWidth="1" strokeLinecap="round" opacity="0.6"/>
+    <circle cx="12" cy="5" r="1.5" fill="#A855F7" opacity="0.8"/>
+    <circle cx="20" cy="5" r="1.5" fill="#A855F7" opacity="0.8"/>
+    <circle cx="16" cy="4" r="1.5" fill="#FBBF24" opacity="0.9"/>
+  </svg>
+)
+
+const ShowcaseIcon = () => (
+  <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+    <rect x="8" y="6" width="16" height="20" rx="2" stroke="#7C3AED" strokeWidth="1.5" fill="#7C3AED" opacity="0.08"/>
+    <line x1="12" y1="12" x2="20" y2="12" stroke="#7C3AED" strokeWidth="1.5" strokeLinecap="round"/>
+    <line x1="12" y1="16" x2="20" y2="16" stroke="#7C3AED" strokeWidth="1.5" strokeLinecap="round"/>
+    <line x1="12" y1="20" x2="17" y2="20" stroke="#7C3AED" strokeWidth="1.5" strokeLinecap="round"/>
+    <circle cx="24" cy="8" r="1.5" fill="#FBBF24"/>
+    <circle cx="28" cy="14" r="1.5" fill="#A855F7" opacity="0.8"/>
+    <circle cx="26" cy="20" r="1.5" fill="#7C3AED" opacity="0.8"/>
+    <line x1="24" y1="8" x2="22" y2="10" stroke="#FBBF24" strokeWidth="1" opacity="0.6"/>
+    <line x1="28" y1="14" x2="22" y2="15" stroke="#A855F7" strokeWidth="1" opacity="0.5"/>
+    <line x1="26" y1="20" x2="22" y2="19" stroke="#7C3AED" strokeWidth="1" opacity="0.5"/>
+    <circle cx="24" cy="8" r="3" stroke="#FBBF24" strokeWidth="0.8" fill="none" opacity="0.3"/>
+    <circle cx="28" cy="14" r="3" stroke="#A855F7" strokeWidth="0.8" fill="none" opacity="0.25"/>
+  </svg>
+)
+
+// ── Feature card data ─────────────────────────────────────────────────────────
 
 const features = [
-  { icon: Lightbulb, title: 'Idea Board', description: 'Share your research ideas and discover opportunities to collaborate with peers across Africa.', color: '#A855F7' },
-  { icon: Users, title: 'Smart Matching', description: 'Our algorithm connects you with researchers who complement your skills and share your interests.', color: '#06B6D4' },
-  { icon: GraduationCap, title: 'Mentor Network', description: 'Access experienced academics and industry professionals for guidance on your research journey.', color: '#C084FC' },
-  { icon: BookOpen, title: 'Project Workspace', description: 'Manage your research projects with Kanban boards, file sharing, and real-time collaboration.', color: '#818CF8' },
-  { icon: Globe, title: 'Research Showcase', description: 'Publish and share your completed research with the academic community.', color: '#06B6D4' },
-  { icon: Rocket, title: 'Task Marketplace', description: 'Find help or offer your expertise on specific research tasks.', color: '#A855F7' },
+  {
+    icon: IdeasIcon,
+    title: 'Idea Board',
+    description: 'Share your research ideas and discover opportunities to collaborate with peers across Africa.',
+    color: '#A855F7',
+  },
+  {
+    icon: CollaborateIcon,
+    title: 'Smart Matching',
+    description: 'Our algorithm connects you with researchers who complement your skills and share your interests.',
+    color: '#06B6D4',
+  },
+  {
+    icon: MentorIcon,
+    title: 'Mentor Network',
+    description: 'Access experienced academics and industry professionals for guidance on your research journey.',
+    color: '#C084FC',
+  },
+  {
+    icon: ReputationIcon,
+    title: 'Project Workspace',
+    description: 'Manage your research projects with Kanban boards, file sharing, and real-time collaboration.',
+    color: '#818CF8',
+  },
+  {
+    icon: ShowcaseIcon,
+    title: 'Research Showcase',
+    description: 'Publish and share your completed research with the academic community.',
+    color: '#06B6D4',
+  },
+  {
+    icon: GrantsIcon,
+    title: 'Task Marketplace',
+    description: 'Find help or offer your expertise on specific research tasks.',
+    color: '#A855F7',
+  },
 ]
 
+// ── Testimonials ──────────────────────────────────────────────────────────────
 
 const testimonials = [
   {
@@ -54,6 +179,8 @@ const testimonials = [
   },
 ]
 
+// ── Page ──────────────────────────────────────────────────────────────────────
+
 export default function LandingPage() {
   const stats = [
     { value: '100+', label: 'African Universities' },
@@ -64,7 +191,7 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground relative">
-      {/* Global 3D Illustrations */}
+      {/* Global particle field + ambient glows */}
       <GlobalIllustrations />
 
       {/* Navigation */}
@@ -80,7 +207,9 @@ export default function LandingPage() {
 
             <div className="hidden md:flex items-center gap-8">
               {['Features', 'How It Works', 'Testimonials'].map((item) => (
-                <Link key={item} href={`#${item.toLowerCase().replace(/ /g, '-')}`}
+                <Link
+                  key={item}
+                  href={`#${item.toLowerCase().replace(/ /g, '-')}`}
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   {item}
@@ -100,45 +229,59 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className="relative pt-36 pb-24 px-4 overflow-hidden">
-        {/* 3D Node Network */}
-        <HeroIllustrations />
-
+      {/* ── Hero Section ── */}
+      <section className="relative pt-32 pb-20 px-4 overflow-hidden">
         <div className="max-w-7xl mx-auto relative z-10">
-          <div className="text-center max-w-4xl mx-auto">
-            {/* Tag pill */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-8 animate-fade-in bg-violet-600/12 border border-violet-500/25">
-              <Zap className="w-3.5 h-3.5 text-violet-400" />
-              <span className="text-sm font-medium text-violet-400">Built for African researchers, by African innovators</span>
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+
+            {/* Left: copy */}
+            <div className="text-center lg:text-left">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-8 animate-fade-in bg-violet-600/12 border border-violet-500/25">
+                <Zap className="w-3.5 h-3.5 text-violet-400" />
+                <span className="text-sm font-medium text-violet-400">Built for African researchers, by African innovators</span>
+              </div>
+
+              <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold font-heading leading-none mb-6 animate-fade-up tracking-tight">
+                <span className="gradient-text">Collaborate.</span>{' '}
+                <span className="gradient-text">Discover.</span>{' '}
+                <span className="gradient-text">Publish.</span>
+              </h1>
+
+              <p className="text-lg sm:text-xl max-w-2xl mx-auto lg:mx-0 mb-10 leading-relaxed animate-fade-up stagger-1 text-muted-foreground">
+                The premier research collaboration platform connecting university students across Africa.
+                Find collaborators, access mentors, and bring your research ideas to life.
+              </p>
+
+              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 animate-fade-up stagger-2">
+                <Button
+                  size="lg"
+                  asChild
+                  className="bg-gradient-to-br from-violet-600 to-violet-500 shadow-[0_0_24px_rgba(124,58,237,0.45)] border-none rounded-lg hover:shadow-[0_0_32px_rgba(124,58,237,0.55)] transition-all"
+                >
+                  <Link href="/auth/signup">
+                    Start Collaborating
+                    <ArrowRight className="ml-2 w-4 h-4" />
+                  </Link>
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  asChild
+                  className="border-violet-500/40 text-violet-400 bg-transparent rounded-lg hover:bg-violet-500/10 hover:border-violet-500/60"
+                >
+                  <Link href="#how-it-works">See How It Works</Link>
+                </Button>
+              </div>
             </div>
 
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold font-heading leading-none mb-6 animate-fade-up tracking-tight">
-              <span className="gradient-text">Collaborate.</span>{' '}
-              <span className="gradient-text">Discover.</span>{' '}
-              <span className="gradient-text">Publish.</span>
-            </h1>
-
-            <p className="text-lg sm:text-xl max-w-2xl mx-auto mb-10 leading-relaxed animate-fade-up stagger-1 text-muted-foreground">
-              The premier research collaboration platform connecting university students across Africa.
-              Find collaborators, access mentors, and bring your research ideas to life.
-            </p>
-
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-up stagger-2">
-              <Button size="lg" asChild className="bg-gradient-to-br from-violet-600 to-violet-500 shadow-[0_0_24px_rgba(124,58,237,0.45)] border-none rounded-lg hover:shadow-[0_0_32px_rgba(124,58,237,0.55)] transition-all">
-                <Link href="/auth/signup">
-                  Start Collaborating
-                  <ArrowRight className="ml-2 w-4 h-4" />
-                </Link>
-              </Button>
-              <Button size="lg" variant="outline" asChild className="border-violet-500/40 text-violet-400 bg-transparent rounded-lg hover:bg-violet-500/10 hover:border-violet-500/60">
-                <Link href="#how-it-works">See How It Works</Link>
-              </Button>
+            {/* Right: Baobab tree */}
+            <div className="relative flex items-center justify-center lg:justify-end w-full h-full min-h-[400px]">
+              <BaobabTree />
             </div>
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-24 max-w-4xl mx-auto animate-fade-up stagger-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-20 max-w-4xl mx-auto animate-fade-up stagger-3">
             {stats.map((stat) => (
               <div key={stat.label} className="text-center p-6 rounded-2xl bg-card border border-border">
                 <div className="text-4xl font-bold font-heading stat-number">{stat.value}</div>
@@ -149,9 +292,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Features */}
+      {/* ── Features ── */}
       <section id="features" className="py-24 px-4 relative">
-        {/* DNA Helix Illustration */}
         <FeaturesIllustrations />
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="text-center mb-16">
@@ -174,7 +316,7 @@ export default function LandingPage() {
                   className="w-11 h-11 rounded-xl flex items-center justify-center mb-4"
                   style={{ background: `${feature.color}18`, border: `1px solid ${feature.color}30` }}
                 >
-                  <feature.icon className="w-5 h-5" style={{ color: feature.color }} />
+                  <feature.icon />
                 </div>
                 <h3 className="text-lg font-semibold font-heading mb-2">{feature.title}</h3>
                 <p className="text-sm leading-relaxed text-muted-foreground">{feature.description}</p>
@@ -184,7 +326,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* How It Works */}
+      {/* ── How It Works ── */}
       <section id="how-it-works" className="py-24 px-4 bg-secondary/20">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
@@ -202,7 +344,7 @@ export default function LandingPage() {
                 icon: User,
                 iconColor: '#A855F7',
                 title: 'Create Your Profile',
-                description: 'Sign up with your university email, add your skills, research interests, and what you\'re looking to achieve. Your profile is your academic identity on ResearchFlow.',
+                description: "Sign up with your university email, add your skills, research interests, and what you're looking to achieve. Your profile is your academic identity on ResearchFlow.",
               },
               {
                 step: '02',
@@ -241,9 +383,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Testimonials */}
+      {/* ── Testimonials ── */}
       <section id="testimonials" className="py-24 px-4 relative">
-        {/* Molecular Structure Illustration */}
         <StatsIllustrations />
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="text-center mb-16">
@@ -280,16 +421,14 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* FAQ Section */}
+      {/* ── FAQ ── */}
       <FaqSection />
 
-      {/* CTA Section */}
+      {/* ── CTA ── */}
       <section className="py-24 px-4 relative">
-        {/* Footer Nodes */}
         <FooterIllustrations />
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <div className="p-10 sm:p-16 rounded-3xl relative overflow-hidden bg-gradient-to-r from-purple-700 to-purple-900 dark:from-purple-900 dark:to-[#050118]">
-            {/* Glow */}
             <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_50%_0%,rgba(255,255,255,0.08),transparent_60%)]" />
             <div className="relative text-white">
               <p className="label-section mb-4" style={{ color: 'rgba(255,255,255,0.6)' }}>Join the movement</p>
@@ -299,7 +438,11 @@ export default function LandingPage() {
               <p className="mb-10 max-w-2xl mx-auto text-white/80">
                 Join the growing community of African researchers collaborating, learning, and publishing together.
               </p>
-              <Button size="lg" asChild className="bg-white text-purple-800 hover:bg-white/90 border-none rounded-lg shadow-[0_0_24px_rgba(255,255,255,0.2)] hover:shadow-[0_0_32px_rgba(255,255,255,0.3)]">
+              <Button
+                size="lg"
+                asChild
+                className="bg-white text-purple-800 hover:bg-white/90 border-none rounded-lg shadow-[0_0_24px_rgba(255,255,255,0.2)] hover:shadow-[0_0_32px_rgba(255,255,255,0.3)]"
+              >
                 <Link href="/auth/signup">
                   Create Free Account
                   <ArrowRight className="ml-2 w-4 h-4" />
@@ -310,7 +453,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Footer */}
+      {/* ── Footer ── */}
       <footer className="py-12 px-4 border-t border-border">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-2">
@@ -321,7 +464,9 @@ export default function LandingPage() {
           </div>
           <div className="flex items-center gap-6 text-sm text-muted-foreground">
             {['About', 'Terms', 'Privacy', 'Contact'].map(item => (
-              <Link key={item} href={`/${item.toLowerCase()}`} className="hover:text-foreground transition-colors">{item}</Link>
+              <Link key={item} href={`/${item.toLowerCase()}`} className="hover:text-foreground transition-colors">
+                {item}
+              </Link>
             ))}
           </div>
           <div className="text-sm text-muted-foreground">
