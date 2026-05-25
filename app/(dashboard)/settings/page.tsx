@@ -12,11 +12,11 @@ import { Separator } from "@/components/ui/separator"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
-import { BaobabLoader } from '@/components/ui/baobab-loader'
   Shield, Bell, Key, Download, Trash2, AlertTriangle,
   Loader2, Check, LogOut, Save, MessageSquare,
   Search, Activity, Sun, Moon, Monitor,
 } from "lucide-react"
+import { BaobabLoader } from '@/components/ui/baobab-loader'
 
 const NOTIF_TYPES = [
   { key: "new_match",            label: "New match suggestion" },
