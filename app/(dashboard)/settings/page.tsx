@@ -56,7 +56,8 @@ export default function SettingsPage() {
   // ── Profile background ──
   const [profileBg, setProfileBg] = useState<'baobab' | 'constellation'>('baobab')
   const [isSavingBg, setIsSavingBg] = useState(false)
-  const [bgMsg, setBgMsg] = useState<string | null>(null)
+  const [bgSaveError, setBgSaveError] = useState<string | null>(null)
+  const [bgSaveSuccess, setBgSaveSuccess] = useState(false)
 
   // ── Privacy ──
   const [profileVisibility, setProfileVisibility] =
@@ -150,27 +151,32 @@ export default function SettingsPage() {
 
   async function saveProfileBg() {
     setIsSavingBg(true)
-    setBgMsg(null)
+    setBgSaveError(null)
+    setBgSaveSuccess(false)
     try {
       const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Not authenticated')
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      if (authError || !user) throw new Error('Not authenticated')
 
-      const { error } = await supabase
+      console.log('Saving profile_background:', profileBg, 'for user:', user.id)
+
+      const { data, error } = await supabase
         .from("profiles")
         .update({ profile_background: profileBg })
         .eq("id", user.id)
+        .select()
 
       if (error) {
-        console.error("Save appearance error:", error.message, error.code, (error as any).details)
+        console.error("Supabase error:", { message: error.message, code: error.code, details: (error as any).details, hint: (error as any).hint })
         throw error
       }
 
-      setBgMsg("Profile appearance saved!")
-      setTimeout(() => setBgMsg(null), 3000)
+      console.log('Save successful:', data)
+      setBgSaveSuccess(true)
+      setTimeout(() => setBgSaveSuccess(false), 2000)
     } catch (err: any) {
       console.error("saveProfileBg failed:", err)
-      setBgMsg("Failed to save. Please try again.")
+      setBgSaveError(err?.message ? `Failed to save: ${err.message}` : 'Failed to save. Please try again.')
     } finally {
       setIsSavingBg(false)
     }
@@ -383,17 +389,31 @@ export default function SettingsPage() {
           </button>
         </div>
 
-        {bgMsg && (
-          <p className={`text-xs mt-3 ${bgMsg.includes('saved') ? 'text-green-400' : 'text-destructive'}`}>
-            {bgMsg}
-          </p>
-        )}
-
-        <div className="pt-1">
-          <Button size="sm" onClick={saveProfileBg} disabled={isSavingBg} className="gap-2">
-            {isSavingBg ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
-            Save Appearance
-          </Button>
+        <div className="pt-2">
+          <button
+            onClick={saveProfileBg}
+            disabled={isSavingBg}
+            className={[
+              "w-full h-11 rounded-xl font-semibold text-sm transition-all duration-200",
+              "flex items-center justify-center gap-2",
+              isSavingBg
+                ? "bg-purple-800/50 text-purple-400 cursor-not-allowed"
+                : bgSaveSuccess
+                ? "bg-green-600 text-white"
+                : "bg-purple-600 hover:bg-purple-500 text-white",
+            ].join(" ")}
+          >
+            {isSavingBg ? (
+              <><Loader2 className="w-4 h-4 animate-spin" />Saving...</>
+            ) : bgSaveSuccess ? (
+              <><Check className="w-4 h-4" />Saved!</>
+            ) : (
+              <><Check className="w-4 h-4" />Save Appearance</>
+            )}
+          </button>
+          {bgSaveError && (
+            <p className="text-red-400 text-xs text-center mt-2">{bgSaveError}</p>
+          )}
         </div>
       </div>
 
