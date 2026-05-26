@@ -35,6 +35,67 @@ import { AkiliScoreCard } from '@/components/akili/AkiliScoreCard'
 import { getAkiliNarrative } from '@/lib/utils/akili'
 import { shareContent } from '@/lib/utils/share'
 import { ProfileBackground } from '@/components/profile/ProfileBackground'
+import { RippleButton } from '@/components/ui/RippleButton'
+
+// ── Animation helpers (module-level, no hooks) ────────────────────────────────
+
+function easeOutExpo(t: number): number {
+  return t === 1 ? 1 : 1 - Math.pow(2, -10 * t)
+}
+
+function triggerSparkleBurst(elementId: string) {
+  const el = document.getElementById(elementId)
+  if (!el) return
+  const rect = el.getBoundingClientRect()
+  const cx = rect.left + rect.width / 2
+  const cy = rect.top + rect.height / 2
+  const colors = ['#FBBF24','#F59E0B','#A855F7','#C4B5FD','#FBBF24','#7C3AED','#FBBF24','#E879F9','#FDE68A','#FBBF24','#A855F7','#FBBF24']
+  for (let i = 0; i < 12; i++) {
+    const spark = document.createElement('div')
+    const isDiamond = i % 3 !== 0
+    Object.assign(spark.style, {
+      position: 'fixed', width: isDiamond ? '5px' : '4px', height: isDiamond ? '5px' : '4px',
+      borderRadius: isDiamond ? '1px' : '50%', backgroundColor: colors[i],
+      transform: isDiamond ? 'rotate(45deg)' : 'none',
+      left: `${cx}px`, top: `${cy}px`, pointerEvents: 'none', zIndex: '9999',
+      boxShadow: `0 0 4px ${colors[i]}, 0 0 8px ${colors[i]}`,
+    })
+    document.body.appendChild(spark)
+    const angle = (i / 12) * 360 + (Math.random() * 20 - 10)
+    const dist = 45 + Math.random() * 35
+    const rad = (angle * Math.PI) / 180
+    const tx = cx + Math.cos(rad) * dist
+    const ty = cy + Math.sin(rad) * dist
+    spark.animate([
+      { transform: `translate(-50%,-50%) ${isDiamond ? 'rotate(45deg)' : ''} scale(0)`, opacity: '1' },
+      { transform: `translate(calc(${tx - cx}px - 50%),calc(${ty - cy}px - 50%)) ${isDiamond ? 'rotate(225deg)' : ''} scale(1)`, opacity: '1', offset: 0.6 },
+      { transform: `translate(calc(${tx - cx}px - 50%),calc(${ty - cy}px - 50%)) ${isDiamond ? 'rotate(360deg)' : ''} scale(0.3)`, opacity: '0' },
+    ], { duration: 600 + Math.random() * 200, delay: i * 18, easing: 'cubic-bezier(0.25,0.46,0.45,0.94)', fill: 'forwards' }).onfinish = () => spark.remove()
+  }
+  el.animate(
+    [{ transform: 'scale(1)' }, { transform: 'scale(1.12)' }, { transform: 'scale(0.96)' }, { transform: 'scale(1.04)' }, { transform: 'scale(1)' }],
+    { duration: 400, easing: 'ease-out' }
+  )
+}
+
+function animateCountUp(targetValue: number, elementId: string, duration = 1400) {
+  const el = document.getElementById(elementId)
+  if (!el) return
+  const key = `akili_counted_${targetValue}`
+  if (sessionStorage.getItem(key)) { el.textContent = targetValue.toString(); return }
+  const startTime = performance.now()
+  function tick(now: number) {
+    const progress = Math.min((now - startTime) / duration, 1)
+    el!.textContent = Math.round(easeOutExpo(progress) * targetValue).toString()
+    if (progress < 1) { requestAnimationFrame(tick) }
+    else {
+      el!.textContent = targetValue.toString()
+      sessionStorage.setItem(key, 'true')
+      triggerSparkleBurst('akili-hero-badge')
+    }
+  }
+  requestAnimationFrame(tick)
+}
 import { BaobabLoader } from '@/components/ui/baobab-loader'
 
 interface ActivityStats {
@@ -124,6 +185,35 @@ export default function ProfilePage() {
   useEffect(() => {
     loadAll()
   }, [])
+
+  // Count-up animation when akili_score is available
+  useEffect(() => {
+    if (profile?.akili_score) {
+      // Small delay so the element is in the DOM
+      const t = setTimeout(() => animateCountUp(profile.akili_score, 'akili-count'), 120)
+      return () => clearTimeout(t)
+    }
+  }, [profile?.akili_score])
+
+  // Stats cards IntersectionObserver
+  useEffect(() => {
+    const cards = document.querySelectorAll('.stat-card-animate')
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const el = entry.target as HTMLElement
+            const delay = parseInt(el.dataset.delay ?? '0')
+            setTimeout(() => el.classList.add('is-visible'), delay)
+            observer.unobserve(entry.target)
+          }
+        })
+      },
+      { threshold: 0.15, rootMargin: '0px 0px -30px 0px' }
+    )
+    cards.forEach(card => observer.observe(card))
+    return () => observer.disconnect()
+  }, [profile]) // re-run when profile loads so cards exist in DOM
 
   async function loadAnalytics(userId: string) {
     setAnalyticsLoading(true)
@@ -695,9 +785,26 @@ export default function ProfilePage() {
           <div className="absolute bottom-0 left-0 right-0 h-20 pointer-events-none z-10"
             style={{ background: 'linear-gradient(to bottom, transparent, rgba(9,6,19,0.95))' }} />
         </div>
-        <CardContent className="relative p-8" style={{ zIndex: 2 }}>
+        {/* CSS for avatar pulse and stat card animations */}
+        <style>{`
+          @keyframes avatar-ring-pulse {
+            0%,100% { opacity: 0.4; transform: scale(1); }
+            50%      { opacity: 1;   transform: scale(1.08); }
+          }
+          .avatar-ring-pulse { animation: avatar-ring-pulse 2.8s ease-in-out infinite; }
+          .avatar-ring-pulse-fast { animation: avatar-ring-pulse 0.9s ease-in-out infinite; }
+          .stat-card-animate {
+            opacity: 0; transform: translateY(24px);
+            transition: opacity 0.55s ease, transform 0.55s ease;
+          }
+          .stat-card-animate.is-visible { opacity: 1; transform: translateY(0); }
+        `}</style>
+
+        <CardContent className="relative p-8">
           <div className="flex flex-col md:flex-row items-start gap-6">
-            <div className="relative">
+
+            {/* ── Avatar ── */}
+            <div className="relative shrink-0 flex flex-col items-center">
               <input
                 ref={fileInputRef}
                 type="file"
@@ -705,32 +812,63 @@ export default function ProfilePage() {
                 className="hidden"
                 onChange={handleAvatarFileSelect}
               />
-              <Avatar className="w-24 h-24">
-                <AvatarImage src={profile.avatar_url || undefined} />
-                <AvatarFallback className="text-2xl">
-                  {profile.full_name?.charAt(0) || 'U'}
-                </AvatarFallback>
-              </Avatar>
-              {isUploadingAvatar && (
-                <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50">
-                  <Loader2 className="w-6 h-6 animate-spin text-white" />
-                </div>
-              )}
-              <Button
-                size="icon"
-                variant="outline"
-                className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full"
+              {/* Outer glow ring */}
+              <div
+                className="avatar-ring-pulse rounded-full"
+                style={{
+                  position: 'absolute', inset: '-8px',
+                  border: '4px solid rgba(124,58,237,0.25)',
+                  borderRadius: '9999px',
+                  pointerEvents: 'none',
+                }}
+                id="avatar-outer-ring"
+              />
+              {/* Clickable avatar wrapper */}
+              <div
+                className="relative cursor-pointer group"
+                style={{ width: 96, height: 96 }}
                 onClick={() => fileInputRef.current?.click()}
-                disabled={isUploadingAvatar}
+                onMouseEnter={() => {
+                  const ring = document.getElementById('avatar-outer-ring')
+                  if (ring) { ring.classList.remove('avatar-ring-pulse'); ring.classList.add('avatar-ring-pulse-fast') }
+                }}
+                onMouseLeave={() => {
+                  const ring = document.getElementById('avatar-outer-ring')
+                  if (ring) { ring.classList.remove('avatar-ring-pulse-fast'); ring.classList.add('avatar-ring-pulse') }
+                }}
+                onTouchStart={(e) => {
+                  const ring = document.getElementById('avatar-outer-ring')
+                  if (ring) { ring.classList.remove('avatar-ring-pulse'); ring.classList.add('avatar-ring-pulse-fast') }
+                  const timer = setTimeout(() => { fileInputRef.current?.click() }, 500)
+                  const cancel = () => { clearTimeout(timer); if (ring) { ring.classList.remove('avatar-ring-pulse-fast'); ring.classList.add('avatar-ring-pulse') } }
+                  e.currentTarget.addEventListener('touchend', cancel, { once: true })
+                  e.currentTarget.addEventListener('touchmove', cancel, { once: true })
+                }}
               >
-                <Edit className="w-3 h-3" />
-              </Button>
+                <Avatar
+                  className="w-24 h-24 transition-transform duration-200 group-hover:scale-[1.06]"
+                  style={{
+                    border: '2px solid #7C3AED',
+                    boxShadow: '0 0 0 6px rgba(124,58,237,0.18), 0 0 20px rgba(124,58,237,0.35)',
+                    transition: 'box-shadow 300ms ease, transform 200ms cubic-bezier(0.34,1.56,0.64,1)',
+                  }}
+                >
+                  <AvatarImage src={profile.avatar_url || undefined} />
+                  <AvatarFallback className="text-2xl">
+                    {profile.full_name?.charAt(0) || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                {isUploadingAvatar && (
+                  <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50">
+                    <Loader2 className="w-6 h-6 animate-spin text-white" />
+                  </div>
+                )}
+              </div>
+              {avatarError && <p className="text-xs text-destructive mt-2 text-center">{avatarError}</p>}
             </div>
-            {avatarError && (
-              <p className="text-xs text-destructive mt-1">{avatarError}</p>
-            )}
 
-            <div className="flex-1 space-y-4">
+            {/* ── Identity ── */}
+            <div className="flex-1 space-y-4 min-w-0">
               {isEditing ? (
                 <div className="space-y-4">
                   <div>
@@ -819,10 +957,16 @@ export default function ProfilePage() {
                 </div>
               ) : (
                 <>
-                  <div className="flex items-start justify-between">
+                  {/* Name + badges row */}
+                  <div className="flex items-start justify-between gap-4 flex-wrap">
                     <div>
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h1 className="text-2xl font-bold font-heading">{profile.full_name}</h1>
+                        <h1
+                          className="text-2xl font-bold font-heading"
+                          style={{ letterSpacing: '-0.02em' }}
+                        >
+                          {profile.full_name}
+                        </h1>
                         <div className="flex items-center gap-1">
                           {profile.is_admin && (
                             <div title="Platform Admin" className="w-5 h-5 rounded-full bg-yellow-500/20 border border-yellow-500/40 flex items-center justify-center">
@@ -840,35 +984,54 @@ export default function ProfilePage() {
                             </div>
                           )}
                         </div>
-                        {profile.akili_score > 0 && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-sm font-semibold bg-primary/10 text-primary border border-primary/20">
-                            <Zap className="w-3.5 h-3.5" />
-                            {profile.akili_score.toLocaleString()} · {getAkiliNarrative(profile.akili_score).title}
-                          </span>
-                        )}
                       </div>
-                      <p className="text-muted-foreground flex items-center gap-2 mt-1">
+
+                      {/* Akili hero badge */}
+                      <div className="flex items-center gap-2 mt-2">
+                        <div
+                          id="akili-hero-badge"
+                          className="relative flex items-center gap-1.5 px-3 py-1.5 rounded-full cursor-pointer select-none"
+                          style={{ background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.35)' }}
+                          onClick={() => triggerSparkleBurst('akili-hero-badge')}
+                        >
+                          <span className="text-amber-400 text-sm">⚡</span>
+                          <span
+                            id="akili-count"
+                            className="text-amber-400 font-black text-lg tracking-tight"
+                          >
+                            {profile.akili_score ?? 0}
+                          </span>
+                          <span className="text-xs font-semibold" style={{ color: 'rgba(196,181,253,0.7)' }}>
+                            · {getAkiliNarrative(profile.akili_score ?? 0).title}
+                          </span>
+                        </div>
+                      </div>
+
+                      <p className="text-muted-foreground flex items-center gap-2 mt-2">
                         <GraduationCap className="w-4 h-4" />
                         {getAcademicLevelLabel(profile.academic_level || '')}
                         {profile.department && ` · ${profile.department}`}
                       </p>
                     </div>
+
+                    {/* Action buttons */}
                     <div className="flex gap-2 flex-wrap">
-                      <Button variant="outline" onClick={() => setIsEditing(true)}>
-                        <Edit className="w-4 h-4 mr-2" />Edit Profile
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleShareProfile}
-                        className="gap-2"
+                      <RippleButton
+                        variant="default"
+                        className="flex items-center gap-2 h-9 px-4 rounded-lg text-sm font-semibold text-purple-300 bg-white/5 border border-purple-500/30 hover:border-purple-500/60 hover:bg-purple-500/10 transition-colors"
+                        onClick={() => setIsEditing(true)}
                       >
-                        {copied
-                          ? <Check className="w-4 h-4 text-green-400" />
-                          : <Share2 className="w-4 h-4" />
-                        }
+                        <Edit className="w-3.5 h-3.5" />
+                        Edit Profile
+                      </RippleButton>
+                      <RippleButton
+                        variant="default"
+                        className="flex items-center gap-2 h-9 px-4 rounded-lg text-sm font-semibold text-purple-400 bg-purple-500/15 border border-purple-500/35 hover:border-purple-500/60 hover:bg-purple-500/20 transition-colors"
+                        onClick={handleShareProfile}
+                      >
+                        {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Share2 className="w-3.5 h-3.5" />}
                         {copied ? 'Link Copied!' : 'Share Profile'}
-                      </Button>
+                      </RippleButton>
                     </div>
                   </div>
 
@@ -905,17 +1068,18 @@ export default function ProfilePage() {
               )}
             </div>
 
+            {/* ── Stats (with stagger animation) ── */}
             {!isEditing && (
-              <div className="flex md:flex-col gap-4 md:gap-2 text-center md:text-right">
-                <div>
+              <div className="flex md:flex-col gap-4 md:gap-3 text-center md:text-right shrink-0">
+                <div className="stat-card-animate" data-delay="0">
                   <p className="text-2xl font-bold text-primary">{profile.projects_completed}</p>
                   <p className="text-xs text-muted-foreground">Projects</p>
                 </div>
-                <div>
+                <div className="stat-card-animate" data-delay="100">
                   <p className="text-2xl font-bold text-accent">{profile.connections_count}</p>
                   <p className="text-xs text-muted-foreground">Connections</p>
                 </div>
-                <div>
+                <div className="stat-card-animate" data-delay="200">
                   <p className="text-2xl font-bold">{profile.portfolio_views}</p>
                   <p className="text-xs text-muted-foreground">Profile Views</p>
                 </div>
