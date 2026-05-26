@@ -165,11 +165,10 @@ export default function PublicProfilePage() {
         <ArrowLeft className="h-5 w-5" />
       </Button>
 
-      {/* Profile Header — NO overflow-hidden so avatar can overlap banner */}
-      <div className="relative rounded-2xl border border-primary/20 shadow-[0_0_40px_rgba(124,58,237,0.15),0_0_80px_rgba(124,58,237,0.05)]">
-
-        {/* Banner — overflow-hidden only here */}
-        <div className="relative h-52 overflow-hidden rounded-t-2xl" style={{ background: '#05010F' }}>
+      {/* Profile Header */}
+      <Card className="overflow-hidden border-primary/20 shadow-[0_0_40px_rgba(124,58,237,0.15),0_0_80px_rgba(124,58,237,0.05)]">
+        {/* Animated canvas banner */}
+        <div className="relative h-52 overflow-hidden" style={{ background: '#05010F' }}>
           <ProfileBackground
             backgroundStyle={profile.profile_background ?? 'baobab'}
             interests={profile.research_interests?.length > 0
@@ -184,39 +183,120 @@ export default function PublicProfilePage() {
             }}
             collaborationCount={profile.connections_count ?? 0}
           />
+          {/* Gradient fade at bottom */}
           <div className="absolute bottom-0 left-0 right-0 h-20 pointer-events-none z-10"
             style={{ background: 'linear-gradient(to bottom, transparent, rgba(9,6,19,0.95))' }} />
         </div>
+        <CardContent className="relative p-6">
+          <div className="flex flex-col sm:flex-row items-start gap-5">
+            <Avatar className="w-20 h-20 border-2 border-primary/20">
+              <AvatarImage src={profile.avatar_url} />
+              <AvatarFallback className="text-2xl bg-primary/10 text-primary">
+                {profile.full_name?.charAt(0) || '?'}
+              </AvatarFallback>
+            </Avatar>
 
-        {/* Content area */}
-        <div className="bg-card rounded-b-2xl px-6 pb-6">
+            <div className="flex-1 space-y-3">
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h1 className="text-2xl font-bold">{profile.full_name}</h1>
+                  <div className="flex items-center gap-1">
+                    {profile.is_admin && (
+                      <div title="Platform Admin" className="w-5 h-5 rounded-full bg-yellow-500/20 border border-yellow-500/40 flex items-center justify-center">
+                        <Shield className="w-3 h-3 text-yellow-500" />
+                      </div>
+                    )}
+                    {profile.roles?.includes('mentor') && mentorVerified && (
+                      <div title="Verified Mentor" className="w-5 h-5 rounded-full bg-teal-500/20 border border-teal-500/40 flex items-center justify-center">
+                        <GraduationCap className="w-3 h-3 text-teal-400" />
+                      </div>
+                    )}
+                    {profile.roles?.includes('technical_expert') && (
+                      <div title="Technical Expert" className="w-5 h-5 rounded-full bg-blue-500/20 border border-blue-500/40 flex items-center justify-center">
+                        <Code className="w-3 h-3 text-blue-400" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <p className="text-muted-foreground flex items-center gap-2 mt-1">
+                  <GraduationCap className="w-4 h-4" />
+                  {ACADEMIC_LEVEL_LABELS[profile.academic_level] || profile.academic_level?.replace(/_/g, ' ')}
+                  {profile.department && ` · ${profile.department}`}
+                </p>
+                {profile.universityName && (
+                  <p className="text-muted-foreground flex items-center gap-2 mt-1">
+                    <Building2 className="w-4 h-4" />
+                    {profile.universityName}
+                  </p>
+                )}
+                {/* Status badge pills */}
+                {(profile.academic_level || profile.roles?.some((r: string) => STATUS_ROLES.includes(r))) && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {profile.academic_level && (
+                      <span className="bg-primary/15 text-primary border border-primary/20 rounded-full px-3 py-1 text-xs font-medium">
+                        {ACADEMIC_LEVEL_LABELS[profile.academic_level] || profile.academic_level}
+                      </span>
+                    )}
+                    {profile.roles?.filter((r: string) => STATUS_ROLES.includes(r)).map((role: string) => (
+                      <span key={role} className="bg-primary/15 text-primary border border-primary/20 rounded-full px-3 py-1 text-xs font-medium">
+                        {role === 'student_researcher' ? 'Student Researcher' : role.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
 
-          {/* Avatar + action-buttons row — -mt-12 pulls avatar 48px up into banner */}
-          <div className="flex items-end justify-between -mt-12 mb-4 relative z-20">
+              {/* Trajectory block */}
+              <div className="flex flex-wrap gap-2">
+                {(profile.current_focus || profile.research_interests?.[0]) && (
+                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-xs">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                    <span className="text-primary/80">Investigating:</span>
+                    <span className="font-semibold text-foreground">
+                      {profile.current_focus || profile.research_interests[0]}
+                    </span>
+                  </div>
+                )}
+                {profile.updated_at && (
+                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-muted border border-border text-xs">
+                    <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                    <span className="text-muted-foreground">
+                      Active {formatDistanceToNow(new Date(profile.updated_at), { addSuffix: true })}
+                    </span>
+                  </div>
+                )}
+              </div>
 
-            {/* Avatar */}
-            <div
-              className="w-24 h-24 rounded-full overflow-hidden flex items-center justify-center shrink-0"
-              style={{
-                border: '3px solid #7C3AED',
-                boxShadow: '0 0 0 5px rgba(124,58,237,0.2), 0 0 20px rgba(124,58,237,0.45)',
-                background: 'linear-gradient(135deg,#3b1d8a,#1e0a4a)',
-              }}
-            >
-              {profile.avatar_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={profile.avatar_url} alt={profile.full_name || 'Avatar'} className="w-full h-full object-cover" />
-              ) : (
-                <span className="text-3xl font-black text-amber-400">
-                  {profile.full_name?.charAt(0)?.toUpperCase() || '?'}
-                </span>
+              {profile.bio && (
+                <p className="text-muted-foreground text-sm leading-relaxed">{profile.bio}</p>
               )}
-            </div>
 
-            {/* Action buttons aligned to avatar bottom */}
-            <div className="flex gap-2 flex-wrap pb-1">
+              {/* Akili Score */}
+              {(profile.akili_score || 0) > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl font-black text-primary">{profile.akili_score}</span>
+                  <div>
+                    <p className="text-xs font-bold text-primary">AKILI</p>
+                    <p className="text-xs text-muted-foreground">{getAkiliTitle(profile.akili_score)}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Follower / following counts */}
+              <div className="flex gap-4 text-sm">
+                <button className="hover:text-primary transition-colors">
+                  <span className="font-bold">{profile.followers_count || 0}</span>
+                  <span className="text-muted-foreground ml-1">Followers</span>
+                </button>
+                <button className="hover:text-primary transition-colors">
+                  <span className="font-bold">{profile.following_count || 0}</span>
+                  <span className="text-muted-foreground ml-1">Following</span>
+                </button>
+              </div>
+
+              {/* Action buttons */}
               {!isOwnProfile && currentUserId && (
-                <>
+                <div className="flex gap-2 flex-wrap pt-2 items-center">
                   {isConnected ? (
                     <Badge variant="secondary">✓ Connected</Badge>
                   ) : connectionSent ? (
@@ -235,10 +315,11 @@ export default function PublicProfilePage() {
                   </Button>
                   <FollowButton targetUserId={userId} />
                   <BookmarkButton contentType="profile" contentId={userId} />
-                </>
+                </div>
               )}
+
               {isOwnProfile && (
-                <>
+                <div className="flex gap-2 pt-2 flex-wrap">
                   <Button size="sm" variant="outline" asChild>
                     <Link href="/profile">Edit Profile</Link>
                   </Button>
@@ -261,125 +342,28 @@ export default function PublicProfilePage() {
                     {profileShareCopied ? <Check className="w-4 h-4 text-green-400" /> : <Share2 className="w-4 h-4" />}
                     {profileShareCopied ? 'Link Copied!' : 'Share Profile'}
                   </Button>
-                </>
+                </div>
               )}
             </div>
-          </div>
 
-          {/* Profile info */}
-          <div className="space-y-3">
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-2xl font-bold">{profile.full_name}</h1>
-                <div className="flex items-center gap-1">
-                  {profile.is_admin && (
-                    <div title="Platform Admin" className="w-5 h-5 rounded-full bg-yellow-500/20 border border-yellow-500/40 flex items-center justify-center">
-                      <Shield className="w-3 h-3 text-yellow-500" />
-                    </div>
-                  )}
-                  {profile.roles?.includes('mentor') && mentorVerified && (
-                    <div title="Verified Mentor" className="w-5 h-5 rounded-full bg-teal-500/20 border border-teal-500/40 flex items-center justify-center">
-                      <GraduationCap className="w-3 h-3 text-teal-400" />
-                    </div>
-                  )}
-                  {profile.roles?.includes('technical_expert') && (
-                    <div title="Technical Expert" className="w-5 h-5 rounded-full bg-blue-500/20 border border-blue-500/40 flex items-center justify-center">
-                      <Code className="w-3 h-3 text-blue-400" />
-                    </div>
-                  )}
-                </div>
+            {/* Stats */}
+            <div className="flex sm:flex-col gap-4 text-center">
+              <div>
+                <p className="text-xl font-bold text-primary">{profile.projects_completed || 0}</p>
+                <p className="text-xs text-muted-foreground">Projects</p>
               </div>
-              <p className="text-muted-foreground flex items-center gap-2 mt-1">
-                <GraduationCap className="w-4 h-4" />
-                {ACADEMIC_LEVEL_LABELS[profile.academic_level] || profile.academic_level?.replace(/_/g, ' ')}
-                {profile.department && ` · ${profile.department}`}
-              </p>
-              {profile.universityName && (
-                <p className="text-muted-foreground flex items-center gap-2 mt-1">
-                  <Building2 className="w-4 h-4" />
-                  {profile.universityName}
-                </p>
-              )}
-              {(profile.academic_level || profile.roles?.some((r: string) => STATUS_ROLES.includes(r))) && (
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {profile.academic_level && (
-                    <span className="bg-primary/15 text-primary border border-primary/20 rounded-full px-3 py-1 text-xs font-medium">
-                      {ACADEMIC_LEVEL_LABELS[profile.academic_level] || profile.academic_level}
-                    </span>
-                  )}
-                  {profile.roles?.filter((r: string) => STATUS_ROLES.includes(r)).map((role: string) => (
-                    <span key={role} className="bg-primary/15 text-primary border border-primary/20 rounded-full px-3 py-1 text-xs font-medium">
-                      {role === 'student_researcher' ? 'Student Researcher' : role.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Trajectory block */}
-            <div className="flex flex-wrap gap-2">
-              {(profile.current_focus || profile.research_interests?.[0]) && (
-                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-xs">
-                  <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                  <span className="text-primary/80">Investigating:</span>
-                  <span className="font-semibold text-foreground">
-                    {profile.current_focus || profile.research_interests[0]}
-                  </span>
-                </div>
-              )}
-              {profile.updated_at && (
-                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-muted border border-border text-xs">
-                  <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                  <span className="text-muted-foreground">
-                    Active {formatDistanceToNow(new Date(profile.updated_at), { addSuffix: true })}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {profile.bio && (
-              <p className="text-muted-foreground text-sm leading-relaxed">{profile.bio}</p>
-            )}
-
-            {(profile.akili_score || 0) > 0 && (
-              <div className="flex items-center gap-2">
-                <span className="text-2xl font-black text-primary">{profile.akili_score}</span>
-                <div>
-                  <p className="text-xs font-bold text-primary">AKILI</p>
-                  <p className="text-xs text-muted-foreground">{getAkiliTitle(profile.akili_score)}</p>
-                </div>
+              <div>
+                <p className="text-xl font-bold">{profile.connections_count || 0}</p>
+                <p className="text-xs text-muted-foreground">Connections</p>
               </div>
-            )}
-
-            <div className="flex gap-4 text-sm">
-              <button className="hover:text-primary transition-colors">
-                <span className="font-bold">{profile.followers_count || 0}</span>
-                <span className="text-muted-foreground ml-1">Followers</span>
-              </button>
-              <button className="hover:text-primary transition-colors">
-                <span className="font-bold">{profile.following_count || 0}</span>
-                <span className="text-muted-foreground ml-1">Following</span>
-              </button>
+              <div>
+                <p className="text-xl font-bold">{profile.portfolio_views || 0}</p>
+                <p className="text-xs text-muted-foreground">Views</p>
+              </div>
             </div>
           </div>
-
-          {/* Stats */}
-          <div className="flex gap-6 mt-4">
-            <div>
-              <p className="text-xl font-bold text-primary">{profile.projects_completed || 0}</p>
-              <p className="text-xs text-muted-foreground">Projects</p>
-            </div>
-            <div>
-              <p className="text-xl font-bold">{profile.connections_count || 0}</p>
-              <p className="text-xs text-muted-foreground">Connections</p>
-            </div>
-            <div>
-              <p className="text-xl font-bold">{profile.portfolio_views || 0}</p>
-              <p className="text-xs text-muted-foreground">Views</p>
-            </div>
-          </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Skills */}
       {profile.skills?.length > 0 && (

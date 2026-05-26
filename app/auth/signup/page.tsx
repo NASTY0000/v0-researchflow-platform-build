@@ -3,14 +3,14 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import Image from 'next/image'
+import { Logo } from '@/components/Logo'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
 import { Loader2, Mail, Lock, User, CheckCircle, ArrowLeft } from 'lucide-react'
-import { signUp, signInWithGoogle, verifyOtp, resendOtp } from '@/lib/actions/auth'
+import { signUp, signInWithGoogle } from '@/lib/actions/auth'
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
@@ -26,15 +26,12 @@ function GoogleIcon({ className }: { className?: string }) {
 export default function SignUpPage() {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
-  const [successMsg, setSuccessMsg] = useState<string | null>(null)
-  const [step, setStep] = useState<'signup' | 'verify' | 'done'>('signup')
-  const [email, setEmail] = useState('')
+  const [step, setStep] = useState<'signup' | 'done'>('signup')
   const [isLoading, setIsLoading] = useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
-  const [isVerifying, setIsVerifying] = useState(false)
-  const [isResending, setIsResending] = useState(false)
-  const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', ''])
   const [emailType, setEmailType] = useState<'personal' | 'institutional'>('personal')
+  const [verificationSent, setVerificationSent] = useState(false)
+  const [sentToEmail, setSentToEmail] = useState('')
 
   async function handleSubmit(formData: FormData) {
     setIsLoading(true)
@@ -43,57 +40,23 @@ export default function SignUpPage() {
     formData.set('emailType', emailType)
 
     const result = await signUp(formData)
+
     if (result?.error) {
       setError(result.error)
       setIsLoading(false)
-    } else if (result?.success) {
-      if (result?.requiresVerification && result?.email) {
-        router.push(`/auth/verify?email=${encodeURIComponent(result.email as string)}`)
-      } else {
-        setStep('done')
-        setTimeout(() => router.push((result.redirectTo as string) || '/onboarding'), 1500)
-      }
+      return
     }
-  }
 
-  async function handleVerifyOtp() {
-    setIsVerifying(true)
-    setError(null)
-    const token = otpDigits.join('')
-    if (token.length !== 6) { setError('Please enter the complete 6-digit code'); setIsVerifying(false); return }
-    const result = await verifyOtp(email, token)
-    if (result?.error) { setError(result.error); setIsVerifying(false) }
-  }
+    if (result?.requiresVerification) {
+      setSentToEmail(result.email as string)
+      setVerificationSent(true)
+      setIsLoading(false)
+      return
+    }
 
-  async function handleResendCode() {
-    setIsResending(true); setError(null)
-    const result = await resendOtp(email)
-    if (result?.error) { setError(result.error) }
-    else { setSuccessMsg('Code resent!'); setTimeout(() => setSuccessMsg(null), 3000) }
-    setIsResending(false)
-  }
-
-  function handleOtpChange(index: number, value: string) {
-    if (value && !/^\d$/.test(value)) return
-    const newDigits = [...otpDigits]
-    newDigits[index] = value
-    setOtpDigits(newDigits)
-    if (value && index < 5) document.getElementById(`otp-${index + 1}`)?.focus()
-  }
-
-  function handleOtpKeyDown(index: number, e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === 'Backspace' && !otpDigits[index] && index > 0)
-      document.getElementById(`otp-${index - 1}`)?.focus()
-  }
-
-  function handleOtpPaste(e: React.ClipboardEvent) {
-    e.preventDefault()
-    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6)
-    if (pasted) {
-      const d = [...otpDigits]
-      for (let i = 0; i < pasted.length; i++) d[i] = pasted[i]
-      setOtpDigits(d)
-      document.getElementById(`otp-${Math.min(pasted.length, 5)}`)?.focus()
+    if (result?.success) {
+      setStep('done')
+      setTimeout(() => router.push((result.redirectTo as string) || '/onboarding'), 1500)
     }
   }
 
@@ -121,74 +84,37 @@ export default function SignUpPage() {
     )
   }
 
-  // OTP verification screen
-  if (step === 'verify') {
+  // Email verification sent screen
+  if (verificationSent) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-background">
         {bg}
-        <div className="w-full max-w-md relative animate-fade-up">
-          <div className="text-center mb-8">
-            <Link href="/" className="inline-flex items-center gap-2.5">
-              <div className="w-10 h-10 rounded-xl overflow-hidden">
-                <Image src="/icon.svg" alt="ResearchFlow" width={40} height={40} className="w-10 h-10" />
-              </div>
-              <span className="text-2xl font-bold font-heading gradient-text-cyan">ResearchFlow</span>
-            </Link>
+        <div className="max-w-md w-full text-center space-y-6 relative animate-fade-up">
+          <div className="w-20 h-20 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto">
+            <span className="text-4xl">📧</span>
           </div>
 
-          <div className="p-8 rounded-2xl bg-card border border-border backdrop-blur-xl">
-            <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-5 bg-primary/10 border border-primary/30">
-              <Mail className="w-7 h-7 text-primary" />
-            </div>
-            <h1 className="text-2xl font-bold font-heading mb-1 text-center" style={{ letterSpacing: '-0.02em' }}>Check your email</h1>
-            <p className="text-sm text-center mb-6 text-muted-foreground">
-              We sent a 6-digit code to <span className="text-primary">{email}</span>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold font-heading">Check your email</h2>
+            <p className="text-muted-foreground">We sent a verification link to</p>
+            <p className="font-semibold text-primary">{sentToEmail}</p>
+            <p className="text-muted-foreground text-sm">
+              Click the link in the email to verify your account and complete your profile setup.
             </p>
-
-            {error && (
-              <Alert variant="destructive" className="mb-5">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-            {successMsg && (
-              <Alert className="mb-5 border-green-500/40 bg-green-500/10">
-                <AlertDescription className="text-green-500">{successMsg}</AlertDescription>
-              </Alert>
-            )}
-
-            {/* OTP Inputs */}
-            <div className="flex justify-center gap-3 mb-6" onPaste={handleOtpPaste}>
-              {otpDigits.map((digit, i) => (
-                <input
-                  key={i}
-                  id={`otp-${i}`}
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={1}
-                  value={digit}
-                  onChange={e => handleOtpChange(i, e.target.value)}
-                  onKeyDown={e => handleOtpKeyDown(i, e)}
-                  className="w-12 h-14 text-center text-xl font-bold rounded-xl outline-none transition-all border bg-background text-foreground focus:border-primary"
-                  style={{
-                    borderColor: digit ? 'rgba(168,85,247,0.6)' : undefined,
-                    boxShadow: digit ? '0 0 12px rgba(124,58,237,0.25)' : 'none',
-                  }}
-                />
-              ))}
-            </div>
-
-            <Button className="w-full h-10" onClick={handleVerifyOtp} disabled={isVerifying || otpDigits.some(d => !d)}
-              style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', boxShadow: '0 0 20px rgba(124,58,237,0.35)', border: 'none', borderRadius: '8px', color: '#fff' }}>
-              {isVerifying ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Verifying...</> : 'Verify Email'}
-            </Button>
-
-            <div className="flex items-center justify-center gap-2 mt-4">
-              <span className="text-sm text-muted-foreground">Didn&apos;t receive it?</span>
-              <button onClick={handleResendCode} disabled={isResending} className="text-sm font-medium text-primary">
-                {isResending ? 'Resending...' : 'Resend code'}
-              </button>
-            </div>
           </div>
+
+          <div className="bg-muted rounded-xl p-4 text-sm text-muted-foreground space-y-1 text-left">
+            <p>✉️ Check your spam folder too</p>
+            <p>⏱ Link expires in 24 hours</p>
+            <p>🔒 Your account is secure</p>
+          </div>
+
+          <button
+            onClick={() => { setVerificationSent(false); setError(null) }}
+            className="text-sm text-muted-foreground hover:text-primary transition-colors"
+          >
+            Wrong email? Go back
+          </button>
         </div>
       </div>
     )
@@ -200,11 +126,8 @@ export default function SignUpPage() {
       {bg}
       <div className="w-full max-w-md relative animate-fade-up">
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-xl overflow-hidden">
-              <Image src="/icon.svg" alt="ResearchFlow" width={40} height={40} className="w-10 h-10" />
-            </div>
-            <span className="text-2xl font-bold font-heading gradient-text-cyan">ResearchFlow</span>
+          <Link href="/" className="inline-flex justify-center">
+            <Logo variant="full" width={120} />
           </Link>
         </div>
 

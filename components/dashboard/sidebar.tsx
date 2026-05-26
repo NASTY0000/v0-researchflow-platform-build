@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/sidebar'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import Image from 'next/image'
+import { Logo } from '@/components/Logo'
 import {
   LayoutDashboard,
   Lightbulb,
@@ -38,6 +38,8 @@ import {
   Bookmark,
   Sparkles,
   DollarSign,
+  Building2,
+  FileText,
 } from 'lucide-react'
 import type { Profile } from '@/lib/types/database'
 import { signOut } from '@/lib/actions/auth'
@@ -99,6 +101,16 @@ const resourceNavItems = [
     badge: 'New',
   },
   {
+    title: 'Institution',
+    href: '/institution',
+    icon: Building2,
+  },
+  {
+    title: 'Agreements',
+    href: '/agreements',
+    icon: FileText,
+  },
+  {
     title: 'Journals & Conferences',
     href: '/publications',
     icon: GraduationCap,
@@ -152,21 +164,20 @@ export function DashboardSidebar({ profile }: DashboardSidebarProps) {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
-              <Link href="/dashboard">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg overflow-hidden">
-                  <Image src="/icon.svg" alt="ResearchFlow" width={32} height={32} className="size-8" />
-                </div>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold font-heading gradient-text-cyan">ResearchFlow</span>
-                  <span className="truncate text-xs text-muted-foreground">Collaborate & Discover</span>
-                </div>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+        <Link href="/dashboard" className="block hover:opacity-80 transition-opacity">
+          <div className="flex items-center gap-3 px-4 py-5 mb-2">
+            <Logo variant="icon" width={38} />
+            <div>
+              <div className="text-base font-bold leading-tight">
+                <span className="text-white">Research</span>
+                <span style={{ color: '#FBBF24' }}>Flow</span>
+              </div>
+              <div className="text-xs" style={{ color: '#7C6A9C' }}>
+                Collaborate &amp; Discover
+              </div>
+            </div>
+          </div>
+        </Link>
       </SidebarHeader>
 
       <SidebarContent>

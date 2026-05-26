@@ -39,7 +39,7 @@ import {
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import type { MarketplaceTask, Profile } from "@/lib/types/database"
-import { awardAkiliPoints } from "@/lib/actions/akili"
+import { completeMarketplaceTask } from "@/lib/actions/akili"
 import { formatDistanceToNow } from "date-fns"
 import { toast } from "sonner"
 
@@ -235,21 +235,8 @@ export default function MarketplacePage() {
       .eq("id", manageTask.id)
 
     if (manageTask.assigned_to) {
-      await awardAkiliPoints(
-        manageTask.assigned_to,
-        "completeMarketplaceTask",
-        reward,
-        `Completed marketplace task: "${manageTask.title}"`,
-        manageTask.id,
-      )
-      await awardAkiliPoints(
-        manageTask.assigned_to,
-        "completeMarketplaceTask",
-        10,
-        `Technical bonus for completing: "${manageTask.title}"`,
-        manageTask.id,
-      )
-      toast.success(`Task complete! ${reward + 10} Akili Points awarded to the researcher.`)
+      completeMarketplaceTask(manageTask.assigned_to, manageTask.id).catch(() => {})
+      toast.success(`Task complete! Akili points awarded to the researcher.`)
     } else {
       toast.success("Task marked as complete.")
     }
@@ -488,17 +475,17 @@ export default function MarketplacePage() {
 
                 {/* Poster & actions */}
                 <div className="flex items-center justify-between pt-4 border-t">
-                  <div className="flex items-center gap-2">
-                    <Avatar className="h-6 w-6">
+                  <Link href={`/profile/${task.posted_by}`} className="flex items-center gap-2 group">
+                    <Avatar className="h-6 w-6 cursor-pointer group-hover:ring-2 group-hover:ring-primary/50 transition-all duration-200">
                       <AvatarImage src={task.poster?.avatar_url || undefined} />
                       <AvatarFallback className="text-xs bg-primary/10 text-primary">
                         {task.poster?.full_name?.charAt(0) || "?"}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="text-sm truncate max-w-[100px]">
+                    <span className="text-sm truncate max-w-[100px] group-hover:text-primary group-hover:underline transition-colors">
                       {task.poster?.full_name || "Anonymous"}
                     </span>
-                  </div>
+                  </Link>
                   {task.posted_by === currentUserId ? (
                     <Button size="sm" variant="outline" onClick={() => setManageTask(task)}>
                       Manage

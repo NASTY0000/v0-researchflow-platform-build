@@ -9,10 +9,10 @@ import {
 } from '@/components/ui/sidebar'
 import {
   LayoutDashboard, Users, Shield, FileText, AlertTriangle,
-  Building2, BarChart3, Megaphone, ArrowLeft,
+  Building2, BarChart3, Megaphone, ArrowLeft, DollarSign,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-import Image from 'next/image'
+import { Logo } from '@/components/Logo'
 
 const adminNavItems = [
   { title: 'Overview', href: '/admin', icon: LayoutDashboard, exact: true },
@@ -23,6 +23,9 @@ const adminNavItems = [
   { title: 'Universities', href: '/admin/universities', icon: Building2 },
   { title: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
   { title: 'Broadcast', href: '/admin/broadcast', icon: Megaphone },
+  { title: 'Grants', href: '/admin/grants', icon: DollarSign },
+  { title: 'Grant Applications', href: '/admin/grants/applications', icon: FileText },
+  { title: 'Institutions', href: '/admin/institutions', icon: Building2 },
 ]
 
 interface AdminSidebarProps {
@@ -48,9 +51,7 @@ export function AdminSidebar({ pendingMentors = 0, pendingShowcase = 0, pendingR
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link href="/admin">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg overflow-hidden">
-                  <Image src="/icon.svg" alt="ResearchFlow" width={32} height={32} className="size-8" />
-                </div>
+                <Logo variant="icon" width={32} />
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold font-heading" style={{ color: '#A855F7' }}>Admin Panel</span>
                   <span className="truncate text-xs" style={{ color: '#7C6A9C' }}>ResearchFlow</span>

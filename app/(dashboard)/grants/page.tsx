@@ -19,6 +19,7 @@ import {
   ExternalLink, Calendar, DollarSign, Globe,
 } from 'lucide-react'
 import { format, isPast, addDays } from 'date-fns'
+import { BaobabLoader } from '@/components/ui/baobab-loader'
 
 interface Grant {
   id: string
@@ -268,7 +269,7 @@ export default function GrantsPage() {
       {/* List */}
       {loading ? (
         <div className="flex justify-center py-12">
-          <div className="w-8 h-8 rounded-full animate-spin border-4 border-primary border-t-transparent" />
+          <BaobabLoader size="md" />
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">

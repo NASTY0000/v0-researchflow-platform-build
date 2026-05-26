@@ -1,243 +1,247 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useRef, useEffect } from 'react'
 
 interface BaobabCanvasProps {
-  interests?: { name: string; weight: number }[]
-  akiliScore?: number
-  dimensions?: {
+  interests: Array<{ name: string; weight: number }>
+  akiliScore: number
+  dimensions: {
     knowledge: number
     collaboration: number
     mentorship: number
     technical: number
   }
-  collaborationCount?: number
+  collaborationCount: number
 }
 
-export function BaobabCanvas({ interests = [] }: BaobabCanvasProps) {
+interface Particle {
+  x: number; y: number
+  vx: number; vy: number
+  r: number; opacity: number
+}
+
+const DEFAULTS = [
+  { name: 'Research', weight: 0.34 },
+  { name: 'Collaboration', weight: 0.33 },
+  { name: 'Discovery', weight: 0.33 },
+]
+
+export function BaobabCanvas({ interests, akiliScore, dimensions }: BaobabCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
+    const container = canvas.parentElement
+    if (!container) return
 
-    let rafId = 0
-    let t = 0
+    const active = interests.length > 0 ? interests.slice(0, 7) : DEFAULTS
 
-    const nodes = interests.length > 0 ? interests : [
-      { name: 'Research',      weight: 0.5 },
-      { name: 'Collaboration', weight: 0.45 },
-      { name: 'Innovation',    weight: 0.4 },
-      { name: 'Technology',    weight: 0.35 },
-      { name: 'Science',       weight: 0.3 },
-      { name: 'Data',          weight: 0.25 },
-      { name: 'Analysis',      weight: 0.2 },
-    ]
+    let rafId: number
+    let time = 0
+    let particles: Particle[] = []
 
     function resize() {
-      const container = canvas!.parentElement
-      if (!container) return
-      const W = container.offsetWidth || container.clientWidth || 600
-      const H = container.offsetHeight || container.clientHeight || 208
-      canvas!.width = W
-      canvas!.height = H
+      // Use offsetWidth/offsetHeight so we match the actual rendered CSS size
+      canvas!.width = container!.offsetWidth || container!.clientWidth
+      canvas!.height = container!.offsetHeight || container!.clientHeight
+
+      const W = canvas!.width
+      const H = canvas!.height
+      particles = Array.from({ length: 28 }, () => ({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        vx: (Math.random() - 0.5) * 0.4,
+        vy: (Math.random() - 0.5) * 0.4,
+        r: 0.6 + Math.random() * 2.0,
+        opacity: 0.12 + Math.random() * 0.32,
+      }))
     }
 
     function draw() {
       const W = canvas!.width
       const H = canvas!.height
-      if (W === 0 || H === 0) return
+      if (W === 0 || H === 0) { rafId = requestAnimationFrame(draw); return }
+      const ctx = canvas!.getContext('2d')!
 
-      ctx!.clearRect(0, 0, W, H)
+      // Clear every frame
+      ctx.fillStyle = '#05010F'
+      ctx.fillRect(0, 0, W, H)
 
-      // Background
-      ctx!.fillStyle = '#05010F'
-      ctx!.fillRect(0, 0, W, H)
+      // Drifting particles
+      ctx.save()
+      for (const p of particles) {
+        p.x += p.vx; p.y += p.vy
+        if (p.x < 0) p.x = W; if (p.x > W) p.x = 0
+        if (p.y < 0) p.y = H; if (p.y > H) p.y = 0
+        ctx.beginPath()
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2)
+        ctx.fillStyle = `rgba(139,92,246,${p.opacity})`
+        ctx.fill()
+      }
+      ctx.restore()
 
-      // Ambient radial glow
-      const grd = ctx!.createRadialGradient(W * 0.5, H * 0.55, 0, W * 0.5, H * 0.55, W * 0.6)
-      grd.addColorStop(0, 'rgba(124,58,237,0.10)')
-      grd.addColorStop(0.5, 'rgba(88,28,135,0.05)')
-      grd.addColorStop(1, 'rgba(0,0,0,0)')
-      ctx!.fillStyle = grd
-      ctx!.fillRect(0, 0, W, H)
+      // Junction point: trunk meets branches
+      const jx = W * 0.72
+      const jy = H * 0.88
 
-      // Trunk junction — base of canopy
-      const jx = W * 0.5
-      const jy = H * 0.82
-      const trunkW = Math.max(10, W * 0.025)  // wider trunk
+      // Ambient aura — drawn BEFORE branches
+      const aura = ctx.createRadialGradient(jx, H, 0, jx, H * 0.5, W * 0.7)
+      aura.addColorStop(0, 'rgba(245,158,11,0.18)')
+      aura.addColorStop(0.4, 'rgba(124,58,237,0.08)')
+      aura.addColorStop(1, 'rgba(0,0,0,0)')
+      ctx.fillStyle = aura
+      ctx.fillRect(0, 0, W, H)
 
-      // Trunk glow halo
-      const tglow = ctx!.createRadialGradient(jx, H, 0, jx, H, trunkW * 5)
-      tglow.addColorStop(0, 'rgba(124,58,237,0.35)')
-      tglow.addColorStop(1, 'rgba(124,58,237,0)')
-      ctx!.fillStyle = tglow
-      ctx!.beginPath()
-      ctx!.ellipse(jx, H, trunkW * 5, trunkW * 3, 0, 0, Math.PI * 2)
-      ctx!.fill()
-
-      // Trunk
-      const trunkGrad = ctx!.createLinearGradient(jx, jy, jx, H)
-      trunkGrad.addColorStop(0, '#7C3AED')
-      trunkGrad.addColorStop(0.5, '#5B21B6')
+      // Trunk: from jy down to bottom
+      const trunkWidth = 14 + (akiliScore / 2500) * 22
+      const trunkGrad = ctx.createLinearGradient(jx, jy, jx, H)
+      trunkGrad.addColorStop(0, '#5B21B6')
       trunkGrad.addColorStop(1, '#2E1065')
-      ctx!.save()
-      ctx!.shadowBlur = 18
-      ctx!.shadowColor = 'rgba(124,58,237,0.6)'
-      ctx!.strokeStyle = trunkGrad
-      ctx!.lineWidth = trunkW
-      ctx!.lineCap = 'round'
-      ctx!.beginPath()
-      ctx!.moveTo(jx, jy)
-      ctx!.lineTo(jx, H)
-      ctx!.stroke()
-      ctx!.restore()
+      ctx.fillStyle = trunkGrad
+      ctx.beginPath()
+      ctx.moveTo(jx - trunkWidth * 0.4, jy)
+      ctx.lineTo(jx + trunkWidth * 0.4, jy)
+      ctx.lineTo(jx + trunkWidth, H)
+      ctx.lineTo(jx - trunkWidth, H)
+      ctx.closePath()
+      ctx.fill()
 
       // Branches
-      const count = Math.min(nodes.length, 9)
-      const angleStart = -Math.PI * 0.88
-      const angleEnd   = -Math.PI * 0.12
-      const angleRange = angleEnd - angleStart
+      const n = active.length
+      const spreadRad = (110 * Math.PI) / 180
+      // Branches point upward — angle 0 = right, so upward is -PI/2
+      // Spread from (−PI/2 − spread/2) to (−PI/2 + spread/2)
+      const baseAngle = -Math.PI / 2
+      const maxBranchLen = H * 0.82
 
-      nodes.slice(0, count).forEach((node, i) => {
-        const frac = count === 1 ? 0.5 : i / (count - 1)
-        const angle = angleStart + frac * angleRange
-        const branchLen = H * 0.74 * (0.55 + node.weight * 0.45)
-        const pulse = 0.75 + 0.25 * Math.sin(t * 0.018 + i * 0.7)
+      type NodePos = { x: number; y: number; r: number }
+      const nodes: NodePos[] = []
+      let apexNode: NodePos | null = null
+      let lowestY = Infinity
 
-        const ex = jx + Math.cos(angle) * branchLen
-        const ey = jy + Math.sin(angle) * branchLen
-        const cx1 = jx + Math.cos(angle + 0.28) * branchLen * 0.5
-        const cy1 = jy + Math.sin(angle + 0.28) * branchLen * 0.5
+      for (let i = 0; i < n; i++) {
+        const t = n === 1 ? 0.5 : i / (n - 1)
+        const angle = baseAngle - spreadRad / 2 + t * spreadRad
+        const interest = active[i]
+        const branchLen = maxBranchLen * (0.55 + interest.weight * 0.45)
+        const strokeW = 5 + interest.weight * 4
 
-        const alpha = 0.3 + 0.65 * pulse
-        const lineW = Math.max(2, 5 * node.weight * pulse)  // thicker branches
+        const bx = jx + Math.cos(angle) * branchLen
+        const by = jy + Math.sin(angle) * branchLen
 
-        ctx!.save()
-        ctx!.shadowBlur = 14 * pulse
-        ctx!.shadowColor = 'rgba(124,58,237,0.8)'
-        ctx!.strokeStyle = `rgba(139,92,246,${alpha})`
-        ctx!.lineWidth = lineW
-        ctx!.lineCap = 'round'
-        ctx!.beginPath()
-        ctx!.moveTo(jx, jy)
-        ctx!.quadraticCurveTo(cx1, cy1, ex, ey)
-        ctx!.stroke()
-        ctx!.restore()
+        // Branch with glow
+        ctx.save()
+        ctx.shadowBlur = 12
+        ctx.shadowColor = 'rgba(124,58,237,0.7)'
+        ctx.beginPath()
+        ctx.moveTo(jx, jy)
+        ctx.lineTo(bx, by)
+        ctx.strokeStyle = '#7C3AED'
+        ctx.lineWidth = strokeW
+        ctx.lineCap = 'round'
+        ctx.stroke()
+        ctx.restore()
 
-        // Node — bigger and brighter
-        const nodeR = Math.max(5, 7 * node.weight + 3)  // was max(3, 5*w+2)
-        const nodeAlpha = 0.4 + 0.6 * pulse
+        // Node
+        const pulse = 1 + Math.sin(time * 0.04 + i * 1.8) * 0.12
+        const nodeR = (8 + interest.weight * 10) * pulse
+        const nodeColor = i % 2 === 0 ? '#8B5CF6' : '#A855F7'
 
-        ctx!.save()
-        ctx!.shadowBlur = 20 * pulse
-        ctx!.shadowColor = 'rgba(167,139,250,1.0)'
+        // Node glow
+        const glow = ctx.createRadialGradient(bx, by, 0, bx, by, nodeR * 2.8)
+        glow.addColorStop(0, 'rgba(139,92,246,0.4)')
+        glow.addColorStop(1, 'rgba(139,92,246,0)')
+        ctx.fillStyle = glow
+        ctx.beginPath()
+        ctx.arc(bx, by, nodeR * 2.8, 0, Math.PI * 2)
+        ctx.fill()
 
-        // Outer glow
-        const nodeGrd = ctx!.createRadialGradient(ex, ey, 0, ex, ey, nodeR * 2.5)
-        nodeGrd.addColorStop(0, `rgba(196,181,253,${nodeAlpha * 0.8})`)
-        nodeGrd.addColorStop(0.5, `rgba(139,92,246,${nodeAlpha * 0.5})`)
-        nodeGrd.addColorStop(1, 'rgba(139,92,246,0)')
-        ctx!.fillStyle = nodeGrd
-        ctx!.beginPath()
-        ctx!.arc(ex, ey, nodeR * 2.5, 0, Math.PI * 2)
-        ctx!.fill()
+        ctx.save()
+        ctx.shadowBlur = 14
+        ctx.shadowColor = 'rgba(139,92,246,0.8)'
+        ctx.beginPath()
+        ctx.arc(bx, by, nodeR, 0, Math.PI * 2)
+        ctx.fillStyle = nodeColor
+        ctx.fill()
+        ctx.restore()
 
-        // Colored core
-        ctx!.fillStyle = i % 2 === 0 ? '#A78BFA' : '#C4B5FD'
-        ctx!.beginPath()
-        ctx!.arc(ex, ey, nodeR, 0, Math.PI * 2)
-        ctx!.fill()
-
-        // White-hot center
-        ctx!.fillStyle = 'rgba(255,255,255,0.9)'
-        ctx!.beginPath()
-        ctx!.arc(ex, ey, nodeR * 0.4, 0, Math.PI * 2)
-        ctx!.fill()
-        ctx!.restore()
-      })
-
-      // Gold apex node
-      const apexY = jy - H * 0.72 * 0.95
-      const apexPulse = 0.7 + 0.3 * Math.sin(t * 0.025)
-
-      // Outer glow rings (3 layers)
-      for (const [mult, a] of [[3.5, 0.08], [2.2, 0.16], [1.3, 0.30]] as [number, number][]) {
-        ctx!.save()
-        ctx!.shadowBlur = 24 * apexPulse
-        ctx!.shadowColor = 'rgba(251,191,36,0.7)'
-        const apxGrd = ctx!.createRadialGradient(jx, apexY, 0, jx, apexY, 14 * mult)
-        apxGrd.addColorStop(0, `rgba(251,191,36,${a * apexPulse})`)
-        apxGrd.addColorStop(1, 'rgba(251,191,36,0)')
-        ctx!.fillStyle = apxGrd
-        ctx!.beginPath()
-        ctx!.arc(jx, apexY, 14 * mult, 0, Math.PI * 2)
-        ctx!.fill()
-        ctx!.restore()
+        nodes.push({ x: bx, y: by, r: nodeR })
+        if (by < lowestY) { lowestY = by; apexNode = { x: bx, y: by, r: nodeR } }
       }
 
-      // Apex core
-      ctx!.save()
-      ctx!.shadowBlur = 24 * apexPulse
-      ctx!.shadowColor = 'rgba(251,191,36,1.0)'
-      ctx!.fillStyle = '#FBBF24'
-      ctx!.beginPath()
-      ctx!.arc(jx, apexY, 7, 0, Math.PI * 2)  // was 5.5
-      ctx!.fill()
-      ctx!.fillStyle = 'rgba(255,255,255,0.95)'
-      ctx!.beginPath()
-      ctx!.arc(jx, apexY, 2.8, 0, Math.PI * 2)
-      ctx!.fill()
-      ctx!.restore()
+      // Canopy arcs between adjacent nodes
+      ctx.save()
+      ctx.strokeStyle = 'rgba(196,181,253,0.45)'
+      ctx.lineWidth = 1.4
+      for (let i = 0; i < nodes.length - 1; i++) {
+        const a = nodes[i]; const b = nodes[i + 1]
+        const cpx = (a.x + b.x) / 2
+        const cpy = Math.min(a.y, b.y) - 18
+        ctx.beginPath()
+        ctx.moveTo(a.x, a.y)
+        ctx.quadraticCurveTo(cpx, cpy, b.x, b.y)
+        ctx.stroke()
+      }
+      ctx.restore()
 
-      // Apex cross spikes
-      const spLen = 7 * 1.8
-      ctx!.strokeStyle = 'rgba(251,191,36,0.5)'
-      ctx!.lineWidth = 0.8
-      ;[[0, -spLen, 0, spLen], [-spLen, 0, spLen, 0]].forEach(([x1, y1, x2, y2]) => {
-        ctx!.beginPath()
-        ctx!.moveTo(jx + x1, apexY + y1)
-        ctx!.lineTo(jx + x2, apexY + y2)
-        ctx!.stroke()
-      })
+      // Gold apex
+      if (apexNode) {
+        const { x: ax, y: ay } = apexNode
+        const coreR = 10 + (dimensions.knowledge / 20)
 
-      t++
-    }
+        // Three glow rings
+        for (const [mult, alpha] of [[3.0, 0.08], [2.0, 0.15], [1.2, 0.30]] as [number, number][]) {
+          const g = ctx.createRadialGradient(ax, ay, 0, ax, ay, coreR * mult)
+          g.addColorStop(0, `rgba(251,191,36,${alpha})`)
+          g.addColorStop(1, 'rgba(251,191,36,0)')
+          ctx.fillStyle = g
+          ctx.beginPath()
+          ctx.arc(ax, ay, coreR * mult, 0, Math.PI * 2)
+          ctx.fill()
+        }
 
-    function loop() {
-      draw()
-      rafId = requestAnimationFrame(loop)
+        ctx.save()
+        ctx.shadowBlur = 20
+        ctx.shadowColor = 'rgba(251,191,36,1.0)'
+        ctx.beginPath()
+        ctx.arc(ax, ay, coreR, 0, Math.PI * 2)
+        ctx.fillStyle = '#FBBF24'
+        ctx.fill()
+        ctx.restore()
+      }
+
+      time++
+      rafId = requestAnimationFrame(draw)
     }
 
     resize()
-    loop()
+    rafId = requestAnimationFrame(draw)
 
     const ro = new ResizeObserver(() => {
       cancelAnimationFrame(rafId)
       resize()
-      loop()
+      rafId = requestAnimationFrame(draw)
     })
-    if (canvas.parentElement) ro.observe(canvas.parentElement)
+    ro.observe(container)
 
     return () => {
       cancelAnimationFrame(rafId)
       ro.disconnect()
     }
-  }, [interests])
+  }, [interests, akiliScore, dimensions])
 
   return (
     <canvas
       ref={canvasRef}
       style={{
         position: 'absolute',
-        top: 0, left: 0,
-        width: '100%', height: '100%',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
         display: 'block',
       }}
     />
   )
 }
-
-export default BaobabCanvas

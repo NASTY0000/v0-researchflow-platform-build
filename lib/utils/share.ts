@@ -7,22 +7,20 @@ export async function shareContent({
   text?: string
   url: string
 }) {
-  if (typeof navigator === 'undefined') return { success: false }
-
   if (navigator.share) {
     try {
       await navigator.share({ title, text: text || title, url })
-      return { success: true, method: 'native' }
+      return { success: true, method: 'native' as const }
     } catch (err: any) {
       if (err.name === 'AbortError') {
-        return { success: false, method: 'cancelled' }
+        return { success: false, method: 'cancelled' as const }
       }
     }
   }
 
   try {
     await navigator.clipboard.writeText(url)
-    return { success: true, method: 'clipboard' }
+    return { success: true, method: 'clipboard' as const }
   } catch {
     const input = document.createElement('input')
     input.value = url
@@ -30,6 +28,6 @@ export async function shareContent({
     input.select()
     document.execCommand('copy')
     document.body.removeChild(input)
-    return { success: true, method: 'clipboard' }
+    return { success: true, method: 'clipboard' as const }
   }
 }

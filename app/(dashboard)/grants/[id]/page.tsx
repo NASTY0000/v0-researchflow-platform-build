@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { format, isPast } from 'date-fns'
+import { BaobabLoader } from '@/components/ui/baobab-loader'
 
 interface Grant {
   id: string
@@ -117,7 +118,7 @@ export default function GrantDetailPage() {
 
   if (loading) return (
     <div className="flex items-center justify-center min-h-[60vh]">
-      <div className="w-8 h-8 rounded-full animate-spin border-4 border-primary border-t-transparent" />
+      <BaobabLoader size="md" />
     </div>
   )
 

@@ -39,6 +39,8 @@ import type { ResearchIdea, Profile } from "@/lib/types/database"
 import { formatDistanceToNow, format } from "date-fns"
 import { Input } from "@/components/ui/input"
 import { BookmarkButton } from "@/components/ui/bookmark-button"
+import { shareContent } from "@/lib/utils/share"
+import { BaobabLoader } from '@/components/ui/baobab-loader'
 
 type IdeaComment = {
   id: string
@@ -217,19 +219,16 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
     setIsConnecting(false)
   }
 
-  function handleShare() {
-    const url = window.location.href
-    if (navigator.share && idea) {
-      navigator.share({
-        title: idea.title,
-        text: idea.description?.slice(0, 100),
-        url,
-      }).catch(() => {})
-    } else {
-      navigator.clipboard.writeText(url).then(() => {
-        setShareCopied(true)
-        setTimeout(() => setShareCopied(false), 2000)
-      })
+  async function handleShare() {
+    if (!idea) return
+    const result = await shareContent({
+      title: `${idea.title} — ResearchFlow`,
+      text: `Check out this research idea on ResearchFlow: ${idea.title}`,
+      url: `https://researchflowafrica.com/ideas/${idea.id}`,
+    })
+    if (result.method === 'clipboard' && result.success) {
+      setShareCopied(true)
+      setTimeout(() => setShareCopied(false), 2000)
     }
   }
 
@@ -294,7 +293,7 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center space-y-4">
-          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+          <BaobabLoader size="md" />
           <p className="text-muted-foreground">Loading idea...</p>
         </div>
       </div>

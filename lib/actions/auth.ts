@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import { completeOnboardingWithAllSkills } from '@/lib/actions/akili'
+import { completeOnboardingWithAllSkills, onboardingComplete } from '@/lib/actions/akili'
 import { generateMatchesOnOnboarding } from '@/lib/actions/matching'
 import { checkRateLimit } from '@/lib/rate-limit'
 
@@ -11,7 +11,7 @@ export async function signUp(formData: FormData) {
 
   const email = formData.get('email') as string
   const password = formData.get('password') as string
-  const fullName = formData.get('fullName') as string
+  const fullName = (formData.get('fullName') || formData.get('full_name') || '') as string
 
   const limit = await checkRateLimit(email, 'signup', 5, 3600)
   if (!limit.allowed) {
@@ -22,6 +22,7 @@ export async function signUp(formData: FormData) {
     email,
     password,
     options: {
+      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/confirm`,
       data: {
         full_name: fullName,
       },
@@ -32,33 +33,20 @@ export async function signUp(formData: FormData) {
     return { error: error.message }
   }
 
+  if (!data.user) {
+    return { error: 'Signup failed. Please try again.' }
+  }
+
   if (data?.user?.identities?.length === 0) {
-    // Email exists in auth — check if they finished onboarding
-    const { data: existingProfile } = await supabase
-      .from('profiles')
-      .select('onboarding_completed, id')
-      .eq('email', email)
-      .single()
-
-    if (!existingProfile || !existingProfile.onboarding_completed) {
-      // Incomplete registration — resend verification so they can continue
-      await supabase.auth.resend({ type: 'signup', email })
-      return {
-        success: true,
-        email,
-        requiresVerification: true,
-        message: "We've resent your verification email. Please check your inbox.",
-      }
-    }
-
     return { error: 'An account with this email already exists. Please sign in instead.' }
   }
 
-  if (data?.session && data.user) {
+  // Email confirmation is OFF — session created immediately
+  if (data.session) {
     await supabase.from('profiles').upsert({
       id: data.user.id,
+      email: data.user.email ?? email,
       full_name: fullName,
-      email: email,
       onboarding_completed: false,
       onboarding_step: 0,
       created_at: new Date().toISOString(),
@@ -66,15 +54,11 @@ export async function signUp(formData: FormData) {
     }, { onConflict: 'id' })
 
     revalidatePath('/', 'layout')
-    return { success: true, redirectTo: '/onboarding', showVerifyBanner: true }
+    return { success: true, redirectTo: '/onboarding' }
   }
 
-  return {
-    success: true,
-    email,
-    requiresVerification: true,
-    message: 'Verification code sent to your email',
-  }
+  // Email confirmation is ON — tell the user to check their inbox
+  return { success: true, requiresVerification: true, email }
 }
 
 export async function verifyOtp(email: string, token: string) {
@@ -155,7 +139,7 @@ export async function signIn(formData: FormData) {
       .from('profiles')
       .select('onboarding_completed')
       .eq('id', user.id)
-      .single()
+      .maybeSingle()
 
     if (!profile || !profile.onboarding_completed) {
       return { success: true, redirectTo: '/onboarding' }
@@ -217,7 +201,7 @@ export async function getProfile() {
     .from('profiles')
     .select('*')
     .eq('id', user.id)
-    .single()
+    .maybeSingle()
 
   return profile
 }
@@ -270,19 +254,10 @@ export async function completeOnboarding(data: Record<string, unknown>) {
 
   revalidatePath('/dashboard', 'layout')
 
-  await completeOnboardingWithAllSkills(user.id)
+  // Fire-and-forget: match generation and Akili points never block the redirect
   generateMatchesOnOnboarding(user.id).catch(() => {})
-
-  // Award Akili points for completing onboarding
-  await supabase.from('akili_score_events').insert({
-    user_id: user.id,
-    event_type: 'onboarding_complete',
-    points_earned: 10,
-    dimension: 'knowledge',
-    description: 'Completed profile setup',
-  }).then(() =>
-    supabase.from('profiles').update({ akili_score: 10 }).eq('id', user.id)
-  ).catch(() => {})
+  onboardingComplete(user.id).catch(() => {})
+  completeOnboardingWithAllSkills(user.id).catch(() => {})
 
   const roles = data.roles as string[] | undefined
   if (roles && roles.includes('mentor')) {

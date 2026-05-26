@@ -5,7 +5,8 @@ import { useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { AlertCircle, Sparkles, ArrowLeft, RefreshCw } from 'lucide-react'
+import { AlertCircle, ArrowLeft, RefreshCw } from 'lucide-react'
+import { Logo } from '@/components/Logo'
 
 function AuthErrorContent() {
   const searchParams = useSearchParams()
@@ -38,11 +39,8 @@ function AuthErrorContent() {
 
       <div className="w-full max-w-md relative">
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2">
-            <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-2xl font-bold font-heading">ResearchFlow</span>
+          <Link href="/" className="inline-flex justify-center">
+            <Logo variant="full" width={120} />
           </Link>
         </div>
 

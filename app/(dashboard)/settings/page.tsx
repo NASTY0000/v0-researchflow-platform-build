@@ -14,8 +14,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
   Shield, Bell, Key, Download, Trash2, AlertTriangle,
   Loader2, Check, LogOut, Save, MessageSquare,
-  Search, Activity, Sun, Moon, Monitor,
+  Search, Activity, Sun, Moon, Monitor, Sparkles,
 } from "lucide-react"
+import { BaobabLoader } from '@/components/ui/baobab-loader'
 
 const NOTIF_TYPES = [
   { key: "new_match",            label: "New match suggestion" },
@@ -51,6 +52,12 @@ export default function SettingsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [userId, setUserId] = useState("")
   const [dataExportedAt, setDataExportedAt] = useState<string | null>(null)
+
+  // ── Profile background ──
+  const [profileBg, setProfileBg] = useState<'baobab' | 'constellation'>('baobab')
+  const [isSavingBg, setIsSavingBg] = useState(false)
+  const [bgSaveError, setBgSaveError] = useState<string | null>(null)
+  const [bgSaveSuccess, setBgSaveSuccess] = useState(false)
 
   // ── Privacy ──
   const [profileVisibility, setProfileVisibility] =
@@ -100,11 +107,12 @@ export default function SettingsPage() {
 
     const { data: p } = await supabase
       .from("profiles")
-      .select("profile_visibility,show_availability,allow_dm_from_non_connections,appear_in_search,notification_prefs,data_export_requested_at")
+      .select("profile_visibility,show_availability,allow_dm_from_non_connections,appear_in_search,notification_prefs,data_export_requested_at,profile_background")
       .eq("id", user.id)
       .single()
 
     if (p) {
+      if (p.profile_background === 'constellation') setProfileBg('constellation')
       setProfileVisibility(p.profile_visibility || "public")
       setShowAvailability(p.show_availability !== false)
       setAllowDm(p.allow_dm_from_non_connections !== false)
@@ -139,6 +147,39 @@ export default function SettingsPage() {
     }).eq("id", userId)
     setPrivacyMsg(error ? "Failed to save. Please try again." : "Privacy settings saved.")
     setIsSavingPrivacy(false)
+  }
+
+  async function saveProfileBg() {
+    setIsSavingBg(true)
+    setBgSaveError(null)
+    setBgSaveSuccess(false)
+    try {
+      const supabase = createClient()
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      if (authError || !user) throw new Error('Not authenticated')
+
+      console.log('Saving profile_background:', profileBg, 'for user:', user.id)
+
+      const { data, error } = await supabase
+        .from("profiles")
+        .update({ profile_background: profileBg })
+        .eq("id", user.id)
+        .select()
+
+      if (error) {
+        console.error("Supabase error:", { message: error.message, code: error.code, details: (error as any).details, hint: (error as any).hint })
+        throw error
+      }
+
+      console.log('Save successful:', data)
+      setBgSaveSuccess(true)
+      setTimeout(() => setBgSaveSuccess(false), 2000)
+    } catch (err: any) {
+      console.error("saveProfileBg failed:", err)
+      setBgSaveError(err?.message ? `Failed to save: ${err.message}` : 'Failed to save. Please try again.')
+    } finally {
+      setIsSavingBg(false)
+    }
   }
 
   async function saveNotifs() {
@@ -218,7 +259,7 @@ export default function SettingsPage() {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center space-y-3">
-          <div className="w-10 h-10 rounded-full animate-spin mx-auto border-[3px] border-primary/20 border-t-primary" />
+          <BaobabLoader size="md" />
           <p className="text-muted-foreground">Loading settings…</p>
         </div>
       </div>
@@ -262,6 +303,117 @@ export default function SettingsPage() {
               <span className="text-sm font-medium">{label}</span>
             </button>
           ))}
+        </div>
+      </div>
+
+      {/* ══════════════════════════════════════════
+          SECTION 0B — PROFILE APPEARANCE
+      ══════════════════════════════════════════ */}
+      <div className={card}>
+        <div className="flex items-center gap-2 mb-1">
+          <Sparkles className="w-5 h-5 text-primary" />
+          <h2 className={sectionHeading}>Profile Appearance</h2>
+        </div>
+        <p className="text-xs text-muted-foreground -mt-3">Choose the animated background shown on your public profile.</p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+          {/* Baobab */}
+          <button
+            type="button"
+            onClick={() => setProfileBg('baobab')}
+            className="p-4 rounded-xl text-left transition-all duration-200 space-y-3"
+            style={profileBg === 'baobab'
+              ? { background: "rgba(124,58,237,0.12)", border: "2px solid rgba(168,85,247,0.5)" }
+              : { background: "transparent", border: "2px solid var(--border)" }
+            }
+          >
+            <div className="w-full h-24 rounded-lg flex items-center justify-center" style={{ background: '#05010F' }}>
+              <svg width="100" height="80" viewBox="0 0 100 80" fill="none">
+                <defs>
+                  <linearGradient id="sb-trunk" x1="50" y1="26" x2="50" y2="80" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stopColor="#5B21B6"/>
+                    <stop offset="100%" stopColor="#2E1065"/>
+                  </linearGradient>
+                </defs>
+                <polygon points="43,26 57,26 61,80 39,80" fill="url(#sb-trunk)"/>
+                <line x1="50" y1="26" x2="20" y2="10" stroke="#7C3AED" strokeWidth="2.5"/>
+                <line x1="50" y1="26" x2="50" y2="4" stroke="#7C3AED" strokeWidth="2.5"/>
+                <line x1="50" y1="26" x2="80" y2="10" stroke="#7C3AED" strokeWidth="2.5"/>
+                <circle cx="20" cy="10" r="6" fill="#8B5CF6"/>
+                <circle cx="50" cy="4" r="8" fill="#FBBF24"/>
+                <circle cx="80" cy="10" r="6" fill="#A855F7"/>
+                <path d="M20,10 Q35,2 50,4" stroke="rgba(196,181,253,0.5)" strokeWidth="1.2" fill="none"/>
+                <path d="M50,4 Q65,2 80,10" stroke="rgba(196,181,253,0.5)" strokeWidth="1.2" fill="none"/>
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm font-semibold" style={{ color: profileBg === 'baobab' ? 'var(--primary)' : undefined }}>
+                The Baobab
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">Branches grow from your research interests, nodes pulse with each connection.</p>
+            </div>
+          </button>
+
+          {/* Constellation */}
+          <button
+            type="button"
+            onClick={() => setProfileBg('constellation')}
+            className="p-4 rounded-xl text-left transition-all duration-200 space-y-3"
+            style={profileBg === 'constellation'
+              ? { background: "rgba(124,58,237,0.12)", border: "2px solid rgba(168,85,247,0.5)" }
+              : { background: "transparent", border: "2px solid var(--border)" }
+            }
+          >
+            <div className="w-full h-24 rounded-lg flex items-center justify-center" style={{ background: '#030812' }}>
+              <svg width="100" height="80" viewBox="0 0 100 80" fill="none">
+                {[[14,10],[86,7],[7,63],[93,58],[47,72]].map(([x,y],i) => (
+                  <circle key={i} cx={x} cy={y} r="0.7" fill="white" opacity="0.25"/>
+                ))}
+                <line x1="32" y1="16" x2="68" y2="34" stroke="rgba(251,191,36,0.4)" strokeWidth="1.2"/>
+                <line x1="68" y1="34" x2="50" y2="62" stroke="rgba(251,191,36,0.4)" strokeWidth="1.2"/>
+                <line x1="50" y1="62" x2="32" y2="16" stroke="rgba(251,191,36,0.4)" strokeWidth="1.2"/>
+                <circle cx="32" cy="16" r="6" fill="#FBBF24" opacity="0.9"/>
+                <circle cx="32" cy="16" r="2.5" fill="white"/>
+                <circle cx="68" cy="34" r="5" fill="#67E8F9" opacity="0.9"/>
+                <circle cx="68" cy="34" r="2" fill="white"/>
+                <circle cx="50" cy="62" r="4.5" fill="#C4B5FD" opacity="0.9"/>
+                <circle cx="50" cy="62" r="1.8" fill="white"/>
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm font-semibold" style={{ color: profileBg === 'constellation' ? 'var(--primary)' : undefined }}>
+                The Constellation
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">Stars map your research fields, lines trace your collaborations across the cosmos.</p>
+            </div>
+          </button>
+        </div>
+
+        <div className="pt-2">
+          <button
+            onClick={saveProfileBg}
+            disabled={isSavingBg}
+            className={[
+              "w-full h-11 rounded-xl font-semibold text-sm transition-all duration-200",
+              "flex items-center justify-center gap-2",
+              isSavingBg
+                ? "bg-purple-800/50 text-purple-400 cursor-not-allowed"
+                : bgSaveSuccess
+                ? "bg-green-600 text-white"
+                : "bg-purple-600 hover:bg-purple-500 text-white",
+            ].join(" ")}
+          >
+            {isSavingBg ? (
+              <><Loader2 className="w-4 h-4 animate-spin" />Saving...</>
+            ) : bgSaveSuccess ? (
+              <><Check className="w-4 h-4" />Saved!</>
+            ) : (
+              <><Check className="w-4 h-4" />Save Appearance</>
+            )}
+          </button>
+          {bgSaveError && (
+            <p className="text-red-400 text-xs text-center mt-2">{bgSaveError}</p>
+          )}
         </div>
       </div>
 

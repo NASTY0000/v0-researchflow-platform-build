@@ -25,6 +25,7 @@ import {
 import { createClient } from "@/lib/supabase/client"
 import type { Project, Team, Profile } from "@/lib/types/database"
 import { format } from "date-fns"
+import { BaobabLoader } from '@/components/ui/baobab-loader'
 
 interface ProjectWithTeam extends Project {
   team: Team & {
@@ -112,7 +113,7 @@ export default function ProjectsPage() {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center space-y-4">
-          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+          <BaobabLoader size="md" />
           <p className="text-muted-foreground">Loading your projects...</p>
         </div>
       </div>

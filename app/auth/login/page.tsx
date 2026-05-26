@@ -1,15 +1,16 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, Suspense } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
-import { useRouter } from 'next/navigation'
+import { Logo } from '@/components/Logo'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, Mail, Lock, Play, ArrowLeft } from 'lucide-react'
 import { signIn, signInWithGoogle } from '@/lib/actions/auth'
+import { createClient } from '@/lib/supabase/client'
 
 const DEMO_EMAIL = 'demo@researchflow.app'
 const DEMO_PASSWORD = 'demo123456'
@@ -25,23 +26,54 @@ function GoogleIcon({ className }: { className?: string }) {
   )
 }
 
-export default function LoginPage() {
+function LoginPageInner() {
   const [error, setError] = useState<string | null>(null)
+  const [cleared, setCleared] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
   const [isDemoLoading, setIsDemoLoading] = useState(false)
   const emailRef = useRef<HTMLInputElement>(null)
   const passwordRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    const urlError = params.get('error')
-    if (urlError === 'suspended') {
+    const urlError = searchParams.get('error')
+    const urlCleared = searchParams.get('cleared')
+
+    if (urlCleared) {
+      setCleared(true)
+      window.history.replaceState({}, '', '/auth/login')
+    } else if (urlError === 'suspended') {
       setError('Your account has been suspended. Contact support@researchflowafrica.com')
-    } else if (urlError === 'auth_failed') {
+    } else if (urlError === 'auth_failed' || urlError === 'oauth_failed') {
       setError('Authentication failed. Please try again.')
     }
+  }, [searchParams])
+
+  // Clear any broken OAuth session on page load
+  useEffect(() => {
+    async function clearBrokenSession() {
+      const supabase = createClient()
+
+      const url = new URL(window.location.href)
+      const oauthError = url.searchParams.get('error')
+      const errorCode = url.searchParams.get('error_code')
+
+      if (oauthError || errorCode) {
+        await supabase.auth.signOut()
+        window.history.replaceState({}, '', '/auth/login')
+        return
+      }
+
+      // If session exists but getUser fails, it's a broken session — clear it
+      const { data: { session } } = await supabase.auth.getSession()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (session && !user) {
+        await supabase.auth.signOut()
+      }
+    }
+    clearBrokenSession()
   }, [])
 
   async function handleSubmit(formData: FormData) {
@@ -86,11 +118,8 @@ export default function LoginPage() {
       <div className="w-full max-w-md relative animate-fade-up">
         {/* Logo */}
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-xl overflow-hidden">
-              <Image src="/icon.svg" alt="ResearchFlow" width={40} height={40} className="w-10 h-10" />
-            </div>
-            <span className="text-2xl font-bold font-heading gradient-text-cyan">ResearchFlow</span>
+          <Link href="/" className="inline-flex justify-center">
+            <Logo variant="full" width={120} />
           </Link>
         </div>
 
@@ -98,6 +127,12 @@ export default function LoginPage() {
         <div className="p-8 rounded-2xl bg-card border border-border backdrop-blur-xl">
           <h1 className="text-2xl font-bold font-heading mb-1" style={{ letterSpacing: '-0.02em' }}>Welcome back</h1>
           <p className="text-sm mb-6 text-muted-foreground">Enter your credentials to access your account</p>
+
+          {cleared && !error && (
+            <p className="text-sm text-center text-muted-foreground mb-5">
+              Sign in cancelled. Please try again.
+            </p>
+          )}
 
           {error && (
             <Alert variant="destructive" className="mb-5">
@@ -175,5 +210,17 @@ export default function LoginPage() {
         </Link>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#05010F' }}>
+        <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#A855F7' }} />
+      </div>
+    }>
+      <LoginPageInner />
+    </Suspense>
   )
 }

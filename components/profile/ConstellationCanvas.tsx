@@ -1,334 +1,263 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useRef, useEffect } from 'react'
 
 interface ConstellationCanvasProps {
-  interests?: { name: string; weight: number }[]
-  akiliScore?: number
-  dimensions?: {
+  interests: Array<{ name: string; weight: number }>
+  akiliScore: number
+  dimensions: {
     knowledge: number
     collaboration: number
     mentorship: number
     technical: number
   }
-  collaborationCount?: number
+  collaborationCount: number
 }
 
-const COLORS = ['#FBBF24', '#67E8F9', '#C4B5FD', '#86EFAC', '#FDA4AF']
-
-interface BgStar {
+interface BGStar {
   x: number; y: number; r: number
-  op: number; speed: number; offset: number
+  opacity: number; twinkleOffset: number; twinkleSpeed: number
 }
 
-interface MainStar {
-  x: number; y: number; r: number
-  color: string; name: string
+interface CompanionStar { dx: number; dy: number; r: number; opacity: number }
+interface ShootingStar { x: number; y: number; vx: number; vy: number; life: number; maxLife: number }
+
+const STAR_COLORS = ['#FBBF24', '#67E8F9', '#C4B5FD', '#86EFAC', '#FDA4AF', '#FCA5A5', '#6EE7B7']
+const DEFAULTS = [
+  { name: 'Research', weight: 0.34 },
+  { name: 'Collaboration', weight: 0.33 },
+  { name: 'Discovery', weight: 0.33 },
+]
+
+function parseHex(hex: string): [number, number, number] {
+  const h = hex.replace('#', '')
+  return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)]
 }
 
-export function ConstellationCanvas({ interests = [] }: ConstellationCanvasProps) {
+function getStarPositions(W: number, H: number, n: number): [number, number][] {
+  const cx = W * 0.70; const cy = H * 0.50
+  if (n === 1) return [[cx, cy]]
+  if (n === 2) return [[W * 0.62, H * 0.38], [W * 0.80, H * 0.64]]
+  if (n === 3) return [[W * 0.70, H * 0.28], [W * 0.86, H * 0.62], [W * 0.56, H * 0.68]]
+  if (n === 4) return [
+    [cx, H * 0.20], [cx + W * 0.14, H * 0.50],
+    [cx, H * 0.76], [cx - W * 0.12, H * 0.50],
+  ]
+  const radius = Math.min(W * 0.17, H * 0.30)
+  return Array.from({ length: n }, (_, i) => {
+    const a = (i / n) * Math.PI * 2 - Math.PI / 2
+    return [cx + Math.cos(a) * radius, cy + Math.sin(a) * radius] as [number, number]
+  })
+}
+
+export function ConstellationCanvas({ interests }: ConstellationCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
+    const container = canvas.parentElement
+    if (!container) return
 
-    let rafId = 0
-    let t = 0
+    const active = interests.length > 0 ? interests.slice(0, 7) : DEFAULTS
 
-    const safeInterests = interests.length > 0 ? interests : [
-      { name: 'Research',      weight: 0.5 },
-      { name: 'Collaboration', weight: 0.4 },
-      { name: 'Innovation',    weight: 0.35 },
-    ]
-
-    let bgStars: BgStar[] = []
-    let mainStars: MainStar[] = []
-
-    // Traveling particle
-    const traveler = { seg: 0, progress: 0 }
-
-    // Shooting star
-    let shootTimer = 400
-    let shootX = 0, shootY = 0, shootVx = 0, shootVy = 0
-    let shootLife = 0, shootMaxLife = 0
-
-    function buildStars() {
-      if (!canvas) return
-      const W = canvas.width
-      const H = canvas.height
-
-      bgStars = Array.from({ length: 200 }, () => ({
-        x: Math.random() * W,
-        y: Math.random() * H,
-        r: Math.random() * 1.4 + 0.3,
-        op: Math.random() * 0.35 + 0.08,
-        speed: Math.random() * 0.025 + 0.008,
-        offset: Math.random() * Math.PI * 2,
-      }))
-
-      const num = Math.min(safeInterests.length, 5)
-
-      // Fixed positions spread across the canvas (not clustered)
-      const positions = [
-        { x: W * 0.55, y: H * 0.28 },  // top-center
-        { x: W * 0.80, y: H * 0.55 },  // right
-        { x: W * 0.38, y: H * 0.60 },  // left
-        { x: W * 0.65, y: H * 0.75 },  // bottom-center
-        { x: W * 0.88, y: H * 0.30 },  // top-right
-      ]
-
-      mainStars = safeInterests.slice(0, num).map((interest, i) => ({
-        x: positions[i % positions.length].x,
-        y: positions[i % positions.length].y,
-        r: 8 + interest.weight * 14,
-        color: COLORS[i % COLORS.length],
-        name: interest.name,
-      }))
-    }
+    let rafId: number
+    let time = 0
+    let bgStars: BGStar[] = []
+    let companions: CompanionStar[][] = []
+    let shootingStar: ShootingStar | null = null
+    let shootTimer = 300 + Math.floor(Math.random() * 400)
+    let travSeg = 0; let travProg = 0
 
     function resize() {
-      const container = canvas!.parentElement
-      if (!container) return
-      const W = container.offsetWidth || container.clientWidth || 600
-      const H = container.offsetHeight || container.clientHeight || 208
-      canvas!.width = W
-      canvas!.height = H
-      buildStars()
-    }
-
-    function newShoot() {
+      canvas!.width = container!.offsetWidth || container!.clientWidth
+      canvas!.height = container!.offsetHeight || container!.clientHeight
       const W = canvas!.width; const H = canvas!.height
-      shootX = Math.random() * W
-      shootY = Math.random() * H * 0.4
-      const dir = shootX < W / 2 ? 1 : -1
-      shootVx = dir * (3 + Math.random() * 3)
-      shootVy = 1 + Math.random() * 2
-      shootMaxLife = 28 + Math.floor(Math.random() * 22)
-      shootLife = shootMaxLife
-      shootTimer = 350 + Math.floor(Math.random() * 450)
+
+      bgStars = Array.from({ length: 240 }, () => ({
+        x: Math.random() * W, y: Math.random() * H,
+        r: 0.2 + Math.random() * 1.2,
+        opacity: 0.08 + Math.random() * 0.35,
+        twinkleOffset: Math.random() * Math.PI * 2,
+        twinkleSpeed: 0.01 + Math.random() * 0.03,
+      }))
+      companions = active.map(() =>
+        Array.from({ length: 2 + Math.floor(Math.random() * 5) }, () => ({
+          dx: (Math.random() - 0.5) * 130,
+          dy: (Math.random() - 0.5) * 130,
+          r: 0.6 + Math.random() * 1.6,
+          opacity: 0.2 + Math.random() * 0.4,
+        }))
+      )
     }
 
     function draw() {
-      const W = canvas!.width
-      const H = canvas!.height
-      if (W === 0 || H === 0) return
+      const W = canvas!.width; const H = canvas!.height
+      if (W === 0 || H === 0) { rafId = requestAnimationFrame(draw); return }
+      const ctx = canvas!.getContext('2d')!
 
-      // Deep space
-      ctx!.fillStyle = '#05010F'
-      ctx!.fillRect(0, 0, W, H)
+      ctx.fillStyle = '#030812'
+      ctx.fillRect(0, 0, W, H)
 
-      // ── Nebula clouds ────────────────────────────────────────
-      if (mainStars.length > 0) {
-        const cx = mainStars.reduce((s, m) => s + m.x, 0) / mainStars.length
-        const cy = mainStars.reduce((s, m) => s + m.y, 0) / mainStars.length
-
-        // Warm gold primary cloud
-        const n1 = ctx!.createRadialGradient(cx, cy, 0, cx, cy, W * 0.55)
-        n1.addColorStop(0,   'rgba(245,158,11,0.12)')
-        n1.addColorStop(0.4, 'rgba(124,58,237,0.06)')
-        n1.addColorStop(1,   'rgba(0,0,0,0)')
-        ctx!.fillStyle = n1
-        ctx!.fillRect(0, 0, W, H)
-
-        // Cool blue secondary cloud
-        const n2 = ctx!.createRadialGradient(
-          mainStars[0].x, mainStars[0].y, 0,
-          mainStars[0].x, mainStars[0].y, W * 0.35
-        )
-        n2.addColorStop(0, 'rgba(6,182,212,0.08)')
-        n2.addColorStop(1, 'rgba(6,182,212,0)')
-        ctx!.fillStyle = n2
-        ctx!.fillRect(0, 0, W, H)
+      // Nebula
+      const ncx = W * 0.70; const ncy = H * 0.50
+      for (const [ox, oy, r, col, al] of [
+        [-40, 20, 0.35 * W, '245,158,11', 0.05],
+        [50, -30, 0.30 * W, '34,211,238', 0.04],
+        [0, 0, 0.40 * W, '139,92,246', 0.06],
+      ] as [number, number, number, string, number][]) {
+        const g = ctx.createRadialGradient(ncx + ox, ncy + oy, 0, ncx + ox, ncy + oy, r)
+        g.addColorStop(0, `rgba(${col},${al})`); g.addColorStop(1, 'rgba(0,0,0,0)')
+        ctx.fillStyle = g; ctx.fillRect(0, 0, W, H)
       }
 
-      // ── Background twinkling stars ────────────────────────────
-      bgStars.forEach(s => {
-        const twinkle = s.op * (0.7 + 0.3 * Math.sin(t * s.speed + s.offset))
-        ctx!.beginPath()
-        ctx!.arc(s.x, s.y, s.r, 0, Math.PI * 2)
-        ctx!.fillStyle = `rgba(210,230,255,${twinkle})`
-        ctx!.fill()
-      })
-
-      // ── Shooting star ─────────────────────────────────────────
-      if (shootTimer <= 0) {
-        newShoot()
-      } else {
-        shootTimer--
-      }
-      if (shootLife > 0) {
-        const prog = shootLife / shootMaxLife
-        ctx!.save()
-        ctx!.globalAlpha = prog * 0.85
-        ctx!.strokeStyle = '#E8E0FF'
-        ctx!.lineWidth = 1.5
-        ctx!.lineCap = 'round'
-        ctx!.shadowBlur = 6
-        ctx!.shadowColor = 'rgba(200,180,255,0.8)'
-        ctx!.beginPath()
-        ctx!.moveTo(shootX, shootY)
-        ctx!.lineTo(shootX - shootVx * 9, shootY - shootVy * 9)
-        ctx!.stroke()
-        ctx!.restore()
-        shootX += shootVx; shootY += shootVy; shootLife--
+      // Background stars
+      for (const s of bgStars) {
+        const t = Math.sin(time * s.twinkleSpeed + s.twinkleOffset) * 0.5 + 0.5
+        ctx.beginPath()
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2)
+        ctx.fillStyle = `rgba(255,255,255,${s.opacity * (0.6 + 0.4 * t)})`
+        ctx.fill()
       }
 
-      // ── Constellation lines ───────────────────────────────────
-      for (let a = 0; a < mainStars.length; a++) {
-        for (let b = a + 1; b < mainStars.length; b++) {
-          const sa = mainStars[a]; const sb = mainStars[b]
+      // Planisphere grid (right 55%)
+      ctx.save()
+      ctx.strokeStyle = 'rgba(34,211,238,0.04)'
+      ctx.lineWidth = 0.5
+      const gL = W * 0.45; const gStep = 28
+      for (let x = gL; x <= W; x += gStep) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke() }
+      for (let y = 0; y <= H; y += gStep) { ctx.beginPath(); ctx.moveTo(gL, y); ctx.lineTo(W, y); ctx.stroke() }
+      ctx.restore()
 
-          // Thick glow pass
-          ctx!.beginPath()
-          ctx!.moveTo(sa.x, sa.y)
-          ctx!.lineTo(sb.x, sb.y)
-          ctx!.strokeStyle = 'rgba(251,191,36,0.2)'
-          ctx!.lineWidth = 5
-          ctx!.shadowBlur = 14
-          ctx!.shadowColor = 'rgba(251,191,36,0.5)'
-          ctx!.stroke()
-          ctx!.shadowBlur = 0
+      // Dashed boundary circle
+      ctx.save()
+      ctx.strokeStyle = 'rgba(34,211,238,0.07)'
+      ctx.lineWidth = 0.6
+      ctx.setLineDash([4, 8])
+      ctx.beginPath()
+      ctx.arc(W * 0.70, H * 0.50, Math.min(W, H) * 0.36, 0, Math.PI * 2)
+      ctx.stroke()
+      ctx.setLineDash([])
+      ctx.restore()
 
-          // Sharp crisp line on top
-          ctx!.beginPath()
-          ctx!.moveTo(sa.x, sa.y)
-          ctx!.lineTo(sb.x, sb.y)
-          ctx!.strokeStyle = 'rgba(251,191,36,0.55)'
-          ctx!.lineWidth = 1.5
-          ctx!.stroke()
-        }
+      const positions = getStarPositions(W, H, active.length)
+      const n = positions.length
+
+      // All pairs for lines
+      const segs: [number, number][] = []
+      for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) segs.push([i, j])
+
+      // Draw constellation lines
+      for (const [a, b] of segs) {
+        const [ax, ay] = positions[a]; const [bx, by] = positions[b]
+        ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by)
+        ctx.strokeStyle = 'rgba(251,191,36,0.22)'; ctx.lineWidth = 4; ctx.stroke()
+        ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by)
+        ctx.strokeStyle = 'rgba(251,191,36,0.45)'; ctx.lineWidth = 1.2; ctx.stroke()
       }
 
-      // ── Traveling particle ────────────────────────────────────
-      if (mainStars.length >= 2) {
-        const connections: [number, number][] = []
-        for (let a = 0; a < mainStars.length; a++)
-          for (let b = a + 1; b < mainStars.length; b++)
-            connections.push([a, b])
+      // Traveling particle
+      if (segs.length > 0) {
+        travProg += 0.003
+        if (travProg >= 1) { travProg = 0; travSeg = (travSeg + 1) % segs.length }
+        const [sa, sb] = segs[travSeg]
+        const [x1, y1] = positions[sa]; const [x2, y2] = positions[sb]
+        const px = x1 + (x2 - x1) * travProg; const py = y1 + (y2 - y1) * travProg
+        const trailT = Math.max(0, travProg - 0.12)
+        const tx1 = x1 + (x2 - x1) * trailT; const ty1 = y1 + (y2 - y1) * trailT
+        const tg = ctx.createLinearGradient(tx1, ty1, px, py)
+        tg.addColorStop(0, 'rgba(251,191,36,0)'); tg.addColorStop(1, 'rgba(251,191,36,0.6)')
+        ctx.beginPath(); ctx.moveTo(tx1, ty1); ctx.lineTo(px, py)
+        ctx.strokeStyle = tg; ctx.lineWidth = 2; ctx.stroke()
+        ctx.save(); ctx.shadowBlur = 14; ctx.shadowColor = 'rgba(251,191,36,0.9)'
+        ctx.beginPath(); ctx.arc(px, py, 3.5, 0, Math.PI * 2)
+        ctx.fillStyle = '#FBBF24'; ctx.fill(); ctx.restore()
+      }
 
-        if (connections.length > 0) {
-          const [ai, bi] = connections[traveler.seg % connections.length]
-          const sa = mainStars[ai]; const sb = mainStars[bi]
-          const x = sa.x + (sb.x - sa.x) * traveler.progress
-          const y = sa.y + (sb.y - sa.y) * traveler.progress
+      // Main stars
+      for (let i = 0; i < n; i++) {
+        const [sx, sy] = positions[i]
+        const interest = active[i]
+        const color = STAR_COLORS[i % STAR_COLORS.length]
+        const [cr, cg, cb] = parseHex(color)
+        const pulse = 1 + Math.sin(time * 0.03 + i * 2.1) * 0.08
+        const r = (6 + interest.weight * 14) * pulse
 
-          // Trail (last 15% of segment)
-          const trailStart = Math.max(0, traveler.progress - 0.15)
-          const tx0 = sa.x + (sb.x - sa.x) * trailStart
-          const ty0 = sa.y + (sb.y - sa.y) * trailStart
-          const tg = ctx!.createLinearGradient(tx0, ty0, x, y)
-          tg.addColorStop(0, 'rgba(251,191,36,0)')
-          tg.addColorStop(1, 'rgba(251,191,36,0.85)')
-          ctx!.beginPath()
-          ctx!.moveTo(tx0, ty0)
-          ctx!.lineTo(x, y)
-          ctx!.strokeStyle = tg
-          ctx!.lineWidth = 2.5
-          ctx!.lineCap = 'round'
-          ctx!.stroke()
-
-          // Particle head
-          ctx!.beginPath()
-          ctx!.arc(x, y, 4.5, 0, Math.PI * 2)
-          ctx!.fillStyle = '#FBBF24'
-          ctx!.shadowBlur = 18
-          ctx!.shadowColor = 'rgba(251,191,36,1.0)'
-          ctx!.fill()
-          ctx!.shadowBlur = 0
-
-          traveler.progress += 0.004
-          if (traveler.progress >= 1) {
-            traveler.progress = 0
-            traveler.seg = (traveler.seg + 1) % connections.length
+        // Companions
+        if (companions[i]) {
+          for (const c of companions[i]) {
+            ctx.beginPath(); ctx.arc(sx + c.dx, sy + c.dy, c.r, 0, Math.PI * 2)
+            ctx.fillStyle = `rgba(255,255,255,${c.opacity})`; ctx.fill()
           }
         }
+
+        // Multi-layer glow
+        for (const [mult, al] of [[4.5, 0.04], [3.0, 0.09], [1.8, 0.18], [1.1, 0.38]] as [number, number][]) {
+          const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, r * mult)
+          g.addColorStop(0, `rgba(${cr},${cg},${cb},${al})`); g.addColorStop(1, 'rgba(0,0,0,0)')
+          ctx.fillStyle = g; ctx.beginPath(); ctx.arc(sx, sy, r * mult, 0, Math.PI * 2); ctx.fill()
+        }
+
+        ctx.save(); ctx.shadowBlur = 16; ctx.shadowColor = `rgba(${cr},${cg},${cb},0.8)`
+        ctx.beginPath(); ctx.arc(sx, sy, r, 0, Math.PI * 2); ctx.fillStyle = color; ctx.fill()
+        ctx.restore()
+
+        ctx.beginPath(); ctx.arc(sx, sy, r * 0.38, 0, Math.PI * 2)
+        ctx.fillStyle = 'rgba(255,255,255,0.95)'; ctx.fill()
+
+        // 4-point cross
+        ctx.save(); ctx.strokeStyle = `rgba(${cr},${cg},${cb},0.55)`; ctx.lineWidth = 0.8
+        const cl = r * 2.4
+        for (let a = 0; a < 4; a++) {
+          const ang = (a / 4) * Math.PI * 2
+          ctx.beginPath()
+          ctx.moveTo(sx + Math.cos(ang) * r * 1.1, sy + Math.sin(ang) * r * 1.1)
+          ctx.lineTo(sx + Math.cos(ang) * cl, sy + Math.sin(ang) * cl)
+          ctx.stroke()
+        }
+        ctx.restore()
+
+        // Label
+        ctx.save(); ctx.font = '8.5px monospace'
+        ctx.fillStyle = `rgba(${cr},${cg},${cb},0.7)`; ctx.textAlign = 'center'
+        ctx.fillText(interest.name, sx, sy + r + 13); ctx.restore()
       }
 
-      // ── Main constellation stars ──────────────────────────────
-      mainStars.forEach((star, i) => {
-        const pulse = 1 + Math.sin(t * 0.04 + i * 1.5) * 0.1
-        const r = star.r * pulse
+      // Shooting star
+      shootTimer--
+      if (shootTimer <= 0 && !shootingStar) {
+        shootingStar = { x: Math.random() * W * 0.4, y: Math.random() * H * 0.3, vx: 4 + Math.random() * 3, vy: 2 + Math.random() * 2, life: 0, maxLife: 50 + Math.floor(Math.random() * 30) }
+        shootTimer = 300 + Math.floor(Math.random() * 400)
+      }
+      if (shootingStar) {
+        const s = shootingStar; s.x += s.vx; s.y += s.vy; s.life++
+        const fade = 1 - s.life / s.maxLife
+        ctx.save()
+        const sg = ctx.createLinearGradient(s.x - s.vx * 8, s.y - s.vy * 8, s.x, s.y)
+        sg.addColorStop(0, 'rgba(255,255,255,0)'); sg.addColorStop(1, `rgba(255,255,255,${fade * 0.8})`)
+        ctx.beginPath(); ctx.moveTo(s.x - s.vx * 8, s.y - s.vy * 8); ctx.lineTo(s.x, s.y)
+        ctx.strokeStyle = sg; ctx.lineWidth = 1.5; ctx.stroke()
+        ctx.beginPath(); ctx.arc(s.x, s.y, 1.5 * fade, 0, Math.PI * 2)
+        ctx.fillStyle = `rgba(255,255,255,${fade})`; ctx.fill()
+        ctx.restore()
+        if (s.life >= s.maxLife || s.x > W || s.y > H) shootingStar = null
+      }
 
-        // 3 glow layers (outer → inner)
-        const glowSizes  = [3.5, 2.2, 1.4]
-        const glowAlphas = [0.08, 0.18, 0.40]
-
-        glowSizes.forEach((scale, layer) => {
-          const glowR = r * scale
-          const sg = ctx!.createRadialGradient(star.x, star.y, 0, star.x, star.y, glowR)
-          const hex = Math.round(glowAlphas[layer] * 255).toString(16).padStart(2, '0')
-          sg.addColorStop(0, star.color + hex)
-          sg.addColorStop(1, star.color + '00')
-          ctx!.beginPath()
-          ctx!.arc(star.x, star.y, glowR, 0, Math.PI * 2)
-          ctx!.fillStyle = sg
-          ctx!.fill()
-        })
-
-        // Colored core
-        ctx!.beginPath()
-        ctx!.arc(star.x, star.y, r, 0, Math.PI * 2)
-        ctx!.fillStyle = star.color
-        ctx!.shadowBlur = 20
-        ctx!.shadowColor = star.color
-        ctx!.fill()
-        ctx!.shadowBlur = 0
-
-        // White-hot center
-        ctx!.beginPath()
-        ctx!.arc(star.x, star.y, r * 0.45, 0, Math.PI * 2)
-        ctx!.fillStyle = 'rgba(255,255,255,0.95)'
-        ctx!.shadowBlur = 10
-        ctx!.shadowColor = 'white'
-        ctx!.fill()
-        ctx!.shadowBlur = 0
-
-        // 4-point star cross
-        const spLen = r * 1.8
-        ctx!.strokeStyle = star.color + '66'
-        ctx!.lineWidth = 0.8
-        ;[
-          [0, -spLen, 0, spLen],
-          [-spLen, 0, spLen, 0],
-        ].forEach(([x1, y1, x2, y2]) => {
-          ctx!.beginPath()
-          ctx!.moveTo(star.x + x1, star.y + y1)
-          ctx!.lineTo(star.x + x2, star.y + y2)
-          ctx!.stroke()
-        })
-
-        // Interest name label
-        ctx!.font = 'bold 9px -apple-system, monospace'
-        ctx!.fillStyle = star.color + 'BB'
-        ctx!.textAlign = 'center'
-        ctx!.fillText(star.name.toUpperCase(), star.x, star.y + r + 15)
-      })
-
-      t++
-    }
-
-    function loop() {
-      draw()
-      rafId = requestAnimationFrame(loop)
+      time++
+      rafId = requestAnimationFrame(draw)
     }
 
     resize()
-    loop()
+    rafId = requestAnimationFrame(draw)
 
     const ro = new ResizeObserver(() => {
       cancelAnimationFrame(rafId)
       resize()
-      loop()
+      rafId = requestAnimationFrame(draw)
     })
-    if (canvas.parentElement) ro.observe(canvas.parentElement)
+    ro.observe(container)
 
-    return () => {
-      cancelAnimationFrame(rafId)
-      ro.disconnect()
-    }
+    return () => { cancelAnimationFrame(rafId); ro.disconnect() }
   }, [interests])
 
   return (
@@ -336,12 +265,12 @@ export function ConstellationCanvas({ interests = [] }: ConstellationCanvasProps
       ref={canvasRef}
       style={{
         position: 'absolute',
-        top: 0, left: 0,
-        width: '100%', height: '100%',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
         display: 'block',
       }}
     />
   )
 }
-
-export default ConstellationCanvas

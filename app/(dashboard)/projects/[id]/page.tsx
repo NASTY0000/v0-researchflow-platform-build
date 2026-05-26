@@ -24,6 +24,7 @@ import { ProjectRoadmap } from "@/components/projects/project-roadmap"
 import { ProjectFiles } from "@/components/projects/project-files"
 import { ProjectTeam } from "@/components/projects/project-team"
 import { MentorSessions } from "@/components/projects/mentor-sessions"
+import { BaobabLoader } from '@/components/ui/baobab-loader'
 
 interface ProjectWithDetails extends Project {
   team: Team & {
@@ -79,7 +80,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center space-y-4">
-          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+          <BaobabLoader size="md" />
           <p className="text-muted-foreground">Loading project...</p>
         </div>
       </div>

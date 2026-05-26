@@ -13,6 +13,7 @@ import { ArrowLeft, Save, Loader2 } from 'lucide-react'
 import type { ResearchIdea } from '@/lib/types/database'
 import { TagInput } from '@/components/ui/tag-input'
 import { RESEARCH_AREAS, SKILLS_LIST } from '@/lib/constants/tags'
+import { BaobabLoader } from '@/components/ui/baobab-loader'
 
 export default function EditIdeaPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
@@ -93,7 +94,7 @@ export default function EditIdeaPage({ params }: { params: Promise<{ id: string 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[40vh]">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <BaobabLoader size="sm" />
       </div>
     )
   }
@@ -101,9 +102,9 @@ export default function EditIdeaPage({ params }: { params: Promise<{ id: string 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
-        <Link href={`/ideas/${id}`} className="inline-flex items-center gap-2 text-sm mb-4" style={{ color: '#A855F7' }}>
+        <button onClick={() => router.back()} className="inline-flex items-center gap-2 text-sm mb-4" style={{ color: '#A855F7' }}>
           <ArrowLeft className="w-4 h-4" /> Back to Idea
-        </Link>
+        </button>
         <h1 className="text-2xl font-bold font-heading mt-4" style={{ letterSpacing: '-0.02em' }}>Edit Idea</h1>
       </div>
 

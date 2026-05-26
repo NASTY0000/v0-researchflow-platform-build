@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import Image from 'next/image'
+import { Logo } from '@/components/Logo'
 import Link from 'next/link'
 
 export default function ResetPasswordPage() {
@@ -43,11 +43,8 @@ export default function ResetPasswordPage() {
     <div className="min-h-screen flex items-center justify-center p-4 bg-background">
       <div className="w-full max-w-md relative animate-fade-up">
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-xl overflow-hidden">
-              <Image src="/icon.svg" alt="ResearchFlow" width={40} height={40} className="w-10 h-10" />
-            </div>
-            <span className="text-2xl font-bold font-heading gradient-text-cyan">ResearchFlow</span>
+          <Link href="/" className="inline-flex justify-center">
+            <Logo variant="full" width={120} />
           </Link>
         </div>
 
