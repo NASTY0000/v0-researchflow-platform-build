@@ -94,6 +94,7 @@ export interface Profile {
   projects_completed: number
   connections_count: number
   portfolio_views: number
+  profile_background: 'baobab' | 'constellation' | null
   email_notifications: boolean
   public_profile: boolean
   created_at: string
