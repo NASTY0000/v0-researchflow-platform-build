@@ -123,6 +123,8 @@ export interface Profile {
   akili_dimension_collaboration: number
   akili_dimension_mentorship: number
   akili_dimension_technical: number
+  // Profile background
+  profile_background: 'baobab' | 'constellation' | null
   // Joined fields
   university?: University
 }

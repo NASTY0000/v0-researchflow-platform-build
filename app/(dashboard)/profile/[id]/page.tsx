@@ -21,7 +21,7 @@ import {
 import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
 import { shareContent } from '@/lib/utils/share'
-import { ProfileNeuralBg } from '@/components/ui/profile-neural-bg'
+import { ProfileBackground } from '@/components/profile/ProfileBackground'
 import { BookmarkButton } from '@/components/ui/bookmark-button'
 import { FollowButton } from '@/components/ui/follow-button'
 import { BaobabLoader } from '@/components/ui/baobab-loader'
@@ -168,7 +168,20 @@ export default function PublicProfilePage() {
       {/* Profile Header */}
       <Card className="overflow-hidden relative border-primary/20 shadow-[0_0_40px_rgba(124,58,237,0.15),0_0_80px_rgba(124,58,237,0.05)]">
         <div className="absolute inset-0" style={{ zIndex: 0 }}>
-          <ProfileNeuralBg />
+          <ProfileBackground
+            backgroundStyle={profile.profile_background ?? 'baobab'}
+            interests={profile.research_interests?.length > 0
+              ? (profile.research_interests as string[]).map((n: string, _: number, a: string[]) => ({ name: n, weight: 1 / a.length }))
+              : [{ name: 'Research', weight: 1 }]}
+            akiliScore={profile.akili_score ?? 0}
+            dimensions={{
+              knowledge:     profile.akili_dimension_knowledge     ?? 0,
+              collaboration: profile.akili_dimension_collaboration ?? 0,
+              mentorship:    profile.akili_dimension_mentorship    ?? 0,
+              technical:     profile.akili_dimension_technical     ?? 0,
+            }}
+            collaborationCount={profile.connections_count ?? 0}
+          />
         </div>
         <div className="absolute inset-0 rounded-xl" style={{
           background: 'linear-gradient(135deg, rgba(5,1,15,0.85) 0%, rgba(18,8,31,0.75) 50%, rgba(5,1,15,0.85) 100%)',

@@ -19,6 +19,7 @@ import {
   ArrowLeft,
   Loader2,
   CheckCircle,
+  Sparkles,
 } from 'lucide-react'
 import type { Profile, University, AcademicLevel } from '@/lib/types/database'
 import { completeOnboarding, updateProfile } from '@/lib/actions/auth'
@@ -36,7 +37,8 @@ const STEPS = [
   { id: 2, title: 'Academic Details', icon: GraduationCap },
   { id: 3, title: 'Research Interests', icon: Target },
   { id: 4, title: 'Skills & Looking For', icon: Clock },
-  { id: 5, title: 'Complete', icon: CheckCircle },
+  { id: 5, title: 'Research Identity', icon: Sparkles },
+  { id: 6, title: 'Complete', icon: CheckCircle },
 ]
 
 const ACADEMIC_LEVELS: { value: AcademicLevel; label: string }[] = [
@@ -73,8 +75,9 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
   const [skills, setSkills] = useState<string[]>(initialProfile?.skills || [])
   const [lookingFor, setLookingFor] = useState<string[]>(initialProfile?.looking_for || [])
   const [weeklyHours, setWeeklyHours] = useState(initialProfile?.weekly_hours_available || 10)
-
-  const progress = ((step - 1) / (STEPS.length - 1)) * 100
+  const [profileBackground, setProfileBackground] = useState<'baobab' | 'constellation'>(
+    (initialProfile?.profile_background as 'baobab' | 'constellation') ?? 'baobab'
+  )
 
   function toggleChip(arr: string[], setArr: (v: string[]) => void, max: number, item: string) {
     if (arr.includes(item)) {
@@ -129,6 +132,7 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
       data.looking_for = lookingFor
       data.weekly_hours_available = weeklyHours
     }
+    if (step >= 5) { data.profile_background = profileBackground }
 
     const result = await updateProfile(data)
     if (result.error) { setError(result.error); setIsLoading(false); return false }
@@ -144,6 +148,7 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
     }
     if (step === 3 && researchInterests.length === 0) { setError('Please select at least one research interest'); return }
     if (step === 4 && lookingFor.length === 0) { setError('Please select at least one thing you are looking for in collaborators'); return }
+    // step 5 (identity) always valid — has default value
 
     const saved = await saveProgress()
     if (saved) setStep(step + 1)
@@ -166,6 +171,7 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
       skills,
       looking_for: lookingFor,
       weekly_hours_available: weeklyHours,
+      profile_background: profileBackground,
     })
 
     if (result?.error) { setError(result.error); setIsLoading(false) }
@@ -173,6 +179,7 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
   }
 
   const isMentorSelected = roles.includes('mentor') || roles.includes('all')
+  const progress = ((step - 1) / (STEPS.length - 1)) * 100
 
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#05010F' }}>
@@ -472,8 +479,109 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
             </Card>
           )}
 
-          {/* Step 5: Complete */}
+          {/* Step 5: Research Identity */}
           {step === 5 && (
+            <Card style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(139,92,246,0.2)' }}>
+              <CardHeader>
+                <CardTitle className="text-2xl font-heading" style={{ color: '#F3F0FF' }}>Choose Your Research Identity</CardTitle>
+                <CardDescription style={{ color: '#7C6A9C' }}>This will become the animated background on your public profile</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Baobab option */}
+                  <button
+                    type="button"
+                    onClick={() => setProfileBackground('baobab')}
+                    className="p-5 rounded-xl text-left transition-all duration-200 space-y-3"
+                    style={profileBackground === 'baobab'
+                      ? { background: 'rgba(124,58,237,0.15)', border: '2px solid rgba(168,85,247,0.7)', boxShadow: '0 0 20px rgba(124,58,237,0.2)' }
+                      : { background: 'rgba(255,255,255,0.03)', border: '2px solid rgba(139,92,246,0.2)' }
+                    }
+                  >
+                    {/* Baobab mini SVG preview */}
+                    <div className="w-full h-28 rounded-lg flex items-center justify-center overflow-hidden" style={{ background: '#05010F' }}>
+                      <svg width="110" height="90" viewBox="0 0 110 90" fill="none">
+                        <defs>
+                          <linearGradient id="ob-trunk" x1="55" y1="30" x2="55" y2="90" gradientUnits="userSpaceOnUse">
+                            <stop offset="0%" stopColor="#5B21B6"/>
+                            <stop offset="100%" stopColor="#2E1065"/>
+                          </linearGradient>
+                        </defs>
+                        <radialGradient id="ob-glow" cx="55" cy="90" r="30" gradientUnits="userSpaceOnUse">
+                          <stop offset="0%" stopColor="#F59E0B" stopOpacity="0.3"/>
+                          <stop offset="100%" stopColor="#F59E0B" stopOpacity="0"/>
+                        </radialGradient>
+                        <circle cx="55" cy="88" r="28" fill="url(#ob-glow)"/>
+                        <polygon points="48,32 62,32 66,90 44,90" fill="url(#ob-trunk)"/>
+                        {/* branches */}
+                        <line x1="55" y1="32" x2="22" y2="14" stroke="#7C3AED" strokeWidth="3"/>
+                        <line x1="55" y1="32" x2="55" y2="8" stroke="#7C3AED" strokeWidth="3"/>
+                        <line x1="55" y1="32" x2="88" y2="14" stroke="#7C3AED" strokeWidth="3"/>
+                        {/* nodes */}
+                        <circle cx="22" cy="14" r="7" fill="#8B5CF6"/>
+                        <circle cx="55" cy="8" r="9" fill="#FBBF24"/>
+                        <circle cx="88" cy="14" r="7" fill="#A855F7"/>
+                        {/* arcs */}
+                        <path d="M22,14 Q38,4 55,8" stroke="rgba(196,181,253,0.5)" strokeWidth="1.2" fill="none"/>
+                        <path d="M55,8 Q72,4 88,14" stroke="rgba(196,181,253,0.5)" strokeWidth="1.2" fill="none"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm" style={{ color: profileBackground === 'baobab' ? '#C084FC' : '#F3F0FF' }}>
+                        The Baobab
+                      </p>
+                      <p className="text-xs mt-1 leading-relaxed" style={{ color: '#7C6A9C' }}>
+                        Growing from strong roots. Your profile reflects your place in the African research ecosystem — branches represent your fields, nodes your connections.
+                      </p>
+                    </div>
+                  </button>
+
+                  {/* Constellation option */}
+                  <button
+                    type="button"
+                    onClick={() => setProfileBackground('constellation')}
+                    className="p-5 rounded-xl text-left transition-all duration-200 space-y-3"
+                    style={profileBackground === 'constellation'
+                      ? { background: 'rgba(124,58,237,0.15)', border: '2px solid rgba(168,85,247,0.7)', boxShadow: '0 0 20px rgba(124,58,237,0.2)' }
+                      : { background: 'rgba(255,255,255,0.03)', border: '2px solid rgba(139,92,246,0.2)' }
+                    }
+                  >
+                    {/* Constellation mini SVG preview */}
+                    <div className="w-full h-28 rounded-lg flex items-center justify-center overflow-hidden" style={{ background: '#030812' }}>
+                      <svg width="110" height="90" viewBox="0 0 110 90" fill="none">
+                        {/* bg stars */}
+                        {[[15,12],[90,8],[8,70],[100,65],[50,80],[30,45],[85,40]].map(([x,y],i) => (
+                          <circle key={i} cx={x} cy={y} r="0.8" fill="white" opacity="0.25"/>
+                        ))}
+                        {/* lines */}
+                        <line x1="35" y1="18" x2="75" y2="38" stroke="rgba(251,191,36,0.4)" strokeWidth="1.2"/>
+                        <line x1="75" y1="38" x2="55" y2="68" stroke="rgba(251,191,36,0.4)" strokeWidth="1.2"/>
+                        <line x1="55" y1="68" x2="35" y2="18" stroke="rgba(251,191,36,0.4)" strokeWidth="1.2"/>
+                        {/* stars */}
+                        <circle cx="35" cy="18" r="6" fill="#FBBF24" opacity="0.9"/>
+                        <circle cx="35" cy="18" r="2.5" fill="white"/>
+                        <circle cx="75" cy="38" r="5" fill="#67E8F9" opacity="0.9"/>
+                        <circle cx="75" cy="38" r="2" fill="white"/>
+                        <circle cx="55" cy="68" r="4.5" fill="#C4B5FD" opacity="0.9"/>
+                        <circle cx="55" cy="68" r="1.8" fill="white"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm" style={{ color: profileBackground === 'constellation' ? '#C084FC' : '#F3F0FF' }}>
+                        The Constellation
+                      </p>
+                      <p className="text-xs mt-1 leading-relaxed" style={{ color: '#7C6A9C' }}>
+                        Reaching for new frontiers. Your profile becomes your mark on the research universe — each star a field you&apos;re exploring, each line a connection you&apos;ve forged.
+                      </p>
+                    </div>
+                  </button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Step 6: Complete */}
+          {step === 6 && (
             <Card style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(139,92,246,0.2)' }}>
               <CardContent className="py-12 text-center">
                 <div
@@ -504,7 +612,7 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
           )}
 
           {/* Navigation */}
-          {step < 5 && (
+          {step < 6 && (
             <div className="flex justify-between mt-6">
               <Button
                 variant="outline"
