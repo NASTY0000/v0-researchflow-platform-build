@@ -20,22 +20,20 @@ export function BaobabCanvas({ interests = [] }: BaobabCanvasProps) {
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
-
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
     let rafId = 0
     let t = 0
 
-    // Use provided interests or fall back to defaults
     const nodes = interests.length > 0 ? interests : [
       { name: 'Research',      weight: 0.5 },
-      { name: 'Collaboration', weight: 0.4 },
-      { name: 'Innovation',    weight: 0.35 },
-      { name: 'Technology',    weight: 0.3 },
-      { name: 'Science',       weight: 0.25 },
-      { name: 'Data',          weight: 0.2 },
-      { name: 'Analysis',      weight: 0.15 },
+      { name: 'Collaboration', weight: 0.45 },
+      { name: 'Innovation',    weight: 0.4 },
+      { name: 'Technology',    weight: 0.35 },
+      { name: 'Science',       weight: 0.3 },
+      { name: 'Data',          weight: 0.25 },
+      { name: 'Analysis',      weight: 0.2 },
     ]
 
     function resize() {
@@ -54,27 +52,40 @@ export function BaobabCanvas({ interests = [] }: BaobabCanvasProps) {
 
       ctx!.clearRect(0, 0, W, H)
 
-      // Dark background
+      // Background
       ctx!.fillStyle = '#05010F'
       ctx!.fillRect(0, 0, W, H)
 
-      // Subtle radial glow in center-left
-      const grd = ctx!.createRadialGradient(W * 0.5, H * 0.6, 0, W * 0.5, H * 0.6, W * 0.55)
-      grd.addColorStop(0, 'rgba(124,58,237,0.06)')
+      // Ambient radial glow
+      const grd = ctx!.createRadialGradient(W * 0.5, H * 0.55, 0, W * 0.5, H * 0.55, W * 0.6)
+      grd.addColorStop(0, 'rgba(124,58,237,0.10)')
+      grd.addColorStop(0.5, 'rgba(88,28,135,0.05)')
       grd.addColorStop(1, 'rgba(0,0,0,0)')
       ctx!.fillStyle = grd
       ctx!.fillRect(0, 0, W, H)
 
-      // Trunk junction point — base of canopy
+      // Trunk junction — base of canopy
       const jx = W * 0.5
       const jy = H * 0.82
+      const trunkW = Math.max(10, W * 0.025)  // wider trunk
 
-      // Draw trunk (down from junction to bottom)
-      const trunkW = Math.max(6, W * 0.018)
-      ctx!.save()
+      // Trunk glow halo
+      const tglow = ctx!.createRadialGradient(jx, H, 0, jx, H, trunkW * 5)
+      tglow.addColorStop(0, 'rgba(124,58,237,0.35)')
+      tglow.addColorStop(1, 'rgba(124,58,237,0)')
+      ctx!.fillStyle = tglow
+      ctx!.beginPath()
+      ctx!.ellipse(jx, H, trunkW * 5, trunkW * 3, 0, 0, Math.PI * 2)
+      ctx!.fill()
+
+      // Trunk
       const trunkGrad = ctx!.createLinearGradient(jx, jy, jx, H)
-      trunkGrad.addColorStop(0, '#5B21B6')
+      trunkGrad.addColorStop(0, '#7C3AED')
+      trunkGrad.addColorStop(0.5, '#5B21B6')
       trunkGrad.addColorStop(1, '#2E1065')
+      ctx!.save()
+      ctx!.shadowBlur = 18
+      ctx!.shadowColor = 'rgba(124,58,237,0.6)'
       ctx!.strokeStyle = trunkGrad
       ctx!.lineWidth = trunkW
       ctx!.lineCap = 'round'
@@ -84,7 +95,7 @@ export function BaobabCanvas({ interests = [] }: BaobabCanvasProps) {
       ctx!.stroke()
       ctx!.restore()
 
-      // Branches — one per interest, fanning out
+      // Branches
       const count = Math.min(nodes.length, 9)
       const angleStart = -Math.PI * 0.88
       const angleEnd   = -Math.PI * 0.12
@@ -93,23 +104,21 @@ export function BaobabCanvas({ interests = [] }: BaobabCanvasProps) {
       nodes.slice(0, count).forEach((node, i) => {
         const frac = count === 1 ? 0.5 : i / (count - 1)
         const angle = angleStart + frac * angleRange
-        const branchLen = H * 0.72 * (0.55 + node.weight * 0.45)
+        const branchLen = H * 0.74 * (0.55 + node.weight * 0.45)
         const pulse = 0.75 + 0.25 * Math.sin(t * 0.018 + i * 0.7)
 
         const ex = jx + Math.cos(angle) * branchLen
         const ey = jy + Math.sin(angle) * branchLen
+        const cx1 = jx + Math.cos(angle + 0.28) * branchLen * 0.5
+        const cy1 = jy + Math.sin(angle + 0.28) * branchLen * 0.5
 
-        // Control point slightly upward for natural curve
-        const cx1 = jx + Math.cos(angle + 0.3) * branchLen * 0.5
-        const cy1 = jy + Math.sin(angle + 0.3) * branchLen * 0.5
-
-        const alpha = 0.25 + 0.65 * pulse
-        const lineW = Math.max(1.5, 3.5 * node.weight * pulse)
+        const alpha = 0.3 + 0.65 * pulse
+        const lineW = Math.max(2, 5 * node.weight * pulse)  // thicker branches
 
         ctx!.save()
-        ctx!.shadowBlur = 10 * pulse
-        ctx!.shadowColor = 'rgba(124,58,237,0.7)'
-        ctx!.strokeStyle = `rgba(124,58,237,${alpha})`
+        ctx!.shadowBlur = 14 * pulse
+        ctx!.shadowColor = 'rgba(124,58,237,0.8)'
+        ctx!.strokeStyle = `rgba(139,92,246,${alpha})`
         ctx!.lineWidth = lineW
         ctx!.lineCap = 'round'
         ctx!.beginPath()
@@ -118,61 +127,81 @@ export function BaobabCanvas({ interests = [] }: BaobabCanvasProps) {
         ctx!.stroke()
         ctx!.restore()
 
-        // End node glow
-        const nodeR = Math.max(3, 5 * node.weight + 2)
-        const nodeAlpha = 0.3 + 0.7 * pulse
+        // Node — bigger and brighter
+        const nodeR = Math.max(5, 7 * node.weight + 3)  // was max(3, 5*w+2)
+        const nodeAlpha = 0.4 + 0.6 * pulse
 
         ctx!.save()
-        ctx!.shadowBlur = 14 * pulse
-        ctx!.shadowColor = 'rgba(139,92,246,0.9)'
+        ctx!.shadowBlur = 20 * pulse
+        ctx!.shadowColor = 'rgba(167,139,250,1.0)'
 
-        const nodeGrd = ctx!.createRadialGradient(ex, ey, 0, ex, ey, nodeR * 1.8)
-        nodeGrd.addColorStop(0, `rgba(196,181,253,${nodeAlpha})`)
-        nodeGrd.addColorStop(0.5, `rgba(139,92,246,${nodeAlpha * 0.8})`)
+        // Outer glow
+        const nodeGrd = ctx!.createRadialGradient(ex, ey, 0, ex, ey, nodeR * 2.5)
+        nodeGrd.addColorStop(0, `rgba(196,181,253,${nodeAlpha * 0.8})`)
+        nodeGrd.addColorStop(0.5, `rgba(139,92,246,${nodeAlpha * 0.5})`)
         nodeGrd.addColorStop(1, 'rgba(139,92,246,0)')
         ctx!.fillStyle = nodeGrd
         ctx!.beginPath()
-        ctx!.arc(ex, ey, nodeR * 2, 0, Math.PI * 2)
+        ctx!.arc(ex, ey, nodeR * 2.5, 0, Math.PI * 2)
         ctx!.fill()
 
-        ctx!.fillStyle = `rgba(196,181,253,${nodeAlpha})`
+        // Colored core
+        ctx!.fillStyle = i % 2 === 0 ? '#A78BFA' : '#C4B5FD'
         ctx!.beginPath()
         ctx!.arc(ex, ey, nodeR, 0, Math.PI * 2)
+        ctx!.fill()
+
+        // White-hot center
+        ctx!.fillStyle = 'rgba(255,255,255,0.9)'
+        ctx!.beginPath()
+        ctx!.arc(ex, ey, nodeR * 0.4, 0, Math.PI * 2)
         ctx!.fill()
         ctx!.restore()
       })
 
-      // Gold apex node at the top-center
+      // Gold apex node
       const apexY = jy - H * 0.72 * 0.95
       const apexPulse = 0.7 + 0.3 * Math.sin(t * 0.025)
 
-      // Outer glow rings
-      for (const [mult, a] of [[3.0, 0.08], [2.0, 0.14], [1.2, 0.22]] as [number, number][]) {
+      // Outer glow rings (3 layers)
+      for (const [mult, a] of [[3.5, 0.08], [2.2, 0.16], [1.3, 0.30]] as [number, number][]) {
         ctx!.save()
-        ctx!.shadowBlur = 20 * apexPulse
-        ctx!.shadowColor = 'rgba(251,191,36,0.6)'
-        const apxGrd = ctx!.createRadialGradient(jx, apexY, 0, jx, apexY, 12 * mult)
+        ctx!.shadowBlur = 24 * apexPulse
+        ctx!.shadowColor = 'rgba(251,191,36,0.7)'
+        const apxGrd = ctx!.createRadialGradient(jx, apexY, 0, jx, apexY, 14 * mult)
         apxGrd.addColorStop(0, `rgba(251,191,36,${a * apexPulse})`)
         apxGrd.addColorStop(1, 'rgba(251,191,36,0)')
         ctx!.fillStyle = apxGrd
         ctx!.beginPath()
-        ctx!.arc(jx, apexY, 12 * mult, 0, Math.PI * 2)
+        ctx!.arc(jx, apexY, 14 * mult, 0, Math.PI * 2)
         ctx!.fill()
         ctx!.restore()
       }
 
+      // Apex core
       ctx!.save()
-      ctx!.shadowBlur = 20 * apexPulse
-      ctx!.shadowColor = 'rgba(251,191,36,0.9)'
-      ctx!.fillStyle = `rgba(251,191,36,${0.85 + 0.15 * apexPulse})`
+      ctx!.shadowBlur = 24 * apexPulse
+      ctx!.shadowColor = 'rgba(251,191,36,1.0)'
+      ctx!.fillStyle = '#FBBF24'
       ctx!.beginPath()
-      ctx!.arc(jx, apexY, 5.5, 0, Math.PI * 2)
+      ctx!.arc(jx, apexY, 7, 0, Math.PI * 2)  // was 5.5
       ctx!.fill()
-      ctx!.fillStyle = 'rgba(255,255,255,0.9)'
+      ctx!.fillStyle = 'rgba(255,255,255,0.95)'
       ctx!.beginPath()
-      ctx!.arc(jx, apexY, 2, 0, Math.PI * 2)
+      ctx!.arc(jx, apexY, 2.8, 0, Math.PI * 2)
       ctx!.fill()
       ctx!.restore()
+
+      // Apex cross spikes
+      const spLen = 7 * 1.8
+      ctx!.strokeStyle = 'rgba(251,191,36,0.5)'
+      ctx!.lineWidth = 0.8
+      ;[[0, -spLen, 0, spLen], [-spLen, 0, spLen, 0]].forEach(([x1, y1, x2, y2]) => {
+        ctx!.beginPath()
+        ctx!.moveTo(jx + x1, apexY + y1)
+        ctx!.lineTo(jx + x2, apexY + y2)
+        ctx!.stroke()
+      })
 
       t++
     }
@@ -203,10 +232,8 @@ export function BaobabCanvas({ interests = [] }: BaobabCanvasProps) {
       ref={canvasRef}
       style={{
         position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
+        top: 0, left: 0,
+        width: '100%', height: '100%',
         display: 'block',
       }}
     />

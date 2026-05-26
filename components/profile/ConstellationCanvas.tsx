@@ -14,14 +14,16 @@ interface ConstellationCanvasProps {
   collaborationCount?: number
 }
 
-interface Star {
-  x: number; y: number
-  r: number; alpha: number
-  twinkleOffset: number; twinkleSpeed: number
+const COLORS = ['#FBBF24', '#67E8F9', '#C4B5FD', '#86EFAC', '#FDA4AF']
+
+interface BgStar {
+  x: number; y: number; r: number
+  op: number; speed: number; offset: number
 }
 
-interface ConstellationStar {
+interface MainStar {
   x: number; y: number; r: number
+  color: string; name: string
 }
 
 export function ConstellationCanvas({ interests = [] }: ConstellationCanvasProps) {
@@ -36,48 +38,54 @@ export function ConstellationCanvas({ interests = [] }: ConstellationCanvasProps
     let rafId = 0
     let t = 0
 
-    // Background stars
-    let bgStars: Star[] = []
-    // Constellation named stars (positioned as % of canvas)
-    let cStars: ConstellationStar[] = []
+    const safeInterests = interests.length > 0 ? interests : [
+      { name: 'Research',      weight: 0.5 },
+      { name: 'Collaboration', weight: 0.4 },
+      { name: 'Innovation',    weight: 0.35 },
+    ]
 
-    // Traveling particle state
-    let travProg = 0
-    // Shooting star state
-    let shootTimer = 0
-    let shootMaxLife = 0
-    let shootX = 0; let shootY = 0
-    let shootVx = 0; let shootVy = 0
-    let shootLife = 0
+    let bgStars: BgStar[] = []
+    let mainStars: MainStar[] = []
 
-    function getConstellationPositions(W: number, H: number): ConstellationStar[] {
-      const pts: [number, number][] = [
-        [0.70, 0.25],  // apex
-        [0.50, 0.40],  // center
-        [0.30, 0.25],  // left shoulder
-        [0.20, 0.55],  // left outer
-        [0.80, 0.55],  // right outer
-        [0.55, 0.70],  // lower right
-        [0.42, 0.70],  // lower left
-        [0.65, 0.15],  // upper right tip
-        [0.35, 0.55],  // mid left
-        [0.60, 0.45],  // mid right
-      ]
-      const count = Math.max(5, Math.min(pts.length, 5 + Math.round((interests.length) / 2)))
-      return pts.slice(0, count).map(([px, py]) => ({
-        x: px * W, y: py * H,
-        r: 2 + Math.random() * 2,
-      }))
-    }
+    // Traveling particle
+    const traveler = { seg: 0, progress: 0 }
 
-    function buildStarField(W: number, H: number) {
-      bgStars = Array.from({ length: 220 }, () => ({
+    // Shooting star
+    let shootTimer = 400
+    let shootX = 0, shootY = 0, shootVx = 0, shootVy = 0
+    let shootLife = 0, shootMaxLife = 0
+
+    function buildStars() {
+      if (!canvas) return
+      const W = canvas.width
+      const H = canvas.height
+
+      bgStars = Array.from({ length: 200 }, () => ({
         x: Math.random() * W,
         y: Math.random() * H,
-        r: 0.3 + Math.random() * 1.2,
-        alpha: 0.2 + Math.random() * 0.6,
-        twinkleOffset: Math.random() * Math.PI * 2,
-        twinkleSpeed: 0.008 + Math.random() * 0.015,
+        r: Math.random() * 1.4 + 0.3,
+        op: Math.random() * 0.35 + 0.08,
+        speed: Math.random() * 0.025 + 0.008,
+        offset: Math.random() * Math.PI * 2,
+      }))
+
+      const num = Math.min(safeInterests.length, 5)
+
+      // Fixed positions spread across the canvas (not clustered)
+      const positions = [
+        { x: W * 0.55, y: H * 0.28 },  // top-center
+        { x: W * 0.80, y: H * 0.55 },  // right
+        { x: W * 0.38, y: H * 0.60 },  // left
+        { x: W * 0.65, y: H * 0.75 },  // bottom-center
+        { x: W * 0.88, y: H * 0.30 },  // top-right
+      ]
+
+      mainStars = safeInterests.slice(0, num).map((interest, i) => ({
+        x: positions[i % positions.length].x,
+        y: positions[i % positions.length].y,
+        r: 8 + interest.weight * 14,
+        color: COLORS[i % COLORS.length],
+        name: interest.name,
       }))
     }
 
@@ -88,25 +96,19 @@ export function ConstellationCanvas({ interests = [] }: ConstellationCanvasProps
       const H = container.offsetHeight || container.clientHeight || 208
       canvas!.width = W
       canvas!.height = H
-      buildStarField(W, H)
-      cStars = getConstellationPositions(W, H)
+      buildStars()
     }
 
-    function newShootingStar(W: number, H: number) {
-      const side = Math.random()
-      if (side < 0.5) {
-        shootX = Math.random() * W * 0.5
-        shootY = Math.random() * H * 0.3
-        shootVx = 3 + Math.random() * 3
-        shootVy = 1 + Math.random() * 2
-      } else {
-        shootX = W * 0.5 + Math.random() * W * 0.5
-        shootY = Math.random() * H * 0.3
-        shootVx = -(3 + Math.random() * 3)
-        shootVy = 1 + Math.random() * 2
-      }
-      shootMaxLife = 30 + Math.floor(Math.random() * 25)
+    function newShoot() {
+      const W = canvas!.width; const H = canvas!.height
+      shootX = Math.random() * W
+      shootY = Math.random() * H * 0.4
+      const dir = shootX < W / 2 ? 1 : -1
+      shootVx = dir * (3 + Math.random() * 3)
+      shootVy = 1 + Math.random() * 2
+      shootMaxLife = 28 + Math.floor(Math.random() * 22)
       shootLife = shootMaxLife
+      shootTimer = 350 + Math.floor(Math.random() * 450)
     }
 
     function draw() {
@@ -114,148 +116,195 @@ export function ConstellationCanvas({ interests = [] }: ConstellationCanvasProps
       const H = canvas!.height
       if (W === 0 || H === 0) return
 
-      // Deep space background
+      // Deep space
       ctx!.fillStyle = '#05010F'
       ctx!.fillRect(0, 0, W, H)
 
-      // Subtle nebula glow
-      const neb = ctx!.createRadialGradient(W * 0.6, H * 0.35, 0, W * 0.6, H * 0.35, W * 0.5)
-      neb.addColorStop(0, 'rgba(88,28,135,0.09)')
-      neb.addColorStop(0.5, 'rgba(49,10,101,0.05)')
-      neb.addColorStop(1, 'rgba(0,0,0,0)')
-      ctx!.fillStyle = neb
-      ctx!.fillRect(0, 0, W, H)
+      // ── Nebula clouds ────────────────────────────────────────
+      if (mainStars.length > 0) {
+        const cx = mainStars.reduce((s, m) => s + m.x, 0) / mainStars.length
+        const cy = mainStars.reduce((s, m) => s + m.y, 0) / mainStars.length
 
-      // Background twinkling stars
+        // Warm gold primary cloud
+        const n1 = ctx!.createRadialGradient(cx, cy, 0, cx, cy, W * 0.55)
+        n1.addColorStop(0,   'rgba(245,158,11,0.12)')
+        n1.addColorStop(0.4, 'rgba(124,58,237,0.06)')
+        n1.addColorStop(1,   'rgba(0,0,0,0)')
+        ctx!.fillStyle = n1
+        ctx!.fillRect(0, 0, W, H)
+
+        // Cool blue secondary cloud
+        const n2 = ctx!.createRadialGradient(
+          mainStars[0].x, mainStars[0].y, 0,
+          mainStars[0].x, mainStars[0].y, W * 0.35
+        )
+        n2.addColorStop(0, 'rgba(6,182,212,0.08)')
+        n2.addColorStop(1, 'rgba(6,182,212,0)')
+        ctx!.fillStyle = n2
+        ctx!.fillRect(0, 0, W, H)
+      }
+
+      // ── Background twinkling stars ────────────────────────────
       bgStars.forEach(s => {
-        const tw = s.alpha * (0.5 + 0.5 * Math.sin(t * s.twinkleSpeed + s.twinkleOffset))
-        ctx!.save()
-        ctx!.globalAlpha = tw
-        ctx!.fillStyle = '#ffffff'
+        const twinkle = s.op * (0.7 + 0.3 * Math.sin(t * s.speed + s.offset))
         ctx!.beginPath()
         ctx!.arc(s.x, s.y, s.r, 0, Math.PI * 2)
+        ctx!.fillStyle = `rgba(210,230,255,${twinkle})`
         ctx!.fill()
-        ctx!.restore()
       })
 
-      // Shooting star
+      // ── Shooting star ─────────────────────────────────────────
       if (shootTimer <= 0) {
-        newShootingStar(W, H)
-        shootTimer = 300 + Math.floor(Math.random() * 400)
+        newShoot()
       } else {
         shootTimer--
       }
       if (shootLife > 0) {
-        const progress = shootLife / shootMaxLife
+        const prog = shootLife / shootMaxLife
         ctx!.save()
-        ctx!.globalAlpha = progress * 0.8
-        ctx!.strokeStyle = '#E0D8FF'
+        ctx!.globalAlpha = prog * 0.85
+        ctx!.strokeStyle = '#E8E0FF'
         ctx!.lineWidth = 1.5
         ctx!.lineCap = 'round'
+        ctx!.shadowBlur = 6
+        ctx!.shadowColor = 'rgba(200,180,255,0.8)'
         ctx!.beginPath()
         ctx!.moveTo(shootX, shootY)
-        ctx!.lineTo(shootX - shootVx * 8, shootY - shootVy * 8)
+        ctx!.lineTo(shootX - shootVx * 9, shootY - shootVy * 9)
         ctx!.stroke()
         ctx!.restore()
-        shootX += shootVx
-        shootY += shootVy
-        shootLife--
+        shootX += shootVx; shootY += shootVy; shootLife--
       }
 
-      // Constellation lines
-      if (cStars.length >= 2) {
-        // Build edges: connect each star to 1-2 nearest neighbors
-        const edges: [number, number][] = []
-        cStars.forEach((a, i) => {
-          let closest = -1; let closestD = Infinity
-          cStars.forEach((b, j) => {
-            if (i === j) return
-            const d = Math.hypot(a.x - b.x, a.y - b.y)
-            if (d < closestD) { closestD = d; closest = j }
-          })
-          if (closest >= 0 && !edges.some(([x, y]) => (x === closest && y === i))) {
-            edges.push([i, closest])
-          }
-        })
+      // ── Constellation lines ───────────────────────────────────
+      for (let a = 0; a < mainStars.length; a++) {
+        for (let b = a + 1; b < mainStars.length; b++) {
+          const sa = mainStars[a]; const sb = mainStars[b]
 
-        // Traveling particle along edges
-        travProg = (travProg + 0.003) % 1
-        const edgeIdx = Math.floor(travProg * edges.length)
-        const edgeFrac = (travProg * edges.length) % 1
-        const [ai, bi] = edges[edgeIdx] || [0, 1]
-        const starA = cStars[ai] || cStars[0]
-        const starB = cStars[bi] || cStars[1]
-        const travX = starA.x + (starB.x - starA.x) * edgeFrac
-        const travY = starA.y + (starB.y - starA.y) * edgeFrac
-
-        // Draw edges with dim glow
-        edges.forEach(([ai2, bi2]) => {
-          const a = cStars[ai2]; const b = cStars[bi2]
-          ctx!.save()
-          ctx!.strokeStyle = 'rgba(139,92,246,0.18)'
-          ctx!.lineWidth = 1
+          // Thick glow pass
           ctx!.beginPath()
-          ctx!.moveTo(a.x, a.y)
-          ctx!.lineTo(b.x, b.y)
+          ctx!.moveTo(sa.x, sa.y)
+          ctx!.lineTo(sb.x, sb.y)
+          ctx!.strokeStyle = 'rgba(251,191,36,0.2)'
+          ctx!.lineWidth = 5
+          ctx!.shadowBlur = 14
+          ctx!.shadowColor = 'rgba(251,191,36,0.5)'
           ctx!.stroke()
-          ctx!.restore()
-        })
+          ctx!.shadowBlur = 0
 
-        // Traveling particle trail
-        const trailLen = 0.12
-        const trailStartFrac = Math.max(0, edgeFrac - trailLen)
-        const trailX0 = starA.x + (starB.x - starA.x) * trailStartFrac
-        const trailY0 = starA.y + (starB.y - starA.y) * trailStartFrac
-        const trailGrd = ctx!.createLinearGradient(trailX0, trailY0, travX, travY)
-        trailGrd.addColorStop(0, 'rgba(167,139,250,0)')
-        trailGrd.addColorStop(1, 'rgba(167,139,250,0.7)')
-        ctx!.save()
-        ctx!.strokeStyle = trailGrd
-        ctx!.lineWidth = 2
-        ctx!.lineCap = 'round'
-        ctx!.beginPath()
-        ctx!.moveTo(trailX0, trailY0)
-        ctx!.lineTo(travX, travY)
-        ctx!.stroke()
-        ctx!.restore()
-
-        // Particle head
-        ctx!.save()
-        ctx!.shadowBlur = 8
-        ctx!.shadowColor = 'rgba(167,139,250,0.9)'
-        ctx!.fillStyle = 'rgba(216,180,254,0.95)'
-        ctx!.beginPath()
-        ctx!.arc(travX, travY, 2.5, 0, Math.PI * 2)
-        ctx!.fill()
-        ctx!.restore()
+          // Sharp crisp line on top
+          ctx!.beginPath()
+          ctx!.moveTo(sa.x, sa.y)
+          ctx!.lineTo(sb.x, sb.y)
+          ctx!.strokeStyle = 'rgba(251,191,36,0.55)'
+          ctx!.lineWidth = 1.5
+          ctx!.stroke()
+        }
       }
 
-      // Constellation star nodes
-      cStars.forEach((s, i) => {
-        const pulse = 0.7 + 0.3 * Math.sin(t * 0.02 + i * 1.1)
+      // ── Traveling particle ────────────────────────────────────
+      if (mainStars.length >= 2) {
+        const connections: [number, number][] = []
+        for (let a = 0; a < mainStars.length; a++)
+          for (let b = a + 1; b < mainStars.length; b++)
+            connections.push([a, b])
 
-        // Glow
-        ctx!.save()
-        ctx!.shadowBlur = 12 * pulse
-        ctx!.shadowColor = 'rgba(139,92,246,0.9)'
-        const grd = ctx!.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.r * 3)
-        grd.addColorStop(0, `rgba(216,180,254,${0.6 * pulse})`)
-        grd.addColorStop(1, 'rgba(139,92,246,0)')
-        ctx!.fillStyle = grd
-        ctx!.beginPath()
-        ctx!.arc(s.x, s.y, s.r * 3, 0, Math.PI * 2)
-        ctx!.fill()
-        ctx!.restore()
+        if (connections.length > 0) {
+          const [ai, bi] = connections[traveler.seg % connections.length]
+          const sa = mainStars[ai]; const sb = mainStars[bi]
+          const x = sa.x + (sb.x - sa.x) * traveler.progress
+          const y = sa.y + (sb.y - sa.y) * traveler.progress
 
-        // Core
-        ctx!.save()
-        ctx!.shadowBlur = 6
-        ctx!.shadowColor = 'rgba(216,180,254,0.8)'
-        ctx!.fillStyle = `rgba(240,220,255,${0.85 * pulse})`
+          // Trail (last 15% of segment)
+          const trailStart = Math.max(0, traveler.progress - 0.15)
+          const tx0 = sa.x + (sb.x - sa.x) * trailStart
+          const ty0 = sa.y + (sb.y - sa.y) * trailStart
+          const tg = ctx!.createLinearGradient(tx0, ty0, x, y)
+          tg.addColorStop(0, 'rgba(251,191,36,0)')
+          tg.addColorStop(1, 'rgba(251,191,36,0.85)')
+          ctx!.beginPath()
+          ctx!.moveTo(tx0, ty0)
+          ctx!.lineTo(x, y)
+          ctx!.strokeStyle = tg
+          ctx!.lineWidth = 2.5
+          ctx!.lineCap = 'round'
+          ctx!.stroke()
+
+          // Particle head
+          ctx!.beginPath()
+          ctx!.arc(x, y, 4.5, 0, Math.PI * 2)
+          ctx!.fillStyle = '#FBBF24'
+          ctx!.shadowBlur = 18
+          ctx!.shadowColor = 'rgba(251,191,36,1.0)'
+          ctx!.fill()
+          ctx!.shadowBlur = 0
+
+          traveler.progress += 0.004
+          if (traveler.progress >= 1) {
+            traveler.progress = 0
+            traveler.seg = (traveler.seg + 1) % connections.length
+          }
+        }
+      }
+
+      // ── Main constellation stars ──────────────────────────────
+      mainStars.forEach((star, i) => {
+        const pulse = 1 + Math.sin(t * 0.04 + i * 1.5) * 0.1
+        const r = star.r * pulse
+
+        // 3 glow layers (outer → inner)
+        const glowSizes  = [3.5, 2.2, 1.4]
+        const glowAlphas = [0.08, 0.18, 0.40]
+
+        glowSizes.forEach((scale, layer) => {
+          const glowR = r * scale
+          const sg = ctx!.createRadialGradient(star.x, star.y, 0, star.x, star.y, glowR)
+          const hex = Math.round(glowAlphas[layer] * 255).toString(16).padStart(2, '0')
+          sg.addColorStop(0, star.color + hex)
+          sg.addColorStop(1, star.color + '00')
+          ctx!.beginPath()
+          ctx!.arc(star.x, star.y, glowR, 0, Math.PI * 2)
+          ctx!.fillStyle = sg
+          ctx!.fill()
+        })
+
+        // Colored core
         ctx!.beginPath()
-        ctx!.arc(s.x, s.y, s.r, 0, Math.PI * 2)
+        ctx!.arc(star.x, star.y, r, 0, Math.PI * 2)
+        ctx!.fillStyle = star.color
+        ctx!.shadowBlur = 20
+        ctx!.shadowColor = star.color
         ctx!.fill()
-        ctx!.restore()
+        ctx!.shadowBlur = 0
+
+        // White-hot center
+        ctx!.beginPath()
+        ctx!.arc(star.x, star.y, r * 0.45, 0, Math.PI * 2)
+        ctx!.fillStyle = 'rgba(255,255,255,0.95)'
+        ctx!.shadowBlur = 10
+        ctx!.shadowColor = 'white'
+        ctx!.fill()
+        ctx!.shadowBlur = 0
+
+        // 4-point star cross
+        const spLen = r * 1.8
+        ctx!.strokeStyle = star.color + '66'
+        ctx!.lineWidth = 0.8
+        ;[
+          [0, -spLen, 0, spLen],
+          [-spLen, 0, spLen, 0],
+        ].forEach(([x1, y1, x2, y2]) => {
+          ctx!.beginPath()
+          ctx!.moveTo(star.x + x1, star.y + y1)
+          ctx!.lineTo(star.x + x2, star.y + y2)
+          ctx!.stroke()
+        })
+
+        // Interest name label
+        ctx!.font = 'bold 9px -apple-system, monospace'
+        ctx!.fillStyle = star.color + 'BB'
+        ctx!.textAlign = 'center'
+        ctx!.fillText(star.name.toUpperCase(), star.x, star.y + r + 15)
       })
 
       t++
@@ -272,7 +321,6 @@ export function ConstellationCanvas({ interests = [] }: ConstellationCanvasProps
     const ro = new ResizeObserver(() => {
       cancelAnimationFrame(rafId)
       resize()
-      // restart loop cleanly
       loop()
     })
     if (canvas.parentElement) ro.observe(canvas.parentElement)
@@ -288,10 +336,8 @@ export function ConstellationCanvas({ interests = [] }: ConstellationCanvasProps
       ref={canvasRef}
       style={{
         position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
+        top: 0, left: 0,
+        width: '100%', height: '100%',
         display: 'block',
       }}
     />
