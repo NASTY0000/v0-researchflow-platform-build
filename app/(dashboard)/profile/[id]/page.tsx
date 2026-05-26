@@ -166,8 +166,9 @@ export default function PublicProfilePage() {
       </Button>
 
       {/* Profile Header */}
-      <Card className="overflow-hidden relative border-primary/20 shadow-[0_0_40px_rgba(124,58,237,0.15),0_0_80px_rgba(124,58,237,0.05)]">
-        <div className="absolute inset-0" style={{ zIndex: 0 }}>
+      <Card className="overflow-hidden border-primary/20 shadow-[0_0_40px_rgba(124,58,237,0.15),0_0_80px_rgba(124,58,237,0.05)]">
+        {/* Animated canvas banner */}
+        <div className="relative h-52 overflow-hidden" style={{ background: '#05010F' }}>
           <ProfileBackground
             backgroundStyle={profile.profile_background ?? 'baobab'}
             interests={profile.research_interests?.length > 0
@@ -182,12 +183,11 @@ export default function PublicProfilePage() {
             }}
             collaborationCount={profile.connections_count ?? 0}
           />
+          {/* Gradient fade at bottom */}
+          <div className="absolute bottom-0 left-0 right-0 h-20 pointer-events-none z-10"
+            style={{ background: 'linear-gradient(to bottom, transparent, rgba(9,6,19,0.95))' }} />
         </div>
-        <div className="absolute inset-0 rounded-xl" style={{
-          background: 'linear-gradient(135deg, rgba(5,1,15,0.85) 0%, rgba(18,8,31,0.75) 50%, rgba(5,1,15,0.85) 100%)',
-          zIndex: 1,
-        }} />
-        <CardContent className="relative p-6" style={{ zIndex: 2 }}>
+        <CardContent className="relative p-6">
           <div className="flex flex-col sm:flex-row items-start gap-5">
             <Avatar className="w-20 h-20 border-2 border-primary/20">
               <AvatarImage src={profile.avatar_url} />
