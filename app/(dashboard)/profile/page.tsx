@@ -856,7 +856,7 @@ export default function ProfilePage() {
                 className="w-24 h-24 rounded-full overflow-hidden flex items-center justify-center relative group"
                 style={{
                   border: '3px solid #7C3AED',
-                  boxShadow: '0 0 0 4px rgba(124,58,237,0.25), 0 0 24px rgba(124,58,237,0.5)',
+                  boxShadow: '0 0 0 5px rgba(124,58,237,0.2), 0 0 20px rgba(124,58,237,0.45)',
                   background: 'linear-gradient(135deg,#3b1d8a,#1e0a4a)',
                 }}
               >
@@ -868,7 +868,7 @@ export default function ProfilePage() {
                     className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-[1.06]"
                   />
                 ) : (
-                  <span className="text-2xl font-black text-amber-400">
+                  <span className="text-3xl font-black text-amber-400">
                     {profile.full_name?.[0]?.toUpperCase() || 'U'}
                   </span>
                 )}
@@ -880,7 +880,7 @@ export default function ProfilePage() {
               </div>
               {/* Edit pencil button */}
               <button
-                className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-purple-600 border-2 flex items-center justify-center hover:bg-purple-500 transition-colors"
+                className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-purple-600 border-2 flex items-center justify-center hover:bg-purple-500 transition-colors"
                 style={{ borderColor: 'var(--card)' }}
                 onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click() }}
                 title="Change avatar"

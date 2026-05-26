@@ -196,10 +196,10 @@ export default function PublicProfilePage() {
 
             {/* Avatar */}
             <div
-              className="w-20 h-20 rounded-full overflow-hidden flex items-center justify-center shrink-0"
+              className="w-24 h-24 rounded-full overflow-hidden flex items-center justify-center shrink-0"
               style={{
                 border: '3px solid #7C3AED',
-                boxShadow: '0 0 0 4px rgba(124,58,237,0.25), 0 0 20px rgba(124,58,237,0.45)',
+                boxShadow: '0 0 0 5px rgba(124,58,237,0.2), 0 0 20px rgba(124,58,237,0.45)',
                 background: 'linear-gradient(135deg,#3b1d8a,#1e0a4a)',
               }}
             >
@@ -207,7 +207,7 @@ export default function PublicProfilePage() {
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={profile.avatar_url} alt={profile.full_name || 'Avatar'} className="w-full h-full object-cover" />
               ) : (
-                <span className="text-2xl font-black text-amber-400">
+                <span className="text-3xl font-black text-amber-400">
                   {profile.full_name?.charAt(0)?.toUpperCase() || '?'}
                 </span>
               )}
