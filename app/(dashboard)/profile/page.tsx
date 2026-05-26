@@ -18,19 +18,85 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { TagInput } from '@/components/ui/tag-input'
-import { RESEARCH_AREAS, SKILLS_LIST } from '@/lib/constants/tags'
+import ChipSelector from '@/components/ui/chip-selector'
+import {
+  RESEARCH_AREAS, RESEARCH_AREAS_FEATURED,
+  SKILLS_OFFERED, SKILLS_FEATURED,
+} from '@/lib/constants/onboarding'
 import {
   User, Mail, Building2, GraduationCap, Calendar,
   Edit, Save, X, Plus, Award, BookOpen, Briefcase, FileText,
   Eye, Star, ExternalLink, Trash2, CheckCircle2, FolderOpen,
   Users, MessageSquare, ListChecks, Zap, Shield, TrendingUp, Loader2,
-  BarChart3, Lightbulb, Code,
+  BarChart3, Lightbulb, Code, Share2, Check,
 } from 'lucide-react'
 import type { Profile, PortfolioItem, PortfolioItemType, University } from '@/lib/types/database'
 import { AkiliScoreCard } from '@/components/akili/AkiliScoreCard'
 import { getAkiliNarrative } from '@/lib/utils/akili'
-import { ProfileNeuralBg } from '@/components/ui/profile-neural-bg'
+import { shareContent } from '@/lib/utils/share'
+import { ProfileBackground } from '@/components/profile/ProfileBackground'
+import { RippleButton } from '@/components/ui/RippleButton'
+
+// ── Animation helpers (module-level, no hooks) ────────────────────────────────
+
+function easeOutExpo(t: number): number {
+  return t === 1 ? 1 : 1 - Math.pow(2, -10 * t)
+}
+
+function triggerSparkleBurst(elementId: string) {
+  const el = document.getElementById(elementId)
+  if (!el) return
+  const rect = el.getBoundingClientRect()
+  const cx = rect.left + rect.width / 2
+  const cy = rect.top + rect.height / 2
+  const colors = ['#FBBF24','#F59E0B','#A855F7','#C4B5FD','#FBBF24','#7C3AED','#FBBF24','#E879F9','#FDE68A','#FBBF24','#A855F7','#FBBF24']
+  for (let i = 0; i < 12; i++) {
+    const spark = document.createElement('div')
+    const isDiamond = i % 3 !== 0
+    Object.assign(spark.style, {
+      position: 'fixed', width: isDiamond ? '5px' : '4px', height: isDiamond ? '5px' : '4px',
+      borderRadius: isDiamond ? '1px' : '50%', backgroundColor: colors[i],
+      transform: isDiamond ? 'rotate(45deg)' : 'none',
+      left: `${cx}px`, top: `${cy}px`, pointerEvents: 'none', zIndex: '9999',
+      boxShadow: `0 0 4px ${colors[i]}, 0 0 8px ${colors[i]}`,
+    })
+    document.body.appendChild(spark)
+    const angle = (i / 12) * 360 + (Math.random() * 20 - 10)
+    const dist = 45 + Math.random() * 35
+    const rad = (angle * Math.PI) / 180
+    const tx = cx + Math.cos(rad) * dist
+    const ty = cy + Math.sin(rad) * dist
+    spark.animate([
+      { transform: `translate(-50%,-50%) ${isDiamond ? 'rotate(45deg)' : ''} scale(0)`, opacity: '1' },
+      { transform: `translate(calc(${tx - cx}px - 50%),calc(${ty - cy}px - 50%)) ${isDiamond ? 'rotate(225deg)' : ''} scale(1)`, opacity: '1', offset: 0.6 },
+      { transform: `translate(calc(${tx - cx}px - 50%),calc(${ty - cy}px - 50%)) ${isDiamond ? 'rotate(360deg)' : ''} scale(0.3)`, opacity: '0' },
+    ], { duration: 600 + Math.random() * 200, delay: i * 18, easing: 'cubic-bezier(0.25,0.46,0.45,0.94)', fill: 'forwards' }).onfinish = () => spark.remove()
+  }
+  el.animate(
+    [{ transform: 'scale(1)' }, { transform: 'scale(1.12)' }, { transform: 'scale(0.96)' }, { transform: 'scale(1.04)' }, { transform: 'scale(1)' }],
+    { duration: 400, easing: 'ease-out' }
+  )
+}
+
+function animateCountUp(targetValue: number, elementId: string, duration = 1400) {
+  const el = document.getElementById(elementId)
+  if (!el) return
+  const key = `akili_counted_${targetValue}`
+  if (sessionStorage.getItem(key)) { el.textContent = targetValue.toString(); return }
+  const startTime = performance.now()
+  function tick(now: number) {
+    const progress = Math.min((now - startTime) / duration, 1)
+    el!.textContent = Math.round(easeOutExpo(progress) * targetValue).toString()
+    if (progress < 1) { requestAnimationFrame(tick) }
+    else {
+      el!.textContent = targetValue.toString()
+      sessionStorage.setItem(key, 'true')
+      triggerSparkleBurst('akili-hero-badge')
+    }
+  }
+  requestAnimationFrame(tick)
+}
+import { BaobabLoader } from '@/components/ui/baobab-loader'
 
 interface ActivityStats {
   activeProjects: number
@@ -112,12 +178,42 @@ export default function ProfilePage() {
 
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null)
   const [analyticsLoading, setAnalyticsLoading] = useState(false)
+  const [copied, setCopied] = useState(false)
 
   const supabase = createClient()
 
   useEffect(() => {
     loadAll()
   }, [])
+
+  // Count-up animation when akili_score is available
+  useEffect(() => {
+    if (profile?.akili_score) {
+      // Small delay so the element is in the DOM
+      const t = setTimeout(() => animateCountUp(profile.akili_score, 'akili-count'), 120)
+      return () => clearTimeout(t)
+    }
+  }, [profile?.akili_score])
+
+  // Stats cards IntersectionObserver
+  useEffect(() => {
+    const cards = document.querySelectorAll('.stat-card-animate')
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const el = entry.target as HTMLElement
+            const delay = parseInt(el.dataset.delay ?? '0')
+            setTimeout(() => el.classList.add('is-visible'), delay)
+            observer.unobserve(entry.target)
+          }
+        })
+      },
+      { threshold: 0.15, rootMargin: '0px 0px -30px 0px' }
+    )
+    cards.forEach(card => observer.observe(card))
+    return () => observer.disconnect()
+  }, [profile]) // re-run when profile loads so cards exist in DOM
 
   async function loadAnalytics(userId: string) {
     setAnalyticsLoading(true)
@@ -491,6 +587,22 @@ export default function ProfilePage() {
     )
   }
 
+  async function handleShareProfile() {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    const result = await shareContent({
+      title: `${profile?.full_name} on ResearchFlow`,
+      text: `Check out ${profile?.full_name}'s research profile on ResearchFlow — Africa's premier research collaboration platform.`,
+      url: `https://researchflowafrica.com/researcher/${user.id}`,
+    })
+
+    if (result.method === 'clipboard' && result.success) {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Portfolio Modal */}
@@ -651,52 +763,159 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* Header Card */}
-      <Card className="overflow-hidden relative border-primary/20 shadow-[0_0_40px_rgba(124,58,237,0.15),0_0_80px_rgba(124,58,237,0.05)]">
-        <div className="absolute inset-0" style={{ zIndex: 0 }}>
-          <ProfileNeuralBg />
-        </div>
-        <div className="absolute inset-0 rounded-xl" style={{
-          background: 'linear-gradient(135deg, rgba(5,1,15,0.85) 0%, rgba(18,8,31,0.75) 50%, rgba(5,1,15,0.85) 100%)',
-          zIndex: 1,
-        }} />
-        <CardContent className="relative p-8" style={{ zIndex: 2 }}>
-          <div className="flex flex-col md:flex-row items-start gap-6">
-            <div className="relative">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                className="hidden"
-                onChange={handleAvatarFileSelect}
-              />
-              <Avatar className="w-24 h-24">
-                <AvatarImage src={profile.avatar_url || undefined} />
-                <AvatarFallback className="text-2xl">
-                  {profile.full_name?.charAt(0) || 'U'}
-                </AvatarFallback>
-              </Avatar>
-              {isUploadingAvatar && (
-                <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50">
-                  <Loader2 className="w-6 h-6 animate-spin text-white" />
-                </div>
-              )}
-              <Button
-                size="icon"
-                variant="outline"
-                className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isUploadingAvatar}
-              >
-                <Edit className="w-3 h-3" />
-              </Button>
-            </div>
-            {avatarError && (
-              <p className="text-xs text-destructive mt-1">{avatarError}</p>
-            )}
+      {/* Header Card — NO overflow-hidden so avatar can overlap banner */}
+      <div className="relative rounded-2xl border border-primary/20 shadow-[0_0_40px_rgba(124,58,237,0.15),0_0_80px_rgba(124,58,237,0.05)]">
 
-            <div className="flex-1 space-y-4">
-              {isEditing ? (
+        {/* Keyframes */}
+        <style>{`
+          @keyframes ping-slow {
+            0%,100% { opacity: 0.3; transform: scale(1.1); }
+            50%      { opacity: 0.6; transform: scale(1.18); }
+          }
+          .animate-ping-slow { animation: ping-slow 2.8s ease-in-out infinite; }
+          @keyframes avatar-ring-pulse {
+            0%,100% { opacity: 0.4; transform: scale(1); }
+            50%      { opacity: 1;   transform: scale(1.08); }
+          }
+          .avatar-ring-pulse { animation: avatar-ring-pulse 2.8s ease-in-out infinite; }
+          .avatar-ring-pulse-fast { animation: avatar-ring-pulse 0.9s ease-in-out infinite; }
+          .stat-card-animate {
+            opacity: 0; transform: translateY(24px);
+            transition: opacity 0.55s ease, transform 0.55s ease;
+          }
+          .stat-card-animate.is-visible { opacity: 1; transform: translateY(0); }
+        `}</style>
+
+        {/* Banner — overflow-hidden only here */}
+        <div className="relative h-52 overflow-hidden rounded-t-2xl" style={{ background: '#05010F' }}>
+          <ProfileBackground
+            backgroundStyle={profile.profile_background ?? 'baobab'}
+            interests={profile.research_interests?.length > 0
+              ? profile.research_interests.map((name: string, _i: number, arr: string[]) => ({ name, weight: 1 / arr.length }))
+              : [{ name: 'Research', weight: 1 }]}
+            akiliScore={profile.akili_score ?? 0}
+            dimensions={{
+              knowledge:     profile.akili_dimension_knowledge     ?? 0,
+              collaboration: profile.akili_dimension_collaboration ?? 0,
+              mentorship:    profile.akili_dimension_mentorship    ?? 0,
+              technical:     profile.akili_dimension_technical     ?? 0,
+            }}
+            collaborationCount={profile.connections_count ?? 0}
+          />
+          <div className="absolute bottom-0 left-0 right-0 h-20 pointer-events-none z-10"
+            style={{ background: 'linear-gradient(to bottom, transparent, rgba(9,6,19,0.95))' }} />
+        </div>
+
+        {/* Content area */}
+        <div className="bg-card rounded-b-2xl px-8 pb-8">
+
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            className="hidden"
+            onChange={handleAvatarFileSelect}
+          />
+
+          {/* Avatar + action-buttons row — -mt-12 pulls it up 48px into the banner */}
+          <div className="flex items-end justify-between -mt-12 mb-6 relative z-20">
+
+            {/* Avatar */}
+            <div
+              className="relative cursor-pointer shrink-0"
+              onClick={() => fileInputRef.current?.click()}
+              onMouseEnter={() => {
+                const ring = document.getElementById('avatar-outer-ring')
+                if (ring) { ring.classList.remove('avatar-ring-pulse'); ring.classList.add('avatar-ring-pulse-fast') }
+              }}
+              onMouseLeave={() => {
+                const ring = document.getElementById('avatar-outer-ring')
+                if (ring) { ring.classList.remove('avatar-ring-pulse-fast'); ring.classList.add('avatar-ring-pulse') }
+              }}
+              onTouchStart={(e) => {
+                const ring = document.getElementById('avatar-outer-ring')
+                if (ring) { ring.classList.remove('avatar-ring-pulse'); ring.classList.add('avatar-ring-pulse-fast') }
+                const timer = setTimeout(() => fileInputRef.current?.click(), 500)
+                const cancel = () => {
+                  clearTimeout(timer)
+                  if (ring) { ring.classList.remove('avatar-ring-pulse-fast'); ring.classList.add('avatar-ring-pulse') }
+                }
+                e.currentTarget.addEventListener('touchend', cancel, { once: true })
+                e.currentTarget.addEventListener('touchmove', cancel, { once: true })
+              }}
+            >
+              {/* Pulsing outer ring */}
+              <div
+                id="avatar-outer-ring"
+                className="avatar-ring-pulse absolute rounded-full pointer-events-none"
+                style={{ inset: '-6px', border: '4px solid rgba(124,58,237,0.28)', borderRadius: '9999px' }}
+              />
+              {/* Avatar circle */}
+              <div
+                className="w-24 h-24 rounded-full overflow-hidden flex items-center justify-center relative group"
+                style={{
+                  border: '3px solid #7C3AED',
+                  boxShadow: '0 0 0 4px rgba(124,58,237,0.25), 0 0 24px rgba(124,58,237,0.5)',
+                  background: 'linear-gradient(135deg,#3b1d8a,#1e0a4a)',
+                }}
+              >
+                {profile.avatar_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={profile.avatar_url}
+                    alt={profile.full_name || 'Avatar'}
+                    className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-[1.06]"
+                  />
+                ) : (
+                  <span className="text-2xl font-black text-amber-400">
+                    {profile.full_name?.[0]?.toUpperCase() || 'U'}
+                  </span>
+                )}
+                {isUploadingAvatar && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full">
+                    <Loader2 className="w-6 h-6 animate-spin text-white" />
+                  </div>
+                )}
+              </div>
+              {/* Edit pencil button */}
+              <button
+                className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-purple-600 border-2 flex items-center justify-center hover:bg-purple-500 transition-colors"
+                style={{ borderColor: 'var(--card)' }}
+                onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click() }}
+                title="Change avatar"
+              >
+                <Edit className="w-3 h-3 text-white" />
+              </button>
+            </div>
+
+            {/* Action buttons aligned to avatar bottom */}
+            {!isEditing && (
+              <div className="flex gap-2 pb-1">
+                <RippleButton
+                  variant="default"
+                  className="flex items-center gap-2 h-9 px-4 rounded-lg text-sm font-semibold text-purple-300 bg-white/5 border border-purple-500/30 hover:border-purple-500/60 hover:bg-purple-500/10 transition-colors"
+                  onClick={() => setIsEditing(true)}
+                >
+                  <Edit className="w-3.5 h-3.5" />
+                  Edit Profile
+                </RippleButton>
+                <RippleButton
+                  variant="default"
+                  className="flex items-center gap-2 h-9 px-4 rounded-lg text-sm font-semibold text-purple-400 bg-purple-500/15 border border-purple-500/35 hover:border-purple-500/60 hover:bg-purple-500/20 transition-colors"
+                  onClick={handleShareProfile}
+                >
+                  {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Share2 className="w-3.5 h-3.5" />}
+                  {copied ? 'Link Copied!' : 'Share Profile'}
+                </RippleButton>
+              </div>
+            )}
+          </div>
+
+          {avatarError && <p className="text-xs text-destructive mb-3">{avatarError}</p>}
+
+          {/* ── Identity / Edit form ── */}
+          {isEditing ? (
                 <div className="space-y-4">
                   <div>
                     <Label>Full Name</Label>
@@ -717,21 +936,59 @@ export default function ProfilePage() {
                     </div>
                   </div>
                   <div>
-                    <Label className="mb-1.5 block">Research Interests</Label>
-                    <TagInput
-                      options={RESEARCH_AREAS}
-                      value={editForm.research_interests}
-                      onChange={(tags) => setEditForm({ ...editForm, research_interests: tags })}
-                      placeholder="Search research areas..."
+                    <Label className="mb-2 block">
+                      Research Interests
+                      {editForm.research_interests.length > 0 && (
+                        <span className="ml-2 text-xs text-primary font-normal">{editForm.research_interests.length} selected</span>
+                      )}
+                    </Label>
+                    <ChipSelector
+                      featuredOptions={RESEARCH_AREAS_FEATURED}
+                      allOptions={RESEARCH_AREAS}
+                      selected={editForm.research_interests}
+                      maxSelections={10}
+                      onToggle={(item) => setEditForm(f => ({
+                        ...f,
+                        research_interests: f.research_interests.includes(item)
+                          ? f.research_interests.filter(i => i !== item)
+                          : f.research_interests.length < 10
+                          ? [...f.research_interests, item]
+                          : f.research_interests,
+                      }))}
+                      onAddCustom={(item) => setEditForm(f => ({
+                        ...f,
+                        research_interests: f.research_interests.length < 10
+                          ? [...f.research_interests, item]
+                          : f.research_interests,
+                      }))}
                     />
                   </div>
                   <div>
-                    <Label className="mb-1.5 block">Skills</Label>
-                    <TagInput
-                      options={SKILLS_LIST}
-                      value={editForm.skills}
-                      onChange={(tags) => setEditForm({ ...editForm, skills: tags })}
-                      placeholder="Search or add skills..."
+                    <Label className="mb-2 block">
+                      Skills
+                      {editForm.skills.length > 0 && (
+                        <span className="ml-2 text-xs text-primary font-normal">{editForm.skills.length} selected</span>
+                      )}
+                    </Label>
+                    <ChipSelector
+                      featuredOptions={SKILLS_FEATURED}
+                      allOptions={SKILLS_OFFERED}
+                      selected={editForm.skills}
+                      maxSelections={15}
+                      onToggle={(item) => setEditForm(f => ({
+                        ...f,
+                        skills: f.skills.includes(item)
+                          ? f.skills.filter(i => i !== item)
+                          : f.skills.length < 15
+                          ? [...f.skills, item]
+                          : f.skills,
+                      }))}
+                      onAddCustom={(item) => setEditForm(f => ({
+                        ...f,
+                        skills: f.skills.length < 15
+                          ? [...f.skills, item]
+                          : f.skills,
+                      }))}
                     />
                   </div>
                   <div className="flex gap-2">
@@ -746,10 +1003,16 @@ export default function ProfilePage() {
                 </div>
               ) : (
                 <>
-                  <div className="flex items-start justify-between">
+                  {/* Name + badges row */}
+                  <div className="flex items-start justify-between gap-4 flex-wrap">
                     <div>
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h1 className="text-2xl font-bold font-heading">{profile.full_name}</h1>
+                        <h1
+                          className="text-2xl font-bold font-heading"
+                          style={{ letterSpacing: '-0.02em' }}
+                        >
+                          {profile.full_name}
+                        </h1>
                         <div className="flex items-center gap-1">
                           {profile.is_admin && (
                             <div title="Platform Admin" className="w-5 h-5 rounded-full bg-yellow-500/20 border border-yellow-500/40 flex items-center justify-center">
@@ -767,35 +1030,36 @@ export default function ProfilePage() {
                             </div>
                           )}
                         </div>
-                        {profile.akili_score > 0 && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-sm font-semibold bg-primary/10 text-primary border border-primary/20">
-                            <Zap className="w-3.5 h-3.5" />
-                            {profile.akili_score.toLocaleString()} · {getAkiliNarrative(profile.akili_score).title}
-                          </span>
-                        )}
                       </div>
-                      <p className="text-muted-foreground flex items-center gap-2 mt-1">
+
+                      {/* Akili hero badge */}
+                      <div className="flex items-center gap-2 mt-2">
+                        <div
+                          id="akili-hero-badge"
+                          className="relative flex items-center gap-1.5 px-3 py-1.5 rounded-full cursor-pointer select-none"
+                          style={{ background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.35)' }}
+                          onClick={() => triggerSparkleBurst('akili-hero-badge')}
+                        >
+                          <span className="text-amber-400 text-sm">⚡</span>
+                          <span
+                            id="akili-count"
+                            className="text-amber-400 font-black text-lg tracking-tight"
+                          >
+                            {profile.akili_score ?? 0}
+                          </span>
+                          <span className="text-xs font-semibold" style={{ color: 'rgba(196,181,253,0.7)' }}>
+                            · {getAkiliNarrative(profile.akili_score ?? 0).title}
+                          </span>
+                        </div>
+                      </div>
+
+                      <p className="text-muted-foreground flex items-center gap-2 mt-2">
                         <GraduationCap className="w-4 h-4" />
                         {getAcademicLevelLabel(profile.academic_level || '')}
                         {profile.department && ` · ${profile.department}`}
                       </p>
                     </div>
-                    <div className="flex gap-2 flex-wrap">
-                      <Button variant="outline" onClick={() => setIsEditing(true)}>
-                        <Edit className="w-4 h-4 mr-2" />Edit Profile
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          const url = `https://researchflowafrica.com/researcher/${profile.id}`
-                          navigator.clipboard?.writeText(url)
-                        }}
-                        title="Copy public profile link"
-                      >
-                        Share Profile
-                      </Button>
-                    </div>
+
                   </div>
 
                   {profile.bio && <p className="text-muted-foreground">{profile.bio}</p>}
@@ -829,27 +1093,25 @@ export default function ProfilePage() {
                   </div>
                 </>
               )}
-            </div>
-
-            {!isEditing && (
-              <div className="flex md:flex-col gap-4 md:gap-2 text-center md:text-right">
-                <div>
-                  <p className="text-2xl font-bold text-primary">{profile.projects_completed}</p>
-                  <p className="text-xs text-muted-foreground">Projects</p>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-accent">{profile.connections_count}</p>
-                  <p className="text-xs text-muted-foreground">Connections</p>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{profile.portfolio_views}</p>
-                  <p className="text-xs text-muted-foreground">Profile Views</p>
-                </div>
+          {/* ── Stats ── */}
+          {!isEditing && (
+            <div className="flex gap-6 mt-4">
+              <div className="stat-card-animate" data-delay="0">
+                <p className="text-2xl font-bold text-primary">{profile.projects_completed}</p>
+                <p className="text-xs text-muted-foreground">Projects</p>
               </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+              <div className="stat-card-animate" data-delay="100">
+                <p className="text-2xl font-bold text-accent">{profile.connections_count}</p>
+                <p className="text-xs text-muted-foreground">Connections</p>
+              </div>
+              <div className="stat-card-animate" data-delay="200">
+                <p className="text-2xl font-bold">{profile.portfolio_views}</p>
+                <p className="text-xs text-muted-foreground">Profile Views</p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Akili Score */}
       <AkiliScoreCard userId={profile.id} />
@@ -1190,7 +1452,7 @@ export default function ProfilePage() {
         <TabsContent value="analytics" className="space-y-6">
           {analyticsLoading ? (
             <div className="flex items-center justify-center py-20">
-              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              <BaobabLoader size="sm" />
             </div>
           ) : analyticsData ? (
             <>
