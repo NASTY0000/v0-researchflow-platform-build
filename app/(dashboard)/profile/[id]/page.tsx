@@ -166,9 +166,9 @@ export default function PublicProfilePage() {
       </Button>
 
       {/* Profile Header */}
-      <Card className="border-primary/20 shadow-[0_0_40px_rgba(124,58,237,0.15),0_0_80px_rgba(124,58,237,0.05)]">
-        {/* Animated canvas banner */}
-        <div className="relative h-52 overflow-hidden rounded-t-2xl" style={{ background: '#05010F' }}>
+      <div className="relative rounded-2xl overflow-hidden border border-primary/20 shadow-[0_0_40px_rgba(124,58,237,0.15),0_0_80px_rgba(124,58,237,0.05)]">
+        {/* Animated canvas banner — first child, flush to top edge */}
+        <div className="relative h-52" style={{ background: '#05010F' }}>
           <ProfileBackground
             backgroundStyle={profile.profile_background ?? 'baobab'}
             interests={profile.research_interests?.length > 0
@@ -187,7 +187,7 @@ export default function PublicProfilePage() {
           <div className="absolute bottom-0 left-0 right-0 h-20 pointer-events-none z-10"
             style={{ background: 'linear-gradient(to bottom, transparent, rgba(9,6,19,0.95))' }} />
         </div>
-        <CardContent className="relative pt-0 px-6 pb-6">
+        <div className="px-6 pb-6">
           <div className="flex flex-col sm:flex-row items-start gap-5">
             <div className="relative shrink-0 -mt-12 z-20">
             <Avatar
@@ -370,8 +370,8 @@ export default function PublicProfilePage() {
               </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Skills */}
       {profile.skills?.length > 0 && (

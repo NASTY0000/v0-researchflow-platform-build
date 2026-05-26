@@ -764,9 +764,9 @@ export default function ProfilePage() {
       )}
 
       {/* Header Card */}
-      <Card className="border-primary/20 shadow-[0_0_40px_rgba(124,58,237,0.15),0_0_80px_rgba(124,58,237,0.05)]">
-        {/* Animated canvas banner */}
-        <div className="relative h-52 overflow-hidden rounded-t-2xl" style={{ background: '#05010F' }}>
+      <div className="relative rounded-2xl overflow-hidden border border-primary/20 shadow-[0_0_40px_rgba(124,58,237,0.15),0_0_80px_rgba(124,58,237,0.05)]">
+        {/* Animated canvas banner — first child, flush to top edge */}
+        <div className="relative h-52" style={{ background: '#05010F' }}>
           <ProfileBackground
             backgroundStyle={profile.profile_background ?? 'baobab'}
             interests={profile.research_interests?.length > 0
@@ -800,7 +800,7 @@ export default function ProfilePage() {
           .stat-card-animate.is-visible { opacity: 1; transform: translateY(0); }
         `}</style>
 
-        <CardContent className="relative pt-0 px-8 pb-8">
+        <div className="px-8 pb-8">
           <div className="flex flex-col md:flex-row items-start gap-6">
 
             {/* ── Avatar ── */}
@@ -1086,8 +1086,8 @@ export default function ProfilePage() {
               </div>
             )}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Akili Score */}
       <AkiliScoreCard userId={profile.id} />
