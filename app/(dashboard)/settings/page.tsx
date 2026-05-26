@@ -151,13 +151,29 @@ export default function SettingsPage() {
   async function saveProfileBg() {
     setIsSavingBg(true)
     setBgMsg(null)
-    const supabase = createClient()
-    const { error } = await supabase.from("profiles")
-      .update({ profile_background: profileBg })
-      .eq("id", userId)
-    setBgMsg(error ? "Failed to save. Please try again." : "Profile appearance saved!")
-    setIsSavingBg(false)
-    if (!error) setTimeout(() => setBgMsg(null), 3000)
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+
+      const { error } = await supabase
+        .from("profiles")
+        .update({ profile_background: profileBg })
+        .eq("id", user.id)
+
+      if (error) {
+        console.error("Save appearance error:", error.message, error.code, (error as any).details)
+        throw error
+      }
+
+      setBgMsg("Profile appearance saved!")
+      setTimeout(() => setBgMsg(null), 3000)
+    } catch (err: any) {
+      console.error("saveProfileBg failed:", err)
+      setBgMsg("Failed to save. Please try again.")
+    } finally {
+      setIsSavingBg(false)
+    }
   }
 
   async function saveNotifs() {
