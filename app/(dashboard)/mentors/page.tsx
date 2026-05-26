@@ -46,6 +46,7 @@ import { BookmarkButton } from "@/components/ui/bookmark-button"
 import type { MentorProfile, Profile, Project } from "@/lib/types/database"
 import { AkiliScoreBadge } from "@/components/akili/AkiliScoreBadge"
 import { toast } from "sonner"
+import { ContextualHint } from "@/components/ui/ContextualHint"
 
 interface MentorWithProfile extends MentorProfile {
   profile: Profile
@@ -339,6 +340,12 @@ export default function MentorsPage() {
 
   return (
     <div className="space-y-6">
+      <ContextualHint
+        hintKey="hint_mentors"
+        icon="🎓"
+        title="Find a Research Mentor"
+        description="Connect with experienced academics and industry professionals. A good mentor can accelerate your research journey significantly."
+      />
       {/* Become a Mentor Modal */}
       {showBecomeMentorModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">

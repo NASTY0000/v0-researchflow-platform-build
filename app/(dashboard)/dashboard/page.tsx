@@ -11,6 +11,7 @@ import {
   ArrowRight, Sparkles, Target, BookOpen, GraduationCap,
 } from "lucide-react"
 import { MentorDashboard } from "@/components/dashboard/mentor-dashboard"
+import { GettingStartedChecklist } from "@/components/dashboard/GettingStartedChecklist"
 import { createClient } from "@/lib/supabase/client"
 import type { Profile, ResearchIdea, Match } from "@/lib/types/database"
 
@@ -121,6 +122,16 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8">
+
+      {/* Getting started checklist — new users only */}
+      {profile && (
+        <GettingStartedChecklist
+          userId={profile.id}
+          akiliScore={profile.akili_score ?? 0}
+          joinedAt={profile.created_at}
+          hasBio={!!profile.bio?.trim()}
+        />
+      )}
 
       {/* Hero banner */}
       <div className="relative rounded-2xl overflow-hidden p-8" style={{ background: 'linear-gradient(135deg,#1E0533 0%,#050118 100%)', border: '1px solid rgba(139,92,246,0.2)' }}>

@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Send, MessageSquare, Search, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import type { Profile } from '@/lib/types/database'
+import { EmptyState } from '@/components/ui/EmptyState'
 import { formatDistanceToNow } from 'date-fns'
 
 type DirectMessage = {
@@ -278,11 +279,13 @@ export default function MessagesPage() {
               </div>
             ))
           ) : filteredConversations.length === 0 ? (
-            <div className="p-8 text-center text-muted-foreground text-sm space-y-1">
-              <MessageSquare className="w-10 h-10 mx-auto mb-3 opacity-20" />
-              <p>No conversations yet.</p>
-              <p>Visit someone&apos;s profile and click Message to start chatting.</p>
-            </div>
+            <EmptyState
+              icon="💬"
+              title="No conversations yet"
+              description="Start by reaching out to one of your matches. They're already interested in similar research."
+              ctaLabel="View Your Matches"
+              ctaHref="/matches"
+            />
           ) : (
             filteredConversations.map(conv => (
               <button
@@ -370,13 +373,13 @@ export default function MessagesPage() {
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {messages.length === 0 ? (
-                <div className="text-center py-16">
-                  <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                  <p className="text-sm text-muted-foreground">No messages yet</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Say hello to {selectedUser.full_name?.split(' ')[0] || 'them'}!
-                  </p>
-                </div>
+                <EmptyState
+                  icon="💬"
+                  title="No messages yet"
+                  description={`Say hello to ${selectedUser.full_name?.split(' ')[0] || 'them'}! Start the conversation.`}
+                  ctaLabel="View Your Matches"
+                  ctaHref="/matches"
+                />
               ) : (
                 messages.map((msg, i) => {
                   const isOwn = msg.sender_id === currentUserId

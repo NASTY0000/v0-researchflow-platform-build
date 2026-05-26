@@ -35,6 +35,8 @@ import { createClient } from "@/lib/supabase/client"
 import type { Match, Profile } from "@/lib/types/database"
 import { AkiliScoreBadge } from "@/components/akili/AkiliScoreBadge"
 import { BaobabLoader } from '@/components/ui/baobab-loader'
+import { ContextualHint } from "@/components/ui/ContextualHint"
+import { EmptyState } from "@/components/ui/EmptyState"
 
 interface MatchWithProfile extends Match {
   matched_user: Profile
@@ -241,6 +243,12 @@ export default function MatchesPage() {
 
   return (
     <div className="space-y-6">
+      <ContextualHint
+        hintKey="hint_collaborators"
+        icon="🤝"
+        title="Smart Matching is working for you"
+        description="These researchers were matched to your profile based on shared interests, complementary skills, and research goals. The more complete your profile, the better your matches."
+      />
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -408,33 +416,20 @@ export default function MatchesPage() {
               ))}
             </div>
           ) : (
-            <Card>
-              <CardContent className="p-12 text-center">
-                <Sparkles className="h-16 w-16 text-muted-foreground/50 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold mb-2">No matches yet</h3>
-                <p className="text-muted-foreground mb-6">
-                  Complete your profile and click &quot;Refresh Matches&quot; to find collaborators and mentors
-                </p>
-                <div className="flex gap-4 justify-center">
-                  <Button onClick={generateMatches} disabled={isGenerating}>
-                    {isGenerating ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Finding...
-                      </>
-                    ) : (
-                      <>
-                        <RefreshCw className="mr-2 h-4 w-4" />
-                        Find Matches
-                      </>
-                    )}
-                  </Button>
-                  <Button variant="outline" asChild>
-                    <Link href="/settings/profile">Update Profile</Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <EmptyState
+              icon={
+                <svg viewBox="0 0 24 24" width="28" height="28">
+                  <circle cx="5" cy="12" r="3" fill="#8B5CF6"/>
+                  <circle cx="19" cy="12" r="3" fill="#A855F7"/>
+                  <path d="M8 12Q12 5 16 12" stroke="#FBBF24" strokeWidth="2" fill="none" strokeLinecap="round"/>
+                  <circle cx="12" cy="6" r="2" fill="#FBBF24"/>
+                </svg>
+              }
+              title="Your research network starts with one connection"
+              description="Complete your profile and click Refresh Matches to find collaborators and mentors."
+              ctaLabel="Complete Your Profile"
+              ctaHref="/profile"
+            />
           )}
         </TabsContent>
       </Tabs>

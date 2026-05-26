@@ -28,6 +28,7 @@ import {
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import type { Profile } from '@/lib/types/database'
+import { EmptyState } from '@/components/ui/EmptyState'
 import { connectionAccepted } from '@/lib/actions/akili'
 import { notifyConnectionAccepted } from '@/lib/actions/email'
 import { toast } from 'sonner'
@@ -264,13 +265,21 @@ export default function NetworkPage() {
         {/* My Network */}
         <TabsContent value="network" className="mt-4 space-y-4">
           {myNetwork.length === 0 ? (
-            <Card style={cardStyle}>
-              <CardContent className="py-16 text-center">
-                <Users className="h-12 w-12 mx-auto mb-4 opacity-30" style={{ color: '#7C6A9C' }} />
-                <p className="font-medium" style={{ color: '#E2D9F3' }}>No connections yet</p>
-                <p className="text-sm mt-1" style={{ color: '#7C6A9C' }}>Check your suggestions to start connecting</p>
-              </CardContent>
-            </Card>
+            <EmptyState
+              icon={
+                <svg viewBox="0 0 24 24" width="28" height="28">
+                  <circle cx="5" cy="12" r="3" fill="#8B5CF6"/>
+                  <circle cx="19" cy="12" r="3" fill="#A855F7"/>
+                  <path d="M8 12Q12 5 16 12" stroke="#FBBF24" strokeWidth="2" fill="none" strokeLinecap="round"/>
+                  <circle cx="12" cy="6" r="2" fill="#FBBF24"/>
+                </svg>
+              }
+              title="Your research network starts with one connection"
+              description="Smart Matching has already found researchers who share your interests. Say hello."
+              ctaLabel="See Your Matches"
+              ctaHref="/matches"
+              stat="Researchers matched to your profile"
+            />
           ) : (
             <div className="grid gap-4 sm:grid-cols-2">
               {myNetwork.map(conn => {

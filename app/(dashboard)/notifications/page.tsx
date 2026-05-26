@@ -5,6 +5,7 @@ import { Bell, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/client'
 import type { Notification } from '@/lib/types/database'
+import { EmptyState } from '@/components/ui/EmptyState'
 
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<Notification[]>([])
@@ -72,13 +73,13 @@ export default function NotificationsPage() {
       </div>
 
       {notifications.length === 0 ? (
-        <div className="text-center py-20" style={cardStyle}>
-          <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(139,92,246,0.2)' }}>
-            <Bell className="h-8 w-8" style={{ color: '#7C6A9C' }} />
-          </div>
-          <p className="font-medium mb-1">No notifications yet</p>
-          <p className="text-sm" style={{ color: '#7C6A9C' }}>You&apos;ll see activity updates here</p>
-        </div>
+        <EmptyState
+          icon="🔔"
+          title="All caught up"
+          description="You'll be notified when someone connects with your research, messages you, or matches your interests."
+          ctaLabel="Complete Your Profile"
+          ctaHref="/profile"
+        />
       ) : (
         <div className="space-y-2">
           {notifications.map(n => (

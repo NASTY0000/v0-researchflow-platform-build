@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import { format, isPast, addDays } from 'date-fns'
 import { BaobabLoader } from '@/components/ui/baobab-loader'
+import { ContextualHint } from '@/components/ui/ContextualHint'
 
 interface Grant {
   id: string
@@ -177,6 +178,12 @@ export default function GrantsPage() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6 pb-10">
+      <ContextualHint
+        hintKey="hint_grants"
+        icon="💰"
+        title="Research Funding Opportunities"
+        description="Browse grants and funding opportunities matched to your research field and academic level."
+      />
 
       {/* Header */}
       <div className="space-y-1">

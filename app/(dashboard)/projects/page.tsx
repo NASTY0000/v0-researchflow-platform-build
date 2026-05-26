@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { createClient } from "@/lib/supabase/client"
 import type { Project, Team, Profile } from "@/lib/types/database"
+import { EmptyState } from '@/components/ui/EmptyState'
 import { format } from "date-fns"
 import { BaobabLoader } from '@/components/ui/baobab-loader'
 
@@ -239,29 +240,15 @@ export default function ProjectsPage() {
           ))}
         </div>
       ) : (
-        <Card>
-          <CardContent className="p-12 text-center">
-            <FolderKanban className="h-16 w-16 text-muted-foreground/50 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">No projects yet</h3>
-            <p className="text-muted-foreground mb-6">
-              Start a new research project or join a team to collaborate on existing ones.
-            </p>
-            <div className="flex gap-4 justify-center">
-              <Button asChild>
-                <Link href="/projects/new">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Create Project
-                </Link>
-              </Button>
-              <Button variant="outline" asChild>
-                <Link href="/ideas">
-                  Browse Ideas
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon="🔬"
+          title="No active projects yet"
+          description="Start a research project and invite collaborators to work with you."
+          ctaLabel="Create a Project"
+          ctaHref="/projects/new"
+          secondaryLabel="Join an existing project"
+          secondaryHref="/ideas"
+        />
       )}
     </div>
   )

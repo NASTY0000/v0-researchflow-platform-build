@@ -40,6 +40,8 @@ import {
 import { createClient } from "@/lib/supabase/client"
 import type { MarketplaceTask, Profile } from "@/lib/types/database"
 import { completeMarketplaceTask } from "@/lib/actions/akili"
+import { EmptyState } from "@/components/ui/EmptyState"
+import { ContextualHint } from "@/components/ui/ContextualHint"
 import { formatDistanceToNow } from "date-fns"
 import { toast } from "sonner"
 
@@ -265,6 +267,12 @@ export default function MarketplacePage() {
 
   return (
     <div className="space-y-6">
+      <ContextualHint
+        hintKey="hint_marketplace"
+        icon="⚡"
+        title="Welcome to the Task Marketplace"
+        description="Post a research task to find skilled help, or browse open tasks to offer your expertise and earn recognition."
+      />
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -499,21 +507,14 @@ export default function MarketplacePage() {
           ))}
         </div>
       ) : (
-        <Card>
-          <CardContent className="p-12 text-center">
-            <Briefcase className="h-16 w-16 text-muted-foreground/50 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">No tasks found</h3>
-            <p className="text-muted-foreground mb-6">
-              {searchQuery || selectedCategory !== "All Categories"
-                ? "Try adjusting your filters"
-                : "Be the first to post a task!"}
-            </p>
-            <Button onClick={() => setShowNewTask(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Post a Task
-            </Button>
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon="⚡"
+          title={searchQuery || selectedCategory !== "All Categories" ? "No results for this search" : "No tasks posted yet"}
+          description={searchQuery || selectedCategory !== "All Categories" ? "Try different keywords or adjust your filters." : "Be the first to post a research task!"}
+          ctaLabel={searchQuery || selectedCategory !== "All Categories" ? "Clear Filters" : "Post a Task"}
+          ctaOnClick={searchQuery || selectedCategory !== "All Categories" ? undefined : () => setShowNewTask(true)}
+          ctaHref={searchQuery || selectedCategory !== "All Categories" ? "/marketplace" : undefined}
+        />
       )}
 
       {/* Monthly leaderboard */}

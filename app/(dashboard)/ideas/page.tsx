@@ -27,6 +27,7 @@ import {
 import { createClient } from "@/lib/supabase/client"
 import type { ResearchIdea, Profile } from "@/lib/types/database"
 import { formatDistanceToNow } from "date-fns"
+import { EmptyState } from '@/components/ui/EmptyState'
 
 const RESEARCH_AREAS = [
   "All Areas",
@@ -376,23 +377,23 @@ export default function IdeasPage() {
           ))}
         </div>
       ) : (
-        <Card>
-          <CardContent className="p-12 text-center">
-            <Lightbulb className="h-16 w-16 text-muted-foreground/50 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">No ideas found</h3>
-            <p className="text-muted-foreground mb-6">
-              {searchQuery || selectedArea !== "All Areas" || selectedType !== "all"
-                ? "Try adjusting your filters to find more ideas"
-                : "Be the first to share a research idea with the community!"}
-            </p>
-            <Button asChild>
-              <Link href="/ideas/new">
-                <Plus className="mr-2 h-4 w-4" />
-                Post New Idea
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={
+            <svg viewBox="0 0 24 24" width="28" height="28">
+              <path d="M12 22Q12 14 12 10Q8 6.5 4 4" stroke="#8B5CF6" strokeWidth="2" fill="none" strokeLinecap="round"/>
+              <path d="M12 10Q16 6.5 20 4" stroke="#8B5CF6" strokeWidth="1.6" fill="none" strokeLinecap="round"/>
+              <circle cx="4" cy="4" r="2.5" fill="#FBBF24"/>
+              <circle cx="20" cy="4" r="2" fill="#8B5CF6"/>
+            </svg>
+          }
+          title={searchQuery || selectedArea !== "All Areas" || selectedType !== "all" ? "No results for this search" : "Your first idea could spark a collaboration"}
+          description={searchQuery || selectedArea !== "All Areas" || selectedType !== "all" ? "Try different keywords or browse by research field instead." : "Post a research idea and let thousands of researchers across Africa discover it."}
+          ctaLabel={searchQuery || selectedArea !== "All Areas" || selectedType !== "all" ? "Browse All Ideas" : "Post Your First Idea"}
+          ctaHref={searchQuery || selectedArea !== "All Areas" || selectedType !== "all" ? "/ideas" : "/ideas/new"}
+          secondaryLabel={!(searchQuery || selectedArea !== "All Areas" || selectedType !== "all") ? "Browse existing ideas first" : undefined}
+          secondaryHref={!(searchQuery || selectedArea !== "All Areas" || selectedType !== "all") ? "/ideas" : undefined}
+          stat={!(searchQuery || selectedArea !== "All Areas" || selectedType !== "all") ? "Active researchers browsing ideas right now" : undefined}
+        />
       )}
     </div>
   )

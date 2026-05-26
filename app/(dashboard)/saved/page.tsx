@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Bookmark, Lightbulb, Award, GraduationCap, User, Star } from 'lucide-react'
 import { BookmarkButton } from '@/components/ui/bookmark-button'
 import { BaobabLoader } from '@/components/ui/baobab-loader'
+import { EmptyState } from '@/components/ui/EmptyState'
 
 interface Bookmark {
   id: string
@@ -148,22 +149,6 @@ export default function SavedPage() {
   const mentorBookmarks = bookmarks.filter(b => b.content_type === 'mentor')
   const profileBookmarks = bookmarks.filter(b => b.content_type === 'profile')
 
-  function EmptyState({ type, href, label }: { type: string; href: string; label: string }) {
-    return (
-      <Card>
-        <CardContent className="py-16 text-center space-y-3">
-          <Bookmark className="w-10 h-10 text-muted-foreground/30 mx-auto" />
-          <p className="font-medium">No saved {type} yet.</p>
-          <p className="text-sm text-muted-foreground">
-            Browse the{' '}
-            <Link href={href} className="text-primary hover:underline">{label}</Link>
-            {' '}and click the bookmark icon to save.
-          </p>
-        </CardContent>
-      </Card>
-    )
-  }
-
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -201,13 +186,13 @@ export default function SavedPage() {
         {/* ALL */}
         <TabsContent value="all" className="mt-4 space-y-4">
           {bookmarks.length === 0 ? (
-            <Card>
-              <CardContent className="py-16 text-center space-y-3">
-                <Bookmark className="w-10 h-10 text-muted-foreground/30 mx-auto" />
-                <p className="font-medium">Nothing saved yet.</p>
-                <p className="text-sm text-muted-foreground">Use the bookmark icon on ideas, showcase entries, mentors, and profiles to save them here.</p>
-              </CardContent>
-            </Card>
+            <EmptyState
+              icon="🔖"
+              title="Nothing saved yet"
+              description="Bookmark research ideas, profiles, and projects you want to come back to."
+              ctaLabel="Explore the Idea Board"
+              ctaHref="/ideas"
+            />
           ) : (
             <div className="space-y-3">
               {bookmarks.map(bk => {
@@ -240,7 +225,7 @@ export default function SavedPage() {
         {/* IDEAS */}
         <TabsContent value="ideas" className="mt-4 space-y-3">
           {ideaBookmarks.length === 0 ? (
-            <EmptyState type="ideas" href="/ideas" label="Ideas Board" />
+            <EmptyState icon="🔖" title="No saved ideas yet" description="Browse the Ideas Board and click the bookmark icon to save ideas here." ctaLabel="Browse Ideas" ctaHref="/ideas" />
           ) : ideaBookmarks.map(bk => {
             const item = ideas.get(bk.content_id)
             if (!item) return null
@@ -251,7 +236,7 @@ export default function SavedPage() {
         {/* SHOWCASE */}
         <TabsContent value="showcase" className="mt-4 space-y-3">
           {showcaseBookmarks.length === 0 ? (
-            <EmptyState type="showcase entries" href="/showcase" label="Showcase" />
+            <EmptyState icon="🔖" title="No saved showcase entries yet" description="Discover published research in the Showcase and bookmark entries to revisit." ctaLabel="Browse Showcase" ctaHref="/showcase" />
           ) : showcaseBookmarks.map(bk => {
             const item = showcases.get(bk.content_id)
             if (!item) return null
@@ -262,7 +247,7 @@ export default function SavedPage() {
         {/* MENTORS */}
         <TabsContent value="mentors" className="mt-4 space-y-3">
           {mentorBookmarks.length === 0 ? (
-            <EmptyState type="mentors" href="/mentors" label="Mentor Directory" />
+            <EmptyState icon="🔖" title="No saved mentors yet" description="Browse the Mentor Directory and bookmark mentors you'd like to connect with." ctaLabel="Find Mentors" ctaHref="/mentors" />
           ) : mentorBookmarks.map(bk => {
             const item = mentors.get(bk.content_id)
             if (!item) return null
@@ -273,7 +258,7 @@ export default function SavedPage() {
         {/* RESEARCHERS */}
         <TabsContent value="researchers" className="mt-4 space-y-3">
           {profileBookmarks.length === 0 ? (
-            <EmptyState type="researchers" href="/matches" label="Find Collaborators" />
+            <EmptyState icon="🔖" title="No saved researchers yet" description="Browse researcher profiles and bookmark ones you want to collaborate with." ctaLabel="Find Collaborators" ctaHref="/matches" />
           ) : profileBookmarks.map(bk => {
             const item = profiles.get(bk.content_id)
             if (!item) return null

@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Search, BookOpen, Calendar, Eye, ArrowRight, Sparkles, Loader2, Filter } from 'lucide-react'
 import type { ShowcaseEntry, Profile } from '@/lib/types/database'
 import { BaobabLoader } from '@/components/ui/baobab-loader'
+import { ContextualHint } from '@/components/ui/ContextualHint'
 
 type EntryWithAuthor = ShowcaseEntry & { author: Profile | null }
 
@@ -132,6 +133,16 @@ export default function ShowcasePage() {
             </SelectContent>
           </Select>
         </div>
+      </div>
+
+      {/* Contextual Hint */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        <ContextualHint
+          hintKey="hint_showcase"
+          icon="📚"
+          title="Research Showcase"
+          description="Explore published research from student researchers and academics across Africa. Discover ideas, cite work, and connect with authors."
+        />
       </div>
 
       {/* Grid */}

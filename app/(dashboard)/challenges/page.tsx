@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { ContextualHint } from '@/components/ui/ContextualHint'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -95,6 +96,12 @@ export default function ChallengesPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
+      <ContextualHint
+        hintKey="hint_challenges"
+        icon="🏆"
+        title="Research Challenges"
+        description="Compete with researchers across Africa. Top entries get published and earn significant Akili points toward your next tier."
+      />
       <div>
         <h1 className="text-2xl font-bold font-heading">Research Challenges</h1>
         <p className="text-muted-foreground text-sm mt-1">Solve real problems and earn Akili points</p>
