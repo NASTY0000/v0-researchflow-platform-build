@@ -212,3 +212,5 @@ export function BaobabCanvas({ interests = [] }: BaobabCanvasProps) {
     />
   )
 }
+
+export default BaobabCanvas

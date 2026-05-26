@@ -297,3 +297,5 @@ export function ConstellationCanvas({ interests = [] }: ConstellationCanvasProps
     />
   )
 }
+
+export default ConstellationCanvas
