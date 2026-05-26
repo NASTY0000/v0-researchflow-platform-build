@@ -12,6 +12,8 @@ import {
 } from "lucide-react"
 import { MentorDashboard } from "@/components/dashboard/mentor-dashboard"
 import { GettingStartedChecklist } from "@/components/dashboard/GettingStartedChecklist"
+import { MilestoneToast } from "@/components/ui/MilestoneToast"
+import { useMilestones } from "@/hooks/useMilestones"
 import { createClient } from "@/lib/supabase/client"
 import type { Profile, ResearchIdea, Match } from "@/lib/types/database"
 
@@ -35,6 +37,8 @@ export default function DashboardPage() {
   const [recentIdeas, setRecentIdeas] = useState<ResearchIdea[]>([])
   const [matches, setMatches] = useState<Match[]>([])
   const [isLoading, setIsLoading] = useState(true)
+
+  const { activeMilestone, clearMilestone } = useMilestones(profile)
 
   useEffect(() => {
     async function loadDashboard() {
@@ -328,6 +332,16 @@ export default function DashboardPage() {
             ))}
           </div>
         </div>
+      )}
+
+      {/* Milestone celebration toast */}
+      {activeMilestone && (
+        <MilestoneToast
+          title={activeMilestone.title}
+          description={activeMilestone.description}
+          icon={activeMilestone.icon}
+          onClose={clearMilestone}
+        />
       )}
     </div>
   )

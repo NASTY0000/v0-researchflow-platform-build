@@ -32,10 +32,13 @@ import {
 } from 'lucide-react'
 import type { Profile, PortfolioItem, PortfolioItemType, University } from '@/lib/types/database'
 import { AkiliScoreCard } from '@/components/akili/AkiliScoreCard'
+import { AkiliProgressCard } from '@/components/akili/AkiliProgressCard'
 import { getAkiliNarrative } from '@/lib/utils/akili'
 import { shareContent } from '@/lib/utils/share'
 import { ProfileBackground } from '@/components/profile/ProfileBackground'
 import { RippleButton } from '@/components/ui/RippleButton'
+import { MilestoneToast } from '@/components/ui/MilestoneToast'
+import { useMilestones } from '@/hooks/useMilestones'
 
 // ── Animation helpers (module-level, no hooks) ────────────────────────────────
 
@@ -181,6 +184,7 @@ export default function ProfilePage() {
   const [copied, setCopied] = useState(false)
 
   const supabase = createClient()
+  const { activeMilestone, clearMilestone } = useMilestones(profile)
 
   useEffect(() => {
     loadAll()
@@ -1089,8 +1093,16 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Akili Score */}
-      <AkiliScoreCard userId={profile.id} />
+      {/* Akili Score — progress card with tier bar + next actions */}
+      <AkiliProgressCard
+        score={profile.akili_score ?? 0}
+        dimensions={{
+          knowledge:     profile.akili_dimension_knowledge     ?? 0,
+          collaboration: profile.akili_dimension_collaboration ?? 0,
+          mentorship:    profile.akili_dimension_mentorship    ?? 0,
+          technical:     profile.akili_dimension_technical     ?? 0,
+        }}
+      />
 
       {/* Tabs */}
       <Tabs defaultValue="skills" className="space-y-4" onValueChange={(v) => {
@@ -1605,6 +1617,15 @@ export default function ProfilePage() {
           )}
         </TabsContent>
       </Tabs>
+
+      {activeMilestone && (
+        <MilestoneToast
+          title={activeMilestone.title}
+          description={activeMilestone.description}
+          icon={activeMilestone.icon}
+          onClose={clearMilestone}
+        />
+      )}
     </div>
   )
 }
