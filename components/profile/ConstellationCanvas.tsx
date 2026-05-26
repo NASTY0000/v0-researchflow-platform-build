@@ -217,10 +217,17 @@ export function ConstellationCanvas({ interests }: ConstellationCanvasProps) {
         }
         ctx.restore()
 
-        // Label
-        ctx.save(); ctx.font = '8.5px monospace'
-        ctx.fillStyle = `rgba(${cr},${cg},${cb},0.7)`; ctx.textAlign = 'center'
-        ctx.fillText(interest.name, sx, sy + r + 13); ctx.restore()
+        // Label — clamp so it never overflows canvas edges
+        ctx.save()
+        const fontSize = W < 400 ? 8 : 9
+        ctx.font = `bold ${fontSize}px -apple-system, monospace`
+        ctx.fillStyle = `rgba(${cr},${cg},${cb},0.7)`
+        ctx.textAlign = 'center'
+        const labelY = sy + r + 13
+        const textWidth = ctx.measureText(interest.name).width
+        const labelX = Math.min(Math.max(textWidth / 2 + 2, sx), W - textWidth / 2 - 2)
+        ctx.fillText(interest.name, labelX, labelY)
+        ctx.restore()
       }
 
       // Shooting star

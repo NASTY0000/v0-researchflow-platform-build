@@ -166,9 +166,9 @@ export default function PublicProfilePage() {
       </Button>
 
       {/* Profile Header */}
-      <Card className="overflow-hidden border-primary/20 shadow-[0_0_40px_rgba(124,58,237,0.15),0_0_80px_rgba(124,58,237,0.05)]">
+      <Card className="border-primary/20 shadow-[0_0_40px_rgba(124,58,237,0.15),0_0_80px_rgba(124,58,237,0.05)]">
         {/* Animated canvas banner */}
-        <div className="relative h-52 overflow-hidden" style={{ background: '#05010F' }}>
+        <div className="relative h-52 overflow-hidden rounded-t-2xl" style={{ background: '#05010F' }}>
           <ProfileBackground
             backgroundStyle={profile.profile_background ?? 'baobab'}
             interests={profile.research_interests?.length > 0
@@ -187,14 +187,22 @@ export default function PublicProfilePage() {
           <div className="absolute bottom-0 left-0 right-0 h-20 pointer-events-none z-10"
             style={{ background: 'linear-gradient(to bottom, transparent, rgba(9,6,19,0.95))' }} />
         </div>
-        <CardContent className="relative p-6">
+        <CardContent className="relative pt-0 px-6 pb-6">
           <div className="flex flex-col sm:flex-row items-start gap-5">
-            <Avatar className="w-20 h-20 border-2 border-primary/20">
+            <div className="relative shrink-0 -mt-12 z-20">
+            <Avatar
+              className="w-24 h-24"
+              style={{
+                border: '3px solid #7C3AED',
+                boxShadow: '0 0 0 5px rgba(124,58,237,0.2), 0 0 24px rgba(124,58,237,0.45)',
+              }}
+            >
               <AvatarImage src={profile.avatar_url} />
-              <AvatarFallback className="text-2xl bg-primary/10 text-primary">
+              <AvatarFallback className="text-3xl font-black text-amber-400">
                 {profile.full_name?.charAt(0) || '?'}
               </AvatarFallback>
             </Avatar>
+            </div>
 
             <div className="flex-1 space-y-3">
               <div>

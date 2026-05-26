@@ -764,9 +764,9 @@ export default function ProfilePage() {
       )}
 
       {/* Header Card */}
-      <Card className="overflow-hidden border-primary/20 shadow-[0_0_40px_rgba(124,58,237,0.15),0_0_80px_rgba(124,58,237,0.05)]">
+      <Card className="border-primary/20 shadow-[0_0_40px_rgba(124,58,237,0.15),0_0_80px_rgba(124,58,237,0.05)]">
         {/* Animated canvas banner */}
-        <div className="relative h-52 overflow-hidden" style={{ background: '#05010F' }}>
+        <div className="relative h-52 overflow-hidden rounded-t-2xl" style={{ background: '#05010F' }}>
           <ProfileBackground
             backgroundStyle={profile.profile_background ?? 'baobab'}
             interests={profile.research_interests?.length > 0
@@ -800,11 +800,11 @@ export default function ProfilePage() {
           .stat-card-animate.is-visible { opacity: 1; transform: translateY(0); }
         `}</style>
 
-        <CardContent className="relative p-8">
+        <CardContent className="relative pt-0 px-8 pb-8">
           <div className="flex flex-col md:flex-row items-start gap-6">
 
             {/* ── Avatar ── */}
-            <div className="relative shrink-0 flex flex-col items-center">
+            <div className="relative shrink-0 flex flex-col items-center -mt-12 z-20">
               <input
                 ref={fileInputRef}
                 type="file"
@@ -848,13 +848,13 @@ export default function ProfilePage() {
                 <Avatar
                   className="w-24 h-24 transition-transform duration-200 group-hover:scale-[1.06]"
                   style={{
-                    border: '2px solid #7C3AED',
-                    boxShadow: '0 0 0 6px rgba(124,58,237,0.18), 0 0 20px rgba(124,58,237,0.35)',
+                    border: '3px solid #7C3AED',
+                    boxShadow: '0 0 0 5px rgba(124,58,237,0.2), 0 0 24px rgba(124,58,237,0.45)',
                     transition: 'box-shadow 300ms ease, transform 200ms cubic-bezier(0.34,1.56,0.64,1)',
                   }}
                 >
                   <AvatarImage src={profile.avatar_url || undefined} />
-                  <AvatarFallback className="text-2xl">
+                  <AvatarFallback className="text-3xl font-black text-amber-400">
                     {profile.full_name?.charAt(0) || 'U'}
                   </AvatarFallback>
                 </Avatar>
