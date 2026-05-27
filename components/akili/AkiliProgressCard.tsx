@@ -1,12 +1,20 @@
 'use client'
 
 import Link from 'next/link'
+import { ReactNode } from 'react'
 import {
   getCurrentTier,
   getNextTier,
   getPointsToNextTier,
   getTopActions,
 } from '@/lib/utils/akili-progress'
+import {
+  AkiliBolt,
+  KnowledgeIcon,
+  CollaborationIcon,
+  MentorshipIcon,
+  TechnicalIcon,
+} from '@/components/icons/AkiliIcons'
 
 interface AkiliProgressCardProps {
   score: number
@@ -27,11 +35,11 @@ export function AkiliProgressCard({ score, dimensions }: AkiliProgressCardProps)
     : 100
   const topActions  = getTopActions(dimensions)
 
-  const dimConfig = [
-    { key: 'knowledge'     as const, label: 'Knowledge',     icon: '📚', score: dimensions.knowledge,     barColor: '#A855F7', max: 500 },
-    { key: 'collaboration' as const, label: 'Collaboration', icon: '🤝', score: dimensions.collaboration, barColor: '#06B6D4', max: 500 },
-    { key: 'mentorship'    as const, label: 'Mentorship',    icon: '🎓', score: dimensions.mentorship,    barColor: '#10B981', max: 500 },
-    { key: 'technical'     as const, label: 'Technical',     icon: '⚙️', score: dimensions.technical,     barColor: '#F59E0B', max: 500 },
+  const dimConfig: { key: 'knowledge' | 'collaboration' | 'mentorship' | 'technical'; label: string; icon: ReactNode; score: number; barColor: string; max: number }[] = [
+    { key: 'knowledge',     label: 'Knowledge',     icon: <KnowledgeIcon size={18} />,     score: dimensions.knowledge,     barColor: '#A855F7', max: 500 },
+    { key: 'collaboration', label: 'Collaboration', icon: <CollaborationIcon size={18} />, score: dimensions.collaboration, barColor: '#06B6D4', max: 500 },
+    { key: 'mentorship',    label: 'Mentorship',    icon: <MentorshipIcon size={18} />,    score: dimensions.mentorship,    barColor: '#10B981', max: 500 },
+    { key: 'technical',     label: 'Technical',     icon: <TechnicalIcon size={18} />,     score: dimensions.technical,     barColor: '#F59E0B', max: 500 },
   ]
 
   return (
@@ -41,13 +49,13 @@ export function AkiliProgressCard({ score, dimensions }: AkiliProgressCardProps)
       {/* Score + tier */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
+          <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
             style={{
               background: 'linear-gradient(135deg,rgba(124,58,237,0.5),rgba(168,85,247,0.3))',
               border: '1px solid rgba(139,92,246,0.4)',
               boxShadow: '0 0 16px rgba(124,58,237,0.35)',
             }}>
-            ⚡
+            <AkiliBolt size={22} />
           </div>
           <div>
             <div className="text-[10px] font-bold uppercase tracking-wider mb-0.5" style={{ color: '#7C6A9C' }}>
@@ -94,7 +102,7 @@ export function AkiliProgressCard({ score, dimensions }: AkiliProgressCardProps)
       <div className="space-y-3">
         {dimConfig.map(dim => (
           <div key={dim.key} className="flex items-center gap-3">
-            <span className="text-sm w-5 flex-shrink-0">{dim.icon}</span>
+            <span className="w-5 h-5 flex items-center justify-center flex-shrink-0">{dim.icon}</span>
             <div className="w-24 flex-shrink-0 text-xs font-medium" style={{ color: '#9B86B8' }}>
               {dim.label}
             </div>
