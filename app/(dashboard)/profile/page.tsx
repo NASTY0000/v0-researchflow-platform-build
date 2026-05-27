@@ -100,6 +100,7 @@ function animateCountUp(targetValue: number, elementId: string, duration = 1400)
   requestAnimationFrame(tick)
 }
 import { BaobabLoader } from '@/components/ui/baobab-loader'
+import { ProfileHeaderSkeleton, Skeleton } from '@/components/ui/SkeletonLayouts'
 
 interface ActivityStats {
   activeProjects: number
@@ -564,19 +565,10 @@ export default function ProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6 animate-pulse">
-        <Card>
-          <CardContent className="p-8">
-            <div className="flex items-start gap-6">
-              <div className="w-24 h-24 rounded-full bg-muted" />
-              <div className="flex-1 space-y-3">
-                <div className="h-6 bg-muted rounded w-48" />
-                <div className="h-4 bg-muted rounded w-32" />
-                <div className="h-4 bg-muted rounded w-64" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="space-y-4">
+        <ProfileHeaderSkeleton />
+        <Skeleton className="h-64 w-full rounded-2xl" />
+        <Skeleton className="h-48 w-full rounded-2xl" />
       </div>
     )
   }

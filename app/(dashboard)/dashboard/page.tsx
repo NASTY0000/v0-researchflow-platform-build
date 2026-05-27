@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -16,6 +16,9 @@ import { MilestoneToast } from "@/components/ui/MilestoneToast"
 import { useMilestones } from "@/hooks/useMilestones"
 import { createClient } from "@/lib/supabase/client"
 import type { Profile, ResearchIdea, Match } from "@/lib/types/database"
+import { Skeleton } from "@/components/ui/SkeletonLayouts"
+import { usePullToRefresh } from "@/hooks/usePullToRefresh"
+import { PullToRefreshIndicator } from "@/components/ui/PullToRefreshIndicator"
 
 interface DashboardStats {
   totalIdeas: number
@@ -40,64 +43,65 @@ export default function DashboardPage() {
 
   const { activeMilestone, clearMilestone } = useMilestones(profile)
 
-  useEffect(() => {
-    async function loadDashboard() {
-      const supabase = createClient()
+  const loadDashboard = useCallback(async () => {
+    const supabase = createClient()
 
-      // Load from cache immediately while fetching
-      try {
-        const cached = localStorage.getItem('rf_dashboard_cache')
-        if (cached) {
-          const { profile: cachedProfile, stats: cachedStats } = JSON.parse(cached)
-          if (cachedProfile) setProfile(cachedProfile)
-          if (cachedStats) setStats(cachedStats)
-        }
-      } catch {}
+    // Load from cache immediately while fetching
+    try {
+      const cached = localStorage.getItem('rf_dashboard_cache')
+      if (cached) {
+        const { profile: cachedProfile, stats: cachedStats } = JSON.parse(cached)
+        if (cachedProfile) setProfile(cachedProfile)
+        if (cachedStats) setStats(cachedStats)
+      }
+    } catch {}
 
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
 
-      const { data: profileData } = await supabase.from("profiles").select("*").eq("id", user.id).single()
-      if (profileData) setProfile(profileData)
+    const { data: profileData } = await supabase.from("profiles").select("*").eq("id", user.id).single()
+    if (profileData) setProfile(profileData)
 
-      const [ideasCount, projectsCount, connectionsCount, matchesCount] = await Promise.all([
-        supabase.from("research_ideas").select("id", { count: "exact", head: true }).eq("author_id", user.id),
-        supabase.from("team_members").select("id", { count: "exact", head: true }).eq("user_id", user.id),
-        supabase.from("connections").select("id", { count: "exact", head: true }).or(`requester_id.eq.${user.id},recipient_id.eq.${user.id}`).eq("status", "accepted"),
-        supabase.from("matches").select("id", { count: "exact", head: true }).eq("user_id", user.id),
-      ])
+    const [ideasCount, projectsCount, connectionsCount, matchesCount] = await Promise.all([
+      supabase.from("research_ideas").select("id", { count: "exact", head: true }).eq("author_id", user.id),
+      supabase.from("team_members").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+      supabase.from("connections").select("id", { count: "exact", head: true }).or(`requester_id.eq.${user.id},recipient_id.eq.${user.id}`).eq("status", "accepted"),
+      supabase.from("matches").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+    ])
 
-      setStats({
-        totalIdeas: ideasCount.count || 0,
-        activeProjects: projectsCount.count || 0,
-        connections: connectionsCount.count || 0,
-        matches: matchesCount.count || 0,
-      })
+    setStats({
+      totalIdeas: ideasCount.count || 0,
+      activeProjects: projectsCount.count || 0,
+      connections: connectionsCount.count || 0,
+      matches: matchesCount.count || 0,
+    })
 
-      const { data: ideasData } = await supabase.from("research_ideas").select("*").order("created_at", { ascending: false }).limit(3)
-      if (ideasData) setRecentIdeas(ideasData)
+    const { data: ideasData } = await supabase.from("research_ideas").select("*").order("created_at", { ascending: false }).limit(3)
+    if (ideasData) setRecentIdeas(ideasData)
 
-      const { data: matchesData } = await supabase.from("matches").select("*, matched_user:profiles!matches_matched_user_id_fkey(*)").eq("user_id", user.id).eq("status", "suggested").order("match_score", { ascending: false }).limit(3)
-      if (matchesData) setMatches(matchesData)
+    const { data: matchesData } = await supabase.from("matches").select("*, matched_user:profiles!matches_matched_user_id_fkey(*)").eq("user_id", user.id).eq("status", "suggested").order("match_score", { ascending: false }).limit(3)
+    if (matchesData) setMatches(matchesData)
 
-      setIsLoading(false)
+    setIsLoading(false)
 
-      // Cache dashboard data for offline use
-      try {
-        localStorage.setItem('rf_dashboard_cache', JSON.stringify({
-          profile: profileData,
-          stats: {
-            totalIdeas: ideasCount.count || 0,
-            activeProjects: projectsCount.count || 0,
-            connections: connectionsCount.count || 0,
-            matches: matchesCount.count || 0,
-          },
-          timestamp: Date.now(),
-        }))
-      } catch {}
-    }
-    loadDashboard()
+    // Cache dashboard data for offline use
+    try {
+      localStorage.setItem('rf_dashboard_cache', JSON.stringify({
+        profile: profileData,
+        stats: {
+          totalIdeas: ideasCount.count || 0,
+          activeProjects: projectsCount.count || 0,
+          connections: connectionsCount.count || 0,
+          matches: matchesCount.count || 0,
+        },
+        timestamp: Date.now(),
+      }))
+    } catch {}
   }, [])
+
+  useEffect(() => {
+    loadDashboard()
+  }, [loadDashboard])
 
   const statCards = [
     { title: "Research Ideas", value: stats.totalIdeas, icon: Lightbulb, href: "/ideas", color: '#A855F7', glow: 'rgba(168,85,247,0.25)' },
@@ -113,18 +117,35 @@ export default function DashboardPage() {
     { title: "Task Marketplace", description: "Find or post tasks", icon: Target, href: "/marketplace", color: '#C084FC' },
   ]
 
+  const { pullDistance, isRefreshing, threshold } = usePullToRefresh(loadDashboard)
+
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center space-y-4">
-          <div className="w-12 h-12 rounded-full animate-spin mx-auto" style={{ border: '3px solid rgba(124,58,237,0.2)', borderTopColor: '#7C3AED' }} />
-          <p style={{ color: '#7C6A9C' }}>Loading your dashboard...</p>
+      <div className="space-y-8">
+        {/* Hero banner skeleton */}
+        <Skeleton className="h-44 w-full rounded-2xl" />
+        {/* Stat cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-28 rounded-2xl" />
+          ))}
         </div>
+        {/* Quick actions */}
+        <div className="grid grid-cols-2 gap-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-20 rounded-2xl" />
+          ))}
+        </div>
+        {/* Content rows */}
+        <Skeleton className="h-48 rounded-2xl" />
+        <Skeleton className="h-48 rounded-2xl" />
       </div>
     )
   }
 
   return (
+    <>
+    <PullToRefreshIndicator pullDistance={pullDistance} threshold={threshold} isRefreshing={isRefreshing} />
     <div className="space-y-8">
 
       {/* Getting started checklist — new users only */}
@@ -344,5 +365,6 @@ export default function DashboardPage() {
         />
       )}
     </div>
+    </>
   )
 }

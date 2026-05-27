@@ -30,6 +30,9 @@ import { createClient } from '@/lib/supabase/client'
 import type { Profile } from '@/lib/types/database'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { connectionAccepted } from '@/lib/actions/akili'
+import { ResearcherCardSkeleton } from '@/components/ui/SkeletonLayouts'
+import { usePullToRefresh } from '@/hooks/usePullToRefresh'
+import { PullToRefreshIndicator } from '@/components/ui/PullToRefreshIndicator'
 import { notifyConnectionAccepted } from '@/lib/actions/email'
 import { toast } from 'sonner'
 
@@ -225,13 +228,12 @@ export default function NetworkPage() {
     setActionLoading(null)
   }
 
+  const { pullDistance, isRefreshing, threshold } = usePullToRefresh(async () => { await loadAll() })
+
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center space-y-4">
-          <div className="w-12 h-12 rounded-full animate-spin mx-auto" style={{ border: '3px solid rgba(124,58,237,0.2)', borderTopColor: '#7C3AED' }} />
-          <p style={{ color: '#7C6A9C' }}>Loading your network...</p>
-        </div>
+      <div className="max-w-4xl mx-auto space-y-3">
+        {Array.from({ length: 5 }).map((_, i) => <ResearcherCardSkeleton key={i} />)}
       </div>
     )
   }
@@ -239,6 +241,8 @@ export default function NetworkPage() {
   const pendingTotal = incoming.length + outgoing.length
 
   return (
+    <>
+    <PullToRefreshIndicator pullDistance={pullDistance} threshold={threshold} isRefreshing={isRefreshing} />
     <div className="max-w-4xl mx-auto space-y-6">
       <div>
         <h1 className="text-2xl font-bold font-heading" style={{ color: '#E2D9F3' }}>My Network</h1>
@@ -612,5 +616,6 @@ export default function NetworkPage() {
         </DialogContent>
       </Dialog>
     </div>
+    </>
   )
 }

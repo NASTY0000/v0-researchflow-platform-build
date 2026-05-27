@@ -28,6 +28,9 @@ import { createClient } from "@/lib/supabase/client"
 import type { ResearchIdea, Profile } from "@/lib/types/database"
 import { formatDistanceToNow } from "date-fns"
 import { EmptyState } from '@/components/ui/EmptyState'
+import { IdeaCardSkeleton } from '@/components/ui/SkeletonLayouts'
+import { usePullToRefresh } from '@/hooks/usePullToRefresh'
+import { PullToRefreshIndicator } from '@/components/ui/PullToRefreshIndicator'
 
 const RESEARCH_AREAS = [
   "All Areas",
@@ -227,6 +230,8 @@ export default function IdeasPage() {
     loadIdeas()
   }
 
+  const { pullDistance, isRefreshing, threshold } = usePullToRefresh(loadIdeas)
+
   async function handleReaction(ideaId: string, emoji: string) {
     if (!currentUserId) return
     const supabase = createClient()
@@ -256,6 +261,8 @@ export default function IdeasPage() {
   }
 
   return (
+    <>
+    <PullToRefreshIndicator pullDistance={pullDistance} threshold={threshold} isRefreshing={isRefreshing} />
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -324,14 +331,8 @@ export default function IdeasPage() {
       {/* Ideas Grid */}
       {isLoading ? (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[...Array(6)].map((_, i) => (
-            <Card key={i} className="animate-pulse">
-              <CardContent className="p-6">
-                <div className="h-6 bg-muted rounded w-3/4 mb-3" />
-                <div className="h-4 bg-muted rounded w-full mb-2" />
-                <div className="h-4 bg-muted rounded w-2/3" />
-              </CardContent>
-            </Card>
+          {Array.from({ length: 6 }).map((_, i) => (
+            <IdeaCardSkeleton key={i} />
           ))}
         </div>
       ) : ideas.length > 0 ? (
@@ -461,5 +462,6 @@ export default function IdeasPage() {
         />
       )}
     </div>
+    </>
   )
 }

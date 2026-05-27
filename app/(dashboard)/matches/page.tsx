@@ -37,6 +37,9 @@ import { AkiliScoreBadge } from "@/components/akili/AkiliScoreBadge"
 import { BaobabLoader } from '@/components/ui/baobab-loader'
 import { ContextualHint } from "@/components/ui/ContextualHint"
 import { EmptyState } from "@/components/ui/EmptyState"
+import { MatchCardSkeleton } from "@/components/ui/SkeletonLayouts"
+import { usePullToRefresh } from "@/hooks/usePullToRefresh"
+import { PullToRefreshIndicator } from "@/components/ui/PullToRefreshIndicator"
 
 interface MatchWithProfile extends Match {
   matched_user: Profile
@@ -264,18 +267,21 @@ export default function MatchesPage() {
     return true
   })
 
+  const { pullDistance, isRefreshing, threshold } = usePullToRefresh(async () => { await loadMatches() })
+
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center space-y-4">
-          <BaobabLoader size="md" />
-          <p className="text-muted-foreground">Finding your matches...</p>
+      <div className="space-y-6">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => <MatchCardSkeleton key={i} />)}
         </div>
       </div>
     )
   }
 
   return (
+    <>
+    <PullToRefreshIndicator pullDistance={pullDistance} threshold={threshold} isRefreshing={isRefreshing} />
     <div className="space-y-6">
       <ContextualHint
         hintKey="hint_collaborators"
@@ -526,5 +532,6 @@ export default function MatchesPage() {
         </DialogContent>
       </Dialog>
     </div>
+    </>
   )
 }

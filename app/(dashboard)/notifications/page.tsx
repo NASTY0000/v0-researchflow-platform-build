@@ -1,32 +1,38 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { Bell, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/client'
 import type { Notification } from '@/lib/types/database'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { NotificationSkeleton } from '@/components/ui/SkeletonLayouts'
+import { usePullToRefresh } from '@/hooks/usePullToRefresh'
+import { PullToRefreshIndicator } from '@/components/ui/PullToRefreshIndicator'
 
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
-  useEffect(() => {
-    async function load() {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-      const { data } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(50)
-      if (data) setNotifications(data)
-      setIsLoading(false)
-    }
-    load()
+  const loadNotifications = useCallback(async () => {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    const { data } = await supabase
+      .from('notifications')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(50)
+    if (data) setNotifications(data)
+    setIsLoading(false)
   }, [])
+
+  useEffect(() => {
+    loadNotifications()
+  }, [loadNotifications])
+
+  const { pullDistance, isRefreshing, threshold } = usePullToRefresh(loadNotifications)
 
   async function markAllRead() {
     const supabase = createClient()
@@ -44,11 +50,8 @@ export default function NotificationsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center space-y-4">
-          <div className="w-12 h-12 rounded-full animate-spin mx-auto" style={{ border: '3px solid rgba(124,58,237,0.2)', borderTopColor: '#7C3AED' }} />
-          <p style={{ color: '#7C6A9C' }}>Loading notifications...</p>
-        </div>
+      <div className="max-w-2xl mx-auto space-y-3">
+        {Array.from({ length: 5 }).map((_, i) => <NotificationSkeleton key={i} />)}
       </div>
     )
   }
@@ -56,6 +59,8 @@ export default function NotificationsPage() {
   const unread = notifications.filter(n => !n.is_read)
 
   return (
+    <>
+    <PullToRefreshIndicator pullDistance={pullDistance} threshold={threshold} isRefreshing={isRefreshing} />
     <div className="max-w-2xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div>
@@ -101,5 +106,6 @@ export default function NotificationsPage() {
         </div>
       )}
     </div>
+    </>
   )
 }
