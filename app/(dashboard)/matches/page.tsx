@@ -50,6 +50,8 @@ export default function MatchesPage() {
   const [connectionMessage, setConnectionMessage] = useState("")
   const [isConnecting, setIsConnecting] = useState(false)
   const [activeTab, setActiveTab] = useState("all")
+  const [collabInterestsSent, setCollabInterestsSent] = useState<Set<string>>(new Set())
+  const [interestToast, setInterestToast] = useState<string | null>(null)
 
   useEffect(() => {
     loadMatches()
@@ -198,12 +200,17 @@ export default function MatchesPage() {
         .update({ status: "contacted" })
         .eq("id", selectedMatch.id)
 
-      // Create notification
+      // Create notification — fetch sender name first
+      const { data: senderProfile } = await supabase.from('profiles').select('full_name').eq('id', user.id).single()
+      const senderName = senderProfile?.full_name || 'A researcher'
+      const msgPreview = connectionMessage
+        ? ` "${connectionMessage.slice(0, 80)}${connectionMessage.length > 80 ? '…' : ''}"`
+        : ''
       await supabase.from("notifications").insert({
         user_id: selectedMatch.matched_user_id,
         type: "connection_request",
-        title: "New Connection Request",
-        message: `Someone wants to connect with you`,
+        title: `${senderName} wants to connect`,
+        message: `They sent you a connection request${msgPreview}. Accept or decline in your network.`,
         link: "/network",
       })
 
@@ -215,6 +222,33 @@ export default function MatchesPage() {
     }
 
     setIsConnecting(false)
+  }
+
+  async function handleCollabInterest(match: MatchWithProfile) {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    const { data: myProfile } = await supabase.from('profiles').select('full_name').eq('id', user.id).single()
+    const myName = myProfile?.full_name || 'A researcher'
+
+    await supabase.from('collaboration_interests').insert({
+      from_user_id: user.id,
+      to_user_id: match.matched_user_id,
+    }).then(() => {})
+
+    await supabase.from('notifications').insert({
+      user_id: match.matched_user_id,
+      type: 'collaboration_interest',
+      title: `${myName} is interested in collaborating`,
+      message: `${myName} flagged your profile as a potential collaboration match. Check their profile and say hi!`,
+      link: `/profile/${user.id}`,
+      is_read: false,
+    }).then(() => {})
+
+    setCollabInterestsSent(prev => new Set([...prev, match.matched_user_id]))
+    setInterestToast(`Interest sent to ${match.matched_user?.full_name?.split(' ')[0] || 'researcher'}!`)
+    setTimeout(() => setInterestToast(null), 3000)
   }
 
   async function dismissMatch(matchId: string) {
@@ -411,6 +445,20 @@ export default function MatchesPage() {
                         </Link>
                       </Button>
                     </div>
+                    {match.match_type !== "mentor" && (
+                      <button
+                        onClick={() => handleCollabInterest(match)}
+                        disabled={collabInterestsSent.has(match.matched_user_id)}
+                        className="mt-2 w-full h-9 rounded-xl text-xs font-semibold transition-all"
+                        style={
+                          collabInterestsSent.has(match.matched_user_id)
+                            ? { background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)', color: '#34D399', cursor: 'default' }
+                            : { background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(139,92,246,0.2)', color: '#A855F7' }
+                        }
+                      >
+                        {collabInterestsSent.has(match.matched_user_id) ? '✓ Interest sent' : '🤝 Interested in collaborating'}
+                      </button>
+                    )}
                   </CardContent>
                 </Card>
               ))}
@@ -433,6 +481,14 @@ export default function MatchesPage() {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Interest sent toast */}
+      {interestToast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] px-5 py-3 rounded-2xl text-sm font-semibold shadow-xl animate-in slide-in-from-bottom-2 duration-300"
+          style={{ background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)', color: '#34D399', backdropFilter: 'blur(16px)' }}>
+          🤝 {interestToast}
+        </div>
+      )}
 
       {/* Connect Dialog */}
       <Dialog open={!!selectedMatch} onOpenChange={() => setSelectedMatch(null)}>

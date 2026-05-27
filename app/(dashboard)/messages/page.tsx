@@ -4,11 +4,12 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Send, MessageSquare, Search, ArrowLeft } from 'lucide-react'
+import { Send, MessageSquare, Search, ArrowLeft, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 import type { Profile } from '@/lib/types/database'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { formatDistanceToNow } from 'date-fns'
+import { generateIcebreaker } from '@/lib/utils/icebreakers'
 
 type DirectMessage = {
   id: string
@@ -41,6 +42,8 @@ export default function MessagesPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [isMobile, setIsMobile] = useState(false)
   const [showChat, setShowChat] = useState(false)
+  const [currentUserProfile, setCurrentUserProfile] = useState<Profile | null>(null)
+  const [icebreaker, setIcebreaker] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -52,10 +55,13 @@ export default function MessagesPage() {
     return () => window.removeEventListener('resize', check)
   }, [])
 
-  // Load current user
+  // Load current user + profile
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) setCurrentUserId(user.id)
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) return
+      setCurrentUserId(user.id)
+      const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+      if (profile) setCurrentUserProfile(profile as Profile)
     })
   }, [supabase])
 
@@ -190,6 +196,15 @@ export default function MessagesPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
+  // Generate icebreaker for new conversations
+  useEffect(() => {
+    if (currentUserProfile && selectedUser && messages.length === 0) {
+      setIcebreaker(generateIcebreaker(currentUserProfile, selectedUser))
+    } else {
+      setIcebreaker(null)
+    }
+  }, [currentUserProfile, selectedUser, messages.length])
+
   function handleSelectUser(user: Profile) {
     setSelectedUserId(user.id)
     setSelectedUser(user)
@@ -229,11 +244,12 @@ export default function MessagesPage() {
       .eq('id', currentUserId)
       .single()
 
+    const preview = content.length > 60 ? content.slice(0, 57) + '…' : content
     supabase.from('notifications').insert({
       user_id: selectedUserId,
       type: 'new_message',
-      title: 'New message',
-      message: `${senderProfile?.full_name || 'Someone'} sent you a message`,
+      title: `Message from ${senderProfile?.full_name || 'a researcher'}`,
+      message: `"${preview}"`,
       link: `/messages?user=${currentUserId}`,
       is_read: false,
     }).then(() => {})
@@ -410,6 +426,25 @@ export default function MessagesPage() {
 
             {/* Input */}
             <div className="p-3 border-t border-border bg-card shrink-0">
+              {icebreaker && (
+                <button
+                  onClick={() => { setNewMessage(icebreaker); setIcebreaker(null); textareaRef.current?.focus() }}
+                  className="w-full mb-2 p-3 rounded-xl text-left transition-all group"
+                  style={{ background: 'rgba(124,58,237,0.07)', border: '1px solid rgba(139,92,246,0.2)' }}
+                  onMouseOver={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(168,85,247,0.45)' }}
+                  onMouseOut={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(139,92,246,0.2)' }}
+                >
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Sparkles className="w-3 h-3" style={{ color: '#A855F7' }} />
+                    <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#A855F7' }}>
+                      Ice-breaker suggestion — click to use
+                    </span>
+                  </div>
+                  <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.55)' }}>
+                    {icebreaker}
+                  </p>
+                </button>
+              )}
               <div className="flex items-end gap-2">
                 <textarea
                   ref={textareaRef}

@@ -106,6 +106,7 @@ export default function IdeasPage() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [userSkills, setUserSkills] = useState<string[]>([])
   const [userDept, setUserDept] = useState("")
+  const [ideaReactions, setIdeaReactions] = useState<Map<string, Set<string>>>(new Map())
 
   const loadIdeas = useCallback(async () => {
     setIsLoading(true)
@@ -168,6 +169,20 @@ export default function IdeasPage() {
           .eq("user_id", user.id)
         const upvotedIds = new Set(upvotes?.map(u => u.idea_id) || [])
         processed = processed.map(idea => ({ ...idea, has_upvoted: upvotedIds.has(idea.id) }))
+
+        // Load emoji reactions for this user
+        const { data: reactions } = await supabase
+          .from("idea_reactions")
+          .select("idea_id, emoji")
+          .eq("user_id", user.id)
+        if (reactions) {
+          const map = new Map<string, Set<string>>()
+          for (const r of reactions) {
+            if (!map.has(r.idea_id)) map.set(r.idea_id, new Set())
+            map.get(r.idea_id)!.add(r.emoji)
+          }
+          setIdeaReactions(map)
+        }
       }
 
       // Compute match scores using the latest skills/dept from state or freshly fetched
@@ -210,6 +225,34 @@ export default function IdeasPage() {
       await supabase.from("research_ideas").update({ upvotes: currentUpvotes + 1 }).eq("id", ideaId)
     }
     loadIdeas()
+  }
+
+  async function handleReaction(ideaId: string, emoji: string) {
+    if (!currentUserId) return
+    const supabase = createClient()
+
+    const current = ideaReactions.get(ideaId) ?? new Set<string>()
+    const alreadyReacted = current.has(emoji)
+
+    // Optimistic update
+    setIdeaReactions(prev => {
+      const next = new Map(prev)
+      const set = new Set(next.get(ideaId) ?? [])
+      if (alreadyReacted) { set.delete(emoji) } else { set.add(emoji) }
+      next.set(ideaId, set)
+      return next
+    })
+
+    if (alreadyReacted) {
+      await supabase.from("idea_reactions")
+        .delete()
+        .eq("idea_id", ideaId)
+        .eq("user_id", currentUserId)
+        .eq("emoji", emoji)
+    } else {
+      await supabase.from("idea_reactions")
+        .insert({ idea_id: ideaId, user_id: currentUserId, emoji })
+    }
   }
 
   return (
@@ -331,6 +374,28 @@ export default function IdeasPage() {
                     <Users className="h-4 w-4 text-muted-foreground" />
                     <span className="text-muted-foreground">Looking for:</span>
                     <span className="truncate">{idea.roles_needed.slice(0, 2).join(", ")}</span>
+                  </div>
+                )}
+
+                {/* Emoji reactions */}
+                {currentUserId && idea.author_id !== currentUserId && (
+                  <div className="flex items-center gap-1.5 pt-3">
+                    {(['🔥', '💡', '🤝'] as const).map(emoji => {
+                      const active = ideaReactions.get(idea.id)?.has(emoji) ?? false
+                      return (
+                        <button
+                          key={emoji}
+                          onClick={e => { e.preventDefault(); handleReaction(idea.id, emoji) }}
+                          className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs transition-all"
+                          style={active
+                            ? { background: 'rgba(124,58,237,0.18)', border: '1px solid rgba(168,85,247,0.4)', color: '#C084FC' }
+                            : { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.35)' }
+                          }
+                        >
+                          <span>{emoji}</span>
+                        </button>
+                      )
+                    })}
                   </div>
                 )}
 
