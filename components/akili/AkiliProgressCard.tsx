@@ -2,19 +2,13 @@
 
 import Link from 'next/link'
 import { ReactNode } from 'react'
+import { Brain, Users, BookOpen, Wrench, Zap } from 'lucide-react'
 import {
   getCurrentTier,
   getNextTier,
   getPointsToNextTier,
   getTopActions,
 } from '@/lib/utils/akili-progress'
-import {
-  AkiliBolt,
-  KnowledgeIcon,
-  CollaborationIcon,
-  MentorshipIcon,
-  TechnicalIcon,
-} from '@/components/icons/AkiliIcons'
 
 interface AkiliProgressCardProps {
   score: number
@@ -36,10 +30,10 @@ export function AkiliProgressCard({ score, dimensions }: AkiliProgressCardProps)
   const topActions  = getTopActions(dimensions)
 
   const dimConfig: { key: 'knowledge' | 'collaboration' | 'mentorship' | 'technical'; label: string; icon: ReactNode; score: number; barColor: string; max: number }[] = [
-    { key: 'knowledge',     label: 'Knowledge',     icon: <KnowledgeIcon size={18} />,     score: dimensions.knowledge,     barColor: '#A855F7', max: 500 },
-    { key: 'collaboration', label: 'Collaboration', icon: <CollaborationIcon size={18} />, score: dimensions.collaboration, barColor: '#06B6D4', max: 500 },
-    { key: 'mentorship',    label: 'Mentorship',    icon: <MentorshipIcon size={18} />,    score: dimensions.mentorship,    barColor: '#10B981', max: 500 },
-    { key: 'technical',     label: 'Technical',     icon: <TechnicalIcon size={18} />,     score: dimensions.technical,     barColor: '#F59E0B', max: 500 },
+    { key: 'knowledge',     label: 'Knowledge',     icon: <Brain    size={18} className="text-purple-400" />, score: dimensions.knowledge,     barColor: '#A855F7', max: 500 },
+    { key: 'collaboration', label: 'Collaboration', icon: <Users    size={18} className="text-cyan-400"   />, score: dimensions.collaboration, barColor: '#06B6D4', max: 500 },
+    { key: 'mentorship',    label: 'Mentorship',    icon: <BookOpen size={18} className="text-emerald-400"/>, score: dimensions.mentorship,    barColor: '#10B981', max: 500 },
+    { key: 'technical',     label: 'Technical',     icon: <Wrench   size={18} className="text-amber-400"  />, score: dimensions.technical,     barColor: '#F59E0B', max: 500 },
   ]
 
   return (
@@ -55,7 +49,7 @@ export function AkiliProgressCard({ score, dimensions }: AkiliProgressCardProps)
               border: '1px solid rgba(139,92,246,0.4)',
               boxShadow: '0 0 16px rgba(124,58,237,0.35)',
             }}>
-            <AkiliBolt size={22} />
+            <Zap size={22} className="text-purple-200" fill="currentColor" />
           </div>
           <div>
             <div className="text-[10px] font-bold uppercase tracking-wider mb-0.5" style={{ color: '#7C6A9C' }}>
