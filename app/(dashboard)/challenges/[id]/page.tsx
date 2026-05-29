@@ -62,7 +62,7 @@ export default function ChallengeDetailPage() {
     async function load() {
       const [{ data: { user } }, { data: challengeData }] = await Promise.all([
         supabase.auth.getUser(),
-        supabase.from('research_challenges').select('*').eq('id', params.id).single(),
+        supabase.from('challenges').select('*').eq('id', params.id).single(),
       ])
 
       setCurrentUserId(user?.id || null)
@@ -111,7 +111,7 @@ export default function ChallengeDetailPage() {
     }
 
     await supabase
-      .from('research_challenges')
+      .from('challenges')
       .update({ submission_count: challenge.submission_count + 1 })
       .eq('id', challenge.id)
 

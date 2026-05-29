@@ -45,24 +45,34 @@ export default function ForumDetailPage() {
   const [forum, setForum] = useState<Forum | null>(null)
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const supabase = createClient()
 
-  useEffect(() => {
-    async function load() {
-      const [{ data: forumData }, { data: postsData }] = await Promise.all([
+  async function load() {
+    setLoading(true)
+    setLoadError(null)
+    try {
+      const [{ data: forumData, error: forumError }, { data: postsData, error: postsError }] = await Promise.all([
         supabase.from('forums').select('*').eq('id', params.id).single(),
         supabase
           .from('forum_posts')
           .select('id, title, content, upvotes, reply_count, view_count, is_pinned, created_at, author:profiles(full_name, avatar_url)')
           .eq('forum_id', params.id)
-          .order('is_pinned', { ascending: false })
           .order('created_at', { ascending: false })
           .limit(50),
       ])
+      if (forumError) throw forumError
+      if (postsError) throw postsError
       setForum(forumData)
       setPosts((postsData || []) as unknown as Post[])
+    } catch (err: unknown) {
+      setLoadError(err instanceof Error ? err.message : 'Failed to load forum')
+    } finally {
       setLoading(false)
     }
+  }
+
+  useEffect(() => {
     load()
   }, [params.id])
 
@@ -70,6 +80,15 @@ export default function ForumDetailPage() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <BaobabLoader size="sm" />
+      </div>
+    )
+  }
+
+  if (loadError) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-8 text-center space-y-3">
+        <p className="text-muted-foreground text-sm">{loadError}</p>
+        <button onClick={load} className="text-primary text-sm underline underline-offset-2">Try again</button>
       </div>
     )
   }
