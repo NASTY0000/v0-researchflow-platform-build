@@ -3,12 +3,11 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import Link from 'next/link'
 import { Search, MessageSquare, Users, Pin, TrendingUp } from 'lucide-react'
-import { ForumCardSkeleton } from '@/components/ui/skeleton-screens'
+import { BaobabLoader } from '@/components/ui/baobab-loader'
 import { StaggerContainer, StaggerItem } from '@/components/ui/stagger-container'
 import { HoverCardLift } from '@/components/ui/hover-card-lift'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -39,7 +38,6 @@ const CATEGORIES = ['all', 'general', 'methodology', 'tools', 'funding', 'career
 
 export default function ForumsPage() {
   const [forums, setForums] = useState<Forum[]>([])
-  const [filtered, setFiltered] = useState<Forum[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('all')
@@ -50,30 +48,29 @@ export default function ForumsPage() {
       const { data, error } = await supabase
         .from('forums')
         .select('*')
-        .order('is_pinned', { ascending: false })
-        .order('last_activity_at', { ascending: false })
-      console.log('Forums:', data, 'Error:', error)
+        .order('created_at', { ascending: true })
+      console.log('Forums:', data?.length, error)
       setForums(data || [])
-      setFiltered(data || [])
       setLoading(false)
     }
     load()
   }, [])
 
-  useEffect(() => {
-    let result = forums
-    if (category !== 'all') result = result.filter(f => f.category === category)
-    if (search) result = result.filter(f =>
-      f.name.toLowerCase().includes(search.toLowerCase()) ||
-      (f.description || '').toLowerCase().includes(search.toLowerCase())
+  const filtered = forums.filter(f => {
+    if (category !== 'all' && f.category !== category) return false
+    if (!search.trim()) return true
+    const q = search.toLowerCase()
+    return (
+      f.name?.toLowerCase().includes(q) ||
+      f.description?.toLowerCase().includes(q) ||
+      f.category?.toLowerCase().includes(q)
     )
-    setFiltered(result)
-  }, [search, category, forums])
+  })
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-8 space-y-3">
-        {Array.from({ length: 5 }).map((_, i) => <ForumCardSkeleton key={i} />)}
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <BaobabLoader size="md" />
       </div>
     )
   }
@@ -116,61 +113,62 @@ export default function ForumsPage() {
       </div>
 
       {/* Forum list */}
-      <StaggerContainer className="space-y-3">
-        {filtered.length === 0 && (
-          <EmptyState
-            icon="💬"
-            title="No forums found"
-            description="Try a different search or category filter to discover research discussions."
-          />
-        )}
-        {filtered.map(forum => (
-          <StaggerItem key={forum.id}>
-          <HoverCardLift>
-          <Link href={`/forums/${forum.id}`}>
-            <Card className="hover:border-primary/40 transition-colors cursor-pointer">
-              <CardContent className="p-4 flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-2xl flex-shrink-0">
-                  {forum.icon || '💬'}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {forum.is_pinned && <Pin className="w-3.5 h-3.5 text-primary flex-shrink-0" />}
-                    <h2 className="font-semibold truncate">{forum.name}</h2>
-                    <Badge
-                      variant="outline"
-                      className={`text-xs capitalize ${CATEGORY_COLORS[forum.category] || 'bg-muted/50 text-muted-foreground'}`}
-                    >
-                      {forum.category}
-                    </Badge>
+      {filtered.length === 0 ? (
+        <EmptyState
+          icon="💬"
+          title="No forums found"
+          description="Try a different search or category filter to discover research discussions."
+        />
+      ) : (
+        <StaggerContainer className="space-y-3">
+          {filtered.map(forum => (
+            <StaggerItem key={forum.id}>
+            <HoverCardLift>
+            <Link href={`/forums/${forum.id}`}>
+              <Card className="hover:border-primary/40 transition-colors cursor-pointer">
+                <CardContent className="p-4 flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-2xl flex-shrink-0">
+                    {forum.icon || '💬'}
                   </div>
-                  {forum.description && (
-                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{forum.description}</p>
-                  )}
-                  <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <MessageSquare className="w-3 h-3" />
-                      {forum.post_count.toLocaleString()} posts
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Users className="w-3 h-3" />
-                      {forum.member_count.toLocaleString()} members
-                    </span>
-                    {forum.last_activity_at && (
-                      <span className="flex items-center gap-1">
-                        <TrendingUp className="w-3 h-3" />
-                        {formatDistanceToNow(new Date(forum.last_activity_at), { addSuffix: true })}
-                      </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {forum.is_pinned && <Pin className="w-3.5 h-3.5 text-primary flex-shrink-0" />}
+                      <h2 className="font-semibold truncate">{forum.name}</h2>
+                      <Badge
+                        variant="outline"
+                        className={`text-xs capitalize ${CATEGORY_COLORS[forum.category] || 'bg-muted/50 text-muted-foreground'}`}
+                      >
+                        {forum.category}
+                      </Badge>
+                    </div>
+                    {forum.description && (
+                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{forum.description}</p>
                     )}
+                    <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <MessageSquare className="w-3 h-3" />
+                        {(forum.post_count || 0).toLocaleString()} posts
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Users className="w-3 h-3" />
+                        {(forum.member_count || 0).toLocaleString()} members
+                      </span>
+                      {forum.last_activity_at && (
+                        <span className="flex items-center gap-1">
+                          <TrendingUp className="w-3 h-3" />
+                          {formatDistanceToNow(new Date(forum.last_activity_at), { addSuffix: true })}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-          </HoverCardLift>
-          </StaggerItem>
-        ))}
-      </StaggerContainer>
+                </CardContent>
+              </Card>
+            </Link>
+            </HoverCardLift>
+            </StaggerItem>
+          ))}
+        </StaggerContainer>
+      )}
     </div>
   )
 }
