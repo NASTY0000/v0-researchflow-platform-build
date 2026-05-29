@@ -22,6 +22,8 @@ import { usePullToRefresh } from "@/hooks/usePullToRefresh"
 import { AnimatedCounter } from "@/components/ui/animated-counter"
 import { motion } from "framer-motion"
 import { PullToRefreshIndicator } from "@/components/ui/PullToRefreshIndicator"
+import { ActivityFeed } from "@/components/dashboard/activity-feed"
+import { GradientText } from "@/components/ui/gradient-text"
 
 interface DashboardStats {
   totalIdeas: number
@@ -189,7 +191,7 @@ export default function DashboardPage() {
             <p className="label-section mb-1">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
             <h1 className="text-3xl font-bold font-heading" style={{ letterSpacing: '-0.03em' }}>
               {getGreeting()},{' '}
-              <span className="gradient-text">{profile?.full_name?.split(' ')[0] || 'Researcher'}</span>{' '}
+              <GradientText animate>{profile?.full_name?.split(' ')[0] || 'Researcher'}</GradientText>{' '}
               👋
             </h1>
             <p style={{ color: '#7C6A9C' }}>Here&apos;s what&apos;s happening with your research journey</p>
@@ -362,6 +364,22 @@ export default function DashboardPage() {
               </div>
             )}
           </div>
+        </div>
+      </div>
+
+      {/* Live Activity Feed */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+            </span>
+            Live Activity
+          </h2>
+        </div>
+        <div className="rounded-2xl p-2" style={cardStyle}>
+          <ActivityFeed />
         </div>
       </div>
 

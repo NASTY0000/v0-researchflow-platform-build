@@ -35,6 +35,7 @@ import { usePullToRefresh } from '@/hooks/usePullToRefresh'
 import { PullToRefreshIndicator } from '@/components/ui/PullToRefreshIndicator'
 import { notifyConnectionAccepted } from '@/lib/actions/email'
 import { toast } from 'sonner'
+import { celebrateConnection } from '@/lib/utils/confetti'
 
 interface Connection {
   id: string
@@ -168,6 +169,7 @@ export default function NetworkPage() {
       connectionAccepted(requesterId, userId!).catch(() => {})
       notifyConnectionAccepted(requesterId, userId!).catch(() => {})
       toast.success('Connection accepted!')
+      celebrateConnection()
       loadAll()
     } else {
       toast.error('Failed to accept connection')

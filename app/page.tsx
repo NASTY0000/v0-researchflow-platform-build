@@ -18,6 +18,9 @@ import {
 } from '@/components/landing/floating-illustrations'
 import { FaqSection } from '@/components/landing/faq-section'
 import { BaobabTree } from '@/components/landing/baobab-tree'
+import { ParallaxHeroWrapper } from '@/components/landing/parallax-hero'
+import { MagneticButton } from '@/components/ui/micro-interactions'
+import { GradientText } from '@/components/ui/gradient-text'
 
 // ── Custom SVG feature icons ──────────────────────────────────────────────────
 
@@ -228,7 +231,7 @@ export default function LandingPage() {
       </nav>
 
       {/* ── Hero Section ── */}
-      <section className="relative pt-32 pb-20 px-4 overflow-hidden">
+      <ParallaxHeroWrapper>
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
 
@@ -240,9 +243,9 @@ export default function LandingPage() {
               </div>
 
               <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold font-heading leading-none mb-6 animate-fade-up tracking-tight">
-                <span className="gradient-text">Collaborate.</span>{' '}
-                <span className="gradient-text">Discover.</span>{' '}
-                <span className="gradient-text">Publish.</span>
+                <GradientText animate>Collaborate.</GradientText>{' '}
+                <GradientText animate>Discover.</GradientText>{' '}
+                <GradientText animate>Publish.</GradientText>
               </h1>
 
               <p className="text-lg sm:text-xl max-w-2xl mx-auto lg:mx-0 mb-10 leading-relaxed animate-fade-up stagger-1 text-muted-foreground">
@@ -251,24 +254,28 @@ export default function LandingPage() {
               </p>
 
               <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 animate-fade-up stagger-2">
-                <Button
-                  size="lg"
-                  asChild
-                  className="bg-gradient-to-br from-violet-600 to-violet-500 shadow-[0_0_24px_rgba(124,58,237,0.45)] border-none rounded-lg hover:shadow-[0_0_32px_rgba(124,58,237,0.55)] transition-all"
-                >
-                  <Link href="/auth/signup">
-                    Start Collaborating
-                    <ArrowRight className="ml-2 w-4 h-4" />
-                  </Link>
-                </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  asChild
-                  className="border-violet-500/40 text-violet-400 bg-transparent rounded-lg hover:bg-violet-500/10 hover:border-violet-500/60"
-                >
-                  <Link href="#how-it-works">See How It Works</Link>
-                </Button>
+                <MagneticButton>
+                  <Button
+                    size="lg"
+                    asChild
+                    className="bg-gradient-to-br from-violet-600 to-violet-500 shadow-[0_0_24px_rgba(124,58,237,0.45)] border-none rounded-lg hover:shadow-[0_0_32px_rgba(124,58,237,0.55)] transition-all"
+                  >
+                    <Link href="/auth/signup">
+                      Start Collaborating
+                      <ArrowRight className="ml-2 w-4 h-4" />
+                    </Link>
+                  </Button>
+                </MagneticButton>
+                <MagneticButton>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    asChild
+                    className="border-violet-500/40 text-violet-400 bg-transparent rounded-lg hover:bg-violet-500/10 hover:border-violet-500/60"
+                  >
+                    <Link href="#how-it-works">See How It Works</Link>
+                  </Button>
+                </MagneticButton>
               </div>
             </div>
 
@@ -288,7 +295,7 @@ export default function LandingPage() {
             ))}
           </div>
         </div>
-      </section>
+      </ParallaxHeroWrapper>
 
       {/* ── Features ── */}
       <section id="features" className="py-24 px-4 relative">
@@ -297,7 +304,8 @@ export default function LandingPage() {
           <div className="text-center mb-16">
             <p className="label-section mb-3">Platform Features</p>
             <h2 className="text-3xl sm:text-4xl font-bold font-heading mb-4 tracking-tight">
-              Everything You Need to Succeed
+              Everything You Need to{' '}
+              <GradientText>Succeed</GradientText>
             </h2>
             <p className="max-w-2xl mx-auto text-muted-foreground">
               From ideation to publication, ResearchFlow provides all the tools for successful research collaboration.

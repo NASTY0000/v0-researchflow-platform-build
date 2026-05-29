@@ -26,6 +26,7 @@ import { StaggerContainer, StaggerItem } from '@/components/ui/stagger-container
 import { HoverCardLift } from '@/components/ui/hover-card-lift'
 import { toast } from 'sonner'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { AnimatedTabs } from '@/components/ui/animated-tabs'
 
 interface Grant {
   id: string
@@ -215,25 +216,15 @@ export default function GrantsPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 border-b border-border">
-        {([
-          { key: 'all', label: 'All Grants' },
+      <AnimatedTabs
+        tabs={[
+          { key: 'all',     label: 'All Grants' },
           { key: 'closing', label: '⏰ Closing Soon' },
-          { key: 'saved', label: '🔖 Saved' },
-        ] as { key: Tab; label: string }[]).map(tab => (
-          <button
-            key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === tab.key
-                ? 'border-primary text-primary'
-                : 'border-transparent text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+          { key: 'saved',   label: '🔖 Saved' },
+        ]}
+        activeTab={activeTab}
+        onChange={(key) => setActiveTab(key as Tab)}
+      />
 
       {/* Filters */}
       <div className="flex gap-3 flex-wrap items-center">

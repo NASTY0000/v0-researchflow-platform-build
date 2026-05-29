@@ -32,6 +32,7 @@ import { IdeaCardSkeleton } from '@/components/ui/SkeletonLayouts'
 import { usePullToRefresh } from '@/hooks/usePullToRefresh'
 import { PullToRefreshIndicator } from '@/components/ui/PullToRefreshIndicator'
 import { StaggerContainer, StaggerItem } from '@/components/ui/stagger-container'
+import { RippleEffect } from '@/components/ui/micro-interactions'
 
 const RESEARCH_AREAS = [
   "All Areas",
@@ -416,16 +417,13 @@ export default function IdeasPage() {
                   </div>
 
                   <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                    <button
-                      onClick={e => {
-                        e.preventDefault()
-                        handleUpvote(idea.id, idea.upvotes || 0, idea.has_upvoted || false)
-                      }}
-                      className={`flex items-center gap-1 hover:text-primary transition-colors ${idea.has_upvoted ? "text-primary" : ""}`}
+                    <RippleEffect
+                      onClick={() => handleUpvote(idea.id, idea.upvotes || 0, idea.has_upvoted || false)}
+                      className={`flex items-center gap-1 hover:text-primary transition-colors rounded px-1 ${idea.has_upvoted ? "text-primary" : ""}`}
                     >
                       <ChevronUp className={`h-4 w-4 ${idea.has_upvoted ? "fill-primary" : ""}`} />
                       {idea.upvotes || 0}
-                    </button>
+                    </RippleEffect>
                     <span className="flex items-center gap-1">
                       <Eye className="h-4 w-4" />
                       {idea.views || 0}

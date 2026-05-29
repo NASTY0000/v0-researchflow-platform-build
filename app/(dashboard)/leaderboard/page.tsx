@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Crown, Medal, Award } from 'lucide-react'
 import Link from 'next/link'
 import { BaobabLoader } from '@/components/ui/baobab-loader'
+import { TiltCard } from '@/components/ui/micro-interactions'
 
 interface LeaderboardUser {
   id: string
@@ -115,8 +116,9 @@ export default function LeaderboardPage() {
         <div className="grid grid-cols-3 gap-3 items-end mb-8">
 
           {/* 2ND PLACE — SILVER */}
+          <TiltCard intensity={5}>
           <div
-            className="relative rounded-2xl overflow-hidden border-2 border-gray-400 dark:border-gray-500 cursor-pointer hover:scale-105 transition-transform duration-300"
+            className="relative rounded-2xl overflow-hidden border-2 border-gray-400 dark:border-gray-500 cursor-pointer"
             style={{
               background: 'linear-gradient(135deg, #E5E7EB, #9CA3AF, #6B7280)',
               minHeight: '260px',
@@ -173,10 +175,12 @@ export default function LeaderboardPage() {
               </Badge>
             </div>
           </div>
+          </TiltCard>
 
           {/* 1ST PLACE — GOLD (center, tallest) */}
+          <TiltCard intensity={6}>
           <div
-            className="relative rounded-2xl overflow-hidden border-2 border-yellow-400 cursor-pointer z-10 hover:scale-[1.05] transition-transform duration-300"
+            className="relative rounded-2xl overflow-hidden border-2 border-yellow-400 cursor-pointer z-10"
             style={{
               background: 'linear-gradient(135deg, #FCD34D, #F59E0B, #D97706, #92400E)',
               minHeight: '310px',
@@ -241,10 +245,12 @@ export default function LeaderboardPage() {
               </Badge>
             </div>
           </div>
+          </TiltCard>
 
           {/* 3RD PLACE — BRONZE */}
+          <TiltCard intensity={5}>
           <div
-            className="relative rounded-2xl overflow-hidden border-2 border-amber-600 dark:border-amber-700 cursor-pointer hover:scale-105 transition-transform duration-300"
+            className="relative rounded-2xl overflow-hidden border-2 border-amber-600 dark:border-amber-700 cursor-pointer"
             style={{
               background: 'linear-gradient(135deg, #FCD34D, #D97706, #92400E, #78350F)',
               minHeight: '240px',
@@ -301,6 +307,7 @@ export default function LeaderboardPage() {
               </Badge>
             </div>
           </div>
+          </TiltCard>
 
         </div>
       )}

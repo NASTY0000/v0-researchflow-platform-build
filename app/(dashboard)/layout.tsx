@@ -6,6 +6,7 @@ import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { MobileNav } from '@/components/dashboard/mobile-nav'
 import { GlobalSearch } from '@/components/dashboard/global-search'
 import { PageTransition } from '@/components/ui/page-transition'
+import { ScrollProgress } from '@/components/ui/scroll-progress'
 
 export default async function DashboardLayout({
   children,
@@ -38,6 +39,7 @@ export default async function DashboardLayout({
 
   return (
     <>
+      <ScrollProgress />
       <SidebarProvider>
         <DashboardSidebar profile={profile} />
         <SidebarInset>

@@ -13,6 +13,7 @@ import {
   ArrowLeft, Trophy, Calendar, Users, Zap, CheckCircle, Loader2,
 } from 'lucide-react'
 import { format, isPast } from 'date-fns'
+import { celebrateMilestone } from '@/lib/utils/confetti'
 
 interface Challenge {
   id: string
@@ -124,6 +125,7 @@ export default function ChallengeDetailPage() {
     setSubmitted(true)
     setChallenge(c => c ? { ...c, submission_count: c.submission_count + 1 } : c)
     setSubmitting(false)
+    celebrateMilestone()
   }
 
   if (loading) {

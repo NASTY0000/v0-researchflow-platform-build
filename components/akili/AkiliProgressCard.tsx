@@ -3,6 +3,8 @@
 import Link from 'next/link'
 import { ReactNode } from 'react'
 import { Brain, Users, BookOpen, Wrench, Zap } from 'lucide-react'
+import { AnimatePresence } from 'framer-motion'
+import { NumberTicker } from '@/components/ui/micro-interactions'
 import {
   getCurrentTier,
   getNextTier,
@@ -56,7 +58,9 @@ export function AkiliProgressCard({ score, dimensions }: AkiliProgressCardProps)
               Akili Score
             </div>
             <div className="text-3xl font-black leading-none tracking-tight" style={{ color: '#C084FC' }}>
-              {score.toLocaleString()}
+              <AnimatePresence mode="wait">
+                <NumberTicker key={score} value={score} />
+              </AnimatePresence>
             </div>
           </div>
         </div>

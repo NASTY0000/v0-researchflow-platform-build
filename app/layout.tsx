@@ -4,6 +4,7 @@ import { Analytics } from '@vercel/analytics/next'
 import { Toaster } from 'sonner'
 import { InstallPrompt } from '@/components/ui/InstallPrompt'
 import { ThemeProvider } from '@/components/theme-provider'
+import { CursorGlow } from '@/components/ui/cursor-glow'
 import './globals.css'
 
 const dmSans = DM_Sans({
@@ -57,6 +58,7 @@ export default function RootLayout({
       <body className={`${dmSans.variable} ${syne.variable} font-sans antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
           {children}
+          <CursorGlow />
           <InstallPrompt />
           <Toaster
             position="bottom-center"

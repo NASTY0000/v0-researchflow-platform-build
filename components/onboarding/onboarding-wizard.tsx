@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { celebrateAchievement } from '@/lib/utils/confetti'
 import { Logo } from '@/components/Logo'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -175,7 +176,7 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
     })
 
     if (result?.error) { setError(result.error); setIsLoading(false) }
-    else if (result?.redirectTo) { window.location.href = result.redirectTo }
+    else if (result?.redirectTo) { celebrateAchievement(); window.location.href = result.redirectTo }
   }
 
   const isMentorSelected = roles.includes('mentor') || roles.includes('all')

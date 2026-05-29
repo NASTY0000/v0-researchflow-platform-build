@@ -450,6 +450,16 @@ input:focus, textarea:focus {
   backdrop-filter: blur(20px);
 }
 
+/* Animated gradient for GradientText */
+@keyframes gradient {
+  0%   { background-position: 0% 50% }
+  50%  { background-position: 100% 50% }
+  100% { background-position: 0% 50% }
+}
+.animate-gradient {
+  animation: gradient 4s linear infinite;
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
