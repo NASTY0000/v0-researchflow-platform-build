@@ -37,7 +37,6 @@ import { AkiliScoreBadge } from "@/components/akili/AkiliScoreBadge"
 import { BaobabLoader } from '@/components/ui/baobab-loader'
 import { ContextualHint } from "@/components/ui/ContextualHint"
 import { EmptyState } from "@/components/ui/EmptyState"
-import { MatchCardSkeleton } from "@/components/ui/SkeletonLayouts"
 import { usePullToRefresh } from "@/hooks/usePullToRefresh"
 import { PullToRefreshIndicator } from "@/components/ui/PullToRefreshIndicator"
 import { StaggerContainer, StaggerItem } from "@/components/ui/stagger-container"
@@ -276,10 +275,8 @@ export default function MatchesPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => <MatchCardSkeleton key={i} />)}
-        </div>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <BaobabLoader size="md" />
       </div>
     )
   }

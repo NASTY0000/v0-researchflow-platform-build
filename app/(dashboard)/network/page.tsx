@@ -30,7 +30,7 @@ import { createClient } from '@/lib/supabase/client'
 import type { Profile } from '@/lib/types/database'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { connectionAccepted } from '@/lib/actions/akili'
-import { ResearcherCardSkeleton } from '@/components/ui/SkeletonLayouts'
+import { BaobabLoader } from '@/components/ui/baobab-loader'
 import { usePullToRefresh } from '@/hooks/usePullToRefresh'
 import { PullToRefreshIndicator } from '@/components/ui/PullToRefreshIndicator'
 import { notifyConnectionAccepted } from '@/lib/actions/email'
@@ -234,8 +234,8 @@ export default function NetworkPage() {
 
   if (isLoading) {
     return (
-      <div className="max-w-4xl mx-auto space-y-3">
-        {Array.from({ length: 5 }).map((_, i) => <ResearcherCardSkeleton key={i} />)}
+      <div className="flex items-center justify-center min-h-[400px]">
+        <BaobabLoader size="md" />
       </div>
     )
   }

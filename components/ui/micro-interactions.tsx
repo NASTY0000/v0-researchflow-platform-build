@@ -112,7 +112,7 @@ export function TiltCard({
 
   return (
     <motion.div
-      style={{ rotateX: springRotateX, rotateY: springRotateY, transformStyle: 'preserve-3d', perspective: 1000 }}
+      style={{ rotateX: springRotateX, rotateY: springRotateY, transformStyle: 'preserve-3d', transformPerspective: 800 }}
       onMouseMove={handleMouse}
       onMouseLeave={handleLeave}
       className={className}
