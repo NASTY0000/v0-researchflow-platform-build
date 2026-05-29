@@ -245,12 +245,12 @@ export default function LandingPage() {
                 <GradientText animate>Publish.</GradientText>
               </h1>
 
-              <p className="text-lg sm:text-xl max-w-2xl mx-auto lg:mx-0 mb-10 leading-relaxed animate-fade-up stagger-1 text-muted-foreground">
+              <p className="text-lg sm:text-xl max-w-2xl mx-auto mb-10 leading-relaxed animate-fade-up stagger-1 text-muted-foreground">
                 The premier research collaboration platform connecting university students across Africa.
                 Find collaborators, access mentors, and bring your research ideas to life.
               </p>
 
-              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 animate-fade-up stagger-2">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-up stagger-2">
                 <MagneticButton>
                   <Button
                     size="lg"

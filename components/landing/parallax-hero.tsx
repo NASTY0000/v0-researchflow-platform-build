@@ -17,8 +17,8 @@ export function ParallaxHeroWrapper({ children }: { children: React.ReactNode })
 
   return (
     <section
-      className="relative min-h-screen overflow-hidden"
-      style={{ backgroundColor: '#07030F' }}
+      className="relative overflow-hidden"
+      style={{ backgroundColor: '#07030F', height: '100svh', minHeight: '600px' }}
     >
       {/* Layer 0 — animated starfield + planet canvas */}
       <HeroBackground />
