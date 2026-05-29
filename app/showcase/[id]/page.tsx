@@ -25,9 +25,9 @@ import {
   Twitter,
   Linkedin,
   MessageCircle,
-  Loader2,
   Sparkles,
 } from "lucide-react"
+import { BaobabLoader } from "@/components/ui/baobab-loader"
 import { createClient } from "@/lib/supabase/client"
 import { toast } from "sonner"
 import type { ShowcaseEntry, Profile } from "@/lib/types/database"
@@ -276,7 +276,7 @@ export default function ShowcaseEntryPage({
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#05010F' }}>
-        <Loader2 className="h-10 w-10 animate-spin" style={{ color: '#A855F7' }} />
+        <BaobabLoader size="md" />
       </div>
     )
   }

@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { ArrowLeft, ThumbsUp, MessageSquare, Eye, Loader2, Send } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
+import { BaobabLoader } from '@/components/ui/baobab-loader'
 
 interface Post {
   id: string
@@ -154,7 +155,7 @@ export default function PostDetailPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+        <BaobabLoader size="sm" />
       </div>
     )
   }

@@ -13,6 +13,7 @@ import {
   Plus, ChevronRight
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
+import { BaobabLoader } from '@/components/ui/baobab-loader'
 
 interface Forum {
   id: string
@@ -68,7 +69,7 @@ export default function ForumDetailPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+        <BaobabLoader size="sm" />
       </div>
     )
   }

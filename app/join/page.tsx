@@ -5,7 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Loader2, CheckCircle2, AlertCircle, Users } from 'lucide-react'
+import { CheckCircle2, AlertCircle, Users } from 'lucide-react'
+import { BaobabLoader } from '@/components/ui/baobab-loader'
 import { createClient } from '@/lib/supabase/client'
 import { acceptInvitation } from '@/lib/actions/invitations'
 
@@ -61,7 +62,7 @@ function JoinPageInner() {
         <CardContent className="py-12 text-center space-y-4">
           {status === 'loading' || status === 'joining' ? (
             <>
-              <Loader2 className="h-12 w-12 animate-spin mx-auto" style={{ color: '#A855F7' }} />
+              <BaobabLoader size="sm" />
               <p className="font-medium" style={{ color: '#E2D9F3' }}>
                 {status === 'loading' ? 'Checking invitation...' : 'Joining project...'}
               </p>
@@ -123,13 +124,7 @@ export default function JoinPage() {
       <div className="min-h-screen flex items-center justify-center"
         style={{ backgroundColor: '#05010F' }}>
         <div className="text-center space-y-4">
-          <div
-            className="w-12 h-12 rounded-full animate-spin mx-auto"
-            style={{
-              border: '3px solid rgba(124,58,237,0.2)',
-              borderTopColor: '#7C3AED'
-            }}
-          />
+          <BaobabLoader size="md" />
           <p style={{ color: '#7C6A9C' }}>Loading invitation...</p>
         </div>
       </div>
