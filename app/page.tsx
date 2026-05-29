@@ -1,480 +1,874 @@
+'use client'
+
+import { useEffect, useRef } from 'react'
+import { motion } from 'framer-motion'
 import Link from 'next/link'
-import Image from 'next/image'
-import { Button } from '@/components/ui/button'
 import { Logo } from '@/components/Logo'
-import {
-  ArrowRight,
-  Zap,
-  User,
-  Users,
-  Award,
-  Star,
-} from 'lucide-react'
-import {
-  GlobalIllustrations,
-  FeaturesIllustrations,
-  StatsIllustrations,
-  FooterIllustrations
-} from '@/components/landing/floating-illustrations'
-import { FaqSection } from '@/components/landing/faq-section'
-import { BaobabTree } from '@/components/landing/baobab-tree'
-import { ParallaxHeroWrapper } from '@/components/landing/parallax-hero'
 import { MagneticButton } from '@/components/ui/micro-interactions'
-import { GradientText } from '@/components/ui/gradient-text'
 
-// ── Custom SVG feature icons ──────────────────────────────────────────────────
+function HeroCanvas() {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
 
-const CollaborateIcon = () => (
-  <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-    <circle cx="16" cy="6" r="3" fill="#7C3AED"/>
-    <circle cx="16" cy="6" r="5" stroke="#7C3AED" strokeWidth="1" fill="none" opacity="0.4"/>
-    <circle cx="6" cy="22" r="2.5" fill="#7C3AED"/>
-    <circle cx="6" cy="22" r="4" stroke="#7C3AED" strokeWidth="1" fill="none" opacity="0.4"/>
-    <circle cx="26" cy="22" r="2.5" fill="#7C3AED"/>
-    <circle cx="26" cy="22" r="4" stroke="#7C3AED" strokeWidth="1" fill="none" opacity="0.4"/>
-    <circle cx="16" cy="18" r="2" fill="#A855F7"/>
-    <path d="M16 9 Q14 13 11 15 Q9 17 6 20" stroke="#7C3AED" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
-    <path d="M16 9 Q18 13 21 15 Q23 17 26 20" stroke="#7C3AED" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
-    <path d="M16 9 L16 16" stroke="#7C3AED" strokeWidth="1.5" strokeLinecap="round"/>
-    <circle cx="11" cy="15" r="1.5" fill="#C084FC" opacity="0.7"/>
-    <circle cx="21" cy="15" r="1.5" fill="#C084FC" opacity="0.7"/>
-  </svg>
-)
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
 
-const IdeasIcon = () => (
-  <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-    <rect x="6" y="4" width="16" height="20" rx="2" stroke="#7C3AED" strokeWidth="1.5" fill="none"/>
-    <rect x="6" y="4" width="16" height="20" rx="2" fill="#7C3AED" opacity="0.08"/>
-    <line x1="10" y1="10" x2="18" y2="10" stroke="#7C3AED" strokeWidth="1.5" strokeLinecap="round"/>
-    <line x1="10" y1="14" x2="18" y2="14" stroke="#7C3AED" strokeWidth="1.5" strokeLinecap="round"/>
-    <line x1="10" y1="18" x2="15" y2="18" stroke="#7C3AED" strokeWidth="1.5" strokeLinecap="round"/>
-    <circle cx="25" cy="10" r="4" fill="#FBBF24" opacity="0.9"/>
-    <circle cx="25" cy="10" r="6" stroke="#FBBF24" strokeWidth="1" fill="none" opacity="0.3"/>
-    <line x1="22" y1="10" x2="18" y2="12" stroke="#FBBF24" strokeWidth="1" opacity="0.6"/>
-    <text x="23.5" y="13.5" fontSize="6" fill="white" fontWeight="bold">✦</text>
-  </svg>
-)
+    let W = 0, H = 0, t = 0
+    let stars: any[] = []
+    let shoot: any = null
+    let shootTimer = 0
+    let animId: number
 
-const MentorIcon = () => (
-  <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-    <circle cx="16" cy="9" r="5" stroke="#7C3AED" strokeWidth="1.5" fill="none"/>
-    <circle cx="16" cy="9" r="5" fill="#7C3AED" opacity="0.1"/>
-    <path d="M8 28 Q8 20 16 20 Q24 20 24 28" stroke="#7C3AED" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
-    <path d="M13 6 L16 4 L19 6" stroke="#FBBF24" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-    <line x1="11" y1="6" x2="21" y2="6" stroke="#FBBF24" strokeWidth="1.5" strokeLinecap="round"/>
-    <circle cx="25" cy="16" r="3" fill="#A855F7" opacity="0.8"/>
-    <path d="M19 12 Q22 13 24 15" stroke="#A855F7" strokeWidth="1" strokeLinecap="round" opacity="0.6" fill="none"/>
-    <circle cx="25" cy="16" r="5" stroke="#A855F7" strokeWidth="0.8" fill="none" opacity="0.3"/>
-  </svg>
-)
+    function buildStars() {
+      stars = []
+      const count = 420
+      for (let i = 0; i < count; i++) {
+        const rand = Math.random()
+        const r = rand < 0.70
+          ? Math.random() * 0.55 + 0.12
+          : rand < 0.92
+          ? Math.random() * 0.75 + 0.55
+          : Math.random() * 1.1 + 1.3
 
-const GrantsIcon = () => (
-  <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-    <circle cx="16" cy="16" r="9" stroke="#FBBF24" strokeWidth="1.5" fill="none"/>
-    <circle cx="16" cy="16" r="9" fill="#FBBF24" opacity="0.08"/>
-    <text x="13" y="21" fontSize="11" fill="#FBBF24" fontWeight="bold">$</text>
-    <circle cx="5" cy="8" r="2.5" fill="#7C3AED" opacity="0.8"/>
-    <circle cx="27" cy="8" r="2.5" fill="#7C3AED" opacity="0.8"/>
-    <circle cx="5" cy="24" r="2.5" fill="#7C3AED" opacity="0.8"/>
-    <circle cx="27" cy="24" r="2.5" fill="#7C3AED" opacity="0.8"/>
-    <line x1="7" y1="9" x2="10" y2="11" stroke="#7C3AED" strokeWidth="1" opacity="0.5"/>
-    <line x1="25" y1="9" x2="22" y2="11" stroke="#7C3AED" strokeWidth="1" opacity="0.5"/>
-    <line x1="7" y1="23" x2="10" y2="21" stroke="#7C3AED" strokeWidth="1" opacity="0.5"/>
-    <line x1="25" y1="23" x2="22" y2="21" stroke="#7C3AED" strokeWidth="1" opacity="0.5"/>
-  </svg>
-)
+        const c = Math.random()
+        let color
+        if (c > 0.85)      color = { r:220, g:200, b:255 }
+        else if (c > 0.65) color = { r:210, g:220, b:255 }
+        else if (c > 0.3)  color = { r:250, g:248, b:255 }
+        else               color = { r:255, g:248, b:235 }
 
-const ReputationIcon = () => (
-  <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-    <path d="M10 20 L10 14 Q10 8 16 8 Q22 8 22 14 L22 20 Z" stroke="#7C3AED" strokeWidth="1.5" fill="#7C3AED" opacity="0.15" strokeLinejoin="round"/>
-    <path d="M10 14 Q6 14 6 10 Q6 6 10 8" stroke="#7C3AED" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
-    <path d="M22 14 Q26 14 26 10 Q26 6 22 8" stroke="#7C3AED" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
-    <rect x="12" y="20" width="8" height="3" rx="1" fill="#7C3AED" opacity="0.6"/>
-    <rect x="10" y="23" width="12" height="2.5" rx="1" fill="#7C3AED" opacity="0.8"/>
-    <circle cx="16" cy="13" r="3" fill="#FBBF24"/>
-    <circle cx="16" cy="13" r="5" stroke="#FBBF24" strokeWidth="1" fill="none" opacity="0.3"/>
-    <path d="M14 10 Q14 7 12 5" stroke="#7C3AED" strokeWidth="1" strokeLinecap="round" opacity="0.6"/>
-    <path d="M18 10 Q18 7 20 5" stroke="#7C3AED" strokeWidth="1" strokeLinecap="round" opacity="0.6"/>
-    <path d="M16 9 L16 4" stroke="#7C3AED" strokeWidth="1" strokeLinecap="round" opacity="0.6"/>
-    <circle cx="12" cy="5" r="1.5" fill="#A855F7" opacity="0.8"/>
-    <circle cx="20" cy="5" r="1.5" fill="#A855F7" opacity="0.8"/>
-    <circle cx="16" cy="4" r="1.5" fill="#FBBF24" opacity="0.9"/>
-  </svg>
-)
+        stars.push({
+          x: Math.random() * W,
+          y: Math.random() * H * 0.82,
+          r, color,
+          op: r < 0.6  ? Math.random() * 0.28 + 0.06
+            : r < 1.2  ? Math.random() * 0.45 + 0.2
+            :            Math.random() * 0.35 + 0.55,
+          ts: Math.random() * 0.022 + 0.004,
+          to: Math.random() * Math.PI * 2,
+          flare: r > 1.4 && Math.random() > 0.35,
+        })
+      }
+    }
 
-const ShowcaseIcon = () => (
-  <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-    <rect x="8" y="6" width="16" height="20" rx="2" stroke="#7C3AED" strokeWidth="1.5" fill="#7C3AED" opacity="0.08"/>
-    <line x1="12" y1="12" x2="20" y2="12" stroke="#7C3AED" strokeWidth="1.5" strokeLinecap="round"/>
-    <line x1="12" y1="16" x2="20" y2="16" stroke="#7C3AED" strokeWidth="1.5" strokeLinecap="round"/>
-    <line x1="12" y1="20" x2="17" y2="20" stroke="#7C3AED" strokeWidth="1.5" strokeLinecap="round"/>
-    <circle cx="24" cy="8" r="1.5" fill="#FBBF24"/>
-    <circle cx="28" cy="14" r="1.5" fill="#A855F7" opacity="0.8"/>
-    <circle cx="26" cy="20" r="1.5" fill="#7C3AED" opacity="0.8"/>
-    <line x1="24" y1="8" x2="22" y2="10" stroke="#FBBF24" strokeWidth="1" opacity="0.6"/>
-    <line x1="28" y1="14" x2="22" y2="15" stroke="#A855F7" strokeWidth="1" opacity="0.5"/>
-    <line x1="26" y1="20" x2="22" y2="19" stroke="#7C3AED" strokeWidth="1" opacity="0.5"/>
-    <circle cx="24" cy="8" r="3" stroke="#FBBF24" strokeWidth="0.8" fill="none" opacity="0.3"/>
-    <circle cx="28" cy="14" r="3" stroke="#A855F7" strokeWidth="0.8" fill="none" opacity="0.25"/>
-  </svg>
-)
+    function drawStars() {
+      stars.forEach(s => {
+        const op = s.op * (
+          0.72 + 0.28 * Math.sin(t * s.ts + s.to)
+        )
+        const { r: cr, g: cg, b: cb } = s.color
 
-// ── Feature card data ─────────────────────────────────────────────────────────
+        if (s.r > 0.9) {
+          ctx.shadowBlur = s.r * 3.5
+          ctx.shadowColor =
+            `rgba(${cr},${cg},${cb},0.65)`
+        }
 
-const features = [
-  {
-    icon: IdeasIcon,
-    title: 'Idea Board',
-    description: 'Share your research ideas and discover opportunities to collaborate with peers across Africa.',
-    color: '#A855F7',
-  },
-  {
-    icon: CollaborateIcon,
-    title: 'Smart Matching',
-    description: 'Our algorithm connects you with researchers who complement your skills and share your interests.',
-    color: '#06B6D4',
-  },
-  {
-    icon: MentorIcon,
-    title: 'Mentor Network',
-    description: 'Access experienced academics and industry professionals for guidance on your research journey.',
-    color: '#C084FC',
-  },
-  {
-    icon: ReputationIcon,
-    title: 'Project Workspace',
-    description: 'Manage your research projects with Kanban boards, file sharing, and real-time collaboration.',
-    color: '#818CF8',
-  },
-  {
-    icon: ShowcaseIcon,
-    title: 'Research Showcase',
-    description: 'Publish and share your completed research with the academic community.',
-    color: '#06B6D4',
-  },
-  {
-    icon: GrantsIcon,
-    title: 'Task Marketplace',
-    description: 'Find help or offer your expertise on specific research tasks.',
-    color: '#A855F7',
-  },
-]
+        ctx.beginPath()
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2)
+        ctx.fillStyle = `rgba(${cr},${cg},${cb},${op})`
+        ctx.fill()
+        ctx.shadowBlur = 0
 
-// ── Testimonials ──────────────────────────────────────────────────────────────
+        if (s.flare) {
+          const sp = s.r * 5
+          const fo = op * 0.5
 
-const testimonials = [
-  {
-    quote: "Within two weeks of joining ResearchFlow, I had three collaborators for my climate adaptation study. We submitted to a peer-reviewed journal six months later — something I could not have done alone.",
-    author: "Amara Okafor",
-    role: "PhD Candidate, University of Ibadan",
-    initial: "A",
-  },
-  {
-    quote: "The Akili Score system genuinely motivates students to contribute meaningfully. My lab has seen a 40% increase in cross-departmental project proposals since we started using ResearchFlow.",
-    author: "Dr. Chukwuemeka Adeyemi",
-    role: "Associate Professor, Obafemi Awolowo University",
-    initial: "C",
-  },
-  {
-    quote: "As a female researcher in northern Nigeria, finding a mentor felt impossible. ResearchFlow connected me with a senior researcher in Nairobi in days. That relationship changed my career.",
-    author: "Fatima Al-Hassan",
-    role: "Masters Student, Ahmadu Bello University",
-    initial: "F",
-  },
-]
+          const hg = ctx.createLinearGradient(
+            s.x - sp, s.y, s.x + sp, s.y
+          )
+          hg.addColorStop(0, `rgba(${cr},${cg},${cb},0)`)
+          hg.addColorStop(0.5, `rgba(${cr},${cg},${cb},${fo})`)
+          hg.addColorStop(1, `rgba(${cr},${cg},${cb},0)`)
+          ctx.beginPath()
+          ctx.moveTo(s.x - sp, s.y)
+          ctx.lineTo(s.x + sp, s.y)
+          ctx.strokeStyle = hg
+          ctx.lineWidth = 0.7
+          ctx.stroke()
 
-// ── Page ──────────────────────────────────────────────────────────────────────
+          const vg = ctx.createLinearGradient(
+            s.x, s.y - sp, s.x, s.y + sp
+          )
+          vg.addColorStop(0, `rgba(${cr},${cg},${cb},0)`)
+          vg.addColorStop(0.5, `rgba(${cr},${cg},${cb},${fo})`)
+          vg.addColorStop(1, `rgba(${cr},${cg},${cb},0)`)
+          ctx.beginPath()
+          ctx.moveTo(s.x, s.y - sp)
+          ctx.lineTo(s.x, s.y + sp)
+          ctx.strokeStyle = vg
+          ctx.lineWidth = 0.5
+          ctx.stroke()
 
-export default function LandingPage() {
-  const stats = [
-    { value: '100+', label: 'African Universities' },
-    { value: '10K+', label: 'Student Researchers' },
-    { value: '500+', label: 'Active Projects' },
-    { value: '95%', label: 'Match Success Rate' },
-  ]
+          if (s.r > 2.0) {
+            const ds = sp * 0.5
+            const dop = fo * 0.45
+            ;[[1,1],[1,-1],[-1,1],[-1,-1]].forEach(
+              ([dx, dy]) => {
+                const dg = ctx.createLinearGradient(
+                  s.x, s.y,
+                  s.x + dx * ds, s.y + dy * ds
+                )
+                dg.addColorStop(0, `rgba(${cr},${cg},${cb},${dop})`)
+                dg.addColorStop(1, `rgba(${cr},${cg},${cb},0)`)
+                ctx.beginPath()
+                ctx.moveTo(s.x, s.y)
+                ctx.lineTo(s.x + dx * ds, s.y + dy * ds)
+                ctx.strokeStyle = dg
+                ctx.lineWidth = 0.4
+                ctx.stroke()
+              }
+            )
+          }
+        }
+      })
+    }
+
+    function drawPlanet() {
+      const cx = W * 0.5
+      const cy = H + H * 0.24
+      const pr = Math.max(W, H) * 0.90
+
+      const body = ctx.createRadialGradient(
+        cx, cy, pr * 0.7, cx, cy, pr
+      )
+      body.addColorStop(0,    'rgba(20,8,50,0.0)')
+      body.addColorStop(0.80, 'rgba(20,8,50,0.12)')
+      body.addColorStop(0.92, 'rgba(30,10,70,0.40)')
+      body.addColorStop(0.97, 'rgba(15,5,45,0.65)')
+      body.addColorStop(1,    'rgba(10,3,30,0.0)')
+      ctx.beginPath()
+      ctx.arc(cx, cy, pr, 0, Math.PI * 2)
+      ctx.fillStyle = body
+      ctx.fill()
+
+      const ao = ctx.createRadialGradient(
+        cx, cy, pr * 0.86, cx, cy, pr * 1.1
+      )
+      ao.addColorStop(0,    'rgba(80,20,180,0.0)')
+      ao.addColorStop(0.25, 'rgba(100,30,200,0.10)')
+      ao.addColorStop(0.55, 'rgba(130,50,220,0.20)')
+      ao.addColorStop(0.80, 'rgba(160,80,255,0.14)')
+      ao.addColorStop(1,    'rgba(180,100,255,0.0)')
+      ctx.beginPath()
+      ctx.arc(cx, cy, pr * 1.1, 0, Math.PI * 2)
+      ctx.fillStyle = ao
+      ctx.fill()
+
+      const ai = ctx.createRadialGradient(
+        cx, cy, pr * 0.92, cx, cy, pr * 1.015
+      )
+      ai.addColorStop(0,    'rgba(120,40,220,0.0)')
+      ai.addColorStop(0.35, 'rgba(150,60,240,0.38)')
+      ai.addColorStop(0.65, 'rgba(180,90,255,0.55)')
+      ai.addColorStop(0.88, 'rgba(200,120,255,0.28)')
+      ai.addColorStop(1,    'rgba(200,120,255,0.0)')
+      ctx.beginPath()
+      ctx.arc(cx, cy, pr * 1.015, 0, Math.PI * 2)
+      ctx.fillStyle = ai
+      ctx.fill()
+
+      const rimAngle = Math.acos(
+        Math.min(1, Math.max(-1, (cy - H) / pr))
+      )
+      const rimStart = Math.PI + rimAngle
+      const rimEnd = Math.PI * 2 - rimAngle
+
+      ctx.beginPath()
+      ctx.arc(cx, cy, pr, rimStart, rimEnd)
+      ctx.strokeStyle = 'rgba(160,80,255,0.30)'
+      ctx.lineWidth = 16
+      ctx.shadowBlur = 30
+      ctx.shadowColor = 'rgba(150,60,255,0.55)'
+      ctx.stroke()
+      ctx.shadowBlur = 0
+
+      ctx.beginPath()
+      ctx.arc(cx, cy, pr, rimStart, rimEnd)
+      ctx.strokeStyle = 'rgba(190,110,255,0.55)'
+      ctx.lineWidth = 4
+      ctx.shadowBlur = 18
+      ctx.shadowColor = 'rgba(180,90,255,0.7)'
+      ctx.stroke()
+      ctx.shadowBlur = 0
+
+      ctx.beginPath()
+      ctx.arc(cx, cy, pr, rimStart, rimEnd)
+      ctx.strokeStyle = 'rgba(220,160,255,0.80)'
+      ctx.lineWidth = 1.2
+      ctx.shadowBlur = 14
+      ctx.shadowColor = 'rgba(210,140,255,0.95)'
+      ctx.stroke()
+      ctx.shadowBlur = 0
+
+      const hf = ctx.createLinearGradient(
+        0, H * 0.70, 0, H
+      )
+      hf.addColorStop(0,    'rgba(7,3,15,0)')
+      hf.addColorStop(0.45, 'rgba(7,3,15,0.50)')
+      hf.addColorStop(1,    'rgba(7,3,15,0.97)')
+      ctx.fillStyle = hf
+      ctx.fillRect(0, H * 0.70, W, H * 0.30)
+    }
+
+    function maybeShootingStar() {
+      shootTimer++
+      if (!shoot && shootTimer > 380 + Math.random() * 550) {
+        const angle = (18 + Math.random() * 22) * Math.PI / 180
+        const spd = 5.5 + Math.random() * 4
+        shoot = {
+          x: Math.random() * W * 0.55,
+          y: Math.random() * H * 0.3,
+          vx: spd * Math.cos(angle),
+          vy: spd * Math.sin(angle),
+          life: 0, max: 50,
+        }
+        shootTimer = 0
+      }
+      if (!shoot) return
+
+      const p = shoot.life / shoot.max
+      const fade = Math.sin(p * Math.PI)
+      const tl = 90
+      const tx = shoot.x - shoot.vx * (tl / shoot.vx)
+      const ty = shoot.y - shoot.vy * (tl / shoot.vx)
+
+      const sg = ctx.createLinearGradient(tx, ty, shoot.x, shoot.y)
+      sg.addColorStop(0,   'rgba(220,180,255,0)')
+      sg.addColorStop(0.6, `rgba(220,180,255,${fade * 0.35})`)
+      sg.addColorStop(1,   `rgba(255,255,255,${fade * 0.85})`)
+      ctx.beginPath()
+      ctx.moveTo(tx, ty)
+      ctx.lineTo(shoot.x, shoot.y)
+      ctx.strokeStyle = sg
+      ctx.lineWidth = 1.4
+      ctx.stroke()
+
+      ctx.beginPath()
+      ctx.arc(shoot.x, shoot.y, 1.4, 0, Math.PI * 2)
+      ctx.fillStyle = `rgba(255,255,255,${fade * 0.9})`
+      ctx.fill()
+
+      shoot.x += shoot.vx
+      shoot.y += shoot.vy
+      shoot.life++
+      if (shoot.life >= shoot.max) shoot = null
+    }
+
+    function render() {
+      t++
+      ctx.fillStyle = '#07030F'
+      ctx.fillRect(0, 0, W, H)
+
+      const nb1 = ctx.createRadialGradient(
+        W * 0.08, H * 0.3, 0,
+        W * 0.08, H * 0.3, W * 0.35
+      )
+      nb1.addColorStop(0, 'rgba(60,20,140,0.06)')
+      nb1.addColorStop(1, 'rgba(0,0,0,0)')
+      ctx.fillStyle = nb1
+      ctx.fillRect(0, 0, W, H)
+
+      const nb2 = ctx.createRadialGradient(
+        W * 0.05, H * 0.7, 0,
+        W * 0.05, H * 0.7, W * 0.28
+      )
+      nb2.addColorStop(0, 'rgba(6,182,212,0.045)')
+      nb2.addColorStop(1, 'rgba(0,0,0,0)')
+      ctx.fillStyle = nb2
+      ctx.fillRect(0, 0, W, H)
+
+      drawStars()
+      maybeShootingStar()
+      drawPlanet()
+
+      animId = requestAnimationFrame(render)
+    }
+
+    function resize() {
+      canvas.width = window.innerWidth
+      canvas.height = window.innerHeight
+      W = canvas.width
+      H = canvas.height
+      buildStars()
+    }
+
+    window.addEventListener('resize', resize)
+    resize()
+    render()
+
+    return () => {
+      cancelAnimationFrame(animId)
+      window.removeEventListener('resize', resize)
+    }
+  }, [])
 
   return (
-    <div className="min-h-screen bg-background text-foreground relative">
-      {/* Global particle field + ambient glows */}
-      <GlobalIllustrations />
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 w-full h-full"
+      style={{ zIndex: 0 }}
+    />
+  )
+}
 
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-background/85 border-b border-border backdrop-blur-xl">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <Link href="/">
-              <Logo variant="horizontal" width={160} uid="nav" />
-            </Link>
+export default function LandingPage() {
+  return (
+    <div style={{
+      background: '#07030F',
+      color: '#F0ECF8',
+      minHeight: '100vh',
+      overflowX: 'hidden',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    }}>
 
-            <div className="hidden md:flex items-center gap-8">
-              {['Features', 'How It Works', 'Testimonials'].map((item) => (
-                <Link
-                  key={item}
-                  href={`#${item.toLowerCase().replace(/ /g, '-')}`}
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  {item}
-                </Link>
-              ))}
-            </div>
+      {/* ── NAVBAR ── */}
+      <nav style={{
+        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
+        height: '60px',
+        display: 'flex', alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 48px',
+        background: 'rgba(7,3,15,0.6)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        borderBottom: '1px solid rgba(139,92,246,0.12)',
+      }}>
+        <Link href="/" style={{
+          display: 'flex', alignItems: 'center',
+          gap: '10px', textDecoration: 'none',
+        }}>
+          <Logo width={30} variant="icon"/>
+          <span style={{
+            fontSize: '18px', fontWeight: 700,
+            letterSpacing: '-0.02em',
+            color: '#F0ECF8',
+          }}>
+            Research<span style={{ color: '#FBBF24' }}>Flow</span>
+          </span>
+        </Link>
 
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" asChild className="text-muted-foreground hover:text-foreground">
-                <Link href="/auth/login">Sign in</Link>
-              </Button>
-              <Button asChild className="bg-gradient-to-br from-violet-600 to-violet-500 shadow-[0_0_20px_rgba(124,58,237,0.35)] border-none hover:shadow-[0_0_30px_rgba(124,58,237,0.5)]">
-                <Link href="/auth/signup">Get Started</Link>
-              </Button>
-            </div>
-          </div>
+        <div style={{
+          display: 'flex', gap: '36px',
+        }} className="hidden md:flex">
+          {['Features', 'How It Works', 'Universities'].map(item => (
+            <a key={item} href="#" style={{
+              fontSize: '14px',
+              color: 'rgba(196,181,253,0.6)',
+              textDecoration: 'none',
+            }}>
+              {item}
+            </a>
+          ))}
+        </div>
+
+        <div style={{
+          display: 'flex', gap: '12px',
+          alignItems: 'center',
+        }}>
+          <Link href="/auth/login" style={{
+            fontSize: '14px', color: '#F0ECF8',
+            textDecoration: 'none', padding: '8px 16px',
+          }}>
+            Sign in
+          </Link>
+          <Link href="/auth/signup" style={{
+            fontSize: '14px', fontWeight: 600,
+            color: '#fff',
+            padding: '9px 22px', borderRadius: '8px',
+            background: 'linear-gradient(135deg,#7C3AED,#A855F7)',
+            boxShadow: '0 0 20px rgba(124,58,237,0.45)',
+            textDecoration: 'none',
+          }}>
+            Get Started
+          </Link>
         </div>
       </nav>
 
-      {/* ── Hero Section ── */}
-      <ParallaxHeroWrapper>
-        <div className="max-w-7xl mx-auto relative z-10">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+      {/* ── HERO ── */}
+      <section style={{
+        position: 'relative',
+        minHeight: '100vh',
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center',
+        overflow: 'hidden',
+        textAlign: 'center',
+        padding: '80px 24px 140px',
+      }}>
+        {/* Animated canvas background */}
+        <HeroCanvas />
 
-            {/* Left: copy */}
-            <div className="text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-8 animate-fade-in bg-violet-600/12 border border-violet-500/25">
-                <Zap className="w-3.5 h-3.5 text-violet-400" />
-                <span className="text-sm font-medium text-violet-400">Built for African researchers, by African innovators</span>
-              </div>
+        {/* Ghost Baobab — right side, very subtle */}
+        <svg
+          viewBox="0 0 520 580"
+          style={{
+            position: 'absolute',
+            right: '-40px',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            width: '480px',
+            opacity: 0.07,
+            zIndex: 1,
+            pointerEvents: 'none',
+            animation: 'bgFloat 16s ease-in-out infinite',
+          }}
+          className="hidden lg:block"
+        >
+          <defs>
+            <linearGradient id="bgT" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#7C3AED"/>
+              <stop offset="100%" stopColor="#2E1065"/>
+            </linearGradient>
+          </defs>
+          <path d="M 242,420 C 237,450 230,490 226,540 L 294,540 C 290,490 283,450 278,420 Z" fill="url(#bgT)"/>
+          <path d="M 260,420 Q 160,300 25,105" stroke="#A855F7" strokeWidth="7" fill="none" strokeLinecap="round"/>
+          <path d="M 260,420 Q 195,285 85,90" stroke="#A855F7" strokeWidth="7" fill="none" strokeLinecap="round"/>
+          <path d="M 260,420 Q 230,270 185,65" stroke="#A855F7" strokeWidth="7" fill="none" strokeLinecap="round"/>
+          <path d="M 260,420 Q 260,270 260,48" stroke="#A855F7" strokeWidth="7.5" fill="none" strokeLinecap="round"/>
+          <path d="M 260,420 Q 290,270 335,65" stroke="#A855F7" strokeWidth="7" fill="none" strokeLinecap="round"/>
+          <path d="M 260,420 Q 325,285 435,90" stroke="#A855F7" strokeWidth="7" fill="none" strokeLinecap="round"/>
+          <path d="M 260,420 Q 360,300 495,105" stroke="#A855F7" strokeWidth="7" fill="none" strokeLinecap="round"/>
+          <g fill="none" stroke="#C4B5FD" strokeWidth="2" strokeLinecap="round" opacity="0.7">
+            <path d="M 25,105 Q 55,92 85,90"/>
+            <path d="M 85,90 Q 135,76 185,65"/>
+            <path d="M 185,65 Q 222,56 260,48"/>
+            <path d="M 260,48 Q 297,56 335,65"/>
+            <path d="M 335,65 Q 385,76 435,90"/>
+            <path d="M 435,90 Q 465,92 495,105"/>
+          </g>
+          <circle cx="25" cy="105" r="11" fill="#8B5CF6"/>
+          <circle cx="85" cy="90" r="10" fill="#A855F7"/>
+          <circle cx="185" cy="65" r="11" fill="#8B5CF6"/>
+          <circle cx="260" cy="48" r="18" fill="rgba(251,191,36,0.18)"/>
+          <circle cx="260" cy="48" r="12" fill="#FBBF24"/>
+          <circle cx="335" cy="65" r="11" fill="#8B5CF6"/>
+          <circle cx="435" cy="90" r="10" fill="#A855F7"/>
+          <circle cx="495" cy="105" r="11" fill="#8B5CF6"/>
+        </svg>
 
-              <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold font-heading leading-none mb-6 animate-fade-up tracking-tight">
-                <GradientText animate>Collaborate.</GradientText>{' '}
-                <GradientText animate>Discover.</GradientText>{' '}
-                <GradientText animate>Publish.</GradientText>
-              </h1>
+        <style>{`
+          @keyframes bgFloat {
+            0%,100% { transform:translateY(-50%); }
+            50% { transform:translateY(-52.5%); }
+          }
+        `}</style>
 
-              <p className="text-lg sm:text-xl max-w-2xl mx-auto lg:mx-0 mb-10 leading-relaxed animate-fade-up stagger-1 text-muted-foreground">
-                The premier research collaboration platform connecting university students across Africa.
-                Find collaborators, access mentors, and bring your research ideas to life.
-              </p>
+        {/* Hero content */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: [0.22,1,0.36,1] }}
+          style={{
+            position: 'relative', zIndex: 10,
+            maxWidth: '920px', width: '100%',
+          }}
+        >
+          {/* Badge */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+            style={{
+              display: 'inline-flex', alignItems: 'center',
+              gap: '8px', fontSize: '13px', fontWeight: 500,
+              color: 'rgba(196,181,253,0.9)',
+              background: 'rgba(124,58,237,0.12)',
+              border: '1px solid rgba(139,92,246,0.3)',
+              padding: '7px 20px', borderRadius: '100px',
+              marginBottom: '32px',
+              boxShadow: '0 0 20px rgba(124,58,237,0.15)',
+            }}
+          >
+            ⚡ Built for African researchers, by African innovators
+          </motion.div>
 
-              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 animate-fade-up stagger-2">
-                <MagneticButton>
-                  <Button
-                    size="lg"
-                    asChild
-                    className="bg-gradient-to-br from-violet-600 to-violet-500 shadow-[0_0_24px_rgba(124,58,237,0.45)] border-none rounded-lg hover:shadow-[0_0_32px_rgba(124,58,237,0.55)] transition-all"
-                  >
-                    <Link href="/auth/signup">
-                      Start Collaborating
-                      <ArrowRight className="ml-2 w-4 h-4" />
-                    </Link>
-                  </Button>
-                </MagneticButton>
-                <MagneticButton>
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    asChild
-                    className="border-violet-500/40 text-violet-400 bg-transparent rounded-lg hover:bg-violet-500/10 hover:border-violet-500/60"
-                  >
-                    <Link href="#how-it-works">See How It Works</Link>
-                  </Button>
-                </MagneticButton>
-              </div>
-            </div>
+          {/* Headline */}
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.7 }}
+            style={{
+              fontSize: 'clamp(52px, 8vw, 92px)',
+              fontWeight: 800,
+              lineHeight: 1.05,
+              letterSpacing: '-0.025em',
+              marginBottom: '22px',
+              background: 'linear-gradient(180deg, #E8DEFF 0%, #C4B5FD 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}
+          >
+            Collaborate. Discover.<br/>Publish.
+          </motion.h1>
 
-            {/* Right: Baobab tree */}
-            <div className="relative flex items-center justify-center lg:justify-end w-full h-full min-h-[400px]">
-              <BaobabTree />
-            </div>
-          </div>
+          {/* Subtitle */}
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.7 }}
+            style={{
+              fontSize: 'clamp(15px, 1.8vw, 18px)',
+              color: 'rgba(196,181,253,0.5)',
+              lineHeight: 1.75,
+              maxWidth: '540px',
+              margin: '0 auto 42px',
+            }}
+          >
+            The premier research collaboration platform connecting
+            university students across Africa. Find collaborators,
+            access mentors, and bring your research ideas to life.
+          </motion.p>
+
+          {/* CTAs */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 0.7 }}
+            style={{
+              display: 'flex', alignItems: 'center',
+              justifyContent: 'center',
+              gap: '14px', flexWrap: 'wrap',
+              marginBottom: '72px',
+            }}
+          >
+            <MagneticButton>
+              <Link href="/auth/signup" style={{
+                display: 'inline-flex', alignItems: 'center',
+                gap: '8px', fontSize: '15px', fontWeight: 700,
+                color: '#fff',
+                padding: '13px 30px', borderRadius: '9px',
+                background: 'linear-gradient(135deg,#7C3AED,#A855F7)',
+                boxShadow: '0 0 26px rgba(124,58,237,0.55)',
+                textDecoration: 'none',
+                letterSpacing: '-0.01em',
+              }}>
+                Start Collaborating →
+              </Link>
+            </MagneticButton>
+            <Link href="/auth/login" style={{
+              display: 'inline-flex', alignItems: 'center',
+              gap: '8px', fontSize: '15px', fontWeight: 500,
+              color: 'rgba(196,181,253,0.8)',
+              padding: '13px 26px', borderRadius: '9px',
+              border: '1px solid rgba(139,92,246,0.3)',
+              background: 'rgba(124,58,237,0.07)',
+              textDecoration: 'none',
+            }}>
+              Sign In
+            </Link>
+          </motion.div>
 
           {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-20 max-w-4xl mx-auto animate-fade-up stagger-3">
-            {stats.map((stat) => (
-              <div key={stat.label} className="text-center p-6 rounded-2xl bg-card border border-border">
-                <div className="text-4xl font-bold font-heading stat-number">{stat.value}</div>
-                <div className="text-sm mt-1 text-muted-foreground">{stat.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </ParallaxHeroWrapper>
-
-      {/* ── Features ── */}
-      <section id="features" className="py-24 px-4 relative">
-        <FeaturesIllustrations />
-        <div className="max-w-7xl mx-auto relative z-10">
-          <div className="text-center mb-16">
-            <p className="label-section mb-3">Platform Features</p>
-            <h2 className="text-3xl sm:text-4xl font-bold font-heading mb-4 tracking-tight">
-              Everything You Need to{' '}
-              <GradientText>Succeed</GradientText>
-            </h2>
-            <p className="max-w-2xl mx-auto text-muted-foreground">
-              From ideation to publication, ResearchFlow provides all the tools for successful research collaboration.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {features.map((feature, i) => (
-              <div
-                key={feature.title}
-                className={`p-6 rounded-2xl transition-all duration-300 cursor-default animate-fade-up stagger-${Math.min(i + 1, 4)} bg-card border border-border hover:border-primary/40 hover:shadow-[0_0_30px_rgba(124,58,237,0.12)]`}
-              >
-                <div
-                  className="w-11 h-11 rounded-xl flex items-center justify-center mb-4"
-                  style={{ background: `${feature.color}18`, border: `1px solid ${feature.color}30` }}
-                >
-                  <feature.icon />
-                </div>
-                <h3 className="text-lg font-semibold font-heading mb-2">{feature.title}</h3>
-                <p className="text-sm leading-relaxed text-muted-foreground">{feature.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── How It Works ── */}
-      <section id="how-it-works" className="py-24 px-4 bg-secondary/20">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <p className="label-section mb-3">Getting Started</p>
-            <h2 className="text-3xl sm:text-4xl font-bold font-heading mb-4 tracking-tight">
-              Get Started in Minutes
-            </h2>
-            <p className="text-muted-foreground">Join thousands of researchers already collaborating on ResearchFlow.</p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6, duration: 0.7 }}
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: '12px',
+              maxWidth: '860px',
+              margin: '0 auto',
+            }}
+            className="grid-cols-2 sm:grid-cols-4"
+          >
             {[
-              {
-                step: '01',
-                icon: User,
-                iconColor: '#A855F7',
-                title: 'Create Your Profile',
-                description: "Sign up with your university email, add your skills, research interests, and what you're looking to achieve. Your profile is your academic identity on ResearchFlow.",
-              },
-              {
-                step: '02',
-                icon: Users,
-                iconColor: '#06B6D4',
-                title: 'Find Your Match',
-                description: 'Our smart algorithm surfaces collaborators, ideas, and mentors tailored to your research goals. Browse opportunities or let matches come to you.',
-              },
-              {
-                step: '03',
-                icon: Award,
-                iconColor: '#C084FC',
-                title: 'Publish & Grow',
-                description: 'Form teams, manage projects with built-in tools, earn Akili Score points, and publish your completed research to the African academic community.',
-              },
-            ].map((item, i) => (
-              <div
-                key={item.step}
-                className={`relative p-8 rounded-2xl animate-fade-up stagger-${i + 1} bg-card border border-border hover:border-primary/35 transition-all duration-300`}
+              { num: '100+', label: 'African Universities' },
+              { num: '10K+', label: 'Student Researchers' },
+              { num: '500+', label: 'Active Projects' },
+              { num: '95%', label: 'Match Success Rate' },
+            ].map((stat, i) => (
+              <motion.div
+                key={stat.label}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.7 + i * 0.08 }}
+                whileHover={{
+                  borderColor: 'rgba(139,92,246,0.35)',
+                  background: 'rgba(124,58,237,0.07)',
+                }}
+                style={{
+                  background: 'rgba(255,255,255,0.03)',
+                  border: '1px solid rgba(139,92,246,0.18)',
+                  borderRadius: '14px',
+                  padding: '22px 16px 18px',
+                  backdropFilter: 'blur(8px)',
+                  WebkitBackdropFilter: 'blur(8px)',
+                  transition: 'all 0.2s',
+                }}
               >
-                <div className="flex items-center gap-4 mb-5">
-                  <div
-                    className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
-                    style={{ background: `${item.iconColor}18`, border: `1px solid ${item.iconColor}30` }}
-                  >
-                    <item.icon className="w-6 h-6" style={{ color: item.iconColor }} />
-                  </div>
-                  <span className="text-4xl font-black font-heading text-violet-600/20 tracking-tighter leading-none">{item.step}</span>
+                <div style={{
+                  fontSize: '36px', fontWeight: 900,
+                  letterSpacing: '-0.03em', lineHeight: 1,
+                  marginBottom: '6px',
+                  background: 'linear-gradient(135deg, #C4B5FD, #A855F7)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                }}>
+                  {stat.num}
                 </div>
-                <div className="w-8 h-0.5 mb-4 rounded bg-gradient-to-r from-violet-600 to-cyan-500" />
-                <h3 className="text-xl font-semibold font-heading mb-3">{item.title}</h3>
-                <p className="text-muted-foreground text-sm leading-relaxed">{item.description}</p>
-              </div>
+                <div style={{
+                  fontSize: '12px',
+                  color: 'rgba(196,181,253,0.4)',
+                  letterSpacing: '0.01em',
+                }}>
+                  {stat.label}
+                </div>
+              </motion.div>
             ))}
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </section>
 
-      {/* ── Testimonials ── */}
-      <section id="testimonials" className="py-24 px-4 relative">
-        <StatsIllustrations />
-        <div className="max-w-7xl mx-auto relative z-10">
-          <div className="text-center mb-16">
-            <p className="label-section mb-3">Social Proof</p>
-            <h2 className="text-3xl sm:text-4xl font-bold font-heading tracking-tight">
-              Trusted by Researchers Across Africa
-            </h2>
-          </div>
+      {/* ── FEATURES SECTION ── */}
+      <section style={{
+        padding: '120px 24px',
+        maxWidth: '1100px',
+        margin: '0 auto',
+      }}>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7 }}
+          style={{ textAlign: 'center', marginBottom: '64px' }}
+        >
+          <p style={{
+            fontSize: '13px', fontWeight: 600,
+            letterSpacing: '0.15em', textTransform: 'uppercase',
+            color: 'rgba(196,181,253,0.5)',
+            marginBottom: '16px',
+          }}>
+            Everything you need
+          </p>
+          <h2 style={{
+            fontSize: 'clamp(32px, 5vw, 52px)',
+            fontWeight: 800, letterSpacing: '-0.025em',
+            background: 'linear-gradient(180deg, #E8DEFF 0%, #C4B5FD 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+            marginBottom: '16px',
+          }}>
+            Built for African Research
+          </h2>
+          <p style={{
+            fontSize: '17px',
+            color: 'rgba(196,181,253,0.45)',
+            maxWidth: '480px', margin: '0 auto',
+            lineHeight: 1.7,
+          }}>
+            Every feature designed specifically for
+            the African research context.
+          </p>
+        </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-5">
-            {testimonials.map((t, i) => (
-              <div
-                key={i}
-                className={`p-6 rounded-2xl animate-fade-up stagger-${i + 1} bg-card border border-border`}
-              >
-                <div className="flex gap-1 mb-4">
-                  {[...Array(5)].map((_, j) => (
-                    <Star key={j} className="w-4 h-4 fill-current text-violet-400" />
-                  ))}
-                </div>
-                <p className="mb-6 leading-relaxed text-foreground">&ldquo;{t.quote}&rdquo;</p>
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold bg-gradient-to-br from-violet-600 to-violet-500 text-primary-foreground">
-                    {t.initial}
-                  </div>
-                  <div>
-                    <div className="font-semibold text-sm">{t.author}</div>
-                    <div className="text-xs text-muted-foreground">{t.role}</div>
-                  </div>
-                </div>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: '16px',
+        }} className="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+          {[
+            {
+              icon: '🤝',
+              title: 'Smart Matching',
+              desc: 'Algorithm-powered matching connects you with researchers who complement your skills and share your interests.',
+              color: '#7C3AED',
+            },
+            {
+              icon: '💡',
+              title: 'Ideas Board',
+              desc: 'Post research ideas, get feedback from peers, and find collaborators to bring them to life.',
+              color: '#0891B2',
+            },
+            {
+              icon: '🎓',
+              title: 'Mentor Directory',
+              desc: 'Connect with verified mentors from your field for guidance, career advice, and academic support.',
+              color: '#059669',
+            },
+            {
+              icon: '💰',
+              title: 'Grants Directory',
+              desc: 'Discover and apply for funding opportunities across Africa. Never miss a grant deadline again.',
+              color: '#D97706',
+            },
+            {
+              icon: '🏆',
+              title: 'Akili Score',
+              desc: 'Build your research reputation with every contribution. Your Akili score reflects your impact.',
+              color: '#7C3AED',
+            },
+            {
+              icon: '📚',
+              title: 'Research Showcase',
+              desc: 'Publish and share your research work with the African academic community and beyond.',
+              color: '#DC2626',
+            },
+          ].map((feature, i) => (
+            <motion.div
+              key={feature.title}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.08, duration: 0.6 }}
+              whileHover={{ y: -6 }}
+              style={{
+                background: 'rgba(255,255,255,0.025)',
+                border: '1px solid rgba(139,92,246,0.15)',
+                borderRadius: '20px',
+                padding: '32px 28px',
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
+                transition: 'border-color 0.3s, box-shadow 0.3s',
+                cursor: 'default',
+              }}
+              onMouseEnter={e => {
+                const el = e.currentTarget as HTMLElement
+                el.style.borderColor = `${feature.color}40`
+                el.style.boxShadow = `0 8px 32px ${feature.color}15`
+              }}
+              onMouseLeave={e => {
+                const el = e.currentTarget as HTMLElement
+                el.style.borderColor = 'rgba(139,92,246,0.15)'
+                el.style.boxShadow = 'none'
+              }}
+            >
+              <div style={{
+                width: '52px', height: '52px',
+                borderRadius: '14px',
+                background: `${feature.color}20`,
+                border: `1px solid ${feature.color}30`,
+                display: 'flex', alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '24px',
+                marginBottom: '20px',
+              }}>
+                {feature.icon}
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── FAQ ── */}
-      <FaqSection />
-
-      {/* ── CTA ── */}
-      <section className="py-24 px-4 relative">
-        <FooterIllustrations />
-        <div className="max-w-4xl mx-auto text-center relative z-10">
-          <div className="p-10 sm:p-16 rounded-3xl relative overflow-hidden bg-gradient-to-r from-purple-700 to-purple-900 dark:from-purple-900 dark:to-[#050118]">
-            <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_50%_0%,rgba(255,255,255,0.08),transparent_60%)]" />
-            <div className="relative text-white">
-              <p className="label-section mb-4" style={{ color: 'rgba(255,255,255,0.6)' }}>Join the movement</p>
-              <h2 className="text-3xl sm:text-4xl font-bold font-heading mb-4 tracking-tight text-white">
-                Ready to Transform Your Research?
-              </h2>
-              <p className="mb-10 max-w-2xl mx-auto text-white/80">
-                Join the growing community of African researchers collaborating, learning, and publishing together.
+              <h3 style={{
+                fontSize: '17px', fontWeight: 700,
+                color: '#F0ECF8',
+                marginBottom: '10px',
+              }}>
+                {feature.title}
+              </h3>
+              <p style={{
+                fontSize: '14px',
+                color: 'rgba(196,181,253,0.45)',
+                lineHeight: 1.7,
+              }}>
+                {feature.desc}
               </p>
-              <Button
-                size="lg"
-                asChild
-                className="bg-white text-purple-800 hover:bg-white/90 border-none rounded-lg shadow-[0_0_24px_rgba(255,255,255,0.2)] hover:shadow-[0_0_32px_rgba(255,255,255,0.3)]"
-              >
-                <Link href="/auth/signup">
-                  Create Free Account
-                  <ArrowRight className="ml-2 w-4 h-4" />
-                </Link>
-              </Button>
-            </div>
-          </div>
+            </motion.div>
+          ))}
         </div>
       </section>
 
-      {/* ── Footer ── */}
-      <footer className="py-12 px-4 border-t border-border">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center">
-            <Logo variant="horizontal" width={160} uid="footer" />
-          </div>
-          <div className="flex items-center gap-6 text-sm text-muted-foreground">
-            {['About', 'Terms', 'Privacy', 'Contact'].map(item => (
-              <Link key={item} href={`/${item.toLowerCase()}`} className="hover:text-foreground transition-colors">
-                {item}
-              </Link>
-            ))}
-          </div>
-          <div className="text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} ResearchFlow. All rights reserved.
-          </div>
+      {/* ── CTA SECTION ── */}
+      <section style={{
+        padding: '100px 24px',
+        textAlign: 'center',
+      }}>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7 }}
+          style={{
+            maxWidth: '680px',
+            margin: '0 auto',
+            background: 'linear-gradient(135deg, rgba(124,58,237,0.15), rgba(34,211,238,0.08))',
+            border: '1px solid rgba(124,58,237,0.25)',
+            borderRadius: '28px',
+            padding: '64px 48px',
+          }}
+        >
+          <h2 style={{
+            fontSize: 'clamp(28px, 4vw, 44px)',
+            fontWeight: 800, letterSpacing: '-0.025em',
+            background: 'linear-gradient(180deg, #E8DEFF 0%, #C4B5FD 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+            marginBottom: '16px',
+          }}>
+            Ready to transform your research?
+          </h2>
+          <p style={{
+            fontSize: '17px',
+            color: 'rgba(196,181,253,0.5)',
+            marginBottom: '36px',
+            lineHeight: 1.7,
+          }}>
+            Join thousands of African researchers already
+            collaborating, discovering, and publishing on ResearchFlow.
+          </p>
+          <MagneticButton>
+            <Link href="/auth/signup" style={{
+              display: 'inline-flex', alignItems: 'center',
+              gap: '8px', fontSize: '16px', fontWeight: 700,
+              color: '#fff',
+              padding: '15px 36px', borderRadius: '10px',
+              background: 'linear-gradient(135deg,#7C3AED,#A855F7)',
+              boxShadow: '0 0 30px rgba(124,58,237,0.5)',
+              textDecoration: 'none',
+            }}>
+              Join ResearchFlow Free →
+            </Link>
+          </MagneticButton>
+          <p style={{
+            fontSize: '13px',
+            color: 'rgba(196,181,253,0.3)',
+            marginTop: '16px',
+          }}>
+            Free forever · No credit card required
+          </p>
+        </motion.div>
+      </section>
+
+      {/* ── FOOTER ── */}
+      <footer style={{
+        borderTop: '1px solid rgba(139,92,246,0.12)',
+        padding: '40px 48px',
+        display: 'flex', alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap', gap: '16px',
+      }}>
+        <div style={{
+          display: 'flex', alignItems: 'center',
+          gap: '8px',
+        }}>
+          <Logo width={24} variant="icon"/>
+          <span style={{
+            fontSize: '15px', fontWeight: 700,
+            color: '#F0ECF8',
+          }}>
+            Research<span style={{ color: '#FBBF24' }}>Flow</span>
+          </span>
+        </div>
+        <p style={{
+          fontSize: '13px',
+          color: 'rgba(196,181,253,0.3)',
+        }}>
+          © 2026 ResearchFlow · researchflowafrica.com
+        </p>
+        <div style={{
+          display: 'flex', gap: '24px',
+        }}>
+          {['Privacy', 'Terms', 'Contact'].map(item => (
+            <a key={item} href="#" style={{
+              fontSize: '13px',
+              color: 'rgba(196,181,253,0.3)',
+              textDecoration: 'none',
+            }}>
+              {item}
+            </a>
+          ))}
         </div>
       </footer>
     </div>
