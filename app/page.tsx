@@ -17,7 +17,6 @@ import {
   FooterIllustrations
 } from '@/components/landing/floating-illustrations'
 import { FaqSection } from '@/components/landing/faq-section'
-import { BaobabTree } from '@/components/landing/baobab-tree'
 import { ParallaxHeroWrapper } from '@/components/landing/parallax-hero'
 import { MagneticButton } from '@/components/ui/micro-interactions'
 import { GradientText } from '@/components/ui/gradient-text'
@@ -233,10 +232,8 @@ export default function LandingPage() {
       {/* ── Hero Section ── */}
       <ParallaxHeroWrapper>
         <div className="max-w-7xl mx-auto relative z-10">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-
-            {/* Left: copy */}
-            <div className="text-center lg:text-left">
+          <div className="flex flex-col items-center text-center">
+            <div className="max-w-3xl w-full">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-8 animate-fade-in bg-violet-600/12 border border-violet-500/25">
                 <Zap className="w-3.5 h-3.5 text-violet-400" />
                 <span className="text-sm font-medium text-violet-400">Built for African researchers, by African innovators</span>
@@ -279,10 +276,6 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Right: Baobab tree */}
-            <div className="relative flex items-center justify-center lg:justify-end w-full h-full min-h-[400px]">
-              <BaobabTree />
-            </div>
           </div>
 
           {/* Stats */}
