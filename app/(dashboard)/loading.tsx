@@ -1,4 +1,5 @@
 import { Logo } from '@/components/Logo'
+import { BaobabLoader } from '@/components/ui/baobab-loader'
 
 export default function DashboardLoading() {
   return (
@@ -7,7 +8,7 @@ export default function DashboardLoading() {
         <div className="mx-auto flex justify-center">
           <Logo variant="icon" width={56} />
         </div>
-        <div className="w-10 h-10 rounded-full animate-spin mx-auto" style={{ border: '3px solid rgba(124,58,237,0.2)', borderTopColor: '#7C3AED' }} />
+        <BaobabLoader size="md" />
         <p className="text-sm" style={{ color: '#7C6A9C' }}>Loading your dashboard...</p>
       </div>
     </div>

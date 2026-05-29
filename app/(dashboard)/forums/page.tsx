@@ -47,11 +47,12 @@ export default function ForumsPage() {
 
   useEffect(() => {
     async function load() {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('forums')
         .select('*')
         .order('is_pinned', { ascending: false })
         .order('last_activity_at', { ascending: false })
+      console.log('Forums:', data, 'Error:', error)
       setForums(data || [])
       setFiltered(data || [])
       setLoading(false)
