@@ -390,53 +390,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── Testimonials ── */}
-      <section id="testimonials" className="py-24 px-4 relative overflow-hidden">
-        <svg
-          aria-hidden="true"
-          style={{
-            position: 'absolute',
-            left: '50%',
-            top: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: '600px',
-            opacity: 0.07,
-            zIndex: 0,
-            pointerEvents: 'none',
-            filter: 'blur(1px)',
-          }}
-          viewBox="0 0 520 580"
-        >
-          <defs>
-            <linearGradient id="spBgT" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#7C3AED"/>
-              <stop offset="100%" stopColor="#2E1065"/>
-            </linearGradient>
-          </defs>
-          <path d="M 242,420 C 237,450 230,490 226,540 L 294,540 C 290,490 283,450 278,420 Z" fill="url(#spBgT)"/>
-          <path d="M 260,420 Q 160,300 25,105" stroke="#A855F7" strokeWidth="7" fill="none" strokeLinecap="round"/>
-          <path d="M 260,420 Q 195,285 85,90" stroke="#A855F7" strokeWidth="7" fill="none" strokeLinecap="round"/>
-          <path d="M 260,420 Q 230,270 185,65" stroke="#A855F7" strokeWidth="7" fill="none" strokeLinecap="round"/>
-          <path d="M 260,420 Q 260,270 260,48" stroke="#A855F7" strokeWidth="7.5" fill="none" strokeLinecap="round"/>
-          <path d="M 260,420 Q 290,270 335,65" stroke="#A855F7" strokeWidth="7" fill="none" strokeLinecap="round"/>
-          <path d="M 260,420 Q 325,285 435,90" stroke="#A855F7" strokeWidth="7" fill="none" strokeLinecap="round"/>
-          <path d="M 260,420 Q 360,300 495,105" stroke="#A855F7" strokeWidth="7" fill="none" strokeLinecap="round"/>
-          <g fill="none" stroke="#C4B5FD" strokeWidth="2" strokeLinecap="round" opacity="0.7">
-            <path d="M 25,105 Q 55,92 85,90"/>
-            <path d="M 85,90 Q 135,76 185,65"/>
-            <path d="M 185,65 Q 222,56 260,48"/>
-            <path d="M 260,48 Q 297,56 335,65"/>
-            <path d="M 335,65 Q 385,76 435,90"/>
-            <path d="M 435,90 Q 465,92 495,105"/>
-          </g>
-          <circle cx="25"  cy="105" r="11" fill="#8B5CF6"/>
-          <circle cx="85"  cy="90"  r="10" fill="#A855F7"/>
-          <circle cx="185" cy="65"  r="11" fill="#8B5CF6"/>
-          <circle cx="260" cy="48"  r="18" fill="rgba(251,191,36,0.18)"/>
-          <circle cx="260" cy="48"  r="12" fill="#FBBF24"/>
-          <circle cx="335" cy="65"  r="11" fill="#8B5CF6"/>
-          <circle cx="435" cy="90"  r="10" fill="#A855F7"/>
-          <circle cx="495" cy="105" r="11" fill="#8B5CF6"/>
-        </svg>
+      <section id="testimonials" className="py-24 px-4 relative">
         <StatsIllustrations />
         <div className="relative z-10 max-w-7xl mx-auto">
           <div className="text-center mb-16">
