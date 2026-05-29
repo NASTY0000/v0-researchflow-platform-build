@@ -450,6 +450,12 @@ input:focus, textarea:focus {
   backdrop-filter: blur(20px);
 }
 
+/* Baobab background SVG float */
+@keyframes bgFloat {
+  0%, 100% { transform: translateY(-50%); }
+  50%       { transform: translateY(-52.5%); }
+}
+
 /* Animated gradient for GradientText */
 @keyframes gradient {
   0%   { background-position: 0% 50% }
