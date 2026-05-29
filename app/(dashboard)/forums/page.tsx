@@ -11,6 +11,7 @@ import { Search, MessageSquare, Users, Pin, TrendingUp } from 'lucide-react'
 import { ForumCardSkeleton } from '@/components/ui/skeleton-screens'
 import { StaggerContainer, StaggerItem } from '@/components/ui/stagger-container'
 import { HoverCardLift } from '@/components/ui/hover-card-lift'
+import { EmptyState } from '@/components/ui/EmptyState'
 import { formatDistanceToNow } from 'date-fns'
 
 interface Forum {
@@ -116,10 +117,11 @@ export default function ForumsPage() {
       {/* Forum list */}
       <StaggerContainer className="space-y-3">
         {filtered.length === 0 && (
-          <div className="text-center py-16 text-muted-foreground">
-            <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-30" />
-            <p>No forums found</p>
-          </div>
+          <EmptyState
+            icon="💬"
+            title="No forums found"
+            description="Try a different search or category filter to discover research discussions."
+          />
         )}
         {filtered.map(forum => (
           <StaggerItem key={forum.id}>

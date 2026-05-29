@@ -13,6 +13,7 @@ import { formatDistanceToNow, format, isPast } from 'date-fns'
 import { ForumCardSkeleton } from '@/components/ui/skeleton-screens'
 import { StaggerContainer, StaggerItem } from '@/components/ui/stagger-container'
 import { HoverCardLift } from '@/components/ui/hover-card-lift'
+import { EmptyState } from '@/components/ui/EmptyState'
 
 interface Challenge {
   id: string
@@ -159,11 +160,18 @@ export default function ChallengesPage() {
 
       {/* Challenges */}
       <StaggerContainer className="space-y-4">
-        {filtered.length === 0 && (
+        {filtered.length === 0 && !isAdmin && (
+          <EmptyState
+            icon="🏆"
+            title="No challenges found"
+            description="Try adjusting your filters. New research challenges are posted regularly."
+          />
+        )}
+        {filtered.length === 0 && isAdmin && (
           <div className="text-center py-16 text-muted-foreground space-y-3">
             <Trophy className="w-12 h-12 mx-auto mb-3 opacity-30" />
             <p>No challenges found</p>
-            {isAdmin && challenges.length === 0 && (
+            {challenges.length === 0 && (
               <div className="space-y-3">
                 <p className="text-sm">No challenges in database.</p>
                 <Button

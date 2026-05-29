@@ -7,9 +7,10 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Progress } from "@/components/ui/progress"
 import {
-  Lightbulb, Users, FolderKanban, TrendingUp,
-  ArrowRight, Sparkles, Target, BookOpen, GraduationCap,
+  Lightbulb, Users, TrendingUp,
+  ArrowRight, Sparkles, Target, BookOpen, GraduationCap, Zap,
 } from "lucide-react"
+import { getCurrentTier, getNextTier, getPointsToNextTier } from "@/lib/utils/akili-progress"
 import { MentorDashboard } from "@/components/dashboard/mentor-dashboard"
 import { GettingStartedChecklist } from "@/components/dashboard/GettingStartedChecklist"
 import { MilestoneToast } from "@/components/ui/MilestoneToast"
@@ -112,11 +113,19 @@ export default function DashboardPage() {
     loadDashboard()
   }, [loadDashboard])
 
+  const akiliScore = profile?.akili_score ?? 0
+  const currentTier = getCurrentTier(akiliScore)
+  const nextTier = getNextTier(akiliScore)
+  const pointsLeft = getPointsToNextTier(akiliScore)
+  const tierPct = nextTier
+    ? Math.round(((akiliScore - currentTier.min) / (nextTier.min - currentTier.min)) * 100)
+    : 100
+
   const statCards = [
-    { title: "Research Ideas", value: stats.totalIdeas, icon: Lightbulb, href: "/ideas", color: '#A855F7', glow: 'rgba(168,85,247,0.25)' },
-    { title: "Active Projects", value: stats.activeProjects, icon: FolderKanban, href: "/projects", color: '#06B6D4', glow: 'rgba(6,182,212,0.25)' },
-    { title: "Connections", value: stats.connections, icon: Users, href: "/matches", color: '#22C55E', glow: 'rgba(34,197,94,0.25)' },
-    { title: "Matches", value: stats.matches, icon: Sparkles, href: "/matches", color: '#C084FC', glow: 'rgba(192,132,252,0.25)' },
+    { title: "Akili Score", value: akiliScore, icon: Zap, href: "/profile", color: '#F59E0B', glow: 'rgba(245,158,11,0.25)', sub: currentTier.name },
+    { title: "Connections", value: stats.connections, icon: Users, href: "/matches", color: '#06B6D4', glow: 'rgba(6,182,212,0.25)' },
+    { title: "Ideas Posted", value: stats.totalIdeas, icon: Lightbulb, href: "/ideas", color: '#A855F7', glow: 'rgba(168,85,247,0.25)' },
+    { title: "New Matches", value: stats.matches, icon: Sparkles, href: "/matches", color: '#EC4899', glow: 'rgba(236,72,153,0.25)' },
   ]
 
   const quickActions = [
@@ -200,21 +209,48 @@ export default function DashboardPage() {
           <Link key={stat.title} href={stat.href}>
             <div className={`p-5 rounded-2xl cursor-pointer transition-all duration-300 animate-fade-up stagger-${i + 1}`}
               style={{ ...cardStyle }}
-              onMouseOver={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(168,85,247,0.4)'; (e.currentTarget as HTMLDivElement).style.boxShadow = `0 0 24px ${stat.glow}` }}
+              onMouseOver={e => { (e.currentTarget as HTMLDivElement).style.borderColor = `${stat.color}66`; (e.currentTarget as HTMLDivElement).style.boxShadow = `0 0 24px ${stat.glow}` }}
               onMouseOut={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(139,92,246,0.15)'; (e.currentTarget as HTMLDivElement).style.boxShadow = 'none' }}>
-              <div className="flex items-center gap-4">
-                <div className="p-2.5 rounded-xl" style={{ background: `${stat.color}18`, border: `1px solid ${stat.color}30` }}>
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl flex-shrink-0" style={{ background: `${stat.color}18`, border: `1px solid ${stat.color}30` }}>
                   <stat.icon className="h-5 w-5" style={{ color: stat.color }} />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <AnimatedCounter value={stat.value} className="text-2xl font-bold font-heading stat-number" />
-                  <p className="text-xs" style={{ color: '#7C6A9C' }}>{stat.title}</p>
+                  <p className="text-xs truncate" style={{ color: '#7C6A9C' }}>
+                    {'sub' in stat && stat.sub ? stat.sub : stat.title}
+                  </p>
                 </div>
               </div>
             </div>
           </Link>
         ))}
       </div>
+
+      {/* Akili tier progress */}
+      {profile && nextTier && (
+        <div className="rounded-2xl p-5" style={cardStyle}>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Zap className="h-4 w-4" style={{ color: '#F59E0B' }} />
+              <span className="text-sm font-semibold">{currentTier.name}</span>
+              <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.25)', color: '#F59E0B' }}>{tierPct}%</span>
+            </div>
+            <span className="text-xs" style={{ color: '#7C6A9C' }}>
+              <span className="font-medium" style={{ color: '#F59E0B' }}>{pointsLeft.toLocaleString()}</span> pts to {nextTier.name}
+            </span>
+          </div>
+          <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+            <motion.div
+              className="h-full rounded-full"
+              style={{ background: 'linear-gradient(90deg,#D97706,#F59E0B,#FCD34D)' }}
+              initial={{ width: 0 }}
+              animate={{ width: `${tierPct}%` }}
+              transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1], delay: 0.3 }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Quick Actions */}
       <div>

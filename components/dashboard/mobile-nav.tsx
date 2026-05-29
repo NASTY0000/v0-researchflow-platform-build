@@ -4,15 +4,15 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Home, Lightbulb, Users, Bell, User } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
+import { motion } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
 
 const NAV_ITEMS = [
-  { label: 'Home', href: '/dashboard', icon: Home },
-  { label: 'Ideas', href: '/ideas', icon: Lightbulb },
-  { label: 'Network', href: '/network', icon: Users },
-  { label: 'Alerts', href: '/notifications', icon: Bell },
-  { label: 'Profile', href: '/profile', icon: User },
+  { label: 'Home',    href: '/dashboard',     icon: Home     },
+  { label: 'Ideas',   href: '/ideas',          icon: Lightbulb },
+  { label: 'Network', href: '/network',        icon: Users    },
+  { label: 'Alerts',  href: '/notifications',  icon: Bell     },
+  { label: 'Profile', href: '/profile',        icon: User     },
 ]
 
 interface MobileNavProps {
@@ -91,32 +91,53 @@ export function MobileNav({ initialUnreadCount }: MobileNavProps) {
             className="flex-1 flex flex-col items-center justify-center gap-0.5 relative"
             onClick={isNotifications ? () => setUnreadCount(0) : undefined}
           >
-            <div className="relative">
+            {/* Active background pill */}
+            {active && (
+              <motion.div
+                layoutId="mobile-nav-active"
+                className="absolute inset-x-2 inset-y-1 rounded-xl"
+                style={{ background: 'rgba(124,58,237,0.15)' }}
+                transition={{ type: 'spring', stiffness: 400, damping: 35 }}
+              />
+            )}
+
+            {/* Active top accent */}
+            {active && (
+              <motion.span
+                layoutId="mobile-nav-accent"
+                className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full"
+                style={{ background: 'linear-gradient(90deg,#7C3AED,#A855F7)' }}
+                transition={{ type: 'spring', stiffness: 400, damping: 35 }}
+              />
+            )}
+
+            <motion.div
+              className="relative z-10"
+              whileTap={{ scale: 0.85 }}
+              transition={{ duration: 0.1 }}
+            >
               <Icon
                 className="h-5 w-5 transition-colors"
-                style={{ color: active ? '#A855F7' : '#7C6A9C' }}
+                style={{ color: active ? '#C084FC' : '#7C6A9C' }}
               />
               {isNotifications && unreadCount > 0 && (
-                <Badge
-                  variant="destructive"
-                  className="absolute -top-2 -right-2 h-4 w-4 flex items-center justify-center p-0 text-[10px]"
+                <motion.span
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="absolute -top-2 -right-2 h-4 w-4 flex items-center justify-center rounded-full text-[9px] font-bold text-white"
+                  style={{ background: 'linear-gradient(135deg,#EF4444,#DC2626)', boxShadow: '0 0 8px rgba(239,68,68,0.5)' }}
                 >
                   {unreadCount > 9 ? '9+' : unreadCount}
-                </Badge>
+                </motion.span>
               )}
-            </div>
+            </motion.div>
+
             <span
-              className="text-[10px] font-medium transition-colors leading-tight"
-              style={{ color: active ? '#A855F7' : '#7C6A9C' }}
+              className="text-[10px] font-medium transition-colors leading-tight relative z-10"
+              style={{ color: active ? '#C084FC' : '#7C6A9C' }}
             >
               {label}
             </span>
-            {active && (
-              <span
-                className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full"
-                style={{ background: '#A855F7' }}
-              />
-            )}
           </Link>
         )
       })}

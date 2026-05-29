@@ -25,6 +25,7 @@ import { GrantCardSkeleton } from '@/components/ui/skeleton-screens'
 import { StaggerContainer, StaggerItem } from '@/components/ui/stagger-container'
 import { HoverCardLift } from '@/components/ui/hover-card-lift'
 import { toast } from 'sonner'
+import { EmptyState } from '@/components/ui/EmptyState'
 
 interface Grant {
   id: string
@@ -285,10 +286,11 @@ export default function GrantsPage() {
           {Array.from({ length: 3 }).map((_, i) => <GrantCardSkeleton key={i} />)}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground">
-          <p className="text-lg font-medium">No grants found</p>
-          <p className="text-sm mt-2">Try adjusting your filters</p>
-        </div>
+        <EmptyState
+          icon="💰"
+          title="No grants found"
+          description="Try adjusting your filters or search terms to find relevant funding opportunities."
+        />
       ) : (
         <StaggerContainer className="space-y-4">
           {filtered.map(grant => {
