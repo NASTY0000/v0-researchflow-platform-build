@@ -121,13 +121,7 @@ function JoinPageInner() {
 export default function JoinPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center"
-        style={{ backgroundColor: '#05010F' }}>
-        <div className="text-center space-y-4">
-          <BaobabLoader size="md" />
-          <p style={{ color: '#7C6A9C' }}>Loading invitation...</p>
-        </div>
-      </div>
+      <div className="min-h-screen" style={{ backgroundColor: '#05010F' }} />
     }>
       <JoinPageInner />
     </Suspense>
