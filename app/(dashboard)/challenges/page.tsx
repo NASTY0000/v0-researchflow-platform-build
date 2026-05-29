@@ -10,6 +10,9 @@ import { Card, CardContent } from '@/components/ui/card'
 import Link from 'next/link'
 import { Search, Trophy, Calendar, Users, Zap } from 'lucide-react'
 import { formatDistanceToNow, format, isPast } from 'date-fns'
+import { ForumCardSkeleton } from '@/components/ui/skeleton-screens'
+import { StaggerContainer, StaggerItem } from '@/components/ui/stagger-container'
+import { HoverCardLift } from '@/components/ui/hover-card-lift'
 
 interface Challenge {
   id: string
@@ -88,8 +91,8 @@ export default function ChallengesPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+      <div className="max-w-4xl mx-auto px-4 py-8 space-y-3">
+        {Array.from({ length: 4 }).map((_, i) => <ForumCardSkeleton key={i} />)}
       </div>
     )
   }
@@ -155,7 +158,7 @@ export default function ChallengesPage() {
       </div>
 
       {/* Challenges */}
-      <div className="space-y-4">
+      <StaggerContainer className="space-y-4">
         {filtered.length === 0 && (
           <div className="text-center py-16 text-muted-foreground space-y-3">
             <Trophy className="w-12 h-12 mx-auto mb-3 opacity-30" />
@@ -221,7 +224,9 @@ export default function ChallengesPage() {
         {filtered.map(challenge => {
           const deadlinePast = challenge.submission_deadline ? isPast(new Date(challenge.submission_deadline)) : false
           return (
-            <Link key={challenge.id} href={`/challenges/${challenge.id}`}>
+            <StaggerItem key={challenge.id}>
+            <HoverCardLift>
+            <Link href={`/challenges/${challenge.id}`}>
               <Card className="hover:border-primary/40 transition-colors cursor-pointer">
                 <CardContent className="p-5">
                   <div className="flex items-start justify-between gap-4">
@@ -288,9 +293,11 @@ export default function ChallengesPage() {
                 </CardContent>
               </Card>
             </Link>
+            </HoverCardLift>
+            </StaggerItem>
           )
         })}
-      </div>
+      </StaggerContainer>
     </div>
   )
 }

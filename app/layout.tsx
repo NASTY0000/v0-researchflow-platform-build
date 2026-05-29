@@ -58,7 +58,25 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
           {children}
           <InstallPrompt />
-          <Toaster position="bottom-right" theme="dark" />
+          <Toaster
+            position="bottom-center"
+            toastOptions={{
+              style: {
+                background: '#0B0117',
+                border: '1px solid rgba(124,58,237,0.25)',
+                color: '#F5F0E8',
+                borderRadius: '12px',
+                fontSize: '14px',
+              },
+              classNames: {
+                success: 'border-green-500/30 !bg-green-950/80',
+                error: 'border-red-500/30 !bg-red-950/80',
+                warning: 'border-yellow-500/30 !bg-yellow-950/80',
+              },
+            }}
+            richColors
+            closeButton
+          />
           {process.env.NODE_ENV === 'production' && <Analytics />}
           <script
             dangerouslySetInnerHTML={{

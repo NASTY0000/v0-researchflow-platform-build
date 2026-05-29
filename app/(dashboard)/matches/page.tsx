@@ -40,6 +40,9 @@ import { EmptyState } from "@/components/ui/EmptyState"
 import { MatchCardSkeleton } from "@/components/ui/SkeletonLayouts"
 import { usePullToRefresh } from "@/hooks/usePullToRefresh"
 import { PullToRefreshIndicator } from "@/components/ui/PullToRefreshIndicator"
+import { StaggerContainer, StaggerItem } from "@/components/ui/stagger-container"
+import { HoverCardLift } from "@/components/ui/hover-card-lift"
+import { toast } from "sonner"
 
 interface MatchWithProfile extends Match {
   matched_user: Profile
@@ -219,9 +222,11 @@ export default function MatchesPage() {
 
       setSelectedMatch(null)
       setConnectionMessage("")
+      toast.success('Connection request sent!')
       loadMatches()
     } catch (err) {
       console.error("Error connecting:", err)
+      toast.error('Failed to send request. Please try again.')
     }
 
     setIsConnecting(false)
@@ -334,9 +339,11 @@ export default function MatchesPage() {
 
         <TabsContent value={activeTab} className="mt-6">
           {filteredMatches.length > 0 ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <StaggerContainer className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredMatches.map((match) => (
-                <Card key={match.id} className="hover:border-primary/50 transition-colors group">
+                <StaggerItem key={match.id}>
+                <HoverCardLift>
+                <Card className="hover:border-primary/50 transition-colors group h-full">
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center gap-3">
@@ -467,8 +474,10 @@ export default function MatchesPage() {
                     )}
                   </CardContent>
                 </Card>
+                </HoverCardLift>
+                </StaggerItem>
               ))}
-            </div>
+            </StaggerContainer>
           ) : (
             <EmptyState
               icon={

@@ -8,6 +8,9 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import Link from 'next/link'
 import { Search, MessageSquare, Users, Pin, TrendingUp } from 'lucide-react'
+import { ForumCardSkeleton } from '@/components/ui/skeleton-screens'
+import { StaggerContainer, StaggerItem } from '@/components/ui/stagger-container'
+import { HoverCardLift } from '@/components/ui/hover-card-lift'
 import { formatDistanceToNow } from 'date-fns'
 
 interface Forum {
@@ -67,8 +70,8 @@ export default function ForumsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+      <div className="max-w-4xl mx-auto px-4 py-8 space-y-3">
+        {Array.from({ length: 5 }).map((_, i) => <ForumCardSkeleton key={i} />)}
       </div>
     )
   }
@@ -111,7 +114,7 @@ export default function ForumsPage() {
       </div>
 
       {/* Forum list */}
-      <div className="space-y-3">
+      <StaggerContainer className="space-y-3">
         {filtered.length === 0 && (
           <div className="text-center py-16 text-muted-foreground">
             <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-30" />
@@ -119,7 +122,9 @@ export default function ForumsPage() {
           </div>
         )}
         {filtered.map(forum => (
-          <Link key={forum.id} href={`/forums/${forum.id}`}>
+          <StaggerItem key={forum.id}>
+          <HoverCardLift>
+          <Link href={`/forums/${forum.id}`}>
             <Card className="hover:border-primary/40 transition-colors cursor-pointer">
               <CardContent className="p-4 flex items-start gap-4">
                 <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-2xl flex-shrink-0">
@@ -159,8 +164,10 @@ export default function ForumsPage() {
               </CardContent>
             </Card>
           </Link>
+          </HoverCardLift>
+          </StaggerItem>
         ))}
-      </div>
+      </StaggerContainer>
     </div>
   )
 }

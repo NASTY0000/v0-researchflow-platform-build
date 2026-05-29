@@ -18,6 +18,8 @@ import { createClient } from "@/lib/supabase/client"
 import type { Profile, ResearchIdea, Match } from "@/lib/types/database"
 import { Skeleton } from "@/components/ui/SkeletonLayouts"
 import { usePullToRefresh } from "@/hooks/usePullToRefresh"
+import { AnimatedCounter } from "@/components/ui/animated-counter"
+import { motion } from "framer-motion"
 import { PullToRefreshIndicator } from "@/components/ui/PullToRefreshIndicator"
 
 interface DashboardStats {
@@ -25,6 +27,13 @@ interface DashboardStats {
   activeProjects: number
   connections: number
   matches: number
+}
+
+function getGreeting() {
+  const h = new Date().getHours()
+  if (h < 12) return 'Good morning'
+  if (h < 17) return 'Good afternoon'
+  return 'Good evening'
 }
 
 const cardStyle = {
@@ -162,14 +171,20 @@ export default function DashboardPage() {
       <div className="relative rounded-2xl overflow-hidden p-8" style={{ background: 'linear-gradient(135deg,#1E0533 0%,#050118 100%)', border: '1px solid rgba(139,92,246,0.2)' }}>
         <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 20% 50%,rgba(124,58,237,0.2),transparent 60%)' }} />
         <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <p className="label-section mb-2">Your workspace</p>
-            <h1 className="text-3xl font-bold font-heading mb-1" style={{ letterSpacing: '-0.03em' }}>
-              Welcome back,{' '}
-              <span className="gradient-text">{profile?.full_name?.split(" ")[0] || "Researcher"}</span>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            className="space-y-1"
+          >
+            <p className="label-section mb-1">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
+            <h1 className="text-3xl font-bold font-heading" style={{ letterSpacing: '-0.03em' }}>
+              {getGreeting()},{' '}
+              <span className="gradient-text">{profile?.full_name?.split(' ')[0] || 'Researcher'}</span>{' '}
+              👋
             </h1>
             <p style={{ color: '#7C6A9C' }}>Here&apos;s what&apos;s happening with your research journey</p>
-          </div>
+          </motion.div>
           <Button asChild style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', boxShadow: '0 0 20px rgba(124,58,237,0.35)', border: 'none', borderRadius: '8px', flexShrink: 0 }}>
             <Link href="/ideas/new">
               <Lightbulb className="mr-2 h-4 w-4" />
@@ -192,7 +207,7 @@ export default function DashboardPage() {
                   <stat.icon className="h-5 w-5" style={{ color: stat.color }} />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold font-heading stat-number">{stat.value}</p>
+                  <AnimatedCounter value={stat.value} className="text-2xl font-bold font-heading stat-number" />
                   <p className="text-xs" style={{ color: '#7C6A9C' }}>{stat.title}</p>
                 </div>
               </div>

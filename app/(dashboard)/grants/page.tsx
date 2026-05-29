@@ -21,6 +21,10 @@ import {
 import { format, isPast, addDays } from 'date-fns'
 import { BaobabLoader } from '@/components/ui/baobab-loader'
 import { ContextualHint } from '@/components/ui/ContextualHint'
+import { GrantCardSkeleton } from '@/components/ui/skeleton-screens'
+import { StaggerContainer, StaggerItem } from '@/components/ui/stagger-container'
+import { HoverCardLift } from '@/components/ui/hover-card-lift'
+import { toast } from 'sonner'
 
 interface Grant {
   id: string
@@ -104,11 +108,13 @@ export default function GrantsPage() {
         .eq('user_id', user.id)
         .eq('grant_id', grantId)
       setBookmarks(prev => { const n = new Set(prev); n.delete(grantId); return n })
+      toast('Removed from bookmarks', { icon: '🗑️' })
     } else {
       await supabase
         .from('grant_bookmarks')
         .insert({ user_id: user.id, grant_id: grantId })
       setBookmarks(prev => new Set([...prev, grantId]))
+      toast.success('Saved to bookmarks')
     }
   }
 
@@ -275,8 +281,8 @@ export default function GrantsPage() {
 
       {/* List */}
       {loading ? (
-        <div className="flex justify-center py-12">
-          <BaobabLoader size="md" />
+        <div className="space-y-4">
+          {Array.from({ length: 3 }).map((_, i) => <GrantCardSkeleton key={i} />)}
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
@@ -284,13 +290,14 @@ export default function GrantsPage() {
           <p className="text-sm mt-2">Try adjusting your filters</p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <StaggerContainer className="space-y-4">
           {filtered.map(grant => {
             const status = deadlineStatus(grant.deadline)
             const saved = bookmarks.has(grant.id)
             return (
+              <StaggerItem key={grant.id}>
+              <HoverCardLift>
               <Card
-                key={grant.id}
                 className={`border transition-all hover:border-primary/30 ${
                   grant.is_featured ? 'border-primary/20 bg-primary/5' : 'border-border'
                 }`}
@@ -385,9 +392,11 @@ export default function GrantsPage() {
                   </div>
                 </CardContent>
               </Card>
+              </HoverCardLift>
+              </StaggerItem>
             )
           })}
-        </div>
+        </StaggerContainer>
       )}
 
       <div className="text-center py-6 border-t border-border">

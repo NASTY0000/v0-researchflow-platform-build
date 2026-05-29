@@ -31,6 +31,7 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { IdeaCardSkeleton } from '@/components/ui/SkeletonLayouts'
 import { usePullToRefresh } from '@/hooks/usePullToRefresh'
 import { PullToRefreshIndicator } from '@/components/ui/PullToRefreshIndicator'
+import { StaggerContainer, StaggerItem } from '@/components/ui/stagger-container'
 
 const RESEARCH_AREAS = [
   "All Areas",
@@ -336,9 +337,10 @@ export default function IdeasPage() {
           ))}
         </div>
       ) : ideas.length > 0 ? (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <StaggerContainer className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           {ideas.map(idea => (
-            <Card key={idea.id} className="hover:border-primary/50 transition-all group relative">
+            <StaggerItem key={idea.id}>
+            <Card className="hover:border-primary/50 transition-all group relative h-full">
               <CardContent className="p-6">
                 <div className="flex items-start justify-between gap-2 mb-3">
                   <Link href={`/ideas/${idea.id}`} className="flex-1">
@@ -440,8 +442,9 @@ export default function IdeasPage() {
                 </div>
               </CardContent>
             </Card>
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerContainer>
       ) : (
         <EmptyState
           icon={

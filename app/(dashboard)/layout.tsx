@@ -5,6 +5,7 @@ import { DashboardHeader } from '@/components/dashboard/header'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { MobileNav } from '@/components/dashboard/mobile-nav'
 import { GlobalSearch } from '@/components/dashboard/global-search'
+import { PageTransition } from '@/components/ui/page-transition'
 
 export default async function DashboardLayout({
   children,
@@ -41,10 +42,8 @@ export default async function DashboardLayout({
         <DashboardSidebar profile={profile} />
         <SidebarInset>
           <DashboardHeader profile={profile} unreadCount={unreadCount || 0} />
-          <main
-            className="flex-1 p-4 lg:p-6 pb-20 md:pb-6 bg-background min-h-screen"
-          >
-            {children}
+          <main className="flex-1 p-4 lg:p-6 pb-20 md:pb-6 bg-background min-h-screen">
+            <PageTransition>{children}</PageTransition>
           </main>
         </SidebarInset>
       </SidebarProvider>
