@@ -21,6 +21,7 @@ import {
 import { format, isPast, addDays } from 'date-fns'
 import { BaobabLoader } from '@/components/ui/baobab-loader'
 import { ContextualHint } from '@/components/ui/ContextualHint'
+import { GrantCardSkeleton } from '@/components/ui/skeleton-screens'
 import { StaggerContainer, StaggerItem } from '@/components/ui/stagger-container'
 import { HoverCardLift } from '@/components/ui/hover-card-lift'
 import { toast } from 'sonner'
@@ -272,8 +273,8 @@ export default function GrantsPage() {
 
       {/* List */}
       {loading ? (
-        <div className="flex items-center justify-center min-h-[400px]">
-          <BaobabLoader size="md" />
+        <div className="space-y-4">
+          {Array.from({ length: 3 }).map((_, i) => <GrantCardSkeleton key={i} />)}
         </div>
       ) : filtered.length === 0 ? (
         <EmptyState

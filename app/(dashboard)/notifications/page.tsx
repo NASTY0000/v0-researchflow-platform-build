@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/client'
 import type { Notification } from '@/lib/types/database'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { BaobabLoader } from '@/components/ui/baobab-loader'
+import { NotificationSkeleton } from '@/components/ui/SkeletonLayouts'
 import { usePullToRefresh } from '@/hooks/usePullToRefresh'
 import { PullToRefreshIndicator } from '@/components/ui/PullToRefreshIndicator'
 
@@ -50,8 +50,8 @@ export default function NotificationsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <BaobabLoader size="md" />
+      <div className="max-w-2xl mx-auto space-y-3">
+        {Array.from({ length: 5 }).map((_, i) => <NotificationSkeleton key={i} />)}
       </div>
     )
   }

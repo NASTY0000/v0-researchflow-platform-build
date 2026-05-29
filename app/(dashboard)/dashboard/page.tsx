@@ -17,7 +17,7 @@ import { MilestoneToast } from "@/components/ui/MilestoneToast"
 import { useMilestones } from "@/hooks/useMilestones"
 import { createClient } from "@/lib/supabase/client"
 import type { Profile, ResearchIdea, Match } from "@/lib/types/database"
-import { BaobabLoader } from "@/components/ui/baobab-loader"
+import { Skeleton } from "@/components/ui/SkeletonLayouts"
 import { usePullToRefresh } from "@/hooks/usePullToRefresh"
 import { AnimatedCounter } from "@/components/ui/animated-counter"
 import { motion } from "framer-motion"
@@ -141,8 +141,24 @@ export default function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <BaobabLoader size="lg" />
+      <div className="space-y-8">
+        {/* Hero banner skeleton */}
+        <Skeleton className="h-44 w-full rounded-2xl" />
+        {/* Stat cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-28 rounded-2xl" />
+          ))}
+        </div>
+        {/* Quick actions */}
+        <div className="grid grid-cols-2 gap-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-20 rounded-2xl" />
+          ))}
+        </div>
+        {/* Content rows */}
+        <Skeleton className="h-48 rounded-2xl" />
+        <Skeleton className="h-48 rounded-2xl" />
       </div>
     )
   }

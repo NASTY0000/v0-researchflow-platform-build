@@ -28,7 +28,7 @@ import { createClient } from "@/lib/supabase/client"
 import type { ResearchIdea, Profile } from "@/lib/types/database"
 import { formatDistanceToNow } from "date-fns"
 import { EmptyState } from '@/components/ui/EmptyState'
-import { BaobabLoader } from '@/components/ui/baobab-loader'
+import { IdeaCardSkeleton } from '@/components/ui/SkeletonLayouts'
 import { usePullToRefresh } from '@/hooks/usePullToRefresh'
 import { PullToRefreshIndicator } from '@/components/ui/PullToRefreshIndicator'
 import { StaggerContainer, StaggerItem } from '@/components/ui/stagger-container'
@@ -332,8 +332,10 @@ export default function IdeasPage() {
 
       {/* Ideas Grid */}
       {isLoading ? (
-        <div className="flex items-center justify-center min-h-[400px]">
-          <BaobabLoader size="md" />
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <IdeaCardSkeleton key={i} />
+          ))}
         </div>
       ) : ideas.length > 0 ? (
         <StaggerContainer className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
