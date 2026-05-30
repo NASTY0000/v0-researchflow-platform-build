@@ -125,7 +125,7 @@ export function HeroBackground() {
     function drawPlanet() {
       const cx = W * 0.5
       const cy = H + H * 0.24
-      const pr = Math.max(W, H) * 0.90
+      const pr = H * 0.90
 
       const body = ctx.createRadialGradient(cx,cy,pr*0.7,cx,cy,pr)
       body.addColorStop(0,    'rgba(20,8,50,0.0)')
