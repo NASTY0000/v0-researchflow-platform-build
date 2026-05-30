@@ -36,27 +36,85 @@ import {
   COLLABORATOR_TYPES, COLLABORATOR_TYPES_FEATURED,
 } from '@/lib/constants/onboarding'
 
+import { createClient } from '@/lib/supabase/client'
+
 // ── University picker ─────────────────────────────────────────────────────────
+
+interface UniOption {
+  id: string
+  name: string
+  university_type: string | null
+}
 
 interface UniversityPickerProps {
   value: string
   onChange: (name: string) => void
-  universities: University[]
 }
 
-function UniversityPicker({ value, onChange, universities }: UniversityPickerProps) {
+function UniversityPicker({ value, onChange }: UniversityPickerProps) {
   const [search, setSearch] = useState('')
+  const [universities, setUniversities] = useState<UniOption[]>([])
+  const [filtered, setFiltered] = useState<UniOption[]>([])
   const [open, setOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
+  const supabase = createClient()
 
-  // Merge DB universities with the static fallback list, deduplicated
-  const allNames: string[] = universities.length > 0
-    ? universities.filter(u => u.country === 'Nigeria').map(u => u.name)
-    : ALL_NIGERIAN_UNIVERSITIES
+  useEffect(() => {
+    loadUniversities()
+  }, [])
 
-  const filtered = search.trim().length === 0
-    ? allNames.slice(0, 10)
-    : allNames.filter(n => n.toLowerCase().includes(search.toLowerCase())).slice(0, 15)
+  useEffect(() => {
+    if (!universities.length) return
+
+    const q = search.trim().toLowerCase()
+
+    if (q.length === 0) {
+      setFiltered(universities.slice(0, 8))
+      return
+    }
+
+    const results = universities.filter(u => u.name.toLowerCase().includes(q))
+
+    const sorted = results.sort((a, b) => {
+      const aName = a.name.toLowerCase()
+      const bName = b.name.toLowerCase()
+      const aStarts = aName.startsWith(q)
+      const bStarts = bName.startsWith(q)
+      if (aStarts && !bStarts) return -1
+      if (!aStarts && bStarts) return 1
+      return aName.localeCompare(bName)
+    })
+
+    setFiltered(sorted.slice(0, 15))
+  }, [search, universities])
+
+  async function loadUniversities() {
+    setLoading(true)
+    const { data, error } = await supabase
+      .from('universities')
+      .select('id, name, university_type')
+      .eq('is_active', true)
+      .order('name', { ascending: true })
+
+    if (error) console.error('Failed to load universities:', error.message)
+
+    const list = (data || []) as UniOption[]
+    // Fall back to static list if DB is empty
+    if (list.length === 0) {
+      const fallback: UniOption[] = ALL_NIGERIAN_UNIVERSITIES.map((name, i) => ({
+        id: `static-${i}`,
+        name,
+        university_type: null,
+      }))
+      setUniversities(fallback)
+      setFiltered(fallback.slice(0, 8))
+    } else {
+      setUniversities(list)
+      setFiltered(list.slice(0, 8))
+    }
+    setLoading(false)
+  }
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -125,25 +183,47 @@ function UniversityPicker({ value, onChange, universities }: UniversityPickerPro
 
           {/* Results */}
           <div className="max-h-52 overflow-y-auto">
-            {filtered.length === 0 ? (
+            {loading ? (
+              <div className="py-6 text-center text-sm" style={{ color: '#7C6A9C' }}>
+                Loading universities...
+              </div>
+            ) : search.length > 0 && search.length < 2 ? (
+              <div className="px-3 py-4 text-center text-sm" style={{ color: '#7C6A9C' }}>
+                Keep typing to search...
+              </div>
+            ) : filtered.length === 0 ? (
               <div className="py-6 text-center text-sm" style={{ color: '#7C6A9C' }}>
                 No university found for &ldquo;{search}&rdquo;
               </div>
             ) : (
-              filtered.map((name) => (
+              filtered.map((uni) => (
                 <button
-                  key={name}
+                  key={uni.id}
                   type="button"
-                  onClick={() => { onChange(name); setSearch(''); setOpen(false) }}
-                  className="w-full text-left px-3 py-2.5 text-sm transition-colors"
+                  onClick={() => { onChange(uni.name); setSearch(''); setOpen(false) }}
+                  className="w-full text-left px-3 py-2.5 text-sm transition-colors flex items-center justify-between gap-2"
                   style={{
-                    color: value === name ? '#C084FC' : '#F3F0FF',
-                    background: value === name ? 'rgba(124,58,237,0.15)' : 'transparent',
+                    color: value === uni.name ? '#C084FC' : '#F3F0FF',
+                    background: value === uni.name ? 'rgba(124,58,237,0.15)' : 'transparent',
                   }}
-                  onMouseEnter={e => { if (value !== name) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)' }}
-                  onMouseLeave={e => { if (value !== name) (e.currentTarget as HTMLElement).style.background = 'transparent' }}
+                  onMouseEnter={e => { if (value !== uni.name) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)' }}
+                  onMouseLeave={e => { if (value !== uni.name) (e.currentTarget as HTMLElement).style.background = value === uni.name ? 'rgba(124,58,237,0.15)' : 'transparent' }}
                 >
-                  {name}
+                  <span className="truncate font-medium">{uni.name}</span>
+                  {uni.university_type && (
+                    <span
+                      className="text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded shrink-0"
+                      style={
+                        uni.university_type === 'federal'
+                          ? { background: 'rgba(59,130,246,0.15)', color: '#60A5FA' }
+                          : uni.university_type === 'state'
+                          ? { background: 'rgba(34,197,94,0.15)', color: '#4ADE80' }
+                          : { background: 'rgba(168,85,247,0.15)', color: '#C084FC' }
+                      }
+                    >
+                      {uni.university_type}
+                    </span>
+                  )}
                 </button>
               ))
             )}
@@ -154,7 +234,7 @@ function UniversityPicker({ value, onChange, universities }: UniversityPickerPro
             className="px-3 py-2 text-xs"
             style={{ borderTop: '1px solid rgba(139,92,246,0.15)', color: '#7C6A9C' }}
           >
-            {allNames.length} universities available
+            {universities.length} universities available
           </div>
         </div>
       )}
@@ -424,7 +504,6 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
                     <UniversityPicker
                       value={universityId}
                       onChange={setUniversityId}
-                      universities={universities}
                     />
                   ) : (
                     <Input
