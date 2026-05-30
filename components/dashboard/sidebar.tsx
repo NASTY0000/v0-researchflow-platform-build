@@ -14,6 +14,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
+  useSidebar,
 } from '@/components/ui/sidebar'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
@@ -42,104 +43,47 @@ import {
   FileText,
 } from 'lucide-react'
 import type { Profile } from '@/lib/types/database'
+
+interface NavItem {
+  title: string
+  href: string
+  icon: React.ElementType
+  badge?: string
+}
 import { signOut } from '@/lib/actions/auth'
 import { AkiliScoreBadge } from '@/components/akili/AkiliScoreBadge'
 
-const mainNavItems = [
-  {
-    title: 'Dashboard',
-    href: '/dashboard',
-    icon: LayoutDashboard,
-  },
-  {
-    title: 'Idea Board',
-    href: '/ideas',
-    icon: Lightbulb,
-  },
-  {
-    title: 'Find Collaborators',
-    href: '/matches',
-    icon: Users,
-  },
-  {
-    title: 'My Network',
-    href: '/network',
-    icon: UserCheck,
-  },
-  {
-    title: 'Saved',
-    href: '/saved',
-    icon: Bookmark,
-  },
-  {
-    title: 'My Projects',
-    href: '/projects',
-    icon: FolderKanban,
-  },
+const coreNavItems: NavItem[] = [
+  { title: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { title: 'Idea Board', href: '/ideas', icon: Lightbulb },
+  { title: 'Messages', href: '/messages', icon: MessageSquare },
 ]
 
-const resourceNavItems = [
-  {
-    title: 'Mentor Directory',
-    href: '/mentors',
-    icon: BookOpen,
-  },
-  {
-    title: 'Marketplace',
-    href: '/marketplace',
-    icon: Store,
-  },
-  {
-    title: 'Forums',
-    href: '/forums',
-    icon: MessageSquare,
-  },
-  {
-    title: 'Challenges',
-    href: '/challenges',
-    icon: Trophy,
-    badge: 'New',
-  },
-  {
-    title: 'Institution',
-    href: '/institution',
-    icon: Building2,
-  },
-  {
-    title: 'Agreements',
-    href: '/agreements',
-    icon: FileText,
-  },
-  {
-    title: 'Journals & Conferences',
-    href: '/publications',
-    icon: GraduationCap,
-  },
-  {
-    title: 'AI Assistant',
-    href: '/assistant',
-    icon: Sparkles,
-  },
-  {
-    title: 'Grants',
-    href: '/grants',
-    icon: DollarSign,
-  },
-  {
-    title: 'Messages',
-    href: '/messages',
-    icon: MessageSquare,
-  },
-  {
-    title: 'Showcase',
-    href: '/showcase',
-    icon: Award,
-  },
-  {
-    title: 'Leaderboard',
-    href: '/leaderboard',
-    icon: Trophy,
-  },
+const collaborateNavItems: NavItem[] = [
+  { title: 'Find Collaborators', href: '/matches', icon: Users },
+  { title: 'My Network', href: '/network', icon: UserCheck },
+  { title: 'My Projects', href: '/projects', icon: FolderKanban },
+]
+
+const discoverNavItems: NavItem[] = [
+  { title: 'Mentor Directory', href: '/mentors', icon: BookOpen },
+  { title: 'AI Assistant', href: '/assistant', icon: Sparkles },
+  { title: 'Grants', href: '/grants', icon: DollarSign },
+  { title: 'Journals & Conferences', href: '/publications', icon: GraduationCap },
+]
+
+const communityNavItems: NavItem[] = [
+  { title: 'Forums', href: '/forums', icon: MessageSquare },
+  { title: 'Challenges', href: '/challenges', icon: Trophy, badge: 'New' },
+  { title: 'Showcase', href: '/showcase', icon: Award },
+  { title: 'Leaderboard', href: '/leaderboard', icon: Trophy },
+  { title: 'Marketplace', href: '/marketplace', icon: Store },
+]
+
+const accountNavItems: NavItem[] = [
+  { title: 'Saved', href: '/saved', icon: Bookmark },
+  { title: 'Institution', href: '/institution', icon: Building2 },
+  { title: 'Agreements', href: '/agreements', icon: FileText },
 ]
 
 interface DashboardSidebarProps {
@@ -148,6 +92,7 @@ interface DashboardSidebarProps {
 
 export function DashboardSidebar({ profile }: DashboardSidebarProps) {
   const pathname = usePathname()
+  const { setOpenMobile } = useSidebar()
 
   const getInitials = (name: string | null) => {
     if (!name) return 'U'
@@ -161,10 +106,36 @@ export function DashboardSidebar({ profile }: DashboardSidebarProps) {
     }
   }
 
+  function NavItems({ items }: { items: NavItem[] }) {
+    return (
+      <SidebarMenu>
+        {items.map((item) => (
+          <SidebarMenuItem key={item.href}>
+            <SidebarMenuButton
+              asChild
+              isActive={pathname === item.href || pathname.startsWith(item.href + '/')}
+              tooltip={item.title}
+            >
+              <Link href={item.href} onClick={() => setOpenMobile(false)}>
+                <item.icon />
+                <span>{item.title}</span>
+                {'badge' in item && item.badge && (
+                  <span className="ml-auto text-[10px] font-semibold bg-primary/20 text-primary px-1.5 py-0.5 rounded-full">
+                    {item.badge}
+                  </span>
+                )}
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        ))}
+      </SidebarMenu>
+    )
+  }
+
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
-        <Link href="/dashboard" className="block hover:opacity-80 transition-opacity">
+        <Link href="/dashboard" className="block hover:opacity-80 transition-opacity" onClick={() => setOpenMobile(false)}>
           <div className="flex items-center gap-3 px-4 py-5 mb-2">
             <Logo variant="icon" width={38} />
             <div>
@@ -182,51 +153,37 @@ export function DashboardSidebar({ profile }: DashboardSidebarProps) {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Main</SidebarGroupLabel>
+          <SidebarGroupLabel>Core</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
-              {mainNavItems.map((item) => (
-                <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={pathname === item.href || pathname.startsWith(item.href + '/')}
-                    tooltip={item.title}
-                  >
-                    <Link href={item.href}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
+            <NavItems items={coreNavItems} />
           </SidebarGroupContent>
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>Resources</SidebarGroupLabel>
+          <SidebarGroupLabel>Collaborate</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
-              {resourceNavItems.map((item) => (
-                <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={pathname === item.href || pathname.startsWith(item.href + '/')}
-                    tooltip={item.title}
-                  >
-                    <Link href={item.href}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                      {'badge' in item && item.badge && (
-                        <span className="ml-auto text-[10px] font-semibold bg-primary/20 text-primary px-1.5 py-0.5 rounded-full">
-                          {item.badge}
-                        </span>
-                      )}
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
+            <NavItems items={collaborateNavItems} />
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Discover</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <NavItems items={discoverNavItems} />
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Community</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <NavItems items={communityNavItems} />
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Account</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <NavItems items={accountNavItems} />
           </SidebarGroupContent>
         </SidebarGroup>
 
@@ -241,7 +198,7 @@ export function DashboardSidebar({ profile }: DashboardSidebarProps) {
                     isActive={pathname === '/mentor-dashboard' || pathname.startsWith('/mentor-dashboard/')}
                     tooltip="Mentor Dashboard"
                   >
-                    <Link href="/mentor-dashboard">
+                    <Link href="/mentor-dashboard" onClick={() => setOpenMobile(false)}>
                       <GraduationCap />
                       <span>Mentor Dashboard</span>
                     </Link>
@@ -263,7 +220,7 @@ export function DashboardSidebar({ profile }: DashboardSidebarProps) {
                     isActive={pathname === '/admin' || pathname.startsWith('/admin/')}
                     tooltip="Admin Dashboard"
                   >
-                    <Link href="/admin">
+                    <Link href="/admin" onClick={() => setOpenMobile(false)}>
                       <Shield />
                       <span>Admin Dashboard</span>
                     </Link>
