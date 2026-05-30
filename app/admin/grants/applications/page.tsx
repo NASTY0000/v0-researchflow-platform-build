@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import { format } from 'date-fns'
-import { BaobabLoader } from '@/components/ui/baobab-loader'
+import { ListPageSkeleton } from '@/components/ui/skeleton-screens'
 
 interface Application {
   id: string
@@ -121,9 +121,7 @@ export default function AdminGrantApplicationsPage() {
 
       {/* Applications */}
       {loading ? (
-        <div className="flex justify-center py-8">
-          <BaobabLoader size="md" />
-        </div>
+        <ListPageSkeleton type="card" count={4} />
       ) : applications.length === 0 ? (
         <p className="text-center text-muted-foreground py-8">No applications yet</p>
       ) : (

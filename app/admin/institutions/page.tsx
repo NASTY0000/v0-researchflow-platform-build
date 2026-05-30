@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Building2, Plus, ArrowLeft, Edit, Trash2, Check, AlertCircle } from 'lucide-react'
-import { BaobabLoader } from '@/components/ui/baobab-loader'
+import { ListPageSkeleton } from '@/components/ui/skeleton-screens'
 
 export default function AdminInstitutionsPage() {
   const router = useRouter()
@@ -263,9 +263,7 @@ export default function AdminInstitutionsPage() {
 
       {/* Institutions List */}
       {loading ? (
-        <div className="flex justify-center py-8">
-          <BaobabLoader size="md" />
-        </div>
+        <ListPageSkeleton type="card" count={4} />
       ) : institutions.length === 0 ? (
         <div className="text-center py-16 space-y-3">
           <Building2 className="w-12 h-12 text-muted-foreground/30 mx-auto" />

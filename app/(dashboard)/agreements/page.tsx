@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Plus, FileText, Users, CheckCircle, Clock, Edit, Eye } from 'lucide-react'
 import Link from 'next/link'
 import { format } from 'date-fns'
-import { BaobabLoader } from '@/components/ui/baobab-loader'
+import { ListPageSkeleton } from '@/components/ui/skeleton-screens'
 
 export default function AgreementsPage() {
   const [agreements, setAgreements] = useState<any[]>([])
@@ -102,9 +102,7 @@ export default function AgreementsPage() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-12">
-          <BaobabLoader size="md" />
-        </div>
+        <ListPageSkeleton type="card" count={3} />
       ) : agreements.length === 0 ? (
         <div className="text-center py-16 space-y-4">
           <FileText className="w-12 h-12 mx-auto text-muted-foreground opacity-30" />

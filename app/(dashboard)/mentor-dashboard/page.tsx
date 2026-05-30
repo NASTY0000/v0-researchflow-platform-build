@@ -22,7 +22,7 @@ import {
 import { toast } from 'sonner'
 import { acceptMentorshipRequest } from '@/lib/actions/akili'
 import type { MentorProfile, MentorshipRequest, MentorAvailability, Profile, Project } from '@/lib/types/database'
-import { BaobabLoader } from '@/components/ui/baobab-loader'
+import { ListPageSkeleton } from '@/components/ui/skeleton-screens'
 
 type RequestWithStudent = MentorshipRequest & {
   student: Profile
@@ -201,11 +201,7 @@ export default function MentorDashboardPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[40vh]">
-        <BaobabLoader size="sm" />
-      </div>
-    )
+    return <div className="max-w-4xl mx-auto px-4 py-8"><ListPageSkeleton type="card" count={3} /></div>
   }
 
   // No mentor_profile row yet — guide user to complete the application

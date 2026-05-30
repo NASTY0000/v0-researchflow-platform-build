@@ -13,7 +13,7 @@ import { ArrowLeft, Save, Loader2 } from 'lucide-react'
 import type { ResearchIdea } from '@/lib/types/database'
 import { TagInput } from '@/components/ui/tag-input'
 import { RESEARCH_AREAS, SKILLS_LIST } from '@/lib/constants/tags'
-import { BaobabLoader } from '@/components/ui/baobab-loader'
+import { ListPageSkeleton } from '@/components/ui/skeleton-screens'
 
 export default function EditIdeaPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
@@ -93,8 +93,8 @@ export default function EditIdeaPage({ params }: { params: Promise<{ id: string 
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[40vh]">
-        <BaobabLoader size="sm" />
+      <div className="max-w-2xl mx-auto space-y-6 py-8">
+        <ListPageSkeleton type="card" count={3} />
       </div>
     )
   }

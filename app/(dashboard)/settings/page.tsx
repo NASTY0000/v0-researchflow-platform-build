@@ -16,7 +16,7 @@ import {
   Loader2, Check, LogOut, Save, MessageSquare,
   Search, Activity, Sun, Moon, Monitor, Sparkles,
 } from "lucide-react"
-import { BaobabLoader } from '@/components/ui/baobab-loader'
+import { ListPageSkeleton } from '@/components/ui/skeleton-screens'
 
 const NOTIF_TYPES = [
   { key: "new_match",            label: "New match suggestion" },
@@ -256,14 +256,7 @@ export default function SettingsPage() {
   const score = pwScore(newPw)
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center space-y-3">
-          <BaobabLoader size="md" />
-          <p className="text-muted-foreground">Loading settings…</p>
-        </div>
-      </div>
-    )
+    return <div className="max-w-4xl mx-auto px-4 py-8"><ListPageSkeleton type="card" count={3} /></div>
   }
 
   return (

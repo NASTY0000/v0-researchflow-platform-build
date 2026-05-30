@@ -6,7 +6,6 @@ import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { CheckCircle2, AlertCircle, Users } from 'lucide-react'
-import { BaobabLoader } from '@/components/ui/baobab-loader'
 import { createClient } from '@/lib/supabase/client'
 import { acceptInvitation } from '@/lib/actions/invitations'
 
@@ -62,7 +61,7 @@ function JoinPageInner() {
         <CardContent className="py-12 text-center space-y-4">
           {status === 'loading' || status === 'joining' ? (
             <>
-              <BaobabLoader size="sm" />
+              <div className="w-8 h-8 rounded-full animate-spin border-4 border-primary border-t-transparent mx-auto" />
               <p className="font-medium" style={{ color: '#E2D9F3' }}>
                 {status === 'loading' ? 'Checking invitation...' : 'Joining project...'}
               </p>

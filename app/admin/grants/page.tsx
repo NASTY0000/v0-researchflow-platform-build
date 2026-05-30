@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/dialog'
 import { Plus, Pencil, Trash2, Star, Eye, EyeOff, ExternalLink } from 'lucide-react'
 import { format, isPast } from 'date-fns'
-import { BaobabLoader } from '@/components/ui/baobab-loader'
+import { ListPageSkeleton } from '@/components/ui/skeleton-screens'
 
 interface Grant {
   id: string
@@ -167,9 +167,7 @@ export default function AdminGrantsPage() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-12">
-          <BaobabLoader size="md" />
-        </div>
+        <ListPageSkeleton type="card" count={4} />
       ) : (
         <Card>
           <CardContent className="p-0">

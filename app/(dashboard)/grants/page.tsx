@@ -19,7 +19,6 @@ import {
   ExternalLink, Calendar, DollarSign, Globe,
 } from 'lucide-react'
 import { format, isPast, addDays } from 'date-fns'
-import { BaobabLoader } from '@/components/ui/baobab-loader'
 import { ContextualHint } from '@/components/ui/ContextualHint'
 import { GrantCardSkeleton } from '@/components/ui/skeleton-screens'
 import { StaggerContainer, StaggerItem } from '@/components/ui/stagger-container'

@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft } from 'lucide-react'
 import { format } from 'date-fns'
-import { BaobabLoader } from '@/components/ui/baobab-loader'
+import { ListPageSkeleton } from '@/components/ui/skeleton-screens'
 
 interface ApplicationData {
   id: string
@@ -77,8 +77,8 @@ export default function MyApplicationPage() {
   }, [grantId])
 
   if (loading) return (
-    <div className="flex items-center justify-center min-h-[60vh]">
-      <BaobabLoader size="md" />
+    <div className="max-w-3xl mx-auto px-4 py-8">
+      <ListPageSkeleton type="card" count={3} />
     </div>
   )
 

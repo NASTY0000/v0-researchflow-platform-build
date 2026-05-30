@@ -27,7 +27,7 @@ import {
   MessageCircle,
   Sparkles,
 } from "lucide-react"
-import { BaobabLoader } from "@/components/ui/baobab-loader"
+import { ListPageSkeleton } from "@/components/ui/skeleton-screens"
 import { createClient } from "@/lib/supabase/client"
 import { toast } from "sonner"
 import type { ShowcaseEntry, Profile } from "@/lib/types/database"
@@ -275,8 +275,8 @@ export default function ShowcaseEntryPage({
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#05010F' }}>
-        <BaobabLoader size="md" />
+      <div className="min-h-screen px-4 py-12 max-w-4xl mx-auto" style={{ backgroundColor: '#05010F' }}>
+        <ListPageSkeleton type="card" count={3} />
       </div>
     )
   }

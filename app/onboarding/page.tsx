@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { OnboardingWizard } from '@/components/onboarding/onboarding-wizard'
 import type { Profile, University } from '@/lib/types/database'
-import { BaobabLoader } from '@/components/ui/baobab-loader'
+import { ListPageSkeleton } from '@/components/ui/skeleton-screens'
 
 export default function OnboardingPage() {
   const router = useRouter()
@@ -104,7 +104,7 @@ export default function OnboardingPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <BaobabLoader size="md" />
+        <div className="w-8 h-8 rounded-full animate-spin border-4 border-primary border-t-transparent" />
       </div>
     )
   }

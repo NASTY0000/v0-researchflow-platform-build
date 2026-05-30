@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Search, Calendar, Globe, ExternalLink, BookOpen, GraduationCap } from 'lucide-react'
-import { BaobabLoader } from '@/components/ui/baobab-loader'
+import { ListPageSkeleton } from '@/components/ui/skeleton-screens'
 import { format } from 'date-fns'
 
 interface Conference {
@@ -105,11 +105,7 @@ export default function PublicationsPage() {
   }, [search, areaFilter, conferences, journals])
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <BaobabLoader size="md" />
-      </div>
-    )
+    return <div className="max-w-4xl mx-auto px-4 py-8"><ListPageSkeleton type="card" count={4} /></div>
   }
 
   return (

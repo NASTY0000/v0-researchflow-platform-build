@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Bookmark, Lightbulb, Award, GraduationCap, User, Star } from 'lucide-react'
 import { BookmarkButton } from '@/components/ui/bookmark-button'
-import { BaobabLoader } from '@/components/ui/baobab-loader'
+import { ListPageSkeleton } from '@/components/ui/skeleton-screens'
 import { EmptyState } from '@/components/ui/EmptyState'
 
 interface Bookmark {
@@ -150,11 +150,7 @@ export default function SavedPage() {
   const profileBookmarks = bookmarks.filter(b => b.content_type === 'profile')
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <BaobabLoader size="md" />
-      </div>
-    )
+    return <div className="max-w-4xl mx-auto px-4 py-8"><ListPageSkeleton type="card" count={4} /></div>
   }
 
   return (

@@ -12,7 +12,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { format, isPast } from 'date-fns'
-import { BaobabLoader } from '@/components/ui/baobab-loader'
+import { ListPageSkeleton } from '@/components/ui/skeleton-screens'
 
 interface Grant {
   id: string
@@ -117,8 +117,8 @@ export default function GrantDetailPage() {
   }
 
   if (loading) return (
-    <div className="flex items-center justify-center min-h-[60vh]">
-      <BaobabLoader size="md" />
+    <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
+      <ListPageSkeleton type="grant" count={3} />
     </div>
   )
 

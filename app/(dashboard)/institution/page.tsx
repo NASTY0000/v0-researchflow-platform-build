@@ -14,7 +14,7 @@ import {
   Trophy, Star, ArrowUpRight
 } from 'lucide-react'
 import Link from 'next/link'
-import { BaobabLoader } from '@/components/ui/baobab-loader'
+import { ListPageSkeleton } from '@/components/ui/skeleton-screens'
 
 export default function InstitutionDashboard() {
   const [institution, setInstitution] = useState<any>(null)
@@ -221,11 +221,7 @@ export default function InstitutionDashboard() {
     URL.revokeObjectURL(url)
   }
 
-  if (loading) return (
-    <div className="flex items-center justify-center min-h-[60vh]">
-      <BaobabLoader size="md" />
-    </div>
-  )
+  if (loading) return <div className="max-w-3xl mx-auto px-4 py-8"><ListPageSkeleton type="card" count={3} /></div>
 
   if (noInstitution) {
     return (

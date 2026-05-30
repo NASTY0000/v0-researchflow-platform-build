@@ -34,7 +34,6 @@ import {
 import { createClient } from "@/lib/supabase/client"
 import type { Match, Profile } from "@/lib/types/database"
 import { AkiliScoreBadge } from "@/components/akili/AkiliScoreBadge"
-import { BaobabLoader } from '@/components/ui/baobab-loader'
 import { ContextualHint } from "@/components/ui/ContextualHint"
 import { EmptyState } from "@/components/ui/EmptyState"
 import { MatchCardSkeleton } from "@/components/ui/SkeletonLayouts"

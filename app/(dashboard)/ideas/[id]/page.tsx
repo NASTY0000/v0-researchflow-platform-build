@@ -40,7 +40,7 @@ import { formatDistanceToNow, format } from "date-fns"
 import { Input } from "@/components/ui/input"
 import { BookmarkButton } from "@/components/ui/bookmark-button"
 import { shareContent } from "@/lib/utils/share"
-import { BaobabLoader } from '@/components/ui/baobab-loader'
+import { ListPageSkeleton } from '@/components/ui/skeleton-screens'
 
 type IdeaComment = {
   id: string
@@ -291,11 +291,8 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center space-y-4">
-          <BaobabLoader size="md" />
-          <p className="text-muted-foreground">Loading idea...</p>
-        </div>
+      <div className="max-w-4xl mx-auto space-y-6">
+        <ListPageSkeleton type="card" count={3} />
       </div>
     )
   }

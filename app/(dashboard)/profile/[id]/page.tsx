@@ -24,7 +24,7 @@ import { shareContent } from '@/lib/utils/share'
 import { ProfileBackground } from '@/components/profile/ProfileBackground'
 import { BookmarkButton } from '@/components/ui/bookmark-button'
 import { FollowButton } from '@/components/ui/follow-button'
-import { BaobabLoader } from '@/components/ui/baobab-loader'
+import { ProfilePageSkeleton } from '@/components/ui/skeleton-screens'
 
 export default function PublicProfilePage() {
   const params = useParams()
@@ -147,11 +147,7 @@ export default function PublicProfilePage() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <BaobabLoader size="md" />
-      </div>
-    )
+    return <ProfilePageSkeleton />
   }
 
   if (!profile) return null

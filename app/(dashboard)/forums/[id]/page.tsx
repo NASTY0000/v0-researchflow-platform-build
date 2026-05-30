@@ -8,12 +8,9 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import Link from 'next/link'
-import {
-  ArrowLeft, MessageSquare, ThumbsUp, Eye, Pin,
-  Plus, ChevronRight
-} from 'lucide-react'
+import { ArrowLeft, MessageSquare, Plus, ChevronRight } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
-import { BaobabLoader } from '@/components/ui/baobab-loader'
+import { ListPageSkeleton } from '@/components/ui/skeleton-screens'
 
 interface Forum {
   id: string
@@ -21,65 +18,98 @@ interface Forum {
   description: string | null
   category: string
   icon: string | null
-  post_count: number
+  posts_count?: number
+  post_count?: number
 }
 
 interface Post {
   id: string
   title: string
   content: string
-  upvotes: number
-  reply_count: number
-  view_count: number
-  is_pinned: boolean
   created_at: string
-  author: {
+  updated_at: string | null
+  author_id: string
+  forum_id: string
+  profiles: {
+    id: string
     full_name: string | null
     avatar_url: string | null
+    department: string | null
   } | null
 }
 
 export default function ForumDetailPage() {
   const params = useParams()
   const router = useRouter()
+  const forumId = params.id as string
   const [forum, setForum] = useState<Forum | null>(null)
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
   const supabase = createClient()
 
-  async function load() {
-    setLoading(true)
-    setLoadError(null)
+  async function loadData() {
     try {
-      const [{ data: forumData, error: forumError }, { data: postsData, error: postsError }] = await Promise.all([
-        supabase.from('forums').select('*').eq('id', params.id).single(),
-        supabase
-          .from('forum_posts')
-          .select('id, title, content, upvotes, reply_count, view_count, is_pinned, created_at, author:profiles(full_name, avatar_url)')
-          .eq('forum_id', params.id)
-          .order('created_at', { ascending: false })
-          .limit(50),
-      ])
-      if (forumError) throw forumError
-      if (postsError) throw postsError
-      setForum(forumData)
-      setPosts((postsData || []) as unknown as Post[])
+      setLoading(true)
+      setLoadError(null)
+
+      const forumRes = await supabase
+        .from('forums')
+        .select('id, name, description, icon, category, posts_count, post_count')
+        .eq('id', forumId)
+        .single()
+
+      if (forumRes.error) {
+        console.error('Forum error:', forumRes.error)
+        setLoadError('Forum not found')
+        setLoading(false)
+        return
+      }
+
+      setForum(forumRes.data)
+
+      const postsRes = await supabase
+        .from('forum_posts')
+        .select(`
+          id,
+          title,
+          content,
+          created_at,
+          updated_at,
+          author_id,
+          forum_id,
+          profiles (
+            id,
+            full_name,
+            avatar_url,
+            department
+          )
+        `)
+        .eq('forum_id', forumId)
+        .order('created_at', { ascending: false })
+
+      if (postsRes.error) {
+        console.error('Posts error:', postsRes.error)
+      }
+
+      setPosts((postsRes.data || []) as unknown as Post[])
+      setLoading(false)
     } catch (err: unknown) {
-      setLoadError(err instanceof Error ? err.message : 'Failed to load forum')
-    } finally {
+      console.error('Load error:', err)
+      const msg = err instanceof Error ? err.message : 'Failed to load'
+      setLoadError(msg)
       setLoading(false)
     }
   }
 
   useEffect(() => {
-    load()
-  }, [params.id])
+    loadData()
+  }, [forumId])
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <BaobabLoader size="sm" />
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <ListPageSkeleton type="post" count={4} />
       </div>
     )
   }
@@ -88,7 +118,7 @@ export default function ForumDetailPage() {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8 text-center space-y-3">
         <p className="text-muted-foreground text-sm">{loadError}</p>
-        <button onClick={load} className="text-primary text-sm underline underline-offset-2">Try again</button>
+        <button onClick={loadData} className="text-primary text-sm underline underline-offset-2">Try again</button>
       </div>
     )
   }
@@ -105,6 +135,8 @@ export default function ForumDetailPage() {
     if (!name) return 'U'
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
   }
+
+  const postCount = forum.posts_count ?? forum.post_count ?? 0
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
@@ -123,7 +155,7 @@ export default function ForumDetailPage() {
             {forum.description && (
               <p className="text-sm text-muted-foreground mt-1">{forum.description}</p>
             )}
-            <p className="text-xs text-muted-foreground mt-1">{forum.post_count.toLocaleString()} posts</p>
+            <p className="text-xs text-muted-foreground mt-1">{postCount.toLocaleString()} posts</p>
           </div>
         </div>
         <Link href={`/forums/${forum.id}/new-post`}>
@@ -151,27 +183,15 @@ export default function ForumDetailPage() {
               <CardContent className="p-4">
                 <div className="flex items-start gap-3">
                   <Avatar className="h-9 w-9 flex-shrink-0">
-                    <AvatarImage src={post.author?.avatar_url || undefined} />
-                    <AvatarFallback>{getInitials(post.author?.full_name || null)}</AvatarFallback>
+                    <AvatarImage src={post.profiles?.avatar_url || undefined} />
+                    <AvatarFallback>{getInitials(post.profiles?.full_name || null)}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {post.is_pinned && <Pin className="w-3.5 h-3.5 text-primary flex-shrink-0" />}
-                      <h2 className="font-semibold text-sm">{post.title}</h2>
-                    </div>
+                    <h2 className="font-semibold text-sm">{post.title}</h2>
                     <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{post.content}</p>
                     <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                      <span>{post.author?.full_name || 'Anonymous'}</span>
+                      <span>{post.profiles?.full_name || 'Anonymous'}</span>
                       <span>{formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}</span>
-                      <span className="flex items-center gap-1">
-                        <ThumbsUp className="w-3 h-3" /> {post.upvotes}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <MessageSquare className="w-3 h-3" /> {post.reply_count}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Eye className="w-3 h-3" /> {post.view_count}
-                      </span>
                     </div>
                   </div>
                   <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-1" />

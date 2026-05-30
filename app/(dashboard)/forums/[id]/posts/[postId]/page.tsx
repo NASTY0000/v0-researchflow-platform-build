@@ -10,7 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { ArrowLeft, ThumbsUp, MessageSquare, Eye, Loader2, Send } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
-import { BaobabLoader } from '@/components/ui/baobab-loader'
+import { ListPageSkeleton } from '@/components/ui/skeleton-screens'
 
 interface Post {
   id: string
@@ -154,8 +154,8 @@ export default function PostDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <BaobabLoader size="sm" />
+      <div className="max-w-3xl mx-auto px-4 py-8">
+        <ListPageSkeleton type="post" count={3} />
       </div>
     )
   }

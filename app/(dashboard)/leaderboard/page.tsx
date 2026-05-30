@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Crown, Medal, Award } from 'lucide-react'
 import Link from 'next/link'
-import { BaobabLoader } from '@/components/ui/baobab-loader'
+import { ListPageSkeleton } from '@/components/ui/skeleton-screens'
 import { TiltCard } from '@/components/ui/micro-interactions'
 
 interface LeaderboardUser {
@@ -83,11 +83,7 @@ export default function LeaderboardPage() {
   }, [])
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <BaobabLoader size="md" />
-      </div>
-    )
+    return <div className="max-w-4xl mx-auto px-4 py-8"><ListPageSkeleton type="profile" count={6} /></div>
   }
 
   if (error) {

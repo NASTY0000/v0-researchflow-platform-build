@@ -99,8 +99,8 @@ function animateCountUp(targetValue: number, elementId: string, duration = 1400)
   }
   requestAnimationFrame(tick)
 }
-import { BaobabLoader } from '@/components/ui/baobab-loader'
 import { ProfileHeaderSkeleton, Skeleton } from '@/components/ui/SkeletonLayouts'
+import { ListPageSkeleton } from '@/components/ui/skeleton-screens'
 
 interface ActivityStats {
   activeProjects: number
@@ -1431,9 +1431,7 @@ export default function ProfilePage() {
 
         <TabsContent value="analytics" className="space-y-6">
           {analyticsLoading ? (
-            <div className="flex items-center justify-center py-20">
-              <BaobabLoader size="sm" />
-            </div>
+            <ListPageSkeleton type="card" count={3} />
           ) : analyticsData ? (
             <>
               {/* Stat cards */}

@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import Link from 'next/link'
 import { Search, MessageSquare, Users, Pin, TrendingUp } from 'lucide-react'
-import { BaobabLoader } from '@/components/ui/baobab-loader'
+import { ListPageSkeleton } from '@/components/ui/skeleton-screens'
 import { StaggerContainer, StaggerItem } from '@/components/ui/stagger-container'
 import { HoverCardLift } from '@/components/ui/hover-card-lift'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -69,8 +69,8 @@ export default function ForumsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <BaobabLoader size="md" />
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <ListPageSkeleton type="forum" count={6} />
       </div>
     )
   }

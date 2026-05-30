@@ -24,7 +24,7 @@ import { ProjectRoadmap } from "@/components/projects/project-roadmap"
 import { ProjectFiles } from "@/components/projects/project-files"
 import { ProjectTeam } from "@/components/projects/project-team"
 import { MentorSessions } from "@/components/projects/mentor-sessions"
-import { BaobabLoader } from '@/components/ui/baobab-loader'
+import { ListPageSkeleton } from '@/components/ui/skeleton-screens'
 
 interface ProjectWithDetails extends Project {
   team: Team & {
@@ -77,14 +77,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
   }, [id, router])
 
   if (isLoading || !project) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center space-y-4">
-          <BaobabLoader size="md" />
-          <p className="text-muted-foreground">Loading project...</p>
-        </div>
-      </div>
-    )
+    return <div className="max-w-4xl mx-auto px-4 py-8"><ListPageSkeleton type="card" count={3} /></div>
   }
 
   return (

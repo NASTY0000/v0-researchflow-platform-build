@@ -26,7 +26,7 @@ import { createClient } from "@/lib/supabase/client"
 import type { Project, Team, Profile } from "@/lib/types/database"
 import { EmptyState } from '@/components/ui/EmptyState'
 import { format } from "date-fns"
-import { BaobabLoader } from '@/components/ui/baobab-loader'
+import { ListPageSkeleton } from '@/components/ui/skeleton-screens'
 
 interface ProjectWithTeam extends Project {
   team: Team & {
@@ -111,14 +111,7 @@ export default function ProjectsPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center space-y-4">
-          <BaobabLoader size="md" />
-          <p className="text-muted-foreground">Loading your projects...</p>
-        </div>
-      </div>
-    )
+    return <div className="max-w-4xl mx-auto px-4 py-8"><ListPageSkeleton type="card" count={4} /></div>
   }
 
   return (

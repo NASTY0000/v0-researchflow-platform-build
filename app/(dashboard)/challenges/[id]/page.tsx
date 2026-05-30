@@ -14,7 +14,7 @@ import {
 } from 'lucide-react'
 import { format, isPast } from 'date-fns'
 import { celebrateMilestone } from '@/lib/utils/confetti'
-import { BaobabLoader } from '@/components/ui/baobab-loader'
+import { ListPageSkeleton } from '@/components/ui/skeleton-screens'
 
 interface Challenge {
   id: string
@@ -131,8 +131,8 @@ export default function ChallengeDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <BaobabLoader size="sm" />
+      <div className="max-w-3xl mx-auto px-4 py-8">
+        <ListPageSkeleton type="card" count={3} />
       </div>
     )
   }
