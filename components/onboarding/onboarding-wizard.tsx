@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { celebrateAchievement } from '@/lib/utils/confetti'
 import { Logo } from '@/components/Logo'
 import Link from 'next/link'
@@ -21,6 +21,9 @@ import {
   Loader2,
   CheckCircle,
   Sparkles,
+  Search,
+  ChevronDown,
+  X,
 } from 'lucide-react'
 import type { Profile, University, AcademicLevel } from '@/lib/types/database'
 import { completeOnboarding, updateProfile } from '@/lib/actions/auth'
@@ -32,6 +35,132 @@ import {
   SKILLS_OFFERED, SKILLS_FEATURED,
   COLLABORATOR_TYPES, COLLABORATOR_TYPES_FEATURED,
 } from '@/lib/constants/onboarding'
+
+// ── University picker ─────────────────────────────────────────────────────────
+
+interface UniversityPickerProps {
+  value: string
+  onChange: (name: string) => void
+  universities: University[]
+}
+
+function UniversityPicker({ value, onChange, universities }: UniversityPickerProps) {
+  const [search, setSearch] = useState('')
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  // Merge DB universities with the static fallback list, deduplicated
+  const allNames: string[] = universities.length > 0
+    ? universities.filter(u => u.country === 'Nigeria').map(u => u.name)
+    : ALL_NIGERIAN_UNIVERSITIES
+
+  const filtered = search.trim().length === 0
+    ? allNames.slice(0, 10)
+    : allNames.filter(n => n.toLowerCase().includes(search.toLowerCase())).slice(0, 15)
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  return (
+    <div ref={ref} className="relative w-full">
+      {/* Trigger */}
+      <div
+        onClick={() => setOpen(!open)}
+        className="flex items-center justify-between w-full px-3 py-2.5 rounded-lg cursor-pointer text-sm transition-colors"
+        style={{
+          background: 'rgba(255,255,255,0.05)',
+          border: open ? '1px solid rgba(168,85,247,0.7)' : '1px solid rgba(139,92,246,0.25)',
+          color: value ? '#F3F0FF' : '#7C6A9C',
+          boxShadow: open ? '0 0 0 2px rgba(124,58,237,0.15)' : 'none',
+        }}
+      >
+        <span className="truncate">{value || 'Search for your university...'}</span>
+        <div className="flex items-center gap-1 ml-2 shrink-0">
+          {value && (
+            <button
+              type="button"
+              onClick={e => { e.stopPropagation(); onChange('') }}
+              className="p-0.5 rounded text-[#7C6A9C] hover:text-white transition-colors"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+          <ChevronDown
+            className="w-4 h-4 text-[#7C6A9C] transition-transform duration-200"
+            style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}
+          />
+        </div>
+      </div>
+
+      {/* Dropdown */}
+      {open && (
+        <div
+          className="absolute z-50 w-full mt-1 rounded-lg shadow-xl overflow-hidden"
+          style={{ background: '#120C28', border: '1px solid rgba(139,92,246,0.3)' }}
+        >
+          {/* Search */}
+          <div className="p-2" style={{ borderBottom: '1px solid rgba(139,92,246,0.15)' }}>
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7C6A9C]" />
+              <input
+                autoFocus
+                type="text"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Type to search..."
+                className="w-full pl-8 pr-3 py-1.5 text-sm rounded-md outline-none"
+                style={{
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(139,92,246,0.2)',
+                  color: '#F3F0FF',
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Results */}
+          <div className="max-h-52 overflow-y-auto">
+            {filtered.length === 0 ? (
+              <div className="py-6 text-center text-sm" style={{ color: '#7C6A9C' }}>
+                No university found for &ldquo;{search}&rdquo;
+              </div>
+            ) : (
+              filtered.map((name) => (
+                <button
+                  key={name}
+                  type="button"
+                  onClick={() => { onChange(name); setSearch(''); setOpen(false) }}
+                  className="w-full text-left px-3 py-2.5 text-sm transition-colors"
+                  style={{
+                    color: value === name ? '#C084FC' : '#F3F0FF',
+                    background: value === name ? 'rgba(124,58,237,0.15)' : 'transparent',
+                  }}
+                  onMouseEnter={e => { if (value !== name) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)' }}
+                  onMouseLeave={e => { if (value !== name) (e.currentTarget as HTMLElement).style.background = 'transparent' }}
+                >
+                  {name}
+                </button>
+              ))
+            )}
+          </div>
+
+          {/* Footer */}
+          <div
+            className="px-3 py-2 text-xs"
+            style={{ borderTop: '1px solid rgba(139,92,246,0.15)', color: '#7C6A9C' }}
+          >
+            {allNames.length} universities available
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
 
 const STEPS = [
   { id: 1, title: 'Basic Info', icon: User },
@@ -292,16 +421,11 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
                 <div className="space-y-2">
                   <Label style={{ color: '#7C6A9C' }}>University / Institution *</Label>
                   {isNigeria ? (
-                    <Select value={universityId} onValueChange={setUniversityId}>
-                      <SelectTrigger style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(139,92,246,0.25)', color: '#F3F0FF' }}>
-                        <SelectValue placeholder="Select your university" />
-                      </SelectTrigger>
-                      <SelectContent className="max-h-60">
-                        {ALL_NIGERIAN_UNIVERSITIES.map((uni) => (
-                          <SelectItem key={uni} value={uni}>{uni}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <UniversityPicker
+                      value={universityId}
+                      onChange={setUniversityId}
+                      universities={universities}
+                    />
                   ) : (
                     <Input
                       value={customUniversity}
