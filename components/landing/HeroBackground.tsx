@@ -36,7 +36,11 @@ export function HeroBackground() {
 
     function buildStars() {
       stars = []
-      const count = 380
+      // ── PERFORMANCE: Reduce star count on desktop ──
+      // Desktop renders at much larger scale, so fewer stars look equally dense
+      const isDesktop = W >= 900
+      const count = isDesktop ? 200 : 380
+      
       for (let i = 0; i < count; i++) {
         const rand = Math.random()
         const r = rand < 0.70 ? Math.random() * 0.55 + 0.12
@@ -125,13 +129,6 @@ export function HeroBackground() {
     function drawPlanet() {
       const cx = W * 0.5
 
-      // ── DEVICE-SPECIFIC PLANET POSITIONING ──────────
-      // Desktop and mobile need different values because:
-      // Desktop: W=1400 H=730 (wide, short) — arc needs 
-      //   to be larger to feel cinematic
-      // Mobile:  W=390  H=844 (narrow, tall) — arc needs 
-      //   to sit lower to clear the headline text
-      
       const isDesktop = W >= 900
       const isTablet  = W >= 600 && W < 900
 
@@ -139,19 +136,12 @@ export function HeroBackground() {
       let pr: number
 
       if (isDesktop) {
-        // On desktop the hero is wide and short.
-        // We want the arc apex at ~60% from top.
-        // Using W as the reference makes the arc
-        // wide enough to feel epic on a large screen.
-        // cy - pr = apex Y position
-        cy = H * 1.55 + W * 0.15  // shifts down more on wide screens
-        pr = H * 1.10 + W * 0.18  // wider radius on desktop
+        cy = H * 1.55 + W * 0.15
+        pr = H * 1.10 + W * 0.18
       } else if (isTablet) {
         cy = H * 1.70
         pr = H * 1.15
       } else {
-        // Mobile portrait — values that work well
-        // on 390-430px wide screens
         cy = H * 1.85
         pr = H * 1.20
       }
@@ -174,7 +164,8 @@ export function HeroBackground() {
       const apexX = cx
       const apexY = cy - pr
 
-      // Scale the glow radius with screen size
+      // ── PERFORMANCE: Scale glow intensity for desktop ──
+      // Desktop gets reduced shadow blur and opacity for better performance
       const atmosR = isDesktop
         ? Math.min(W, H) * 0.50
         : Math.min(W, H) * 0.60
@@ -184,8 +175,8 @@ export function HeroBackground() {
         apexX, apexY, 0,
         apexX, apexY, atmosR
       )
-      ao.addColorStop(0,    'rgba(180, 80, 255, 0.22)')
-      ao.addColorStop(0.18, 'rgba(140, 50, 220, 0.14)')
+      ao.addColorStop(0,    `rgba(180, 80, 255, ${isDesktop ? 0.15 : 0.22})`)
+      ao.addColorStop(0.18, `rgba(140, 50, 220, ${isDesktop ? 0.09 : 0.14})`)
       ao.addColorStop(0.40, 'rgba(100, 30, 180, 0.07)')
       ao.addColorStop(0.70, 'rgba(60,  10, 120, 0.02)')
       ao.addColorStop(1,    'rgba(0,   0,   0,  0.0)')
@@ -197,8 +188,8 @@ export function HeroBackground() {
         apexX, apexY, 0,
         apexX, apexY, atmosR * 0.35
       )
-      ai.addColorStop(0,    'rgba(230, 160, 255, 0.30)')
-      ai.addColorStop(0.25, 'rgba(200, 100, 255, 0.18)')
+      ai.addColorStop(0,    `rgba(230, 160, 255, ${isDesktop ? 0.20 : 0.30})`)
+      ai.addColorStop(0.25, `rgba(200, 100, 255, ${isDesktop ? 0.12 : 0.18})`)
       ai.addColorStop(0.60, 'rgba(150,  60, 220, 0.06)')
       ai.addColorStop(1,    'rgba(0,    0,   0,  0.0)')
       ctx.fillStyle = ai
@@ -211,26 +202,27 @@ export function HeroBackground() {
       const rimStart = Math.PI + rimAngle
       const rimEnd   = Math.PI * 2 - rimAngle
 
-      // Scale rim thickness with screen size
+      // ── PERFORMANCE: Reduce rim shadow complexity on desktop ──
       const rimScale = isDesktop ? 1.4 : 1.0
+      const shadowBlurScale = isDesktop ? 0.7 : 1.0
 
       // Pass 1 — wide soft glow
       ctx.beginPath()
       ctx.arc(cx, cy, pr, rimStart, rimEnd)
-      ctx.strokeStyle = 'rgba(150, 70, 240, 0.20)'
+      ctx.strokeStyle = `rgba(150, 70, 240, ${isDesktop ? 0.12 : 0.20})`
       ctx.lineWidth   = 22 * rimScale
-      ctx.shadowBlur  = 28
-      ctx.shadowColor = 'rgba(140, 60, 230, 0.45)'
+      ctx.shadowBlur  = 28 * shadowBlurScale
+      ctx.shadowColor = `rgba(140, 60, 230, ${isDesktop ? 0.30 : 0.45})`
       ctx.stroke()
       ctx.shadowBlur  = 0
 
       // Pass 2 — medium glow
       ctx.beginPath()
       ctx.arc(cx, cy, pr, rimStart, rimEnd)
-      ctx.strokeStyle = 'rgba(190, 100, 255, 0.45)'
+      ctx.strokeStyle = `rgba(190, 100, 255, ${isDesktop ? 0.30 : 0.45})`
       ctx.lineWidth   = 5 * rimScale
-      ctx.shadowBlur  = 16
-      ctx.shadowColor = 'rgba(180, 90, 255, 0.65)'
+      ctx.shadowBlur  = 16 * shadowBlurScale
+      ctx.shadowColor = `rgba(180, 90, 255, ${isDesktop ? 0.45 : 0.65})`
       ctx.stroke()
       ctx.shadowBlur  = 0
 
@@ -239,7 +231,7 @@ export function HeroBackground() {
       ctx.arc(cx, cy, pr, rimStart, rimEnd)
       ctx.strokeStyle = 'rgba(235, 185, 255, 0.88)'
       ctx.lineWidth   = 1.4
-      ctx.shadowBlur  = 10
+      ctx.shadowBlur  = 10 * shadowBlurScale
       ctx.shadowColor = 'rgba(225, 165, 255, 1.0)'
       ctx.stroke()
       ctx.shadowBlur  = 0
