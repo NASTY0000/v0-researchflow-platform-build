@@ -30,6 +30,12 @@ export type CollaborationType = 'open' | 'invite_only' | 'team_based'
 
 export type IdeaStatus = 'open' | 'in_progress' | 'completed' | 'closed'
 
+export type ReviewStatus = 'requested' | 'claimed' | 'completed' | 'expired'
+
+export type ReviewVerdict = 'promising' | 'needs_work' | 'not_viable'
+
+export type ReviewBadge = 'peer_reviewed' | 'highly_rated' | null
+
 export type MarketplaceTaskType = 'data_analysis' | 'writing' | 'coding' | 'design' | 'research' | 'review' | 'other'
 
 export type CompensationType = 'paid' | 'collaboration' | 'credit'
@@ -95,7 +101,6 @@ export interface Profile {
   projects_completed: number
   connections_count: number
   portfolio_views: number
-  profile_background: 'baobab' | 'constellation' | null
   email_notifications: boolean
   public_profile: boolean
   created_at: string
@@ -181,11 +186,49 @@ export interface ResearchIdea {
   views: number
   comments_count: number
   is_featured: boolean
+  // Peer review fields
+  review_count: number
+  average_review_score: number | null
+  is_open_for_review: boolean
+  review_badge: ReviewBadge
   created_at: string
   updated_at: string
   // Joined fields
   author?: Profile
   user_has_upvoted?: boolean
+}
+
+export interface PeerReview {
+  id: string
+  idea_id: string
+  author_id: string
+  reviewer_id: string | null
+  status: ReviewStatus
+  claimed_at: string | null
+  deadline_at: string | null
+  completed_at: string | null
+  score_methodology: number | null
+  score_clarity: number | null
+  score_originality: number | null
+  score_feasibility: number | null
+  score_african_context: number | null
+  comment_methodology: string | null
+  comment_clarity: string | null
+  comment_originality: string | null
+  comment_feasibility: string | null
+  comment_african_context: string | null
+  overall_verdict: ReviewVerdict | null
+  overall_comments: string | null
+  average_score: number | null
+  created_at: string
+  updated_at: string
+  // joined fields
+  reviewer?: {
+    full_name: string
+    avatar_url: string | null
+    university_name: string | null
+    is_verified: boolean | null
+  }
 }
 
 export interface Team {

@@ -28,6 +28,7 @@ import { createClient } from "@/lib/supabase/client"
 import type { ResearchIdea, Profile } from "@/lib/types/database"
 import { formatDistanceToNow } from "date-fns"
 import { EmptyState } from '@/components/ui/EmptyState'
+import { ReviewBadge } from '@/components/peer-review/ReviewBadge'
 import { IdeaCardSkeleton } from '@/components/ui/SkeletonLayouts'
 import { usePullToRefresh } from '@/hooks/usePullToRefresh'
 import { PullToRefreshIndicator } from '@/components/ui/PullToRefreshIndicator'
@@ -344,11 +345,23 @@ export default function IdeasPage() {
             <Card className="hover:border-primary/50 transition-all group relative h-full">
               <CardContent className="p-6">
                 <div className="flex items-start justify-between gap-2 mb-3">
-                  <Link href={`/ideas/${idea.id}`} className="flex-1">
-                    <h3 className="font-semibold text-lg line-clamp-2 group-hover:text-primary transition-colors">
-                      {idea.title}
-                    </h3>
-                  </Link>
+                  <div className="flex-1 min-w-0">
+                    <Link href={`/ideas/${idea.id}`}>
+                      <h3 className="font-semibold text-lg line-clamp-2 group-hover:text-primary transition-colors">
+                        {idea.title}
+                      </h3>
+                    </Link>
+                    {idea.review_badge && (
+                      <div className="mt-1.5">
+                        <ReviewBadge
+                          badge={idea.review_badge}
+                          reviewCount={idea.review_count}
+                          averageScore={idea.average_review_score}
+                          size="sm"
+                        />
+                      </div>
+                    )}
+                  </div>
                   <div className="flex flex-col items-end gap-1 shrink-0">
                     {idea.is_featured && (
                       <Badge variant="default" className="bg-yellow-500/20 text-yellow-500 border-yellow-500/30">

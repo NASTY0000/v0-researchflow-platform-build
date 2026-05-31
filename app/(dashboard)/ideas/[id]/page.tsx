@@ -35,12 +35,16 @@ import {
   Send,
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
-import type { ResearchIdea, Profile } from "@/lib/types/database"
+import type { ResearchIdea, Profile, PeerReview } from "@/lib/types/database"
 import { formatDistanceToNow, format } from "date-fns"
 import { Input } from "@/components/ui/input"
 import { BookmarkButton } from "@/components/ui/bookmark-button"
 import { shareContent } from "@/lib/utils/share"
 import { ListPageSkeleton } from '@/components/ui/skeleton-screens'
+import { ReviewBadge } from '@/components/peer-review/ReviewBadge'
+import { RequestReviewButton } from '@/components/peer-review/RequestReviewButton'
+import { getIdeaReviews, getActiveReviewForIdea } from '@/lib/actions/peer-reviews'
+import { VerifiedBadge } from '@/components/ui/VerifiedBadge'
 
 type IdeaComment = {
   id: string
@@ -77,6 +81,9 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
   const [newComment, setNewComment] = useState("")
   const [isSubmittingComment, setIsSubmittingComment] = useState(false)
   const [replyTo, setReplyTo] = useState<{ id: string; authorName: string } | null>(null)
+  const [completedReviews, setCompletedReviews] = useState<PeerReview[]>([])
+  const [activeReviewId, setActiveReviewId] = useState<string | undefined>(undefined)
+  const [expandedReview, setExpandedReview] = useState<string | null>(null)
 
   useEffect(() => {
     async function loadIdea() {
@@ -160,6 +167,14 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
       }
 
       setIsLoading(false)
+
+      // Load peer reviews
+      const [reviewsRes, activeReview] = await Promise.all([
+        getIdeaReviews(id),
+        getActiveReviewForIdea(id),
+      ])
+      if (reviewsRes.data) setCompletedReviews(reviewsRes.data as unknown as PeerReview[])
+      if (activeReview) setActiveReviewId(activeReview.id)
     }
 
     loadIdea()
@@ -365,7 +380,17 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
         <div className="lg:col-span-2 space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="text-2xl font-heading">{idea.title}</CardTitle>
+              <div className="flex items-start justify-between gap-3">
+                <CardTitle className="text-2xl font-heading">{idea.title}</CardTitle>
+                {idea.review_badge && (
+                  <ReviewBadge
+                    badge={idea.review_badge}
+                    reviewCount={idea.review_count}
+                    averageScore={idea.average_review_score}
+                    size="md"
+                  />
+                )}
+              </div>
               <div className="flex items-center gap-4 text-sm text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <Calendar className="h-4 w-4" />
@@ -607,6 +632,153 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
               )}
             </CardContent>
           </Card>
+          {/* Peer Reviews */}
+          {completedReviews.length > 0 && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <svg viewBox="0 0 16 16" width="16" height="16" fill="none">
+                    <path
+                      d="M8 1L2 4.5V8c0 3.5 2.5 6.75 6 7.5 3.5-.75 6-4 6-7.5V4.5L8 1Z"
+                      fill="rgba(124,58,237,0.2)"
+                      stroke="#7C3AED"
+                      strokeWidth="1.2"
+                    />
+                    <path
+                      d="M5.5 8L7 9.5L10.5 6"
+                      stroke="white"
+                      strokeWidth="1"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  Peer Reviews ({completedReviews.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {completedReviews.map(review => {
+                  const reviewer = (review as PeerReview & { profiles?: { full_name: string; avatar_url: string | null; university_name: string | null; is_verified: boolean | null } }).profiles
+                  const isExpanded = expandedReview === review.id
+                  const verdictMap: Record<string, { label: string; color: string }> = {
+                    promising: { label: 'Promising', color: 'text-emerald-400' },
+                    needs_work: { label: 'Needs Work', color: 'text-amber-400' },
+                    not_viable: { label: 'Not Viable', color: 'text-red-400' },
+                  }
+                  const verdict = review.overall_verdict ? verdictMap[review.overall_verdict] : null
+                  const criteria = [
+                    { label: 'Methodology', score: review.score_methodology, comment: review.comment_methodology },
+                    { label: 'Clarity', score: review.score_clarity, comment: review.comment_clarity },
+                    { label: 'Originality', score: review.score_originality, comment: review.comment_originality },
+                    { label: 'Feasibility', score: review.score_feasibility, comment: review.comment_feasibility },
+                    { label: 'African Context', score: review.score_african_context, comment: review.comment_african_context },
+                  ]
+
+                  return (
+                    <div key={review.id} className="border border-border rounded-xl p-4 space-y-3">
+                      {/* Reviewer info + score row */}
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <Avatar className="h-8 w-8 flex-shrink-0">
+                            <AvatarImage src={reviewer?.avatar_url || undefined} />
+                            <AvatarFallback className="text-xs bg-primary/10 text-primary">
+                              {reviewer?.full_name?.charAt(0) || '?'}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-sm font-medium truncate">
+                                {reviewer?.full_name || 'Anonymous Reviewer'}
+                              </span>
+                              {reviewer?.is_verified && (
+                                <VerifiedBadge universityName={reviewer.university_name} size="sm" />
+                              )}
+                            </div>
+                            {reviewer?.university_name && (
+                              <p className="text-xs text-muted-foreground truncate">
+                                {reviewer.university_name}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          {review.average_score != null && (
+                            <div className="flex items-center gap-1">
+                              {[1,2,3,4,5].map(s => (
+                                <svg key={s} viewBox="0 0 12 12" width="12" height="12">
+                                  <path
+                                    d="M6 1l1.5 3L11 4.5l-2.5 2.25.75 3.25L6 8.25l-3.25 1.75.75-3.25L1 4.5 4.5 4 6 1z"
+                                    fill={s <= Math.round(review.average_score!) ? '#FBBF24' : 'rgba(255,255,255,0.1)'}
+                                  />
+                                </svg>
+                              ))}
+                              <span className="text-xs text-amber-400/70 font-semibold ml-0.5">
+                                {Number(review.average_score).toFixed(1)}
+                              </span>
+                            </div>
+                          )}
+                          {verdict && (
+                            <span className={`text-xs font-semibold ${verdict.color}`}>
+                              {verdict.label}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Overall comments */}
+                      {review.overall_comments && (
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                          {review.overall_comments}
+                        </p>
+                      )}
+
+                      {/* Expand/collapse criteria */}
+                      <button
+                        onClick={() => setExpandedReview(isExpanded ? null : review.id)}
+                        className="text-xs text-primary/70 hover:text-primary transition-colors font-medium"
+                      >
+                        {isExpanded ? 'Hide breakdown ↑' : 'Show full breakdown ↓'}
+                      </button>
+
+                      {isExpanded && (
+                        <div className="space-y-3 pt-1">
+                          {criteria.map(c => c.score != null && (
+                            <div key={c.label} className="space-y-1">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs font-semibold text-muted-foreground">
+                                  {c.label}
+                                </span>
+                                <div className="flex gap-0.5">
+                                  {[1,2,3,4,5].map(s => (
+                                    <svg key={s} viewBox="0 0 10 10" width="10" height="10">
+                                      <path
+                                        d="M5 1l1.2 2.5L9 4l-2 1.8.6 2.7L5 7.2l-2.6 1.5.6-2.7L1 4l2.8-.5L5 1z"
+                                        fill={s <= c.score! ? '#FBBF24' : 'rgba(255,255,255,0.1)'}
+                                      />
+                                    </svg>
+                                  ))}
+                                </div>
+                              </div>
+                              {c.comment && (
+                                <p className="text-xs text-muted-foreground/80 leading-relaxed pl-0">
+                                  {c.comment}
+                                </p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {review.completed_at && (
+                        <p className="text-[10px] text-muted-foreground/40">
+                          Reviewed {formatDistanceToNow(new Date(review.completed_at), { addSuffix: true })}
+                        </p>
+                      )}
+                    </div>
+                  )
+                })}
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Sidebar */}
@@ -710,9 +882,16 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
               )}
 
               {isAuthor && (
-                <Button variant="outline" className="w-full" asChild>
-                  <Link href={`/ideas/${idea.id}/edit`}>Edit Idea</Link>
-                </Button>
+                <div className="space-y-2 pt-2">
+                  <Button variant="outline" className="w-full" asChild>
+                    <Link href={`/ideas/${idea.id}/edit`}>Edit Idea</Link>
+                  </Button>
+                  <RequestReviewButton
+                    ideaId={idea.id}
+                    isOpenForReview={idea.is_open_for_review ?? false}
+                    existingReviewId={activeReviewId}
+                  />
+                </div>
               )}
             </CardContent>
           </Card>

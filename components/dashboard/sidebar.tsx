@@ -41,6 +41,7 @@ import {
   DollarSign,
   Building2,
   FileText,
+  ClipboardCheck,
 } from 'lucide-react'
 import type { Profile } from '@/lib/types/database'
 
@@ -74,6 +75,7 @@ const discoverNavItems: NavItem[] = [
 
 const communityNavItems: NavItem[] = [
   { title: 'Forums', href: '/forums', icon: MessageSquare },
+  { title: 'Peer Review', href: '/peer-review', icon: ClipboardCheck },
   { title: 'Challenges', href: '/challenges', icon: Trophy, badge: 'New' },
   { title: 'Showcase', href: '/showcase', icon: Award },
   { title: 'Leaderboard', href: '/leaderboard', icon: Trophy },
