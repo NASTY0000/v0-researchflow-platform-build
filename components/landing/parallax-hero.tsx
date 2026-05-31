@@ -2,7 +2,6 @@
 
 import { useRef } from 'react'
 import { useScroll, useTransform, motion } from 'framer-motion'
-import { HeroBackground } from './HeroBackground'
 
 export function ParallaxHeroWrapper({ children }: { children: React.ReactNode }) {
   const heroRef = useRef(null)
@@ -17,13 +16,24 @@ export function ParallaxHeroWrapper({ children }: { children: React.ReactNode })
 
   return (
     <section
-      className="relative overflow-hidden"
-      style={{ backgroundColor: '#07030F', height: '100svh', minHeight: '600px' }}
+      className="relative overflow-hidden flex flex-col items-center justify-center text-center"
+      style={{
+        backgroundImage: "url('/hero-bg.jpg')",
+        backgroundSize: 'cover',
+        backgroundPosition: 'center center',
+        backgroundRepeat: 'no-repeat',
+        minHeight: '100svh',
+        height: '100svh',
+        backgroundColor: '#07030F',
+      }}
     >
-      {/* Layer 0 — animated starfield + planet canvas */}
-      <HeroBackground />
+      {/* Dark overlay for text readability */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{ background: 'rgba(4, 1, 12, 0.35)', zIndex: 1 }}
+      />
 
-      {/* Layer 1 — parallax content */}
+      {/* Parallax content */}
       <motion.div
         ref={heroRef}
         style={{ y: heroY, opacity: heroOpacity, scale: heroScale, position: 'relative', zIndex: 10 }}
