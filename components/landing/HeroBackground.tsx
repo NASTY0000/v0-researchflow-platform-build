@@ -123,67 +123,114 @@ export function HeroBackground() {
     }
 
     function drawPlanet() {
+      // Arc apex sits at 65% from top of canvas
+      // cy and pr together control this:
+      //   arc apex Y = cy - pr = 1.85H - 1.20H = 0.65H ✓
       const cx = W * 0.5
-      const cy = H + H * 0.24
-      const pr = H * 0.90
+      const cy = H * 1.85   // planet centre well below viewport
+      const pr = H * 1.20   // radius — makes arc wide and flat
 
-      const body = ctx.createRadialGradient(cx,cy,pr*0.7,cx,cy,pr)
-      body.addColorStop(0,    'rgba(20,8,50,0.0)')
-      body.addColorStop(0.80, 'rgba(20,8,50,0.12)')
-      body.addColorStop(0.92, 'rgba(30,10,70,0.40)')
-      body.addColorStop(0.97, 'rgba(15,5,45,0.65)')
-      body.addColorStop(1,    'rgba(10,3,30,0.0)')
-      ctx.beginPath(); ctx.arc(cx,cy,pr,0,Math.PI*2)
-      ctx.fillStyle = body; ctx.fill()
+      // ── LAYER 1: Dark planet body ──────────────────────
+      // Nearly black below the rim, very subtle
+      const body = ctx.createRadialGradient(
+        cx, cy, pr * 0.82,
+        cx, cy, pr
+      )
+      body.addColorStop(0,    'rgba(6,2,15,0.0)')
+      body.addColorStop(0.80, 'rgba(6,2,15,0.45)')
+      body.addColorStop(0.94, 'rgba(8,3,20,0.88)')
+      body.addColorStop(1,    'rgba(6,2,15,0.0)')
+      ctx.beginPath()
+      ctx.arc(cx, cy, pr, 0, Math.PI * 2)
+      ctx.fillStyle = body
+      ctx.fill()
 
-      const ao = ctx.createRadialGradient(cx,cy,pr*0.86,cx,cy,pr*1.1)
-      ao.addColorStop(0,    'rgba(80,20,180,0.0)')
-      ao.addColorStop(0.25, 'rgba(100,30,200,0.10)')
-      ao.addColorStop(0.55, 'rgba(130,50,220,0.20)')
-      ao.addColorStop(0.80, 'rgba(160,80,255,0.14)')
-      ao.addColorStop(1,    'rgba(180,100,255,0.0)')
-      ctx.beginPath(); ctx.arc(cx,cy,pr*1.1,0,Math.PI*2)
-      ctx.fillStyle = ao; ctx.fill()
+      // ── LAYER 2: Atmospheric glow ──────────────────────
+      // A concentrated radial glow centred ONLY at the
+      // apex of the arc (the highest point of the horizon).
+      // This is what creates the "sun rising behind a planet"
+      // effect in the inspiration images.
+      const apexX = cx
+      const apexY = cy - pr   // this is H * 0.65
 
-      const ai = ctx.createRadialGradient(cx,cy,pr*0.92,cx,cy,pr*1.015)
-      ai.addColorStop(0,    'rgba(120,40,220,0.0)')
-      ai.addColorStop(0.35, 'rgba(150,60,240,0.38)')
-      ai.addColorStop(0.65, 'rgba(180,90,255,0.55)')
-      ai.addColorStop(0.88, 'rgba(200,120,255,0.28)')
-      ai.addColorStop(1,    'rgba(200,120,255,0.0)')
-      ctx.beginPath(); ctx.arc(cx,cy,pr*1.015,0,Math.PI*2)
-      ctx.fillStyle = ai; ctx.fill()
+      const atmosR = Math.min(W, H) * 0.55
 
+      // Wide soft outer halo
+      const ao = ctx.createRadialGradient(
+        apexX, apexY, 0,
+        apexX, apexY, atmosR
+      )
+      ao.addColorStop(0,    'rgba(180, 80, 255, 0.22)')
+      ao.addColorStop(0.18, 'rgba(140, 50, 220, 0.14)')
+      ao.addColorStop(0.40, 'rgba(100, 30, 180, 0.07)')
+      ao.addColorStop(0.70, 'rgba(60,  10, 120, 0.02)')
+      ao.addColorStop(1,    'rgba(0,   0,   0,  0.0)')
+      ctx.fillStyle = ao
+      ctx.fillRect(0, 0, W, H)
+
+      // Tighter inner bright glow at apex
+      const ai = ctx.createRadialGradient(
+        apexX, apexY, 0,
+        apexX, apexY, atmosR * 0.35
+      )
+      ai.addColorStop(0,    'rgba(230, 160, 255, 0.30)')
+      ai.addColorStop(0.25, 'rgba(200, 100, 255, 0.18)')
+      ai.addColorStop(0.60, 'rgba(150,  60, 220, 0.06)')
+      ai.addColorStop(1,    'rgba(0,    0,   0,  0.0)')
+      ctx.fillStyle = ai
+      ctx.fillRect(0, 0, W, H)
+
+      // ── LAYER 3: The rim arc ───────────────────────────
       const rimAngle = Math.acos(
         Math.min(1, Math.max(-1, (cy - H) / pr))
       )
       const rimStart = Math.PI + rimAngle
       const rimEnd   = Math.PI * 2 - rimAngle
 
-      ctx.beginPath(); ctx.arc(cx,cy,pr,rimStart,rimEnd)
-      ctx.strokeStyle = 'rgba(160,80,255,0.30)'
-      ctx.lineWidth = 16; ctx.shadowBlur = 30
-      ctx.shadowColor = 'rgba(150,60,255,0.55)'
-      ctx.stroke(); ctx.shadowBlur = 0
+      // Pass 1 — wide soft glow behind rim
+      ctx.beginPath()
+      ctx.arc(cx, cy, pr, rimStart, rimEnd)
+      ctx.strokeStyle = 'rgba(150, 70, 240, 0.20)'
+      ctx.lineWidth   = 22
+      ctx.shadowBlur  = 28
+      ctx.shadowColor = 'rgba(140, 60, 230, 0.45)'
+      ctx.stroke()
+      ctx.shadowBlur  = 0
 
-      ctx.beginPath(); ctx.arc(cx,cy,pr,rimStart,rimEnd)
-      ctx.strokeStyle = 'rgba(190,110,255,0.55)'
-      ctx.lineWidth = 4; ctx.shadowBlur = 18
-      ctx.shadowColor = 'rgba(180,90,255,0.7)'
-      ctx.stroke(); ctx.shadowBlur = 0
+      // Pass 2 — medium glow
+      ctx.beginPath()
+      ctx.arc(cx, cy, pr, rimStart, rimEnd)
+      ctx.strokeStyle = 'rgba(190, 100, 255, 0.45)'
+      ctx.lineWidth   = 5
+      ctx.shadowBlur  = 16
+      ctx.shadowColor = 'rgba(180, 90, 255, 0.65)'
+      ctx.stroke()
+      ctx.shadowBlur  = 0
 
-      ctx.beginPath(); ctx.arc(cx,cy,pr,rimStart,rimEnd)
-      ctx.strokeStyle = 'rgba(220,160,255,0.80)'
-      ctx.lineWidth = 1.2; ctx.shadowBlur = 14
-      ctx.shadowColor = 'rgba(210,140,255,0.95)'
-      ctx.stroke(); ctx.shadowBlur = 0
+      // Pass 3 — sharp bright rim line (thin, crisp)
+      ctx.beginPath()
+      ctx.arc(cx, cy, pr, rimStart, rimEnd)
+      ctx.strokeStyle = 'rgba(235, 185, 255, 0.88)'
+      ctx.lineWidth   = 1.4
+      ctx.shadowBlur  = 10
+      ctx.shadowColor = 'rgba(225, 165, 255, 1.0)'
+      ctx.stroke()
+      ctx.shadowBlur  = 0
 
-      const hf = ctx.createLinearGradient(0,H*0.70,0,H)
-      hf.addColorStop(0,    'rgba(7,3,15,0)')
-      hf.addColorStop(0.45, 'rgba(7,3,15,0.50)')
-      hf.addColorStop(1,    'rgba(7,3,15,0.97)')
-      ctx.fillStyle = hf
-      ctx.fillRect(0, H*0.70, W, H*0.30)
+      // ── LAYER 4: Darken below the rim ─────────────────
+      // Fills the visible planet body area with near-black
+      // so it reads as a dark surface, not a glow.
+      const rimTopY = cy - pr     // = H * 0.65
+      const belowFade = ctx.createLinearGradient(
+        0, rimTopY,
+        0, H
+      )
+      belowFade.addColorStop(0,    'rgba(7,3,15, 0.0)')
+      belowFade.addColorStop(0.08, 'rgba(7,3,15, 0.55)')
+      belowFade.addColorStop(0.30, 'rgba(7,3,15, 0.82)')
+      belowFade.addColorStop(1,    'rgba(7,3,15, 0.98)')
+      ctx.fillStyle = belowFade
+      ctx.fillRect(0, rimTopY, W, H - rimTopY)
     }
 
     function maybeShootingStar() {
