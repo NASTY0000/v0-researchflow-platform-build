@@ -126,8 +126,11 @@ export function HeroBackground() {
       const cx = W * 0.5
 
       // ── DEVICE-SPECIFIC PLANET POSITIONING ──────────
-      // The key is to scale the arc radius based on screen width
-      // so it spans from edge to edge properly on all devices
+      // Desktop and mobile need different values because:
+      // Desktop: W=1400 H=730 (wide, short) — arc needs 
+      //   to be larger to feel cinematic
+      // Mobile:  W=390  H=844 (narrow, tall) — arc needs 
+      //   to sit lower to clear the headline text
       
       const isDesktop = W >= 900
       const isTablet  = W >= 600 && W < 900
@@ -136,20 +139,21 @@ export function HeroBackground() {
       let pr: number
 
       if (isDesktop) {
-        // Desktop: arc radius should be slightly larger than half width
-        // so it touches both edges with the visible arc
-        // cy positioned to show upper arc nicely
-        pr = W * 0.65  // spans nicely from edge to edge
-        cy = H * 0.95  // position lower for the visible arc
+        // On desktop the hero is wide and short.
+        // We want the arc apex at ~60% from top.
+        // Using W as the reference makes the arc
+        // wide enough to feel epic on a large screen.
+        // cy - pr = apex Y position
+        cy = H * 1.55 + W * 0.15  // shifts down more on wide screens
+        pr = H * 1.10 + W * 0.18  // wider radius on desktop
       } else if (isTablet) {
-        // Tablet middle ground
-        pr = W * 0.68
-        cy = H * 1.10
+        cy = H * 1.70
+        pr = H * 1.15
       } else {
         // Mobile portrait — values that work well
         // on 390-430px wide screens
-        pr = W * 0.75
-        cy = H * 1.35
+        cy = H * 1.85
+        pr = H * 1.20
       }
 
       // ── LAYER 1: Dark planet body ──────────────────
@@ -172,7 +176,7 @@ export function HeroBackground() {
 
       // Scale the glow radius with screen size
       const atmosR = isDesktop
-        ? Math.min(W, H) * 0.55
+        ? Math.min(W, H) * 0.50
         : Math.min(W, H) * 0.60
 
       // Wide soft outer halo
