@@ -124,66 +124,138 @@ export function HeroBackground() {
 
     function drawPlanet() {
       const cx = W * 0.5
-      const cy = H + H * 0.24
-      const pr = H * 0.90
 
-      const body = ctx.createRadialGradient(cx,cy,pr*0.7,cx,cy,pr)
-      body.addColorStop(0,    'rgba(20,8,50,0.0)')
-      body.addColorStop(0.80, 'rgba(20,8,50,0.12)')
-      body.addColorStop(0.92, 'rgba(30,10,70,0.40)')
-      body.addColorStop(0.97, 'rgba(15,5,45,0.65)')
-      body.addColorStop(1,    'rgba(10,3,30,0.0)')
-      ctx.beginPath(); ctx.arc(cx,cy,pr,0,Math.PI*2)
-      ctx.fillStyle = body; ctx.fill()
+      // ── DEVICE-SPECIFIC PLANET POSITIONING ──────────
+      // Desktop and mobile need different values because:
+      // Desktop: W=1400 H=730 (wide, short) — arc needs 
+      //   to be larger to feel cinematic
+      // Mobile:  W=390  H=844 (narrow, tall) — arc needs 
+      //   to sit lower to clear the headline text
+      
+      const isDesktop = W >= 900
+      const isTablet  = W >= 600 && W < 900
 
-      const ao = ctx.createRadialGradient(cx,cy,pr*0.86,cx,cy,pr*1.1)
-      ao.addColorStop(0,    'rgba(80,20,180,0.0)')
-      ao.addColorStop(0.25, 'rgba(100,30,200,0.10)')
-      ao.addColorStop(0.55, 'rgba(130,50,220,0.20)')
-      ao.addColorStop(0.80, 'rgba(160,80,255,0.14)')
-      ao.addColorStop(1,    'rgba(180,100,255,0.0)')
-      ctx.beginPath(); ctx.arc(cx,cy,pr*1.1,0,Math.PI*2)
-      ctx.fillStyle = ao; ctx.fill()
+      let cy: number
+      let pr: number
 
-      const ai = ctx.createRadialGradient(cx,cy,pr*0.92,cx,cy,pr*1.015)
-      ai.addColorStop(0,    'rgba(120,40,220,0.0)')
-      ai.addColorStop(0.35, 'rgba(150,60,240,0.38)')
-      ai.addColorStop(0.65, 'rgba(180,90,255,0.55)')
-      ai.addColorStop(0.88, 'rgba(200,120,255,0.28)')
-      ai.addColorStop(1,    'rgba(200,120,255,0.0)')
-      ctx.beginPath(); ctx.arc(cx,cy,pr*1.015,0,Math.PI*2)
-      ctx.fillStyle = ai; ctx.fill()
+      if (isDesktop) {
+        // On desktop the hero is wide and short.
+        // We want the arc apex at ~60% from top.
+        // Using W as the reference makes the arc
+        // wide enough to feel epic on a large screen.
+        // cy - pr = apex Y position
+        cy = H * 1.55 + W * 0.15  // shifts down more on wide screens
+        pr = H * 1.10 + W * 0.18  // wider radius on desktop
+      } else if (isTablet) {
+        cy = H * 1.70
+        pr = H * 1.15
+      } else {
+        // Mobile portrait — values that work well
+        // on 390-430px wide screens
+        cy = H * 1.85
+        pr = H * 1.20
+      }
 
+      // ── LAYER 1: Dark planet body ──────────────────
+      const body = ctx.createRadialGradient(
+        cx, cy, pr * 0.82,
+        cx, cy, pr
+      )
+      body.addColorStop(0,    'rgba(6,2,15,0.0)')
+      body.addColorStop(0.80, 'rgba(6,2,15,0.45)')
+      body.addColorStop(0.94, 'rgba(8,3,20,0.88)')
+      body.addColorStop(1,    'rgba(6,2,15,0.0)')
+      ctx.beginPath()
+      ctx.arc(cx, cy, pr, 0, Math.PI * 2)
+      ctx.fillStyle = body
+      ctx.fill()
+
+      // ── LAYER 2: Atmospheric glow at apex only ─────
+      const apexX = cx
+      const apexY = cy - pr
+
+      // Scale the glow radius with screen size
+      const atmosR = isDesktop
+        ? Math.min(W, H) * 0.50
+        : Math.min(W, H) * 0.60
+
+      // Wide soft outer halo
+      const ao = ctx.createRadialGradient(
+        apexX, apexY, 0,
+        apexX, apexY, atmosR
+      )
+      ao.addColorStop(0,    'rgba(180, 80, 255, 0.22)')
+      ao.addColorStop(0.18, 'rgba(140, 50, 220, 0.14)')
+      ao.addColorStop(0.40, 'rgba(100, 30, 180, 0.07)')
+      ao.addColorStop(0.70, 'rgba(60,  10, 120, 0.02)')
+      ao.addColorStop(1,    'rgba(0,   0,   0,  0.0)')
+      ctx.fillStyle = ao
+      ctx.fillRect(0, 0, W, H)
+
+      // Tight bright apex glow
+      const ai = ctx.createRadialGradient(
+        apexX, apexY, 0,
+        apexX, apexY, atmosR * 0.35
+      )
+      ai.addColorStop(0,    'rgba(230, 160, 255, 0.30)')
+      ai.addColorStop(0.25, 'rgba(200, 100, 255, 0.18)')
+      ai.addColorStop(0.60, 'rgba(150,  60, 220, 0.06)')
+      ai.addColorStop(1,    'rgba(0,    0,   0,  0.0)')
+      ctx.fillStyle = ai
+      ctx.fillRect(0, 0, W, H)
+
+      // ── LAYER 3: The rim arc ───────────────────────
       const rimAngle = Math.acos(
         Math.min(1, Math.max(-1, (cy - H) / pr))
       )
       const rimStart = Math.PI + rimAngle
       const rimEnd   = Math.PI * 2 - rimAngle
 
-      ctx.beginPath(); ctx.arc(cx,cy,pr,rimStart,rimEnd)
-      ctx.strokeStyle = 'rgba(160,80,255,0.30)'
-      ctx.lineWidth = 16; ctx.shadowBlur = 30
-      ctx.shadowColor = 'rgba(150,60,255,0.55)'
-      ctx.stroke(); ctx.shadowBlur = 0
+      // Scale rim thickness with screen size
+      const rimScale = isDesktop ? 1.4 : 1.0
 
-      ctx.beginPath(); ctx.arc(cx,cy,pr,rimStart,rimEnd)
-      ctx.strokeStyle = 'rgba(190,110,255,0.55)'
-      ctx.lineWidth = 4; ctx.shadowBlur = 18
-      ctx.shadowColor = 'rgba(180,90,255,0.7)'
-      ctx.stroke(); ctx.shadowBlur = 0
+      // Pass 1 — wide soft glow
+      ctx.beginPath()
+      ctx.arc(cx, cy, pr, rimStart, rimEnd)
+      ctx.strokeStyle = 'rgba(150, 70, 240, 0.20)'
+      ctx.lineWidth   = 22 * rimScale
+      ctx.shadowBlur  = 28
+      ctx.shadowColor = 'rgba(140, 60, 230, 0.45)'
+      ctx.stroke()
+      ctx.shadowBlur  = 0
 
-      ctx.beginPath(); ctx.arc(cx,cy,pr,rimStart,rimEnd)
-      ctx.strokeStyle = 'rgba(220,160,255,0.80)'
-      ctx.lineWidth = 1.2; ctx.shadowBlur = 14
-      ctx.shadowColor = 'rgba(210,140,255,0.95)'
-      ctx.stroke(); ctx.shadowBlur = 0
+      // Pass 2 — medium glow
+      ctx.beginPath()
+      ctx.arc(cx, cy, pr, rimStart, rimEnd)
+      ctx.strokeStyle = 'rgba(190, 100, 255, 0.45)'
+      ctx.lineWidth   = 5 * rimScale
+      ctx.shadowBlur  = 16
+      ctx.shadowColor = 'rgba(180, 90, 255, 0.65)'
+      ctx.stroke()
+      ctx.shadowBlur  = 0
 
-      const hf = ctx.createLinearGradient(0,H*0.70,0,H)
-      hf.addColorStop(0,    'rgba(7,3,15,0)')
-      hf.addColorStop(0.45, 'rgba(7,3,15,0.50)')
-      hf.addColorStop(1,    'rgba(7,3,15,0.97)')
-      ctx.fillStyle = hf
-      ctx.fillRect(0, H*0.70, W, H*0.30)
+      // Pass 3 — sharp bright rim line
+      ctx.beginPath()
+      ctx.arc(cx, cy, pr, rimStart, rimEnd)
+      ctx.strokeStyle = 'rgba(235, 185, 255, 0.88)'
+      ctx.lineWidth   = 1.4
+      ctx.shadowBlur  = 10
+      ctx.shadowColor = 'rgba(225, 165, 255, 1.0)'
+      ctx.stroke()
+      ctx.shadowBlur  = 0
+
+      // ── LAYER 4: Darken below the rim ─────────────
+      const rimTopY = cy - pr
+      const belowFade = ctx.createLinearGradient(
+        0, rimTopY,
+        0, H
+      )
+      belowFade.addColorStop(0,    'rgba(7,3,15, 0.0)')
+      belowFade.addColorStop(0.08, 'rgba(7,3,15, 0.55)')
+      belowFade.addColorStop(0.30, 'rgba(7,3,15, 0.82)')
+      belowFade.addColorStop(1,    'rgba(7,3,15, 0.98)')
+      ctx.fillStyle = belowFade
+      ctx.fillRect(0, rimTopY, W, H - rimTopY)
     }
 
     function maybeShootingStar() {
@@ -260,12 +332,14 @@ export function HeroBackground() {
       const parent = canvas.parentElement
       if (!parent) return
       const rect = parent.getBoundingClientRect()
-      canvas.width  = rect.width
-      canvas.height = rect.height
+      canvas.width  = Math.round(rect.width)
+      canvas.height = Math.round(rect.height)
       W = canvas.width
       H = canvas.height
       buildStars()
-      prebuildStarCanvas()
+      if (typeof prebuildStarCanvas === 'function') {
+        prebuildStarCanvas()
+      }
     }
 
     const observer = new IntersectionObserver(
