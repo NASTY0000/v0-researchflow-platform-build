@@ -126,6 +126,12 @@ export interface Profile {
   akili_dimension_technical: number
   // Profile background
   profile_background: 'baobab' | 'constellation' | null
+  // Institutional verification
+  is_verified: boolean | null
+  verified_at: string | null
+  verification_type: 'email' | 'admin' | 'institutional' | null
+  university_email: string | null
+  university_name: string | null
   // Joined fields
   university?: University
 }

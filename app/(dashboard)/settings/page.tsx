@@ -17,6 +17,7 @@ import {
   Search, Activity, Sun, Moon, Monitor, Sparkles,
 } from "lucide-react"
 import { ListPageSkeleton } from '@/components/ui/skeleton-screens'
+import { VerificationSection } from '@/components/settings/VerificationSection'
 
 const NOTIF_TYPES = [
   { key: "new_match",            label: "New match suggestion" },
@@ -52,6 +53,11 @@ export default function SettingsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [userId, setUserId] = useState("")
   const [dataExportedAt, setDataExportedAt] = useState<string | null>(null)
+
+  // ── Verification ──
+  const [isVerified, setIsVerified] = useState(false)
+  const [verifiedUniversityName, setVerifiedUniversityName] = useState<string | null>(null)
+  const [verifiedUniversityEmail, setVerifiedUniversityEmail] = useState<string | null>(null)
 
   // ── Profile background ──
   const [profileBg, setProfileBg] = useState<'baobab' | 'constellation'>('baobab')
@@ -107,12 +113,15 @@ export default function SettingsPage() {
 
     const { data: p } = await supabase
       .from("profiles")
-      .select("profile_visibility,show_availability,allow_dm_from_non_connections,appear_in_search,notification_prefs,data_export_requested_at,profile_background")
+      .select("profile_visibility,show_availability,allow_dm_from_non_connections,appear_in_search,notification_prefs,data_export_requested_at,profile_background,is_verified,university_name,university_email")
       .eq("id", user.id)
       .single()
 
     if (p) {
       if (p.profile_background === 'constellation') setProfileBg('constellation')
+      setIsVerified(p.is_verified ?? false)
+      setVerifiedUniversityName((p as { university_name?: string | null }).university_name ?? null)
+      setVerifiedUniversityEmail((p as { university_email?: string | null }).university_email ?? null)
       setProfileVisibility(p.profile_visibility || "public")
       setShowAvailability(p.show_availability !== false)
       setAllowDm(p.allow_dm_from_non_connections !== false)
@@ -264,6 +273,17 @@ export default function SettingsPage() {
       <div>
         <h1 className="text-3xl font-bold font-heading" style={{ letterSpacing: "-0.03em" }}>Settings</h1>
         <p className="mt-1 text-sm text-muted-foreground">Manage your appearance, privacy, notifications, and account</p>
+      </div>
+
+      {/* ══════════════════════════════════════════
+          SECTION — INSTITUTIONAL VERIFICATION
+      ══════════════════════════════════════════ */}
+      <div id="verification" className={card}>
+        <VerificationSection
+          isVerified={isVerified}
+          universityName={verifiedUniversityName}
+          universityEmail={verifiedUniversityEmail}
+        />
       </div>
 
       {/* ══════════════════════════════════════════

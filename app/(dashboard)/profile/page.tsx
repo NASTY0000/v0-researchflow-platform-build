@@ -36,6 +36,8 @@ import { AkiliProgressCard } from '@/components/akili/AkiliProgressCard'
 import { getAkiliNarrative } from '@/lib/utils/akili'
 import { shareContent } from '@/lib/utils/share'
 import { ProfileBackground } from '@/components/profile/ProfileBackground'
+import { VerifiedBadge } from '@/components/ui/VerifiedBadge'
+import Link from 'next/link'
 import { RippleButton } from '@/components/ui/RippleButton'
 import { MilestoneToast } from '@/components/ui/MilestoneToast'
 import { useMilestones } from '@/hooks/useMilestones'
@@ -964,6 +966,9 @@ export default function ProfilePage() {
                           {profile.full_name}
                         </h1>
                         <div className="flex items-center gap-1">
+                          {profile.is_verified && (
+                            <VerifiedBadge universityName={profile.university_name} size="md" />
+                          )}
                           {profile.is_admin && (
                             <div title="Platform Admin" className="w-5 h-5 rounded-full bg-yellow-500/20 border border-yellow-500/40 flex items-center justify-center">
                               <Shield className="w-3 h-3 text-yellow-500" />
@@ -1053,6 +1058,18 @@ export default function ProfilePage() {
                       <span className="bg-primary/15 text-primary border border-primary/25 rounded-full px-3 py-1 text-xs font-semibold">
                         {getAcademicLevelLabel(profile.academic_level)}
                       </span>
+                    )}
+                    {!profile.is_verified && (
+                      <Link
+                        href="/settings#verification"
+                        className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium bg-primary/8 border border-primary/20 text-primary/70 hover:text-primary hover:border-primary/40 transition-all"
+                      >
+                        <svg viewBox="0 0 16 16" width="11" height="11" fill="none">
+                          <path d="M8 1L2 4.5V8c0 3.5 2.5 6.75 6 7.5C11.5 14.75 14 11.5 14 8V4.5L8 1Z" fill="rgba(124,58,237,0.4)" stroke="#7C3AED" strokeWidth="1"/>
+                          <path d="M5.5 8L7 9.5L10.5 6" stroke="white" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                        Verify your university email →
+                      </Link>
                     )}
                     {profile.roles?.filter((role: string) => !['admin', 'mentor', 'technical_expert'].includes(role)).map((role: string) => (
                       <span key={role} className="bg-primary/15 text-primary border border-primary/25 rounded-full px-3 py-1 text-xs font-semibold">

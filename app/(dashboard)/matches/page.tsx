@@ -34,6 +34,7 @@ import {
 import { createClient } from "@/lib/supabase/client"
 import type { Match, Profile } from "@/lib/types/database"
 import { AkiliScoreBadge } from "@/components/akili/AkiliScoreBadge"
+import { VerifiedBadge } from "@/components/ui/VerifiedBadge"
 import { ContextualHint } from "@/components/ui/ContextualHint"
 import { EmptyState } from "@/components/ui/EmptyState"
 import { MatchCardSkeleton } from "@/components/ui/SkeletonLayouts"
@@ -57,6 +58,7 @@ export default function MatchesPage() {
   const [activeTab, setActiveTab] = useState("all")
   const [collabInterestsSent, setCollabInterestsSent] = useState<Set<string>>(new Set())
   const [interestToast, setInterestToast] = useState<string | null>(null)
+  const [verifiedOnly, setVerifiedOnly] = useState(false)
 
   useEffect(() => {
     loadMatches()
@@ -265,9 +267,9 @@ export default function MatchesPage() {
   }
 
   const filteredMatches = matches.filter((match) => {
-    if (activeTab === "all") return true
-    if (activeTab === "collaborators") return match.match_type === "collaborator"
-    if (activeTab === "mentors") return match.match_type === "mentor"
+    if (activeTab === "collaborators" && match.match_type !== "collaborator") return false
+    if (activeTab === "mentors" && match.match_type !== "mentor") return false
+    if (verifiedOnly && !match.matched_user?.is_verified) return false
     return true
   })
 
@@ -321,6 +323,7 @@ export default function MatchesPage() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <div className="flex items-center justify-between flex-wrap gap-2">
         <TabsList>
           <TabsTrigger value="all" className="gap-2">
             <Sparkles className="h-4 w-4" />
@@ -335,6 +338,21 @@ export default function MatchesPage() {
             Mentors ({matches.filter((m) => m.match_type === "mentor").length})
           </TabsTrigger>
         </TabsList>
+        <button
+          onClick={() => setVerifiedOnly(!verifiedOnly)}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
+            verifiedOnly
+              ? 'bg-primary/15 border-primary/40 text-primary'
+              : 'bg-muted/30 border-border text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          <svg viewBox="0 0 24 24" width={12} height={12} fill="none">
+            <path d="M12 2L3 6.5V12c0 5.25 3.75 10.15 9 11.25C17.25 22.15 21 17.25 21 12V6.5L12 2Z" fill="currentColor" fillOpacity="0.9" />
+            <path d="M8.5 12L10.5 14L15.5 9" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          Verified only
+        </button>
+        </div>
 
         <TabsContent value={activeTab} className="mt-6">
           {filteredMatches.length > 0 ? (
@@ -356,7 +374,12 @@ export default function MatchesPage() {
                         </Link>
                         <div>
                           <Link href={`/profile/${match.matched_user_id}`} className="hover:text-primary transition-colors">
-                            <h3 className="font-semibold">{match.matched_user?.full_name}</h3>
+                            <h3 className="font-semibold flex items-center gap-1.5">
+                              {match.matched_user?.full_name}
+                              {match.matched_user?.is_verified && (
+                                <VerifiedBadge universityName={match.matched_user?.university_name} size="sm" />
+                              )}
+                            </h3>
                           </Link>
                           <p className="text-sm text-muted-foreground">
                             {match.matched_user?.department || "Researcher"}
