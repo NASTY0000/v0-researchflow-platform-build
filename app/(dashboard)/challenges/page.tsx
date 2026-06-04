@@ -23,9 +23,13 @@ interface Challenge {
   status: string
   submission_deadline: string | null
   prize_description: string | null
+  prize_type: string | null
   akili_reward: number
   submission_count: number
   research_areas: string[] | null
+  max_team_size: number | null
+  winner_id: string | null
+  featured_in_showcase: boolean
   created_at: string
 }
 
