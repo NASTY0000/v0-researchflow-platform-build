@@ -42,6 +42,7 @@ import type { MarketplaceTask, Profile } from "@/lib/types/database"
 import { completeMarketplaceTask } from "@/lib/actions/akili"
 import { EmptyState } from "@/components/ui/EmptyState"
 import { ContextualHint } from "@/components/ui/ContextualHint"
+import { SearchableMultiSelect } from "@/components/ui/searchable-multi-select"
 import { formatDistanceToNow } from "date-fns"
 import { toast } from "sonner"
 
@@ -61,31 +62,64 @@ interface LeaderboardEntry {
   points_earned: number
 }
 
-const CATEGORIES = [
-  "All Categories",
-  "Data Analysis",
+const TASK_CATEGORIES = [
+  "Data Collection",
+  "Data Analysis and Statistics",
   "Literature Review",
-  "Statistical Analysis",
-  "Coding/Programming",
-  "Survey Design",
-  "Transcription",
-  "Translation",
-  "Editing/Proofreading",
-  "Graphic Design",
+  "Systematic Review and Meta-analysis",
+  "Research Writing and Editing",
+  "Grant Writing",
+  "Laboratory Work",
+  "Field Research",
+  "Survey Design and Distribution",
+  "Qualitative Research",
+  "Quantitative Research",
+  "Mixed Methods Research",
+  "Software and Web Development",
+  "Mobile App Development",
+  "Database Management",
+  "Machine Learning and AI",
+  "Data Visualisation",
+  "Graphic Design and Illustrations",
+  "Science Communication",
+  "Transcription and Translation",
+  "Proofreading and Copyediting",
+  "Presentation Design",
+  "Video and Multimedia Production",
+  "Social Media and Outreach",
+  "Project Coordination",
+  "Ethics Application Support",
+  "Protocol Development",
+  "Clinical Research Support",
+  "Environmental Sampling",
+  "GIS and Mapping",
   "Other",
 ]
 
-const SKILLS_REQUIRED = [
-  "Python",
-  "R",
-  "SPSS",
-  "STATA",
-  "Excel",
-  "Machine Learning",
-  "NLP",
-  "Data Visualization",
-  "Technical Writing",
-  "Qualitative Analysis",
+const FILTER_CATEGORIES = ["All Categories", ...TASK_CATEGORIES]
+
+const MARKETPLACE_SKILLS = [
+  "Python", "R", "SPSS", "STATA", "SAS", "Excel", "MATLAB",
+  "SQL", "PostgreSQL", "MongoDB", "Firebase",
+  "JavaScript", "TypeScript", "React", "Next.js", "Node.js",
+  "Machine Learning", "Deep Learning", "NLP", "Computer Vision",
+  "TensorFlow", "PyTorch", "scikit-learn", "Pandas", "NumPy",
+  "Data Visualisation", "Tableau", "Power BI", "R Shiny", "D3.js",
+  "Statistical Analysis", "Regression Analysis", "Bayesian Statistics",
+  "Qualitative Analysis", "Thematic Analysis", "NVivo", "ATLAS.ti",
+  "Systematic Review", "Meta-analysis", "PRISMA", "Cochrane",
+  "Quantitative Research", "Mixed Methods Research", "Survey Design",
+  "Literature Review", "Academic Writing", "Technical Writing",
+  "Grant Writing", "Science Communication", "Copyediting", "Proofreading",
+  "Transcription", "Translation", "French", "Swahili", "Arabic", "Hausa",
+  "GIS", "ArcGIS", "QGIS", "Remote Sensing", "Spatial Analysis",
+  "Field Research", "Data Collection", "Interviewing", "Focus Groups",
+  "Laboratory Work", "PCR", "Cell Culture", "Microscopy", "Titration",
+  "Clinical Research", "Ethics Application", "Protocol Writing",
+  "Graphic Design", "Figma", "Adobe Illustrator", "Adobe Photoshop",
+  "Video Editing", "Presentation Design", "Canva",
+  "Project Management", "Trello", "Notion", "Asana", "JIRA",
+  "Social Media Management", "Science Outreach",
 ]
 
 export default function MarketplacePage() {
@@ -194,34 +228,46 @@ export default function MarketplacePage() {
   }
 
   async function handleCreateTask() {
-    if (!newTitle.trim() || !newDescription.trim() || !newCategory) return
+    if (!newTitle.trim()) { toast.error("Please add a task title"); return }
+    if (!newCategory) { toast.error("Please select a category"); return }
+    if (!newDescription.trim()) { toast.error("Please add a description"); return }
 
     setIsCreating(true)
-    const supabase = createClient()
 
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { setIsCreating(false); return }
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { toast.error("You must be signed in to post a task"); return }
 
-    const reward = Math.min(500, Math.max(1, parseInt(newAkiliReward) || 50))
+      const reward = Math.min(500, Math.max(1, parseInt(newAkiliReward) || 50))
 
-    const { error } = await supabase.from("marketplace_tasks").insert({
-      posted_by: user.id,
-      title: newTitle.trim(),
-      description: newDescription.trim(),
-      category: newCategory,
-      budget_max: reward,
-      deadline: newDeadline || null,
-      required_skills: newSkills,
-      status: "open",
-    })
+      const { error } = await supabase.from("marketplace_tasks").insert({
+        posted_by: user.id,
+        title: newTitle.trim(),
+        description: newDescription.trim(),
+        category: newCategory,
+        budget_max: reward,
+        deadline: newDeadline || null,
+        required_skills: newSkills,
+        status: "open",
+      })
 
-    if (!error) {
+      if (error) {
+        console.error("Marketplace insert error:", error)
+        toast.error(error.message || "Failed to post task. Please try again.")
+        return
+      }
+
+      toast.success("Task posted successfully!")
       setShowNewTask(false)
       resetNewTaskForm()
       loadTasks()
+    } catch (err) {
+      console.error("Unexpected error posting task:", err)
+      toast.error("Something went wrong. Please try again.")
+    } finally {
+      setIsCreating(false)
     }
-
-    setIsCreating(false)
   }
 
   async function handleCompleteTask() {
@@ -255,14 +301,6 @@ export default function MarketplacePage() {
     setNewAkiliReward("50")
     setNewDeadline("")
     setNewSkills([])
-  }
-
-  function toggleSkill(skill: string) {
-    if (newSkills.includes(skill)) {
-      setNewSkills(newSkills.filter((s) => s !== skill))
-    } else if (newSkills.length < 5) {
-      setNewSkills([...newSkills, skill])
-    }
   }
 
   return (
@@ -323,7 +361,7 @@ export default function MarketplacePage() {
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
-                    {CATEGORIES.filter((c) => c !== "All Categories").map((cat) => (
+                    {TASK_CATEGORIES.map((cat) => (
                       <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                     ))}
                   </SelectContent>
@@ -358,19 +396,15 @@ export default function MarketplacePage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Required Skills (select up to 5)</Label>
-                <div className="flex flex-wrap gap-2">
-                  {SKILLS_REQUIRED.map((skill) => (
-                    <Badge
-                      key={skill}
-                      variant={newSkills.includes(skill) ? "default" : "outline"}
-                      className="cursor-pointer"
-                      onClick={() => toggleSkill(skill)}
-                    >
-                      {skill}
-                    </Badge>
-                  ))}
-                </div>
+                <Label>Required Skills</Label>
+                <SearchableMultiSelect
+                  options={MARKETPLACE_SKILLS}
+                  value={newSkills}
+                  onChange={setNewSkills}
+                  placeholder="Select required skills..."
+                  searchPlaceholder="Search or add a skill..."
+                  allowCustom={true}
+                />
               </div>
             </div>
             <DialogFooter>
@@ -410,7 +444,7 @@ export default function MarketplacePage() {
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent>
-                {CATEGORIES.map((cat) => (
+                {FILTER_CATEGORIES.map((cat) => (
                   <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                 ))}
               </SelectContent>
