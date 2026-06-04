@@ -4,15 +4,21 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Home, Lightbulb, Users, Bell, User } from 'lucide-react'
-import { motion } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
 
-const NAV_ITEMS = [
-  { label: 'Home',    href: '/dashboard',     icon: Home     },
-  { label: 'Ideas',   href: '/ideas',          icon: Lightbulb },
-  { label: 'Network', href: '/network',        icon: Users    },
-  { label: 'Alerts',  href: '/notifications',  icon: Bell     },
-  { label: 'Profile', href: '/profile',        icon: User     },
+interface NavTab {
+  href: string
+  label: string
+  icon: React.ElementType
+  exact?: boolean
+}
+
+const TABS: NavTab[] = [
+  { href: '/dashboard',     label: 'Home',    icon: Home,       exact: true },
+  { href: '/ideas',         label: 'Ideas',   icon: Lightbulb },
+  { href: '/network',       label: 'Network', icon: Users },
+  { href: '/notifications', label: 'Alerts',  icon: Bell },
+  { href: '/profile',       label: 'Profile', icon: User },
 ]
 
 interface MobileNavProps {
@@ -63,84 +69,177 @@ export function MobileNav({ initialUnreadCount }: MobileNavProps) {
     return () => cleanup?.()
   }, [])
 
-  function isActive(href: string) {
-    if (href === '/dashboard') return pathname === '/dashboard'
-    return pathname === href || pathname.startsWith(href + '/')
-  }
+  const isActive = (tab: NavTab) =>
+    tab.exact ? pathname === tab.href : pathname.startsWith(tab.href)
 
   return (
-    <nav
-      className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex items-stretch"
-      style={{
-        height: '64px',
-        background: 'rgba(5,1,15,0.95)',
-        borderTop: '1px solid rgba(139,92,246,0.2)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        paddingBottom: 'env(safe-area-inset-bottom)',
-      }}
-    >
-      {NAV_ITEMS.map(({ label, href, icon: Icon }) => {
-        const active = isActive(href)
-        const isNotifications = href === '/notifications'
+    <>
+      {/* Spacer so page content clears the nav */}
+      <div className="h-[88px] w-full md:hidden" />
 
-        return (
-          <Link
-            key={href}
-            href={href}
-            className="flex-1 flex flex-col items-center justify-center gap-0.5 relative"
-            onClick={isNotifications ? () => setUnreadCount(0) : undefined}
-          >
-            {/* Active background pill */}
-            {active && (
-              <motion.div
-                layoutId="mobile-nav-active"
-                className="absolute inset-x-2 inset-y-1 rounded-xl"
-                style={{ background: 'rgba(124,58,237,0.15)' }}
-                transition={{ type: 'spring', stiffness: 400, damping: 35 }}
-              />
-            )}
+      <nav
+        className="md:hidden fixed bottom-0 left-0 right-0 z-50"
+        style={{
+          height: '88px',
+          background: 'rgba(10, 5, 20, 0.80)',
+          backdropFilter: 'blur(28px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(28px) saturate(180%)',
+          borderTop: '1px solid rgba(139,92,246,0.18)',
+          boxShadow: '0 -1px 0 rgba(139,92,246,0.10), inset 0 1px 0 rgba(255,255,255,0.035)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-around',
+          padding: '0 8px 16px',
+        }}
+      >
+        {TABS.map((tab) => {
+          const active = isActive(tab)
+          const Icon = tab.icon
+          const isAlerts = tab.href === '/notifications'
 
-            {/* Active top accent */}
-            {active && (
-              <motion.span
-                layoutId="mobile-nav-accent"
-                className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full"
-                style={{ background: 'linear-gradient(90deg,#7C3AED,#A855F7)' }}
-                transition={{ type: 'spring', stiffness: 400, damping: 35 }}
-              />
-            )}
-
-            <motion.div
-              className="relative z-10"
-              whileTap={{ scale: 0.85 }}
-              transition={{ duration: 0.1 }}
+          return (
+            <Link
+              key={tab.href}
+              href={tab.href}
+              onClick={isAlerts ? () => setUnreadCount(0) : undefined}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '4px',
+                position: 'relative',
+                padding: '10px 14px 4px',
+                borderRadius: '16px',
+                textDecoration: 'none',
+                WebkitTapHighlightColor: 'transparent',
+                minWidth: '56px',
+              }}
             >
-              <Icon
-                className="h-5 w-5 transition-colors"
-                style={{ color: active ? '#C084FC' : '#7C6A9C' }}
-              />
-              {isNotifications && unreadCount > 0 && (
-                <motion.span
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="absolute -top-2 -right-2 h-4 w-4 flex items-center justify-center rounded-full text-[9px] font-bold text-white"
-                  style={{ background: 'linear-gradient(135deg,#EF4444,#DC2626)', boxShadow: '0 0 8px rgba(239,68,68,0.5)' }}
-                >
-                  {unreadCount > 9 ? '9+' : unreadCount}
-                </motion.span>
+              {/* Icon container */}
+              <div
+                style={{
+                  width: '28px',
+                  height: '28px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  position: 'relative',
+                  transform: active ? 'translateY(-2px) scale(1.1)' : 'none',
+                  transition: 'transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                }}
+              >
+                {/* Active ring + glass disc */}
+                {active && (
+                  <>
+                    <div
+                      style={{
+                        position: 'absolute',
+                        inset: '-9px',
+                        borderRadius: '50%',
+                        background: 'radial-gradient(ellipse at 50% 60%, rgba(124,58,237,0.22) 0%, rgba(124,58,237,0.07) 55%, transparent 75%)',
+                        boxShadow: '0 0 0 1px rgba(139,92,246,0.50), 0 0 18px rgba(124,58,237,0.38), 0 0 36px rgba(124,58,237,0.14), inset 0 1px 0 rgba(255,255,255,0.07)',
+                        animation: 'rfNavRing 2.8s ease-in-out infinite',
+                      }}
+                    />
+                    {/* Gold halo arc at top of ring */}
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: '-9px',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        width: '18px',
+                        height: '3px',
+                        background: 'linear-gradient(90deg, transparent 0%, rgba(251,191,36,0.75) 50%, transparent 100%)',
+                        borderRadius: '100px',
+                        filter: 'blur(1.5px)',
+                        boxShadow: '0 0 6px rgba(251,191,36,0.5)',
+                      }}
+                    />
+                  </>
+                )}
+
+                {/* The icon */}
+                <Icon
+                  size={20}
+                  style={{
+                    color: active ? '#C4B5FD' : 'rgba(139,92,246,0.38)',
+                    filter: active ? 'drop-shadow(0 0 5px rgba(167,139,250,0.65))' : 'none',
+                    transition: 'all 0.25s ease',
+                    position: 'relative',
+                    zIndex: 1,
+                  }}
+                  strokeWidth={active ? 2 : 1.8}
+                />
+
+                {/* Unread badge on Alerts */}
+                {isAlerts && unreadCount > 0 && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '-3px',
+                      right: '-4px',
+                      minWidth: '8px',
+                      height: '8px',
+                      borderRadius: '4px',
+                      background: '#A855F7',
+                      border: '1.5px solid #07030F',
+                      boxShadow: '0 0 6px rgba(168,85,247,0.7)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: '0 2px',
+                    }}
+                  >
+                    {unreadCount > 9 && (
+                      <span style={{ fontSize: '6px', color: 'white', fontWeight: 700 }}>9+</span>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Label */}
+              <span
+                style={{
+                  fontSize: '9.5px',
+                  fontWeight: active ? 600 : 500,
+                  color: active ? '#C4B5FD' : 'rgba(139,92,246,0.35)',
+                  letterSpacing: '0.01em',
+                  transition: 'all 0.25s ease',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {tab.label}
+              </span>
+
+              {/* Active gold dot below label */}
+              {active && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    bottom: '2px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    width: '3px',
+                    height: '3px',
+                    borderRadius: '50%',
+                    background: '#FBBF24',
+                    boxShadow: '0 0 5px rgba(251,191,36,0.8)',
+                  }}
+                />
               )}
-            </motion.div>
+            </Link>
+          )
+        })}
+      </nav>
 
-            <span
-              className="text-[10px] font-medium transition-colors leading-tight relative z-10"
-              style={{ color: active ? '#C084FC' : '#7C6A9C' }}
-            >
-              {label}
-            </span>
-          </Link>
-        )
-      })}
-    </nav>
+      {/* Keyframe animation */}
+      <style>{`
+        @keyframes rfNavRing {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50%       { opacity: 0.78; transform: scale(1.04); }
+        }
+      `}</style>
+    </>
   )
 }
