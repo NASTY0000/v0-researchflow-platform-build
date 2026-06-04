@@ -8,29 +8,102 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { ArrowLeft, Plus, X, Loader2 } from 'lucide-react'
 import { postResearchIdea, joinProjectAsCollaborator } from '@/lib/actions/akili'
+import { SearchableMultiSelect } from '@/components/ui/searchable-multi-select'
 
 const RESEARCH_AREAS = [
-  'Computer Science', 'Data Science', 'Artificial Intelligence', 'Machine Learning',
-  'Biotechnology', 'Environmental Science', 'Public Health', 'Economics',
-  'Social Sciences', 'Engineering', 'Mathematics', 'Physics', 'Chemistry',
-  'Medicine', 'Agriculture', 'Education', 'Other',
+  'Artificial Intelligence & Machine Learning',
+  'Data Science & Analytics',
+  'Computer Science & Software Engineering',
+  'Cybersecurity & Information Security',
+  'Biotechnology & Genetic Engineering',
+  'Biomedical Engineering',
+  'Environmental Science & Climate Change',
+  'Renewable Energy & Clean Technology',
+  'Public Health & Epidemiology',
+  'Medicine & Clinical Research',
+  'Pharmacology & Drug Discovery',
+  'Nursing & Allied Health',
+  'Agriculture & Food Security',
+  'Agronomy & Crop Science',
+  'Veterinary Science & Animal Husbandry',
+  'Economics & Finance',
+  'Development Economics',
+  'Business Administration & Management',
+  'Social Sciences & Sociology',
+  'Political Science & Governance',
+  'Law & Legal Studies',
+  'Education & Pedagogy',
+  'Psychology & Behavioral Science',
+  'Linguistics & Communication',
+  'African Studies & Cultural Heritage',
+  'History & Archaeology',
+  'Philosophy & Ethics',
+  'Theology & Religious Studies',
+  'Mathematics & Statistics',
+  'Physics & Astronomy',
+  'Chemistry & Materials Science',
+  'Earth Sciences & Geology',
+  'Marine & Aquatic Sciences',
+  'Ecology & Biodiversity',
+  'Civil Engineering & Infrastructure',
+  'Mechanical Engineering',
+  'Electrical & Electronic Engineering',
+  'Chemical Engineering',
+  'Urban Planning & Architecture',
+  'Transportation & Logistics',
+  'Water Resources & Sanitation',
+  'Nutrition & Dietetics',
+  'Sports Science & Kinesiology',
+  'Gender Studies & Feminism',
+  'Human Rights & International Relations',
+  'Journalism & Media Studies',
+  'Library & Information Science',
+  'Nanotechnology',
+  'Quantum Computing',
+  'Robotics & Automation',
+  'Other',
+]
+
+const RESEARCH_SKILLS = [
+  // Programming & Data
+  'Python', 'R', 'MATLAB', 'Julia', 'SQL', 'JavaScript', 'Java', 'C/C++',
+  // Stats & Analysis
+  'SPSS', 'STATA', 'SAS', 'Excel', 'Statistical Analysis', 'Econometrics',
+  'Biostatistics', 'Epidemiological Modelling',
+  // Machine Learning
+  'Machine Learning', 'Deep Learning', 'NLP', 'Computer Vision',
+  'Reinforcement Learning', 'Time Series Analysis',
+  // Data Tools
+  'Data Visualization', 'Tableau', 'Power BI', 'Data Wrangling',
+  'Big Data (Spark/Hadoop)', 'Database Design',
+  // Research Methods
+  'Qualitative Analysis', 'Quantitative Research', 'Mixed Methods',
+  'Systematic Review', 'Meta-Analysis', 'Survey Design',
+  'Focus Group Facilitation', 'Ethnography', 'Grounded Theory',
+  'Action Research', 'Case Study Research',
+  // Lab & Field
+  'Lab Skills', 'Field Research', 'PCR & Molecular Biology',
+  'Microscopy', 'Cell Culture', 'Genomic Sequencing', 'Clinical Trials',
+  // Writing & Communication
+  'Technical Writing', 'Academic Writing', 'Grant Writing',
+  'Literature Review', 'Science Communication', 'Policy Writing',
+  // GIS & Environment
+  'GIS & Remote Sensing', 'ArcGIS', 'QGIS', 'Spatial Analysis',
+  'Environmental Monitoring',
+  // Specialist
+  'Bioinformatics', 'Cheminformatics', 'Health Economics',
+  'Project Management', 'Ethics & IRB Protocols',
+  'Community Engagement', 'Translation & Interpretation',
+  'Other',
 ]
 
 const METHODOLOGIES = [
   'Qualitative', 'Quantitative', 'Mixed Methods', 'Systematic Review',
   'Case Study', 'Experimental', 'Survey', 'Observational',
-]
-
-const SKILLS_LIST = [
-  'Python', 'R', 'SPSS', 'STATA', 'Excel', 'Machine Learning', 'NLP',
-  'Data Visualization', 'Technical Writing', 'Qualitative Analysis',
-  'Statistical Analysis', 'Lab Skills', 'Field Research', 'Literature Review',
-  'Grant Writing', 'Survey Design', 'Bioinformatics', 'GIS', 'Other',
 ]
 
 const inputStyle = {
@@ -65,22 +138,6 @@ export default function NewProjectPage() {
     const updated = [...objectives]
     updated[index] = value
     setObjectives(updated)
-  }
-
-  function toggleArea(area: string) {
-    if (researchAreas.includes(area)) {
-      setResearchAreas(researchAreas.filter((a) => a !== area))
-    } else if (researchAreas.length < 3) {
-      setResearchAreas([...researchAreas, area])
-    }
-  }
-
-  function toggleSkill(skill: string) {
-    if (selectedSkills.includes(skill)) {
-      setSelectedSkills(selectedSkills.filter((s) => s !== skill))
-    } else {
-      setSelectedSkills([...selectedSkills, skill])
-    }
   }
 
   async function handleSubmit() {
@@ -298,43 +355,28 @@ export default function NewProjectPage() {
         {/* Research Areas */}
         <div className="space-y-2">
           <Label>Research Areas <span className="text-xs font-normal" style={{ color: '#7C6A9C' }}>(select up to 3)</span></Label>
-          <div className="flex flex-wrap gap-2">
-            {RESEARCH_AREAS.map((area) => (
-              <Badge
-                key={area}
-                variant={researchAreas.includes(area) ? 'default' : 'outline'}
-                className="cursor-pointer"
-                onClick={() => toggleArea(area)}
-                style={researchAreas.includes(area)
-                  ? { background: 'rgba(124,58,237,0.3)', border: '1px solid rgba(168,85,247,0.5)', color: '#E2D9F3' }
-                  : { border: '1px solid rgba(139,92,246,0.3)', color: '#9D8BB8', cursor: 'pointer' }
-                }
-              >
-                {area}
-              </Badge>
-            ))}
-          </div>
+          <SearchableMultiSelect
+            options={RESEARCH_AREAS}
+            value={researchAreas}
+            onChange={setResearchAreas}
+            placeholder="Select research areas..."
+            searchPlaceholder="Search research areas..."
+            maxSelections={3}
+            allowCustom={true}
+          />
         </div>
 
         {/* Skills Needed */}
         <div className="space-y-2">
           <Label>Skills Needed</Label>
-          <div className="flex flex-wrap gap-2">
-            {SKILLS_LIST.map((skill) => (
-              <Badge
-                key={skill}
-                variant={selectedSkills.includes(skill) ? 'default' : 'outline'}
-                className="cursor-pointer"
-                onClick={() => toggleSkill(skill)}
-                style={selectedSkills.includes(skill)
-                  ? { background: 'rgba(124,58,237,0.3)', border: '1px solid rgba(168,85,247,0.5)', color: '#E2D9F3' }
-                  : { border: '1px solid rgba(139,92,246,0.3)', color: '#9D8BB8', cursor: 'pointer' }
-                }
-              >
-                {skill}
-              </Badge>
-            ))}
-          </div>
+          <SearchableMultiSelect
+            options={RESEARCH_SKILLS}
+            value={selectedSkills}
+            onChange={setSelectedSkills}
+            placeholder="Select skills needed..."
+            searchPlaceholder="Search or add a skill..."
+            allowCustom={true}
+          />
         </div>
 
         {/* Submit */}
