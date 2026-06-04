@@ -47,6 +47,9 @@ import type { MentorProfile, Profile, Project } from "@/lib/types/database"
 import { AkiliScoreBadge } from "@/components/akili/AkiliScoreBadge"
 import { toast } from "sonner"
 import { ContextualHint } from "@/components/ui/ContextualHint"
+import { RequestProgramModal } from "@/components/mentorship/RequestProgramModal"
+import { ProgramCard } from "@/components/mentorship/ProgramCard"
+import { getMyMentorshipPrograms, type MenteeProgramItem } from "@/lib/actions/mentorship"
 
 interface MentorWithProfile extends MentorProfile {
   profile: Profile
@@ -114,9 +117,25 @@ export default function MentorsPage() {
   const [isRequesting, setIsRequesting] = useState(false)
   const [requestSuccess, setRequestSuccess] = useState(false)
 
+  // Programs tab
+  const [activeTab, setActiveTab] = useState<'mentors' | 'programs'>('mentors')
+  const [myPrograms, setMyPrograms] = useState<MenteeProgramItem[]>([])
+  const [loadingPrograms, setLoadingPrograms] = useState(false)
+  const [programModalMentor, setProgramModalMentor] = useState<MentorWithProfile | null>(null)
+
   useEffect(() => {
     loadMentors()
   }, [selectedArea, searchQuery])
+
+  useEffect(() => {
+    if (activeTab === 'programs' && myPrograms.length === 0) {
+      setLoadingPrograms(true)
+      getMyMentorshipPrograms().then(({ asMentee }) => {
+        setMyPrograms(asMentee)
+        setLoadingPrograms(false)
+      })
+    }
+  }, [activeTab])
 
   async function loadMentors() {
     setIsLoading(true)
@@ -429,6 +448,64 @@ export default function MentorsPage() {
         </Button>
       </div>
 
+      {/* Tab switcher */}
+      <div style={{ display: 'flex', gap: '4px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(139,92,246,0.18)', borderRadius: '12px', padding: '4px', width: 'fit-content' }}>
+        {(['mentors', 'programs'] as const).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            style={{
+              padding: '7px 20px', borderRadius: '9px', fontSize: '13px', fontWeight: 500,
+              border: 'none', cursor: 'pointer', transition: 'all 0.15s',
+              background: activeTab === tab ? 'rgba(124,58,237,0.25)' : 'transparent',
+              color: activeTab === tab ? '#C4B5FD' : '#7C6A9C',
+            }}
+          >
+            {tab === 'mentors' ? 'Mentor Directory' : 'My Programs'}
+          </button>
+        ))}
+      </div>
+
+      {/* My Programs tab */}
+      {activeTab === 'programs' && (
+        <div className="space-y-4">
+          {loadingPrograms ? (
+            <div className="grid md:grid-cols-2 gap-4">
+              {[1,2].map((i) => <div key={i} style={{ height: '180px', borderRadius: '16px', background: 'rgba(139,92,246,0.06)', animation: 'pulse 1.5s ease-in-out infinite' }} />)}
+            </div>
+          ) : myPrograms.length === 0 ? (
+            <Card>
+              <CardContent className="p-10 text-center">
+                <GraduationCap className="h-14 w-14 text-muted-foreground/40 mx-auto mb-4" />
+                <h3 className="font-semibold mb-1">No programs yet</h3>
+                <p className="text-muted-foreground text-sm mb-4">Browse the Mentor Directory and request a structured program.</p>
+                <Button variant="outline" onClick={() => setActiveTab('mentors')} style={{ border: '1px solid rgba(168,85,247,0.4)', color: '#C084FC' }}>Browse Mentors</Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid md:grid-cols-2 gap-4">
+              {myPrograms.map((p) => (
+                <ProgramCard
+                  key={p.id}
+                  programId={p.id}
+                  otherPerson={p.mentor}
+                  role="mentee"
+                  status={p.status}
+                  focusArea={p.focus_area}
+                  durationMonths={p.duration_months}
+                  milestones={p.mentorship_milestones}
+                  startedAt={p.started_at}
+                  expectedEndAt={p.expected_end_at}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Filters — only shown in Mentors tab */}
+      {activeTab === 'mentors' && <>
+
       {/* Filters */}
       <Card>
         <CardContent className="p-4">
@@ -553,14 +630,18 @@ export default function MentorsPage() {
                   )}
                 </div>
 
-                <div className="flex gap-2 pt-4 border-t">
+                <div className="flex gap-2 pt-4 border-t flex-wrap">
                   <Button
-                    className="flex-1"
-                    onClick={() => openRequestModal(mentor)}
+                    size="sm"
+                    onClick={() => setProgramModalMentor(mentor)}
+                    style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none', flex: 1 }}
                   >
-                    Request Mentorship
+                    Request Program
                   </Button>
-                  <Button variant="outline" asChild>
+                  <Button size="sm" variant="outline" onClick={() => openRequestModal(mentor)}>
+                    Quick Request
+                  </Button>
+                  <Button variant="outline" size="sm" asChild>
                     <Link href={`/profile/${mentor.user_id}`}>Profile</Link>
                   </Button>
                   <BookmarkButton contentType="mentor" contentId={mentor.id} size="sm" />
@@ -590,7 +671,22 @@ export default function MentorsPage() {
         </Card>
       )}
 
-      {/* Request Modal */}
+      {/* End of mentors tab */}
+      </>}
+
+      {/* Program Request Modal */}
+      {programModalMentor && (
+        <RequestProgramModal
+          mentor={programModalMentor}
+          onClose={() => setProgramModalMentor(null)}
+          onSuccess={() => {
+            setProgramModalMentor(null)
+            toast.success('Program request sent!')
+          }}
+        />
+      )}
+
+      {/* Quick Mentorship Request Modal */}
       <Dialog open={!!selectedMentor} onOpenChange={closeModal}>
         <DialogContent className="max-w-md">
           <DialogHeader>

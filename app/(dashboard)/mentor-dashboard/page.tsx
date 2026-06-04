@@ -23,6 +23,8 @@ import { toast } from 'sonner'
 import { acceptMentorshipRequest } from '@/lib/actions/akili'
 import type { MentorProfile, MentorshipRequest, MentorAvailability, Profile, Project } from '@/lib/types/database'
 import { ListPageSkeleton } from '@/components/ui/skeleton-screens'
+import { respondToProgramRequest, getMyMentorshipPrograms, toggleAcceptingMentees, type MentorProgramItem } from '@/lib/actions/mentorship'
+import { ProgramCard } from '@/components/mentorship/ProgramCard'
 
 type RequestWithStudent = MentorshipRequest & {
   student: Profile
@@ -60,6 +62,13 @@ export default function MentorDashboardPage() {
   const [callDeadline, setCallDeadline] = useState('')
   const [isPostingCall, setIsPostingCall] = useState(false)
 
+  // Program management
+  const [pendingPrograms, setPendingPrograms] = useState<MentorProgramItem[]>([])
+  const [activePrograms, setActivePrograms] = useState<MentorProgramItem[]>([])
+  const [respondingProgramId, setRespondingProgramId] = useState<string | null>(null)
+  const [isTogglingCapacity, setIsTogglingCapacity] = useState(false)
+  const [acceptingMentees, setAcceptingMentees] = useState(true)
+
   useEffect(() => {
     load()
   }, [])
@@ -81,7 +90,7 @@ export default function MentorDashboardPage() {
       setMentorProfile(mp)
 
       if (mp.is_verified) {
-        const [reqResult, slotsResult] = await Promise.all([
+        const [reqResult, slotsResult, programsResult] = await Promise.all([
           supabase
             .from('mentorship_requests')
             .select('*, student:profiles!mentorship_requests_student_id_fkey(*), project:projects(*)')
@@ -93,6 +102,7 @@ export default function MentorDashboardPage() {
             .eq('mentor_id', user.id)
             .gte('available_date', new Date().toISOString().split('T')[0])
             .order('available_date', { ascending: true }),
+          getMyMentorshipPrograms(),
         ])
 
         if (reqResult.data) {
@@ -100,6 +110,12 @@ export default function MentorDashboardPage() {
           setActiveRequests(reqResult.data.filter((r) => r.status === 'accepted') as RequestWithStudent[])
         }
         if (slotsResult.data) setSlots(slotsResult.data)
+        if (programsResult) {
+          setPendingPrograms(programsResult.asMentor.filter((p) => p.status === 'requested'))
+          setActivePrograms(programsResult.asMentor.filter((p) => p.status === 'active'))
+        }
+        // Sync accepting mentees toggle from DB
+        if (mp.is_accepting_mentees !== undefined) setAcceptingMentees(mp.is_accepting_mentees ?? true)
       }
     }
 
@@ -400,6 +416,136 @@ export default function MentorDashboardPage() {
               )}
             </CardContent>
           </Card>
+
+          {/* SECTION 3B — Capacity Status */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="w-5 h-5 text-primary" />
+                Capacity & Availability
+              </CardTitle>
+              <CardDescription>Control whether you appear in the mentor directory</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm font-medium">Accepting Mentees</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {acceptingMentees ? 'Your profile is listed in the mentor directory' : 'You are hidden from the mentor directory'}
+                  </p>
+                </div>
+                <button
+                  onClick={async () => {
+                    setIsTogglingCapacity(true)
+                    const next = !acceptingMentees
+                    const result = await toggleAcceptingMentees(next)
+                    if (result.success) setAcceptingMentees(next)
+                    else toast.error(result.error || 'Failed to update')
+                    setIsTogglingCapacity(false)
+                  }}
+                  disabled={isTogglingCapacity}
+                  style={{
+                    width: '44px', height: '24px', borderRadius: '12px', border: 'none',
+                    background: acceptingMentees ? 'rgba(34,197,94,0.6)' : 'rgba(139,92,246,0.2)',
+                    cursor: 'pointer', position: 'relative', transition: 'background 0.2s', flexShrink: 0,
+                  }}
+                >
+                  <div style={{
+                    width: '18px', height: '18px', borderRadius: '9px', background: 'white',
+                    position: 'absolute', top: '3px',
+                    left: acceptingMentees ? '23px' : '3px', transition: 'left 0.2s',
+                  }} />
+                </button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* SECTION 3C — Pending Program Requests */}
+          {pendingPrograms.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-primary" />
+                  Pending Program Requests
+                </CardTitle>
+                <CardDescription>Structured mentorship programs awaiting your response</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {pendingPrograms.map((prog) => (
+                  <div key={prog.id} className="flex flex-col sm:flex-row sm:items-start gap-4 p-4 rounded-xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(139,92,246,0.15)' }}>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm">{prog.mentee?.full_name || 'Researcher'}</p>
+                      <p className="text-xs mt-0.5" style={{ color: '#A855F7' }}>{prog.duration_months}-month program · {prog.focus_area}</p>
+                    </div>
+                    <div className="flex gap-2 shrink-0">
+                      <Button
+                        size="sm"
+                        disabled={respondingProgramId === prog.id}
+                        onClick={async () => {
+                          setRespondingProgramId(prog.id)
+                          const r = await respondToProgramRequest(prog.id, 'active')
+                          if (r.success) {
+                            setPendingPrograms((prev) => prev.filter((p) => p.id !== prog.id))
+                            setActivePrograms((prev) => [...prev, { ...prog, status: 'active' }])
+                            toast.success('Program accepted. Milestones generated.')
+                          } else toast.error(r.error || 'Failed')
+                          setRespondingProgramId(null)
+                        }}
+                        style={{ background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.3)', color: '#22C55E' }}
+                      >
+                        {respondingProgramId === prog.id ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Accept'}
+                      </Button>
+                      <Button
+                        size="sm" variant="outline"
+                        disabled={respondingProgramId === prog.id}
+                        onClick={async () => {
+                          setRespondingProgramId(prog.id)
+                          const r = await respondToProgramRequest(prog.id, 'declined')
+                          if (r.success) setPendingPrograms((prev) => prev.filter((p) => p.id !== prog.id))
+                          else toast.error(r.error || 'Failed')
+                          setRespondingProgramId(null)
+                        }}
+                        style={{ border: '1px solid rgba(239,68,68,0.3)', color: '#EF4444' }}
+                      >
+                        Decline
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* SECTION 3D — Active Programs */}
+          {activePrograms.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <GraduationCap className="w-5 h-5 text-primary" />
+                  Active Programs
+                </CardTitle>
+                <CardDescription>Structured mentorship programs in progress</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid sm:grid-cols-2 gap-3">
+                  {activePrograms.map((prog) => (
+                    <ProgramCard
+                      key={prog.id}
+                      programId={prog.id}
+                      otherPerson={prog.mentee}
+                      role="mentor"
+                      status={prog.status}
+                      focusArea={prog.focus_area}
+                      durationMonths={prog.duration_months}
+                      milestones={prog.mentorship_milestones}
+                      startedAt={prog.started_at}
+                      expectedEndAt={prog.expected_end_at}
+                    />
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* SECTION 4 — Set Availability */}
           <Card>
