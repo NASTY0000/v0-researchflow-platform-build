@@ -42,6 +42,7 @@ import {
   Building2,
   FileText,
   ClipboardCheck,
+  BarChart2,
 } from 'lucide-react'
 import type { Profile } from '@/lib/types/database'
 
@@ -71,6 +72,7 @@ const discoverNavItems: NavItem[] = [
   { title: 'AI Assistant', href: '/assistant', icon: Sparkles },
   { title: 'Grants', href: '/grants', icon: DollarSign },
   { title: 'Journals & Conferences', href: '/publications', icon: GraduationCap },
+  { title: 'My Analytics', href: '/analytics', icon: BarChart2 },
 ]
 
 const communityNavItems: NavItem[] = [

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { trackProfileView } from '@/lib/actions/analytics'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -89,12 +90,15 @@ export default function PublicProfilePage() {
       .maybeSingle()
     setMentorVerified(mentorProfile?.is_verified === true)
 
-    // Increment profile views
+    // Increment profile views counter and record granular view
     supabase
       .from('profiles')
       .update({ portfolio_views: (data.portfolio_views || 0) + 1 })
       .eq('id', userId)
       .then(() => {})
+    if (user && user.id !== userId) {
+      trackProfileView(userId).catch(() => {})
+    }
 
     // Check connection status
     if (user) {
