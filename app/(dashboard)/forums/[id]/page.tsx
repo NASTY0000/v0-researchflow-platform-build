@@ -18,8 +18,7 @@ interface Forum {
   description: string | null
   category: string
   icon: string | null
-  posts_count?: number
-  post_count?: number
+  post_count: number
 }
 
 interface Post {
@@ -55,7 +54,7 @@ export default function ForumDetailPage() {
 
       const forumRes = await supabase
         .from('forums')
-        .select('id, name, description, icon, category, posts_count, post_count')
+        .select('id, name, description, icon, category, post_count')
         .eq('id', forumId)
         .single()
 
@@ -136,7 +135,7 @@ export default function ForumDetailPage() {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
   }
 
-  const postCount = forum.posts_count ?? forum.post_count ?? 0
+  const postCount = forum.post_count ?? 0
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">

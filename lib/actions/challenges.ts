@@ -150,7 +150,7 @@ export async function submitToChallenge(data: {
     .eq('id', data.challengeId)
     .single()
   if (!challenge) return { success: false, error: 'Challenge not found' }
-  if (challenge.status !== 'open') return { success: false, error: 'Challenge is not accepting submissions' }
+  if (challenge.status && challenge.status !== 'open') return { success: false, error: 'Challenge is not accepting submissions' }
   if (challenge.submission_deadline && new Date(challenge.submission_deadline) < new Date()) {
     return { success: false, error: 'Submission deadline has passed' }
   }
