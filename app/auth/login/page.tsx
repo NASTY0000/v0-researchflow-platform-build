@@ -8,12 +8,9 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Loader2, Mail, Lock, Play, ArrowLeft } from 'lucide-react'
+import { Loader2, Mail, Lock, ArrowLeft } from 'lucide-react'
 import { signIn, signInWithGoogle } from '@/lib/actions/auth'
 import { createClient } from '@/lib/supabase/client'
-
-const DEMO_EMAIL = 'demo@researchflow.app'
-const DEMO_PASSWORD = 'demo123456'
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
@@ -31,7 +28,6 @@ function LoginPageInner() {
   const [cleared, setCleared] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
-  const [isDemoLoading, setIsDemoLoading] = useState(false)
   const emailRef = useRef<HTMLInputElement>(null)
   const passwordRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
@@ -91,22 +87,6 @@ function LoginPageInner() {
     }
   }
 
-  async function handleDemoLogin() {
-    setIsDemoLoading(true)
-    setError(null)
-    try {
-      await fetch('/api/seed-demo', { method: 'POST' })
-      const formData = new FormData()
-      formData.append('email', DEMO_EMAIL)
-      formData.append('password', DEMO_PASSWORD)
-      const result = await signIn(formData)
-      if (result?.error) { setError(result.error); setIsDemoLoading(false) }
-    } catch {
-      setError('Failed to load demo account.')
-      setIsDemoLoading(false)
-    }
-  }
-
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-background">
       {/* Background glows */}
@@ -160,7 +140,7 @@ function LoginPageInner() {
               </div>
             </div>
 
-            <Button type="submit" className="w-full h-10" disabled={isLoading || isGoogleLoading || isDemoLoading}
+            <Button type="submit" className="w-full h-10" disabled={isLoading || isGoogleLoading}
               style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', boxShadow: '0 0 20px rgba(124,58,237,0.35)', border: 'none', borderRadius: '8px', color: '#fff' }}>
               {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Signing in...</> : 'Sign in'}
             </Button>
@@ -182,21 +162,12 @@ function LoginPageInner() {
             const result = await signInWithGoogle()
             if (result?.error) { setError(result.error); setIsGoogleLoading(false) }
             else if (result?.url) { window.location.href = result.url }
-          }} className="mb-3">
-            <Button type="submit" variant="outline" className="w-full h-10" disabled={isLoading || isGoogleLoading || isDemoLoading}>
+          }}>
+            <Button type="submit" variant="outline" className="w-full h-10" disabled={isLoading || isGoogleLoading}>
               {isGoogleLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Connecting...</> : <><GoogleIcon className="mr-2 h-4 w-4" />Continue with Google</>}
             </Button>
           </form>
 
-          {/* Demo */}
-          <Button type="button" variant="outline" className="w-full h-10 text-primary border-primary/30 hover:bg-primary/10" onClick={handleDemoLogin}
-            disabled={isLoading || isGoogleLoading || isDemoLoading}>
-            {isDemoLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Loading demo...</> : <><Play className="mr-2 h-4 w-4" />Try Demo Account</>}
-          </Button>
-
-          <p className="text-xs text-center mt-3 text-muted-foreground">
-            Demo: demo@researchflow.app / demo123456
-          </p>
         </div>
 
         <p className="text-center text-sm mt-6 text-muted-foreground">
