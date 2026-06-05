@@ -97,6 +97,29 @@ const TASK_CATEGORIES = [
 
 const FILTER_CATEGORIES = ["All Categories", ...TASK_CATEGORIES]
 
+const TASK_TYPES = [
+  { value: 'research',              label: 'Research' },
+  { value: 'data_collection',       label: 'Data Collection' },
+  { value: 'data_analysis',         label: 'Data Analysis' },
+  { value: 'statistical_analysis',  label: 'Statistical Analysis' },
+  { value: 'literature_review',     label: 'Literature Review' },
+  { value: 'writing',               label: 'Writing' },
+  { value: 'grant_writing',         label: 'Grant Writing' },
+  { value: 'proofreading',          label: 'Proofreading and Editing' },
+  { value: 'coding',                label: 'Coding and Development' },
+  { value: 'design',                label: 'Design' },
+  { value: 'presentation',          label: 'Presentation' },
+  { value: 'laboratory',            label: 'Laboratory Work' },
+  { value: 'field_research',        label: 'Field Research' },
+  { value: 'survey',                label: 'Survey and Questionnaire' },
+  { value: 'transcription',         label: 'Transcription' },
+  { value: 'translation',           label: 'Translation' },
+  { value: 'science_communication', label: 'Science Communication' },
+  { value: 'project_management',    label: 'Project Management' },
+  { value: 'review',                label: 'Peer Review' },
+  { value: 'other',                 label: 'Other' },
+]
+
 const MARKETPLACE_SKILLS = [
   "Python", "R", "SPSS", "STATA", "SAS", "Excel", "MATLAB",
   "SQL", "PostgreSQL", "MongoDB", "Firebase",
@@ -133,6 +156,7 @@ export default function MarketplacePage() {
   const [newTitle, setNewTitle] = useState("")
   const [newDescription, setNewDescription] = useState("")
   const [newCategory, setNewCategory] = useState("")
+  const [newTaskType, setNewTaskType] = useState("")
   const [newAkiliReward, setNewAkiliReward] = useState("50")
   const [newDeadline, setNewDeadline] = useState("")
   const [newSkills, setNewSkills] = useState<string[]>([])
@@ -228,6 +252,7 @@ export default function MarketplacePage() {
 
   async function handleCreateTask() {
     if (!newTitle.trim()) { toast.error("Please add a task title"); return }
+    if (!newTaskType) { toast.error("Please select a task type"); return }
     if (!newCategory) { toast.error("Please select a category"); return }
     if (!newDescription.trim()) { toast.error("Please add a description"); return }
 
@@ -242,7 +267,7 @@ export default function MarketplacePage() {
 
       console.log("Task insert payload:", {
         title: newTitle.trim(),
-        task_type: "general",
+        task_type: newTaskType,
         category: newCategory,
         skills_required: newSkills,
         poster_id: user.id,
@@ -253,7 +278,7 @@ export default function MarketplacePage() {
         title: newTitle.trim(),
         description: newDescription.trim(),
         category: newCategory,
-        task_type: "general",
+        task_type: newTaskType,
         skills_required: newSkills,
         budget_max: reward,
         deadline: newDeadline || null,
@@ -306,6 +331,7 @@ export default function MarketplacePage() {
     setNewTitle("")
     setNewDescription("")
     setNewCategory("")
+    setNewTaskType("")
     setNewAkiliReward("50")
     setNewDeadline("")
     setNewSkills([])
@@ -362,6 +388,21 @@ export default function MarketplacePage() {
                   rows={4}
                 />
               </div>
+              <div className="space-y-2">
+                <Label>Task Type *</Label>
+                <select
+                  value={newTaskType}
+                  onChange={(e) => setNewTaskType(e.target.value)}
+                  className="w-full px-3 py-2.5 rounded-lg border border-input bg-background text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
+                  required
+                >
+                  <option value="" disabled>Select task type...</option>
+                  {TASK_TYPES.map((type) => (
+                    <option key={type.value} value={type.value}>{type.label}</option>
+                  ))}
+                </select>
+              </div>
+
               <div className="space-y-2">
                 <Label>Category</Label>
                 <Select value={newCategory} onValueChange={setNewCategory}>
@@ -421,7 +462,7 @@ export default function MarketplacePage() {
               </Button>
               <Button
                 onClick={handleCreateTask}
-                disabled={isCreating || !newTitle.trim() || !newDescription.trim() || !newCategory}
+                disabled={isCreating || !newTitle.trim() || !newTaskType || !newDescription.trim() || !newCategory}
               >
                 {isCreating ? (
                   <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Posting...</>
