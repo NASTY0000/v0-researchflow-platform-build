@@ -48,6 +48,7 @@ import { AkiliScoreBadge } from "@/components/akili/AkiliScoreBadge"
 import { toast } from "sonner"
 import { ContextualHint } from "@/components/ui/ContextualHint"
 import { RequestProgramModal } from "@/components/mentorship/RequestProgramModal"
+import { DeleteButton } from "@/components/ui/delete-button"
 import { ProgramCard } from "@/components/mentorship/ProgramCard"
 import { getMyMentorshipPrograms, type MenteeProgramItem } from "@/lib/actions/mentorship"
 
@@ -118,6 +119,7 @@ export default function MentorsPage() {
   const [requestSuccess, setRequestSuccess] = useState(false)
 
   // Programs tab
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'mentors' | 'programs'>('mentors')
   const [myPrograms, setMyPrograms] = useState<MenteeProgramItem[]>([])
   const [loadingPrograms, setLoadingPrograms] = useState(false)
@@ -143,6 +145,7 @@ export default function MentorsPage() {
 
     const { data: { user } } = await supabase.auth.getUser()
     if (user) {
+      setCurrentUserId(user.id)
       const { data: profile } = await supabase
         .from("profiles")
         .select("roles")
@@ -631,20 +634,43 @@ export default function MentorsPage() {
                 </div>
 
                 <div className="flex gap-2 pt-4 border-t flex-wrap">
-                  <Button
-                    size="sm"
-                    onClick={() => setProgramModalMentor(mentor)}
-                    style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none', flex: 1 }}
-                  >
-                    Request Program
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={() => openRequestModal(mentor)}>
-                    Quick Request
-                  </Button>
-                  <Button variant="outline" size="sm" asChild>
-                    <Link href={`/profile/${mentor.user_id}`}>Profile</Link>
-                  </Button>
-                  <BookmarkButton contentType="mentor" contentId={mentor.id} size="sm" />
+                  {mentor.user_id === currentUserId ? (
+                    <>
+                      <Button variant="outline" size="sm" asChild className="flex-1">
+                        <Link href="/mentor-dashboard">Manage Listing</Link>
+                      </Button>
+                      <DeleteButton
+                        label="Delete"
+                        onDelete={async () => {
+                          const supabase = createClient()
+                          const { error } = await supabase
+                            .from('mentor_profiles')
+                            .delete()
+                            .eq('id', mentor.id)
+                            .eq('user_id', currentUserId)
+                          if (error) throw error
+                          setMentors(prev => prev.filter(m => m.id !== mentor.id))
+                        }}
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <Button
+                        size="sm"
+                        onClick={() => setProgramModalMentor(mentor)}
+                        style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none', flex: 1 }}
+                      >
+                        Request Program
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => openRequestModal(mentor)}>
+                        Quick Request
+                      </Button>
+                      <Button variant="outline" size="sm" asChild>
+                        <Link href={`/profile/${mentor.user_id}`}>Profile</Link>
+                      </Button>
+                      <BookmarkButton contentType="mentor" contentId={mentor.id} size="sm" />
+                    </>
+                  )}
                 </div>
               </CardContent>
             </Card>

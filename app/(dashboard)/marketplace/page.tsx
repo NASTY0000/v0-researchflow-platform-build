@@ -43,6 +43,7 @@ import { completeMarketplaceTask } from "@/lib/actions/akili"
 import { EmptyState } from "@/components/ui/EmptyState"
 import { ContextualHint } from "@/components/ui/ContextualHint"
 import { SearchableMultiSelect } from "@/components/ui/searchable-multi-select"
+import { DeleteButton } from "@/components/ui/delete-button"
 import { formatDistanceToNow } from "date-fns"
 import { toast } from "sonner"
 
@@ -578,9 +579,24 @@ export default function MarketplacePage() {
                     </span>
                   </Link>
                   {task.poster_id === currentUserId ? (
-                    <Button size="sm" variant="outline" onClick={() => setManageTask(task)}>
-                      Manage
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline" onClick={() => setManageTask(task)}>
+                        Manage
+                      </Button>
+                      <DeleteButton
+                        label="Delete"
+                        onDelete={async () => {
+                          const supabase = createClient()
+                          const { error } = await supabase
+                            .from('marketplace_tasks')
+                            .delete()
+                            .eq('id', task.id)
+                            .eq('poster_id', currentUserId)
+                          if (error) throw error
+                          setTasks(prev => prev.filter(t => t.id !== task.id))
+                        }}
+                      />
+                    </div>
                   ) : (
                     <Button size="sm">Apply</Button>
                   )}

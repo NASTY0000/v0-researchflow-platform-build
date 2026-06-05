@@ -34,6 +34,7 @@ import { usePullToRefresh } from '@/hooks/usePullToRefresh'
 import { PullToRefreshIndicator } from '@/components/ui/PullToRefreshIndicator'
 import { StaggerContainer, StaggerItem } from '@/components/ui/stagger-container'
 import { RippleEffect } from '@/components/ui/micro-interactions'
+import { DeleteButton } from '@/components/ui/delete-button'
 
 const RESEARCH_AREAS = [
   "All Areas",
@@ -427,6 +428,21 @@ export default function IdeasPage() {
                     <span className="text-sm text-muted-foreground truncate max-w-[100px]">
                       {idea.author?.full_name || "Anonymous"}
                     </span>
+                    {currentUserId && idea.author_id === currentUserId && (
+                      <DeleteButton
+                        label="Delete"
+                        onDelete={async () => {
+                          const supabase = createClient()
+                          const { error } = await supabase
+                            .from('research_ideas')
+                            .delete()
+                            .eq('id', idea.id)
+                            .eq('author_id', currentUserId)
+                          if (error) throw error
+                          setIdeas(prev => prev.filter(i => i.id !== idea.id))
+                        }}
+                      />
+                    )}
                   </div>
 
                   <div className="flex items-center gap-3 text-sm text-muted-foreground">
