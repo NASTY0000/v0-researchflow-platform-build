@@ -316,10 +316,13 @@ export interface MarketplaceTask {
   project_id: string | null
   title: string
   description: string
+  category: string | null
   skills_required: string[]
   task_type: MarketplaceTaskType
-  compensation_type: CompensationType
+  compensation_type: CompensationType | null
   budget: number | null
+  budget_min: number | null
+  budget_max: number | null
   deadline: string | null
   status: 'open' | 'assigned' | 'in_progress' | 'completed' | 'cancelled'
   assigned_to: string | null

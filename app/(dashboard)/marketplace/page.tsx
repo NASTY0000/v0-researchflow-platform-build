@@ -48,7 +48,6 @@ import { toast } from "sonner"
 
 interface TaskWithPoster extends MarketplaceTask {
   poster: Profile
-  posted_by: string
   budget_max: number | null
   budget_min: number | null
 }
@@ -160,7 +159,7 @@ export default function MarketplacePage() {
 
     let query = supabase
       .from("marketplace_tasks")
-      .select(`*, poster:profiles!marketplace_tasks_posted_by_fkey(id, full_name, avatar_url, university_id)`)
+      .select(`*, poster:profiles!poster_id(id, full_name, avatar_url, university_id)`)
       .eq("status", "open")
       .order("created_at", { ascending: false })
 
@@ -241,14 +240,23 @@ export default function MarketplacePage() {
 
       const reward = Math.min(500, Math.max(1, parseInt(newAkiliReward) || 50))
 
+      console.log("Task insert payload:", {
+        title: newTitle.trim(),
+        task_type: "general",
+        category: newCategory,
+        skills_required: newSkills,
+        poster_id: user.id,
+      })
+
       const { error } = await supabase.from("marketplace_tasks").insert({
-        posted_by: user.id,
+        poster_id: user.id,
         title: newTitle.trim(),
         description: newDescription.trim(),
         category: newCategory,
+        task_type: "general",
+        skills_required: newSkills,
         budget_max: reward,
         deadline: newDeadline || null,
-        required_skills: newSkills,
         status: "open",
       })
 
@@ -490,13 +498,13 @@ export default function MarketplacePage() {
                 <p className="text-muted-foreground text-sm line-clamp-3 mb-4">{task.description}</p>
 
                 {/* Skills */}
-                {task.required_skills && task.required_skills.length > 0 && (
+                {task.skills_required && task.skills_required.length > 0 && (
                   <div className="flex flex-wrap gap-1 mb-4">
-                    {task.required_skills.slice(0, 3).map((skill) => (
+                    {task.skills_required.slice(0, 3).map((skill) => (
                       <Badge key={skill} variant="outline" className="text-xs">{skill}</Badge>
                     ))}
-                    {task.required_skills.length > 3 && (
-                      <Badge variant="outline" className="text-xs">+{task.required_skills.length - 3}</Badge>
+                    {task.skills_required.length > 3 && (
+                      <Badge variant="outline" className="text-xs">+{task.skills_required.length - 3}</Badge>
                     )}
                   </div>
                 )}
@@ -517,7 +525,7 @@ export default function MarketplacePage() {
 
                 {/* Poster & actions */}
                 <div className="flex items-center justify-between pt-4 border-t">
-                  <Link href={`/profile/${task.posted_by}`} className="flex items-center gap-2 group">
+                  <Link href={`/profile/${task.poster_id}`} className="flex items-center gap-2 group">
                     <Avatar className="h-6 w-6 cursor-pointer group-hover:ring-2 group-hover:ring-primary/50 transition-all duration-200">
                       <AvatarImage src={task.poster?.avatar_url || undefined} />
                       <AvatarFallback className="text-xs bg-primary/10 text-primary">
@@ -528,7 +536,7 @@ export default function MarketplacePage() {
                       {task.poster?.full_name || "Anonymous"}
                     </span>
                   </Link>
-                  {task.posted_by === currentUserId ? (
+                  {task.poster_id === currentUserId ? (
                     <Button size="sm" variant="outline" onClick={() => setManageTask(task)}>
                       Manage
                     </Button>
