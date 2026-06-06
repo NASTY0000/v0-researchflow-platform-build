@@ -131,10 +131,10 @@ export default function DashboardPage() {
   ]
 
   const quickActions = [
+    { title: "My Research Feed", description: "Personalised opportunities", icon: Sparkles, href: "/feed", color: '#8B5CF6' },
     { title: "Post Research Idea", description: "Share your research concept", icon: Lightbulb, href: "/ideas/new", color: '#7C3AED' },
     { title: "Find Collaborators", description: "Connect with researchers", icon: Users, href: "/matches", color: '#06B6D4' },
     { title: "Browse Mentors", description: "Get expert guidance", icon: BookOpen, href: "/mentors", color: '#A855F7' },
-    { title: "Task Marketplace", description: "Find or post tasks", icon: Target, href: "/marketplace", color: '#C084FC' },
   ]
 
   const { pullDistance, isRefreshing, threshold } = usePullToRefresh(loadDashboard)

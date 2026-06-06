@@ -57,6 +57,7 @@ import { AkiliScoreBadge } from '@/components/akili/AkiliScoreBadge'
 
 const coreNavItems: NavItem[] = [
   { title: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { title: 'My Feed', href: '/feed', icon: Sparkles },
   { title: 'Idea Board', href: '/ideas', icon: Lightbulb },
   { title: 'Messages', href: '/messages', icon: MessageSquare },
 ]
