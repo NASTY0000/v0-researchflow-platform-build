@@ -10,10 +10,10 @@ interface ExternalItem {
   content_type?: string
   thumbnail_url?: string | null
   title: string
-  description?: string
+  summary?: string
   url: string
   authors?: string[]
-  journal?: string
+  source_journal?: string
   citation_count?: number
   research_areas?: string[]
   is_african_relevant?: boolean
@@ -130,17 +130,17 @@ export function ExternalCard({ item, index = 0 }: ExternalCardProps) {
           <ExternalLink className="w-3 h-3 mt-1 shrink-0 text-muted-foreground" />
         </h3>
 
-        {item.description && (
+        {item.summary && (
           <p className="text-xs text-muted-foreground line-clamp-2 mb-3 leading-relaxed">
-            {item.description}
+            {item.summary}
           </p>
         )}
 
-        {(item.authors?.length || item.journal) && (
+        {(item.authors?.length || item.source_journal) && (
           <p className="text-xs text-muted-foreground mb-2 truncate">
             {item.authors?.slice(0, 3).join(', ')}
-            {item.authors?.length ? (item.journal ? ' · ' : '') : ''}
-            {item.journal}
+            {item.authors?.length ? (item.source_journal ? ' · ' : '') : ''}
+            {item.source_journal}
           </p>
         )}
 

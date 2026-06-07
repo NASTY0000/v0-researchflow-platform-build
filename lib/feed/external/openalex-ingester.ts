@@ -103,10 +103,10 @@ export async function ingestOpenAlex(researchAreas: string[], supabase: Supabase
       return {
         stream_category: 'publications',
         title: work.title,
-        description: abstract ? abstract.slice(0, 1000) : null,
+        summary: abstract ? abstract.slice(0, 1000) : null,
         url,
         authors,
-        journal: journal ?? null,
+        source_journal: journal ?? null,
         citation_count: work.cited_by_count ?? 0,
         research_areas: matchedAreas.length ? matchedAreas : researchAreas.slice(0, 3),
         is_african_relevant: detectAfricanRelevance(text),

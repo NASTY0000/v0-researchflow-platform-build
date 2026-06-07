@@ -63,7 +63,7 @@ export async function GET(request: Request) {
     const externalQuery = userContext.research_interests.length
       ? supabase
           .from('feed_external_content')
-          .select('id, stream_category, title, description, url, authors, journal, citation_count, research_areas, is_african_relevant, deadline, published_at')
+          .select('id, stream_category, title, summary, url, authors, source_journal, citation_count, research_areas, is_african_relevant, deadline, published_at')
           .gte('published_at', sevenDaysAgo)
           .overlaps('research_areas', userContext.research_interests)
           .order('published_at', { ascending: false })

@@ -27,7 +27,7 @@ export async function GET(request: Request) {
 
     let query = supabase
       .from('feed_external_content')
-      .select('id, stream_category, content_type, thumbnail_url, title, description, url, authors, journal, citation_count, research_areas, is_african_relevant, deadline, published_at')
+      .select('id, stream_category, content_type, thumbnail_url, title, summary, url, authors, source_journal, citation_count, research_areas, is_african_relevant, deadline, published_at')
       .eq('stream_category', category)
       .gte('published_at', thirtyDaysAgo)
       .order('published_at', { ascending: false })

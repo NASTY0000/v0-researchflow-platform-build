@@ -69,7 +69,7 @@ export async function ingestYouTubeScience(supabase: SupabaseClient): Promise<nu
               content_type: 'video',
               source_name: channel.name,
               title: snippet.title.slice(0, 500),
-              description: snippet.description?.slice(0, 500) ?? null,
+              summary: snippet.description?.slice(0, 500) ?? null,
               url: videoUrl,
               thumbnail_url: snippet.thumbnails?.medium?.url ?? null,
               research_areas: channel.areas,

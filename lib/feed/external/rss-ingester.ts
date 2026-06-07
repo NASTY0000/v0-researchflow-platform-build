@@ -161,7 +161,7 @@ export async function ingestRSSSource(source: ContentSource, supabase: SupabaseC
                   ? 'opportunity'
                   : 'article',
             title: item.title.slice(0, 500),
-            description: item.description || null,
+            summary: item.description || null,
             url: item.link,
             research_areas: areas,
             published_at: item.publishedAt ? new Date(item.publishedAt).toISOString() : new Date().toISOString(),

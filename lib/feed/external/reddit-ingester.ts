@@ -63,7 +63,7 @@ export async function ingestRedditScience(supabase: SupabaseClient): Promise<num
               content_type: 'post',
               source_name: `r/${sub.name}`,
               title: post.title.slice(0, 500),
-              description: (post.selftext || post.url || '').slice(0, 500),
+              summary: (post.selftext || post.url || '').slice(0, 500),
               url: postUrl,
               research_areas: sub.areas,
               published_at: new Date(post.created_utc * 1000).toISOString(),
