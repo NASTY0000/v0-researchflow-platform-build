@@ -37,6 +37,8 @@ const TYPE_ROUTES: Record<string, string> = {
 interface ExternalItem {
   id: string
   category: string
+  content_type?: string
+  thumbnail_url?: string | null
   title: string
   description?: string
   url: string
@@ -62,6 +64,7 @@ type FeedTabId = typeof FEED_TABS[number]['id']
 
 export default function FeedPage() {
   const [activeTab, setActiveTab] = useState<FeedTabId>('for_you')
+  const [africaOnly, setAfricaOnly] = useState(false)
   const [items, setItems]         = useState<FeedItem[]>([])
   const [externalItems, setExternalItems] = useState<ExternalItem[]>([])
   const [page, setPage]           = useState(1)
@@ -75,7 +78,7 @@ export default function FeedPage() {
   const loadMoreRef  = useRef<HTMLDivElement | null>(null)
   const loadingRef   = useRef(false) // guard against double-invocation
 
-  const loadFeed = useCallback(async (tab: FeedTabId, pageNum: number, refresh = false) => {
+  const loadFeed = useCallback(async (tab: FeedTabId, pageNum: number, refresh = false, africa = false) => {
     if (loadingRef.current) return
     loadingRef.current = true
     setLoading(true)
@@ -84,7 +87,7 @@ export default function FeedPage() {
     try {
       const url = tab === 'for_you'
         ? `/api/feed?page=${pageNum}&pageSize=20`
-        : `/api/feed/external?category=${tab}&page=${pageNum}&pageSize=20`
+        : `/api/feed/external?category=${tab}&page=${pageNum}&pageSize=20${africa ? '&africaOnly=true' : ''}`
 
       const res = await fetch(url)
       if (!res.ok) throw new Error('Feed request failed')
@@ -112,29 +115,29 @@ export default function FeedPage() {
     }
   }, [])
 
-  // Load on tab change
+  // Load on tab or Africa-filter change
   useEffect(() => {
     setItems([])
     setExternalItems([])
     setPage(1)
     setHasMore(true)
     setInitialLoad(true)
-    loadFeed(activeTab, 1)
-  }, [activeTab]) // eslint-disable-line react-hooks/exhaustive-deps
+    loadFeed(activeTab, 1, false, africaOnly)
+  }, [activeTab, africaOnly]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Infinite scroll
   useEffect(() => {
     observerRef.current = new IntersectionObserver(
       entries => {
         if (entries[0].isIntersecting && hasMore && !loadingRef.current) {
-          loadFeed(activeTab, page + 1)
+          loadFeed(activeTab, page + 1, false, africaOnly)
         }
       },
       { threshold: 0.1 }
     )
     if (loadMoreRef.current) observerRef.current.observe(loadMoreRef.current)
     return () => observerRef.current?.disconnect()
-  }, [hasMore, page, activeTab, loadFeed])
+  }, [hasMore, page, activeTab, africaOnly, loadFeed])
 
   function trackEngagement(item: FeedItem, eventType: string) {
     const areas = item.research_areas?.length
@@ -177,7 +180,7 @@ export default function FeedPage() {
     setExternalItems([])
     setPage(1)
     setHasMore(true)
-    loadFeed(activeTab, 1, true)
+    loadFeed(activeTab, 1, true, africaOnly)
   }
 
   const currentItems: (FeedItem | ExternalItem)[] = activeTab === 'for_you' ? items : externalItems
@@ -245,6 +248,22 @@ export default function FeedPage() {
           )
         })}
       </div>
+
+      {/* Africa filter toggle (external streams only) */}
+      {activeTab !== 'for_you' && (
+        <div className="flex items-center mb-5">
+          <button
+            onClick={() => setAfricaOnly(!africaOnly)}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${
+              africaOnly
+                ? 'bg-primary text-white border-primary'
+                : 'bg-background text-muted-foreground border-border hover:border-primary/50'
+            }`}
+          >
+            🌍 Africa focus
+          </button>
+        </div>
+      )}
 
       {/* Empty state */}
       {currentItems.length === 0 && !loading ? (

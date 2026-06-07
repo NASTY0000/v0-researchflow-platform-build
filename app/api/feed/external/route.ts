@@ -10,9 +10,10 @@ export async function GET(request: Request) {
   }
 
   const { searchParams } = new URL(request.url)
-  const category = searchParams.get('category') || 'news'
-  const page     = parseInt(searchParams.get('page')     || '1')
-  const pageSize = parseInt(searchParams.get('pageSize') || '20')
+  const category   = searchParams.get('category') || 'news'
+  const page       = parseInt(searchParams.get('page')     || '1')
+  const pageSize   = parseInt(searchParams.get('pageSize') || '20')
+  const africaOnly = searchParams.get('africaOnly') === 'true'
 
   try {
     const { data: profile } = await supabase
@@ -26,13 +27,15 @@ export async function GET(request: Request) {
 
     let query = supabase
       .from('feed_external_content')
-      .select('id, category, title, description, url, authors, journal, citation_count, research_areas, is_african_relevant, deadline, published_at')
+      .select('id, category, content_type, thumbnail_url, title, description, url, authors, journal, citation_count, research_areas, is_african_relevant, deadline, published_at')
       .eq('category', category)
       .gte('published_at', thirtyDaysAgo)
       .order('published_at', { ascending: false })
       .range((page - 1) * pageSize, page * pageSize - 1)
 
-    if (category !== 'discovery' && interests.length > 0) {
+    if (africaOnly) {
+      query = query.eq('is_african_relevant', true)
+    } else if (category !== 'discovery' && interests.length > 0) {
       query = query.overlaps('research_areas', interests)
     }
 

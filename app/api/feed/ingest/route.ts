@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { ingestRSSSource, type ContentSource } from '@/lib/feed/external/rss-ingester'
 import { ingestOpenAlex } from '@/lib/feed/external/openalex-ingester'
+import { ingestRedditScience } from '@/lib/feed/external/reddit-ingester'
+import { ingestYouTubeScience } from '@/lib/feed/external/youtube-ingester'
 
 const COMMON_RESEARCH_AREAS = [
   'Medicine', 'Biology', 'Computer Science', 'Public Health',
@@ -44,6 +46,22 @@ export async function GET(request: Request) {
     results.push({ source: 'OpenAlex', error: err instanceof Error ? err.message : 'unknown error' })
   }
 
+  let redditIngested = 0
+  try {
+    redditIngested = await ingestRedditScience(supabase)
+    results.push({ source: 'Reddit', ingested: redditIngested })
+  } catch (err) {
+    results.push({ source: 'Reddit', error: err instanceof Error ? err.message : 'unknown error' })
+  }
+
+  let youtubeIngested = 0
+  try {
+    youtubeIngested = await ingestYouTubeScience(supabase)
+    results.push({ source: 'YouTube', ingested: youtubeIngested })
+  } catch (err) {
+    results.push({ source: 'YouTube', error: err instanceof Error ? err.message : 'unknown error' })
+  }
+
   const { count: expiredCount } = await supabase
     .from('feed_external_content')
     .delete({ count: 'exact' })
@@ -53,6 +71,8 @@ export async function GET(request: Request) {
     sourcesProcessed: (sources ?? []).length,
     rssIngested,
     openAlexIngested,
+    redditIngested,
+    youtubeIngested,
     expiredRemoved: expiredCount ?? 0,
     results,
   })

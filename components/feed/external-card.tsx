@@ -7,6 +7,8 @@ import { formatDistanceToNow } from 'date-fns'
 interface ExternalItem {
   id: string
   category: string
+  content_type?: string
+  thumbnail_url?: string | null
   title: string
   description?: string
   url: string
@@ -80,6 +82,28 @@ export function ExternalCard({ item, index = 0 }: ExternalCardProps) {
       className="relative rounded-xl overflow-hidden cursor-pointer"
       style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${cfg.border}` }}
     >
+      {item.content_type === 'video' && item.thumbnail_url && (
+        <div className="relative w-full aspect-video overflow-hidden">
+          <img
+            src={item.thumbnail_url}
+            alt={item.title}
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-full bg-black/50 flex items-center justify-center backdrop-blur-sm">
+              <div
+                className="w-0 h-0 ml-1"
+                style={{
+                  borderTop: '10px solid transparent',
+                  borderBottom: '10px solid transparent',
+                  borderLeft: '16px solid white',
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="p-4">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
