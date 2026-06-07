@@ -11,10 +11,14 @@ const COMMON_RESEARCH_AREAS = [
 ]
 
 export async function GET(request: Request) {
-  const authHeader = request.headers.get('authorization')
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
-  }
+  console.log('Ingest route called at', new Date().toISOString())
+  console.log('CRON_SECRET set:', !!process.env.CRON_SECRET)
+
+  // TEMPORARY — auth disabled for manual browser-triggered testing.
+  // const authHeader = request.headers.get('authorization')
+  // if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  //   return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+  // }
 
   const supabase = await createClient()
   const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString()
