@@ -28,6 +28,14 @@ interface MobileNavProps {
 export function MobileNav({ initialUnreadCount }: MobileNavProps) {
   const pathname = usePathname()
   const [unreadCount, setUnreadCount] = useState(initialUnreadCount)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   useEffect(() => {
     const supabase = createClient()
@@ -71,6 +79,8 @@ export function MobileNav({ initialUnreadCount }: MobileNavProps) {
 
   const isActive = (tab: NavTab) =>
     tab.exact ? pathname === tab.href : pathname.startsWith(tab.href)
+
+  if (!isMobile) return null
 
   return (
     <>
