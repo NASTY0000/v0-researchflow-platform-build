@@ -60,12 +60,11 @@ export async function GET(request: Request) {
       hasMore: items.length === pageSize,
     })
   } catch (err) {
-    console.error('External feed API error:', err)
+    console.error('External feed error:', JSON.stringify(err))
     return NextResponse.json(
       {
         error: 'External feed unavailable',
-        detail: String(err),
-        stack: err instanceof Error ? err.stack : undefined,
+        detail: err instanceof Error ? err.message : JSON.stringify(err),
       },
       { status: 500 }
     )
