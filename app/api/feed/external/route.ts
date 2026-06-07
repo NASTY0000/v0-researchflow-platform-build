@@ -61,6 +61,13 @@ export async function GET(request: Request) {
     })
   } catch (err) {
     console.error('External feed API error:', err)
-    return NextResponse.json({ error: 'External feed unavailable' }, { status: 500 })
+    return NextResponse.json(
+      {
+        error: 'External feed unavailable',
+        detail: String(err),
+        stack: err instanceof Error ? err.stack : undefined,
+      },
+      { status: 500 }
+    )
   }
 }
