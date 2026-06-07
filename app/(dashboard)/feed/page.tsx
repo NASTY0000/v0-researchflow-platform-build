@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { FeedCard } from '@/components/feed/feed-card'
-import { Loader2, RefreshCw, Sparkles } from 'lucide-react'
+import { ExternalCard } from '@/components/feed/external-card'
+import { Loader2, RefreshCw, Sparkles, Newspaper, BookOpen, Megaphone, Compass } from 'lucide-react'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 
@@ -33,8 +34,36 @@ const TYPE_ROUTES: Record<string, string> = {
   mentor:     '/mentors',
 }
 
+interface ExternalItem {
+  id: string
+  category: string
+  title: string
+  description?: string
+  url: string
+  authors?: string[]
+  journal?: string
+  citation_count?: number
+  research_areas?: string[]
+  is_african_relevant?: boolean
+  deadline?: string
+  published_at?: string
+  [key: string]: unknown
+}
+
+const FEED_TABS = [
+  { id: 'for_you',       label: 'For You',       icon: Sparkles },
+  { id: 'news',          label: 'Science News',  icon: Newspaper },
+  { id: 'publications',  label: 'Publications',  icon: BookOpen },
+  { id: 'opportunities', label: 'Opportunities', icon: Megaphone },
+  { id: 'discovery',     label: 'Discovery',     icon: Compass },
+] as const
+
+type FeedTabId = typeof FEED_TABS[number]['id']
+
 export default function FeedPage() {
+  const [activeTab, setActiveTab] = useState<FeedTabId>('for_you')
   const [items, setItems]         = useState<FeedItem[]>([])
+  const [externalItems, setExternalItems] = useState<ExternalItem[]>([])
   const [page, setPage]           = useState(1)
   const [hasMore, setHasMore]     = useState(true)
   const [loading, setLoading]     = useState(false)
@@ -46,14 +75,18 @@ export default function FeedPage() {
   const loadMoreRef  = useRef<HTMLDivElement | null>(null)
   const loadingRef   = useRef(false) // guard against double-invocation
 
-  const loadFeed = useCallback(async (pageNum: number, refresh = false) => {
+  const loadFeed = useCallback(async (tab: FeedTabId, pageNum: number, refresh = false) => {
     if (loadingRef.current) return
     loadingRef.current = true
     setLoading(true)
     if (refresh) setRefreshing(true)
 
     try {
-      const res = await fetch(`/api/feed?page=${pageNum}&pageSize=20`)
+      const url = tab === 'for_you'
+        ? `/api/feed?page=${pageNum}&pageSize=20`
+        : `/api/feed/external?category=${tab}&page=${pageNum}&pageSize=20`
+
+      const res = await fetch(url)
       if (!res.ok) throw new Error('Feed request failed')
       const data = await res.json()
 
@@ -62,7 +95,11 @@ export default function FeedPage() {
         return
       }
 
-      setItems(prev => refresh ? data.items : [...prev, ...data.items])
+      if (tab === 'for_you') {
+        setItems(prev => refresh ? data.items : [...prev, ...data.items])
+      } else {
+        setExternalItems(prev => refresh ? data.items : [...prev, ...data.items])
+      }
       setHasMore(data.hasMore)
       setPage(pageNum)
     } catch {
@@ -75,24 +112,29 @@ export default function FeedPage() {
     }
   }, [])
 
-  // Initial load
+  // Load on tab change
   useEffect(() => {
-    loadFeed(1)
-  }, [loadFeed])
+    setItems([])
+    setExternalItems([])
+    setPage(1)
+    setHasMore(true)
+    setInitialLoad(true)
+    loadFeed(activeTab, 1)
+  }, [activeTab]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Infinite scroll
   useEffect(() => {
     observerRef.current = new IntersectionObserver(
       entries => {
         if (entries[0].isIntersecting && hasMore && !loadingRef.current) {
-          loadFeed(page + 1)
+          loadFeed(activeTab, page + 1)
         }
       },
       { threshold: 0.1 }
     )
     if (loadMoreRef.current) observerRef.current.observe(loadMoreRef.current)
     return () => observerRef.current?.disconnect()
-  }, [hasMore, page, loadFeed])
+  }, [hasMore, page, activeTab, loadFeed])
 
   function trackEngagement(item: FeedItem, eventType: string) {
     const areas = item.research_areas?.length
@@ -132,10 +174,13 @@ export default function FeedPage() {
 
   function handleRefresh() {
     setItems([])
+    setExternalItems([])
     setPage(1)
     setHasMore(true)
-    loadFeed(1, true)
+    loadFeed(activeTab, 1, true)
   }
+
+  const currentItems: (FeedItem | ExternalItem)[] = activeTab === 'for_you' ? items : externalItems
 
   if (initialLoad) {
     return (
@@ -178,8 +223,31 @@ export default function FeedPage() {
         </button>
       </div>
 
+      {/* Tab bar */}
+      <div className="flex items-center gap-1.5 mb-5 overflow-x-auto pb-1 -mx-1 px-1">
+        {FEED_TABS.map(tab => {
+          const TabIcon = tab.icon
+          const active = activeTab === tab.id
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors shrink-0"
+              style={{
+                background: active ? 'rgba(124,58,237,0.15)' : 'rgba(255,255,255,0.03)',
+                color: active ? '#C084FC' : '#9D8BB8',
+                border: `1px solid ${active ? 'rgba(139,92,246,0.3)' : 'rgba(255,255,255,0.06)'}`,
+              }}
+            >
+              <TabIcon className="w-3.5 h-3.5" />
+              {tab.label}
+            </button>
+          )
+        })}
+      </div>
+
       {/* Empty state */}
-      {items.length === 0 && !loading ? (
+      {currentItems.length === 0 && !loading ? (
         <div className="text-center py-20">
           <div
             className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
@@ -187,12 +255,16 @@ export default function FeedPage() {
           >
             <Sparkles className="w-8 h-8" style={{ color: '#7C6A9C' }} />
           </div>
-          <p className="font-medium mb-1">Your feed is being personalised</p>
+          <p className="font-medium mb-1">
+            {activeTab === 'for_you' ? 'Your feed is being personalised' : 'Nothing here yet'}
+          </p>
           <p className="text-sm text-muted-foreground">
-            Add research interests in your profile to see relevant opportunities here.
+            {activeTab === 'for_you'
+              ? 'Add research interests in your profile to see relevant opportunities here.'
+              : 'Check back soon — we refresh this stream regularly.'}
           </p>
         </div>
-      ) : (
+      ) : activeTab === 'for_you' ? (
         <div className="grid gap-3">
           {items.map((item, index) => (
             <motion.div
@@ -211,16 +283,22 @@ export default function FeedPage() {
             </motion.div>
           ))}
         </div>
+      ) : (
+        <div className="grid gap-3">
+          {externalItems.map((item, index) => (
+            <ExternalCard key={item.id} item={item} index={index} />
+          ))}
+        </div>
       )}
 
       {/* Infinite scroll sentinel */}
       <div ref={loadMoreRef} className="h-10 mt-4">
-        {loading && items.length > 0 && (
+        {loading && currentItems.length > 0 && (
           <div className="flex justify-center py-4">
             <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
           </div>
         )}
-        {!hasMore && items.length > 0 && (
+        {!hasMore && currentItems.length > 0 && (
           <p className="text-center text-xs text-muted-foreground py-4">
             You are all caught up — check back tomorrow for new opportunities.
           </p>

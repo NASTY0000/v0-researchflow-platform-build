@@ -59,10 +59,39 @@ export async function GET(request: Request) {
     }
 
     // Cache miss — fetch and score
-    const [candidates, scoringCtx] = await Promise.all([
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+    const externalQuery = userContext.research_interests.length
+      ? supabase
+          .from('feed_external_content')
+          .select('id, category, title, description, url, authors, journal, citation_count, research_areas, is_african_relevant, deadline, published_at')
+          .gte('published_at', sevenDaysAgo)
+          .overlaps('research_areas', userContext.research_interests)
+          .order('published_at', { ascending: false })
+          .limit(20)
+      : Promise.resolve({ data: [] as Record<string, unknown>[] })
+
+    const [candidates, scoringCtx, externalRes] = await Promise.all([
       fetchCandidateContent({ userId: user.id, researchInterests: userContext.research_interests }, supabase),
       buildUserScoringContext(userContext, supabase),
+      externalQuery,
     ])
+
+    const externalFeedItems = (externalRes.data ?? []).map(ext => ({
+      raw: ext,
+      payload: {
+        ...ext,
+        _feed_meta: {
+          type:         'external',
+          score:        0,
+          reason:       (ext as { is_african_relevant?: boolean }).is_african_relevant
+                          ? 'Relevant to African research'
+                          : 'From your research areas',
+          is_diversity: false,
+          is_external:  true,
+          category:     (ext as { category?: string }).category,
+        },
+      },
+    }))
 
     // Score all candidates (synchronous now — no extra DB calls)
     const scored = candidates.map(item => scoreItem(item, scoringCtx))
@@ -99,18 +128,33 @@ export async function GET(request: Request) {
       )
       .then()
 
-    const paginated = feed.slice((page - 1) * pageSize, page * pageSize)
+    // Interleave external content: 1 external item per 4 internal items
+    const internalPayloads = feed.map(item => ({
+      ...item.raw_data,
+      _feed_meta: {
+        type:         item.type,
+        score:        item.score,
+        reason:       item.reason_label,
+        is_diversity: item.is_diversity_inject,
+      },
+    }))
+
+    const mixed: Record<string, unknown>[] = []
+    let extIdx = 0
+    for (let i = 0; i < internalPayloads.length; i++) {
+      mixed.push(internalPayloads[i])
+      if ((i + 1) % 4 === 0 && extIdx < externalFeedItems.length) {
+        mixed.push(externalFeedItems[extIdx++].payload)
+      }
+    }
+    while (extIdx < externalFeedItems.length) {
+      mixed.push(externalFeedItems[extIdx++].payload)
+    }
+
+    const paginated = mixed.slice((page - 1) * pageSize, page * pageSize)
 
     return NextResponse.json({
-      items: paginated.map(item => ({
-        ...item.raw_data,
-        _feed_meta: {
-          type:         item.type,
-          score:        item.score,
-          reason:       item.reason_label,
-          is_diversity: item.is_diversity_inject,
-        },
-      })),
+      items: paginated,
       hasMore: paginated.length === pageSize,
       source: 'computed',
     })
