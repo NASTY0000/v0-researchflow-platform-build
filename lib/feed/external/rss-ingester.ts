@@ -7,7 +7,6 @@ export interface RSSItem {
   link: string
   description?: string
   publishedAt?: string
-  authors?: string[]
 }
 
 export interface ContentSource {
@@ -19,112 +18,8 @@ export interface ContentSource {
   fetch_config: Record<string, unknown> | null
 }
 
-const USER_AGENT = 'ResearchFlow/1.0 (researchflowafrica.com)'
-
-export async function fetchRSSFeed(url: string): Promise<RSSItem[]> {
-  console.log(`[RSS] Fetching: ${url}`)
-
-  try {
-    const res = await fetch(url, {
-      headers: { 'User-Agent': USER_AGENT, Accept: 'application/rss+xml, application/atom+xml, text/xml' },
-      next: { revalidate: 3600 },
-    })
-
-    console.log(`[RSS] ${url}: status ${res.status}`)
-
-    if (!res.ok) {
-      console.error(`[RSS] ${url}: failed with ${res.status}`)
-      return []
-    }
-
-    const xml = await res.text()
-    console.log(`[RSS] ${url}: got ${xml.length} chars`)
-
-    const items = parseRSSXML(xml)
-    console.log(`[RSS] ${url}: parsed ${items.length} items`)
-    return items
-  } catch (err) {
-    console.error(`[RSS] Fetch error for ${url}:`, err)
-    return []
-  }
-}
-
-export function parseRSSXML(xml: string): RSSItem[] {
-  const items: RSSItem[] = []
-
-  // RSS <item> and Atom <entry> blocks (namespaced tags like <atom:entry> too)
-  const itemRegex = /<(?:[a-z]+:)?item[^>]*>([\s\S]*?)<\/(?:[a-z]+:)?item>/gi
-  const entryRegex = /<(?:[a-z]+:)?entry[^>]*>([\s\S]*?)<\/(?:[a-z]+:)?entry>/gi
-
-  const allMatches = [...xml.matchAll(itemRegex), ...xml.matchAll(entryRegex)]
-
-  console.log(`[RSS Parser] Found ${allMatches.length} items in XML`)
-
-  for (const match of allMatches) {
-    const content = match[1]
-
-    const title = stripHTML(getTag(content, 'title'))
-
-    let link =
-      getTag(content, 'link') ||
-      content.match(/<(?:[a-z]+:)?link[^>]*href=["']([^"']+)["']/i)?.[1] ||
-      content.match(/<(?:[a-z]+:)?guid[^>]*>([^<]+)<\/(?:[a-z]+:)?guid>/i)?.[1] ||
-      ''
-    link = link.trim()
-
-    const description = stripHTML(
-      getTag(content, 'description') || getTag(content, 'summary') || getTag(content, 'content')
-    )
-
-    const publishedAt =
-      getTag(content, 'pubDate') ||
-      getTag(content, 'published') ||
-      getTag(content, 'updated') ||
-      getTag(content, 'date') ||
-      getTag(content, 'dc:date')
-
-    const authorRaw = getTag(content, 'author') || getTag(content, 'dc:creator')
-    const authors = authorRaw ? [stripHTML(authorRaw)] : []
-
-    if (!title || !link) continue
-
-    items.push({
-      title,
-      link,
-      description: description ? description.slice(0, 600) : undefined,
-      publishedAt: publishedAt ? normalizeDate(publishedAt) : undefined,
-      authors,
-    })
-  }
-
-  return items.slice(0, 25)
-}
-
-function getTag(block: string, tag: string): string {
-  const escaped = tag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-
-  // CDATA-wrapped tag content
-  const cdataMatch = block.match(
-    new RegExp(`<(?:[a-z]+:)?${escaped}[^>]*>\\s*<!\\[CDATA\\[([\\s\\S]*?)\\]\\]>\\s*<\\/(?:[a-z]+:)?${escaped}>`, 'i')
-  )
-  if (cdataMatch) return cdataMatch[1].trim()
-
-  // Plain tag content
-  const regularMatch = block.match(new RegExp(`<(?:[a-z]+:)?${escaped}[^>]*>([\\s\\S]*?)<\\/(?:[a-z]+:)?${escaped}>`, 'i'))
-  if (regularMatch) return regularMatch[1].trim()
-
-  // Self-closing tag with href (Atom <link href="..."/>)
-  const hrefMatch = block.match(new RegExp(`<(?:[a-z]+:)?${escaped}[^>]*href=["']([^"']+)["']`, 'i'))
-  if (hrefMatch) return hrefMatch[1].trim()
-
-  return ''
-}
-
-function stripHTML(input: string): string {
-  if (!input) return ''
-  return input
-    .replace(/^<!\[CDATA\[/, '')
-    .replace(/\]\]>$/, '')
+function stripHTML(text: string): string {
+  return text
     .replace(/<[^>]*>/g, ' ')
     .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
@@ -135,44 +30,129 @@ function stripHTML(input: string): string {
     .trim()
 }
 
-function normalizeDate(raw: string): string | undefined {
-  const parsed = new Date(raw)
-  return Number.isNaN(parsed.getTime()) ? undefined : parsed.toISOString()
+function parseRSSXML(xml: string): RSSItem[] {
+  const items: RSSItem[] = []
+
+  const allMatches = [
+    ...xml.matchAll(/<item[^>]*>([\s\S]*?)<\/item>/gi),
+    ...xml.matchAll(/<entry[^>]*>([\s\S]*?)<\/entry>/gi),
+  ]
+
+  for (const match of allMatches) {
+    const c = match[1]
+
+    function get(tag: string): string {
+      const cdata = c.match(new RegExp(`<${tag}[^>]*>\\s*<!\\[CDATA\\[([\\s\\S]*?)\\]\\]>`, 'i'))
+      if (cdata) return cdata[1].trim()
+
+      const plain = c.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, 'i'))
+      if (plain) return plain[1].trim()
+
+      const href = c.match(new RegExp(`<${tag}[^>]*href=["']([^"']+)["']`, 'i'))
+      return href?.[1]?.trim() || ''
+    }
+
+    const title = get('title')
+    const link = get('link') || c.match(/<link[^>]*href=["']([^"']+)["']/i)?.[1] || get('guid') || ''
+    const description = get('description') || get('summary') || get('content')
+    const pubDate = get('pubDate') || get('published') || get('updated')
+
+    if (title && link) {
+      items.push({
+        title: stripHTML(title),
+        link: link.trim(),
+        description: description ? stripHTML(description).slice(0, 500) : undefined,
+        publishedAt: pubDate || new Date().toISOString(),
+      })
+    }
+  }
+
+  return items.slice(0, 20)
+}
+
+export async function fetchRSSFeed(url: string): Promise<RSSItem[]> {
+  // Try direct fetch first
+  try {
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 ResearchFlow/1.0',
+        Accept: 'application/rss+xml, application/xml, text/xml, */*',
+      },
+      signal: AbortSignal.timeout(10000),
+    })
+
+    if (res.ok) {
+      const xml = await res.text()
+      if (xml.includes('<item') || xml.includes('<entry')) {
+        return parseRSSXML(xml)
+      }
+    }
+  } catch {
+    // Fall through to proxy
+  }
+
+  // Try RSS2JSON proxy as fallback (free service, no API key needed)
+  try {
+    const proxyUrl =
+      'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(url) + '&count=20'
+
+    const res = await fetch(proxyUrl, { signal: AbortSignal.timeout(10000) })
+
+    if (!res.ok) return []
+
+    const data = await res.json()
+
+    if (data.status !== 'ok') return []
+
+    return (data.items || [])
+      .map((item: Record<string, string>) => ({
+        title: stripHTML(item.title || ''),
+        link: item.link || item.guid || '',
+        description: item.description ? stripHTML(item.description).slice(0, 500) : undefined,
+        publishedAt: item.pubDate || new Date().toISOString(),
+      }))
+      .filter((i: RSSItem) => i.title && i.link)
+  } catch {
+    return []
+  }
+}
+
+export function detectAfricanRelevance(text: string): boolean {
+  const lower = text.toLowerCase()
+  return (
+    lower.includes('africa') ||
+    lower.includes('nigeria') ||
+    lower.includes('kenya') ||
+    lower.includes('ghana') ||
+    lower.includes('ethiopia') ||
+    lower.includes('rwanda') ||
+    lower.includes('sub-saharan')
+  )
 }
 
 export async function ingestRSSSource(source: ContentSource, supabase: SupabaseClient): Promise<number> {
-  console.log(`[RSS] Starting: ${source.name}`)
+  const items = await fetchRSSFeed(source.url)
 
-  try {
-    const items = await fetchRSSFeed(source.url)
+  if (!items.length) return 0
 
-    console.log(`[RSS] ${source.name}: fetched ${items.length} items`)
+  let inserted = 0
 
-    if (!items.length) {
-      console.log(`[RSS] ${source.name}: no items returned`)
-      return 0
-    }
+  for (const item of items) {
+    if (!item.title || !item.link) continue
 
-    const isOpportunity = source.stream_category === 'opportunities'
-    const expiresInMs = (isOpportunity ? 90 : 30) * 24 * 60 * 60 * 1000
+    const text = `${item.title} ${item.description || ''}`
 
-    let inserted = 0
+    const isAfricanRelevant =
+      detectAfricanRelevance(text) || !!(source.fetch_config?.is_african_relevant)
 
-    for (const item of items) {
-      const text = `${item.title} ${item.description ?? ''}`
-      let researchAreas = source.research_areas ?? []
+    const areas: string[] = [...(source.research_areas || [])]
 
-      if (researchAreas.length === 0) {
-        const { data } = await supabase.rpc('extract_research_areas_from_text', { p_text: text })
-        researchAreas = (data as string[] | null) ?? []
-      }
-
-      const { error: insertError } = await supabase
+    try {
+      const { error } = await supabase
         .from('feed_external_content')
         .upsert(
           {
             source_id: source.id,
-            source_name: source.name,
             category: source.stream_category,
             content_type:
               source.stream_category === 'publications'
@@ -181,47 +161,27 @@ export async function ingestRSSSource(source: ContentSource, supabase: SupabaseC
                   ? 'opportunity'
                   : 'article',
             title: item.title.slice(0, 500),
-            description: item.description ?? null,
+            description: item.description || null,
             url: item.link,
-            authors: item.authors ?? [],
-            research_areas: researchAreas,
-            is_african_relevant: detectAfricanRelevance(text),
-            relevance_signals: { source_areas: source.research_areas ?? [] },
-            published_at: item.publishedAt ?? new Date().toISOString(),
-            expires_at: new Date(Date.now() + expiresInMs).toISOString(),
+            research_areas: areas,
+            published_at: item.publishedAt ? new Date(item.publishedAt).toISOString() : new Date().toISOString(),
+            is_african_relevant: isAfricanRelevant,
+            expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
             raw_data: { source_name: source.name },
           },
-          { onConflict: 'url', ignoreDuplicates: false }
+          { onConflict: 'url', ignoreDuplicates: true }
         )
 
-      if (insertError) {
-        console.error(`[RSS] ${source.name}: insert error:`, insertError.message)
-      } else {
-        inserted++
-      }
+      if (!error) inserted++
+    } catch {
+      // skip
     }
-
-    console.log(`[RSS] ${source.name}: inserted ${inserted} items`)
-
-    await supabase
-      .from('feed_content_sources')
-      .update({ last_fetched_at: new Date().toISOString() })
-      .eq('id', source.id)
-
-    return inserted
-  } catch (err) {
-    console.error(`[RSS] ${source.name} error:`, err)
-    return 0
   }
-}
 
-const AFRICA_KEYWORDS = [
-  'africa', 'african', 'nigeria', 'kenya', 'ghana', 'south africa', 'egypt',
-  'ethiopia', 'tanzania', 'uganda', 'senegal', 'rwanda', 'morocco', 'algeria',
-  'sub-saharan', 'sahel', 'maghreb',
-]
+  await supabase
+    .from('feed_content_sources')
+    .update({ last_fetched_at: new Date().toISOString() })
+    .eq('id', source.id)
 
-export function detectAfricanRelevance(text: string): boolean {
-  const lower = text.toLowerCase()
-  return AFRICA_KEYWORDS.some(keyword => lower.includes(keyword))
+  return inserted
 }
