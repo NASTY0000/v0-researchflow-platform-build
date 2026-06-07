@@ -78,7 +78,7 @@ export function MobileNav({ initialUnreadCount }: MobileNavProps) {
       <div className="h-[88px] w-full md:hidden" />
 
       <nav
-        className="md:hidden fixed bottom-0 left-0 right-0 z-50"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around"
         style={{
           height: '88px',
           background: 'rgba(10, 5, 20, 0.80)',
@@ -86,9 +86,6 @@ export function MobileNav({ initialUnreadCount }: MobileNavProps) {
           WebkitBackdropFilter: 'blur(28px) saturate(180%)',
           borderTop: '1px solid rgba(139,92,246,0.18)',
           boxShadow: '0 -1px 0 rgba(139,92,246,0.10), inset 0 1px 0 rgba(255,255,255,0.035)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-around',
           padding: '0 8px 16px',
         }}
       >
