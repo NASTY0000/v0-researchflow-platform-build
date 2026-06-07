@@ -27,8 +27,8 @@ export async function GET(request: Request) {
 
     let query = supabase
       .from('feed_external_content')
-      .select('id, category, content_type, thumbnail_url, title, description, url, authors, journal, citation_count, research_areas, is_african_relevant, deadline, published_at')
-      .eq('category', category)
+      .select('id, stream_category, content_type, thumbnail_url, title, description, url, authors, journal, citation_count, research_areas, is_african_relevant, deadline, published_at')
+      .eq('stream_category', category)
       .gte('published_at', thirtyDaysAgo)
       .order('published_at', { ascending: false })
       .range((page - 1) * pageSize, page * pageSize - 1)
@@ -51,7 +51,7 @@ export async function GET(request: Request) {
         reason: item.is_african_relevant ? 'Relevant to African research' : 'From your research areas',
         is_diversity: false,
         is_external: true,
-        category: item.category,
+        category: item.stream_category,
       },
     }))
 
