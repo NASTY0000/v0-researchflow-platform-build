@@ -59,7 +59,7 @@ export async function ingestRedditScience(supabase: SupabaseClient): Promise<num
           .from('feed_external_content')
           .upsert(
             {
-              category: 'discovery',
+              stream_category: 'discovery',
               content_type: 'post',
               source_name: `r/${sub.name}`,
               title: post.title.slice(0, 500),

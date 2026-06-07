@@ -65,7 +65,7 @@ export async function ingestYouTubeScience(supabase: SupabaseClient): Promise<nu
           .from('feed_external_content')
           .upsert(
             {
-              category: 'discovery',
+              stream_category: 'discovery',
               content_type: 'video',
               source_name: channel.name,
               title: snippet.title.slice(0, 500),

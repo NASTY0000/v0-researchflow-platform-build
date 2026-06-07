@@ -101,7 +101,7 @@ export async function ingestOpenAlex(researchAreas: string[], supabase: Supabase
       const text = `${work.title} ${abstract ?? ''}`
 
       return {
-        category: 'publications',
+        stream_category: 'publications',
         title: work.title,
         description: abstract ? abstract.slice(0, 1000) : null,
         url,

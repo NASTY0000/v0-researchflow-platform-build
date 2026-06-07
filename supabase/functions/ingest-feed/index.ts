@@ -106,7 +106,7 @@ async function ingestSource(source: {
         .upsert(
           {
             source_id: source.id,
-            category: source.stream_category,
+            stream_category: source.stream_category,
             content_type:
               source.stream_category === 'publications'
                 ? 'paper'
