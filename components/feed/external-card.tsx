@@ -82,6 +82,19 @@ export function ExternalCard({ item, index = 0 }: ExternalCardProps) {
       className="relative rounded-xl overflow-hidden cursor-pointer"
       style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${cfg.border}` }}
     >
+      {item.content_type !== 'video' && item.thumbnail_url && (
+        <div className="w-full h-40 overflow-hidden">
+          <img
+            src={item.thumbnail_url}
+            alt={item.title}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              e.currentTarget.parentElement?.style.setProperty('display', 'none')
+            }}
+          />
+        </div>
+      )}
+
       {item.content_type === 'video' && item.thumbnail_url && (
         <div className="relative w-full aspect-video overflow-hidden">
           <img
