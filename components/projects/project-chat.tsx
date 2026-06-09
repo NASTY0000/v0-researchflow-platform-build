@@ -24,48 +24,91 @@ interface ProjectChatProps {
 
 export function ProjectChat({ projectId, teamId, currentUserId }: ProjectChatProps) {
   const [messages, setMessages] = useState<MessageWithSender[]>([])
+  const [conversationId, setConversationId] = useState<string | null>(null)
   const [newMessage, setNewMessage] = useState("")
   const [isLoading, setIsLoading] = useState(true)
   const [isSending, setIsSending] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    async function loadMessages() {
+    async function loadConversation() {
       const supabase = createClient()
 
-      const { data, error } = await supabase
+      let { data: conversation, error } = await supabase
+        .from("conversations")
+        .select("id")
+        .eq("project_id", projectId)
+        .eq("conversation_type", "project")
+        .maybeSingle()
+
+      if (!conversation && !error) {
+        const { data: created, error: createError } = await supabase
+          .from("conversations")
+          .insert({ conversation_type: "project", project_id: projectId, team_id: teamId })
+          .select("id")
+          .single()
+
+        if (createError) {
+          console.error("Failed to create conversation:", createError)
+          toast.error(createError.message || "Failed to set up project chat")
+          setIsLoading(false)
+          return
+        }
+        conversation = created
+      }
+
+      if (error) {
+        console.error("Failed to load conversation:", error)
+        toast.error(error.message || "Failed to load project chat")
+        setIsLoading(false)
+        return
+      }
+
+      if (!conversation) {
+        setIsLoading(false)
+        return
+      }
+
+      setConversationId(conversation.id)
+
+      const { data, error: messagesError } = await supabase
         .from("messages")
         .select(`
           *,
           sender:profiles!messages_sender_id_fkey(id, full_name, avatar_url)
         `)
-        .eq("team_id", teamId)
+        .eq("conversation_id", conversation.id)
         .order("created_at", { ascending: true })
         .limit(100)
 
-      if (data && !error) {
+      if (messagesError) {
+        console.error("Failed to load messages:", messagesError)
+        toast.error(messagesError.message || "Failed to load messages")
+      } else if (data) {
         setMessages(data)
       }
 
       setIsLoading(false)
     }
 
-    loadMessages()
+    loadConversation()
+  }, [projectId, teamId])
 
-    // Set up realtime subscription
+  useEffect(() => {
+    if (!conversationId) return
+
     const supabase = createClient()
     const channel = supabase
-      .channel(`team-chat-${teamId}`)
+      .channel(`project-chat-${conversationId}`)
       .on(
         "postgres_changes",
         {
           event: "INSERT",
           schema: "public",
           table: "messages",
-          filter: `team_id=eq.${teamId}`,
+          filter: `conversation_id=eq.${conversationId}`,
         },
         async (payload) => {
-          // Fetch the full message with sender info
           const { data } = await supabase
             .from("messages")
             .select(`
@@ -85,7 +128,7 @@ export function ProjectChat({ projectId, teamId, currentUserId }: ProjectChatPro
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [teamId])
+  }, [conversationId])
 
   useEffect(() => {
     // Scroll to bottom when new messages arrive
@@ -96,13 +139,13 @@ export function ProjectChat({ projectId, teamId, currentUserId }: ProjectChatPro
 
   async function handleSendMessage(e: React.FormEvent) {
     e.preventDefault()
-    if (!newMessage.trim() || !currentUserId) return
+    if (!newMessage.trim() || !currentUserId || !conversationId) return
 
     setIsSending(true)
     const supabase = createClient()
 
     const { error } = await supabase.from("messages").insert({
-      team_id: teamId,
+      conversation_id: conversationId,
       sender_id: currentUserId,
       content: newMessage.trim(),
       message_type: "text",
@@ -191,13 +234,13 @@ export function ProjectChat({ projectId, teamId, currentUserId }: ProjectChatPro
             placeholder="Type a message..."
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            disabled={isSending || !currentUserId}
+            disabled={isSending || !currentUserId || !conversationId}
             className="flex-1"
           />
           <Button
             type="submit"
             size="icon"
-            disabled={isSending || !newMessage.trim() || !currentUserId}
+            disabled={isSending || !newMessage.trim() || !currentUserId || !conversationId}
           >
             {isSending ? (
               <Loader2 className="h-4 w-4 animate-spin" />
