@@ -42,6 +42,7 @@ interface ProjectRoadmapProps {
   project: Project
   currentUserId?: string | null
   isOwner?: boolean
+  isMember?: boolean
 }
 
 interface ProjectPhase {
@@ -71,7 +72,7 @@ function getInitials(name: string | null) {
   return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)
 }
 
-export function ProjectRoadmap({ project, currentUserId = null, isOwner = false }: ProjectRoadmapProps) {
+export function ProjectRoadmap({ project, currentUserId = null, isOwner = false, isMember = false }: ProjectRoadmapProps) {
   const [phases, setPhases] = useState<ProjectPhase[]>([])
   const [teamMembers, setTeamMembers] = useState<Profile[]>([])
   const [expandedPhase, setExpandedPhase] = useState<number | null>(null)
@@ -337,7 +338,7 @@ export function ProjectRoadmap({ project, currentUserId = null, isOwner = false 
                               ? <p className="text-xs flex-1 whitespace-pre-wrap" style={{ color: '#C4B5FD' }}>{phase.notes}</p>
                               : <p className="text-xs flex-1" style={{ color: '#4A3F6B' }}>No notes yet.</p>
                             }
-                            {(isOwner || currentUserId) && (
+                            {(isOwner || isMember) && (
                               <Button size="sm" variant="ghost" className="h-6 text-xs opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
                                 style={{ color: '#7C6A9C' }}
                                 onClick={() => { setEditingNotes(def.number); setNotesText(phase?.notes || "") }}>
@@ -349,7 +350,7 @@ export function ProjectRoadmap({ project, currentUserId = null, isOwner = false 
                       </div>
 
                       {/* Actions */}
-                      {!isCompleted && (isOwner || currentUserId) && (
+                      {!isCompleted && (isOwner || isMember) && (
                         <div className="flex items-center gap-2 pt-1">
                           {!prevComplete && !isOwner && (
                             <p className="text-xs flex items-center gap-1" style={{ color: '#7C6A9C' }}>

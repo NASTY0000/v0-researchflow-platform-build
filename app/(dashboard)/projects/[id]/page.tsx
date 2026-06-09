@@ -80,6 +80,9 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
     return <div className="max-w-4xl mx-auto px-4 py-8"><ListPageSkeleton type="card" count={3} /></div>
   }
 
+  const isLead = currentUserId === project.team?.leader_id
+  const isMember = !!project.team?.team_members?.some((m) => m.user.id === currentUserId)
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -191,14 +194,21 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
         </TabsList>
 
         <TabsContent value="kanban">
-          <KanbanBoard projectId={project.id} teamId={project.team_id} tasks={project.tasks || []} />
+          <KanbanBoard
+            projectId={project.id}
+            teamId={project.team_id}
+            tasks={project.tasks || []}
+            currentUserId={currentUserId}
+            isLead={isLead}
+          />
         </TabsContent>
 
         <TabsContent value="roadmap">
           <ProjectRoadmap
             project={project}
             currentUserId={currentUserId}
-            isOwner={currentUserId === project.team?.leader_id}
+            isOwner={isLead}
+            isMember={isMember}
           />
         </TabsContent>
 
@@ -207,7 +217,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
         </TabsContent>
 
         <TabsContent value="files">
-          <ProjectFiles projectId={project.id} />
+          <ProjectFiles projectId={project.id} currentUserId={currentUserId} isLead={isLead} />
         </TabsContent>
 
         <TabsContent value="team">

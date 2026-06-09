@@ -1,5 +1,6 @@
 'use server'
 
+import { createClient } from '@/lib/supabase/server'
 import { createServiceRoleClient } from '@/lib/supabase/admin'
 
 type AkiliDimension = 'knowledge' | 'collaboration' | 'mentorship' | 'technical'
@@ -70,12 +71,62 @@ export async function ideaFormsActiveTeam(userId: string, ideaId: string) {
   await awardAkiliPoints({ userId, eventType: 'ideaFormsActiveTeam', points: 40, dimension: 'knowledge', description: 'Your idea formed an active team', metadata: { idea_id: ideaId } })
 }
 
-export async function phaseCompleted(userId: string, projectId: string, phaseNumber: number, phaseName: string) {
-  await awardAkiliPoints({ userId, eventType: 'phase_completed', points: 30, dimension: 'knowledge', description: `Completed Phase ${phaseNumber}: ${phaseName}`, metadata: { project_id: projectId, phase_number: phaseNumber } })
+// Verifies the requesting user is authenticated and a member of the project's
+// team before awarding points. Phase-completion points must never be granted
+// based on a client-supplied user id.
+async function verifyProjectMember(projectId: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' as const }
+
+  const { data: project } = await supabase
+    .from('projects')
+    .select('team_id')
+    .eq('id', projectId)
+    .single()
+  if (!project) return { error: 'Project not found' as const }
+
+  const { data: membership } = await supabase
+    .from('team_members')
+    .select('id')
+    .eq('team_id', project.team_id)
+    .eq('user_id', user.id)
+    .single()
+  if (!membership) return { error: 'Not a member of this project team' as const }
+
+  return { userId: user.id }
 }
 
-export async function allPhasesCompleted(userId: string, projectId: string) {
-  await awardAkiliPoints({ userId, eventType: 'all_phases_completed', points: 75, dimension: 'knowledge', description: 'Completed all 7 research phases', metadata: { project_id: projectId } })
+async function alreadyAwarded(userId: string, eventType: string, metadata: Record<string, unknown>) {
+  const admin = createServiceRoleClient()
+  const { data } = await admin
+    .from('akili_score_events')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('event_type', eventType)
+    .contains('metadata', metadata)
+    .maybeSingle()
+  return !!data
+}
+
+export async function phaseCompleted(_userId: string, projectId: string, phaseNumber: number, phaseName: string) {
+  const result = await verifyProjectMember(projectId)
+  if ('error' in result) return { error: result.error }
+
+  const metadata = { project_id: projectId, phase_number: phaseNumber }
+  if (await alreadyAwarded(result.userId, 'phase_completed', metadata)) return { success: true }
+
+  return awardAkiliPoints({ userId: result.userId, eventType: 'phase_completed', points: 30, dimension: 'knowledge', description: `Completed Phase ${phaseNumber}: ${phaseName}`, metadata })
+}
+
+export async function allPhasesCompleted(_userId: string, projectId: string) {
+  const result = await verifyProjectMember(projectId)
+  if ('error' in result) return { error: result.error }
+
+  const metadata = { project_id: projectId }
+  if (await alreadyAwarded(result.userId, 'all_phases_completed', metadata)) return { success: true }
+
+  return awardAkiliPoints({ userId: result.userId, eventType: 'all_phases_completed', points: 75, dimension: 'knowledge', description: 'Completed all 7 research phases', metadata })
 }
 
 export async function submitToShowcase(userId: string, showcaseId: string) {
