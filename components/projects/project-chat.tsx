@@ -10,6 +10,7 @@ import { Send, Loader2 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import type { Message, Profile } from "@/lib/types/database"
 import { formatDistanceToNow } from "date-fns"
+import { toast } from "sonner"
 
 interface MessageWithSender extends Message {
   sender: Profile
@@ -100,14 +101,20 @@ export function ProjectChat({ projectId, teamId, currentUserId }: ProjectChatPro
     setIsSending(true)
     const supabase = createClient()
 
-    await supabase.from("messages").insert({
+    const { error } = await supabase.from("messages").insert({
       team_id: teamId,
       sender_id: currentUserId,
       content: newMessage.trim(),
       message_type: "text",
     })
 
-    setNewMessage("")
+    if (error) {
+      console.error("Failed to send message:", error)
+      toast.error(error.message || "Failed to send message")
+    } else {
+      setNewMessage("")
+    }
+
     setIsSending(false)
   }
 
