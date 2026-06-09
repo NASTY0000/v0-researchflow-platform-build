@@ -105,7 +105,52 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                 {project.status}
               </Badge>
             </div>
-            <p className="text-muted-foreground">{project.description || "No description"}</p>
+            <div className="space-y-3 mt-1">
+              {(() => {
+                const raw = project.description || ''
+                const objMarker = '\n\nObjectives:\n'
+                const hasObjectives = raw.includes(objMarker)
+                const aim = hasObjectives ? raw.split(objMarker)[0].trim() : raw.trim()
+                const objectivesList = hasObjectives
+                  ? raw
+                      .split(objMarker)[1]
+                      .split('\n')
+                      .map((l: string) => l.replace(/^\d+\.\s*/, '').trim())
+                      .filter((l: string) => l.length > 0)
+                  : []
+
+                return (
+                  <>
+                    {aim && (
+                      <div>
+                        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
+                          Research Aim
+                        </h3>
+                        <p className="text-sm text-foreground leading-relaxed">{aim}</p>
+                      </div>
+                    )}
+                    {objectivesList.length > 0 && (
+                      <div>
+                        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
+                          Objectives
+                        </h3>
+                        <ol className="space-y-1.5">
+                          {objectivesList.map((obj: string, i: number) => (
+                            <li key={i} className="flex gap-2 text-sm text-foreground leading-relaxed">
+                              <span className="shrink-0 font-semibold text-primary">{i + 1}.</span>
+                              <span>{obj}</span>
+                            </li>
+                          ))}
+                        </ol>
+                      </div>
+                    )}
+                    {!aim && !objectivesList.length && (
+                      <p className="text-sm text-muted-foreground">No description</p>
+                    )}
+                  </>
+                )
+              })()}
+            </div>
           </div>
         </div>
         <Button variant="outline" asChild>
