@@ -173,7 +173,8 @@ export function ProjectFiles({ projectId, currentUserId, isLead }: ProjectFilesP
         .single()
 
       if (dbError) {
-        toast.error('Failed to save file record.')
+        console.error('Failed to save file record:', dbError)
+        toast.error(dbError.message || 'Failed to save file record.')
       } else {
         toast.success(version > 1 ? `Uploaded v${version} of ${file.name}` : `${file.name} uploaded`)
         await loadFiles()
