@@ -116,7 +116,7 @@ export default function NewIdeaPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 px-4 md:px-6">
+    <div className="max-w-3xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" asChild>

@@ -93,14 +93,14 @@ export default function EditIdeaPage({ params }: { params: Promise<{ id: string 
 
   if (isLoading) {
     return (
-      <div className="max-w-2xl mx-auto space-y-6 py-8 px-4 md:px-6">
+      <div className="max-w-2xl mx-auto space-y-6 py-8">
         <ListPageSkeleton type="card" count={3} />
       </div>
     )
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6 px-4 md:px-6">
+    <div className="max-w-2xl mx-auto space-y-6">
       <div>
         <button onClick={() => router.back()} className="inline-flex items-center gap-2 text-sm mb-4" style={{ color: '#A855F7' }}>
           <ArrowLeft className="w-4 h-4" /> Back to Idea

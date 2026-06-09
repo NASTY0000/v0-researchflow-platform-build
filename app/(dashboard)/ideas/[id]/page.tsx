@@ -306,7 +306,7 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
 
   if (isLoading) {
     return (
-      <div className="max-w-4xl mx-auto space-y-6 px-4 md:px-6">
+      <div className="max-w-4xl mx-auto space-y-6">
         <ListPageSkeleton type="card" count={3} />
       </div>
     )
@@ -319,7 +319,7 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
   const isAuthor = currentUserId === idea.author_id
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 px-4 md:px-6">
+    <div className="max-w-4xl mx-auto space-y-6">
       {/* Flag dialog */}
       {showFlagDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
@@ -347,7 +347,7 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
       )}
 
       {/* Header */}
-      <div className="flex items-center gap-4 flex-wrap">
+      <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" asChild>
           <Link href="/ideas">
             <ArrowLeft className="h-5 w-5" />
@@ -380,8 +380,8 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
         <div className="lg:col-span-2 space-y-6">
           <Card>
             <CardHeader>
-              <div className="flex flex-col-reverse md:flex-row md:items-start md:justify-between gap-3">
-                <CardTitle className="text-2xl md:text-3xl font-heading">{idea.title}</CardTitle>
+              <div className="flex items-start justify-between gap-3">
+                <CardTitle className="text-2xl font-heading">{idea.title}</CardTitle>
                 {idea.review_badge && (
                   <ReviewBadge
                     badge={idea.review_badge}
@@ -391,7 +391,7 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
                   />
                 )}
               </div>
-              <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
+              <div className="flex items-center gap-4 text-sm text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <Calendar className="h-4 w-4" />
                   {format(new Date(idea.created_at), "MMM d, yyyy")}
@@ -416,9 +416,7 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
               {/* Tags */}
               {idea.tags && idea.tags.length > 0 && (
                 <div className="space-y-2">
-                  <h4 className="text-xs font-semibold uppercase tracking-wide text-purple-600 border-l-4 border-purple-600 pl-3 mt-6 mb-2">
-                    Tags
-                  </h4>
+                  <h4 className="text-sm font-medium">Tags</h4>
                   <div className="flex flex-wrap gap-2">
                     {idea.tags.map((tag) => (
                       <Badge key={tag} variant="secondary">
@@ -434,7 +432,7 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
               {/* Roles Needed */}
               {idea.roles_needed && idea.roles_needed.length > 0 && (
                 <div className="space-y-2">
-                  <h4 className="text-xs font-semibold uppercase tracking-wide text-purple-600 border-l-4 border-purple-600 pl-3 mt-6 mb-2 flex items-center gap-2">
+                  <h4 className="text-sm font-medium flex items-center gap-2">
                     <Users className="h-4 w-4" />
                     Looking for
                   </h4>
@@ -451,9 +449,7 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
               {/* Skills Needed */}
               {idea.skills_needed && idea.skills_needed.length > 0 && (
                 <div className="space-y-2">
-                  <h4 className="text-xs font-semibold uppercase tracking-wide text-purple-600 border-l-4 border-purple-600 pl-3 mt-6 mb-2">
-                    Required Skills
-                  </h4>
+                  <h4 className="text-sm font-medium">Required Skills</h4>
                   <div className="flex flex-wrap gap-2">
                     {idea.skills_needed.map((skill) => (
                       <Badge key={skill} variant="secondary" className="bg-primary/10 text-primary border-primary/20">
