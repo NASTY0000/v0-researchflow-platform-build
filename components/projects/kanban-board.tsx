@@ -48,6 +48,8 @@ interface KanbanBoardProps {
   projectId: string
   teamId: string
   tasks: Task[]
+  currentUserId?: string | null
+  isLead?: boolean
 }
 
 interface Column {
@@ -77,7 +79,7 @@ const PRIORITIES = [
   { value: "urgent", label: "Urgent", color: "text-red-500" },
 ]
 
-export function KanbanBoard({ projectId, teamId, tasks: initialTasks }: KanbanBoardProps) {
+export function KanbanBoard({ projectId, teamId, tasks: initialTasks, currentUserId = null, isLead = false }: KanbanBoardProps) {
   const [tasks, setTasks] = useState<Task[]>(initialTasks)
   const [teamMembers, setTeamMembers] = useState<{ user: Profile }[]>([])
   const [showNewTask, setShowNewTask] = useState(false)
@@ -121,7 +123,7 @@ export function KanbanBoard({ projectId, teamId, tasks: initialTasks }: KanbanBo
         description: newDescription.trim() || null,
         status: "todo",
         priority: newPriority,
-        assignee_id: newAssignee || null,
+        assigned_to: newAssignee || null,
         due_date: newDueDate || null,
       })
       .select()
@@ -135,6 +137,9 @@ export function KanbanBoard({ projectId, teamId, tasks: initialTasks }: KanbanBo
       setNewPriority("medium")
       setNewAssignee("")
       setNewDueDate("")
+    } else {
+      console.error("Failed to create task:", error)
+      toast.error(error?.message || "Failed to create task")
     }
 
     setIsCreating(false)
@@ -143,7 +148,12 @@ export function KanbanBoard({ projectId, teamId, tasks: initialTasks }: KanbanBo
   async function handleStatusChange(taskId: string, newStatus: string) {
     const supabase = createClient()
 
-    await supabase.from("tasks").update({ status: newStatus }).eq("id", taskId)
+    const { error } = await supabase.from("tasks").update({ status: newStatus }).eq("id", taskId)
+    if (error) {
+      console.error("Failed to update task status:", error)
+      toast.error(error.message || "Failed to move task")
+      return
+    }
     setTasks(tasks.map((t) => (t.id === taskId ? { ...t, status: newStatus } : t)))
 
     if (newStatus === "done") {
@@ -156,7 +166,12 @@ export function KanbanBoard({ projectId, teamId, tasks: initialTasks }: KanbanBo
 
   async function handleDeleteTask(taskId: string) {
     const supabase = createClient()
-    await supabase.from("tasks").delete().eq("id", taskId)
+    const { error } = await supabase.from("tasks").delete().eq("id", taskId)
+    if (error) {
+      console.error("Failed to delete task:", error)
+      toast.error(error.message || "Failed to delete task")
+      return
+    }
     setTasks(tasks.filter((t) => t.id !== taskId))
   }
 
@@ -329,12 +344,14 @@ export function KanbanBoard({ projectId, teamId, tasks: initialTasks }: KanbanBo
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem>Edit</DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="text-destructive"
-                            onClick={() => handleDeleteTask(task.id)}
-                          >
-                            Delete
-                          </DropdownMenuItem>
+                          {(isLead || task.assigned_to === currentUserId) && (
+                            <DropdownMenuItem
+                              className="text-destructive"
+                              onClick={() => handleDeleteTask(task.id)}
+                            >
+                              Delete
+                            </DropdownMenuItem>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
@@ -364,11 +381,11 @@ export function KanbanBoard({ projectId, teamId, tasks: initialTasks }: KanbanBo
                             {format(new Date(task.due_date), "MMM d")}
                           </span>
                         )}
-                        {task.assignee_id && (
+                        {task.assigned_to && (
                           <Avatar className="h-5 w-5">
                             <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
                               {teamMembers
-                                .find((m) => m.user.id === task.assignee_id)
+                                .find((m) => m.user.id === task.assigned_to)
                                 ?.user.full_name?.charAt(0) || "?"}
                             </AvatarFallback>
                           </Avatar>
