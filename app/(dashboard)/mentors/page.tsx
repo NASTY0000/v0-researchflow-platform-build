@@ -40,6 +40,7 @@ import {
   Briefcase,
   Award,
   ArrowRight,
+  Sparkles,
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { BookmarkButton } from "@/components/ui/bookmark-button"
@@ -51,6 +52,7 @@ import { RequestProgramModal } from "@/components/mentorship/RequestProgramModal
 import { DeleteButton } from "@/components/ui/delete-button"
 import { ProgramCard } from "@/components/mentorship/ProgramCard"
 import { getMyMentorshipPrograms, type MenteeProgramItem } from "@/lib/actions/mentorship"
+import { computeMentorMatches, type MatchScore } from '@/lib/mentorship/matching-engine'
 
 interface MentorWithProfile extends MentorProfile {
   profile: Profile
@@ -120,10 +122,15 @@ export default function MentorsPage() {
 
   // Programs tab
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
-  const [activeTab, setActiveTab] = useState<'mentors' | 'programs'>('mentors')
+  const [activeTab, setActiveTab] = useState<'matches' | 'mentors' | 'programs'>('mentors')
   const [myPrograms, setMyPrograms] = useState<MenteeProgramItem[]>([])
   const [loadingPrograms, setLoadingPrograms] = useState(false)
   const [programModalMentor, setProgramModalMentor] = useState<MentorWithProfile | null>(null)
+
+  // Matches tab
+  const [matches, setMatches] = useState<MatchScore[]>([])
+  const [matchesLoading, setMatchesLoading] = useState(false)
+  const [matchesLoaded, setMatchesLoaded] = useState(false)
 
   useEffect(() => {
     loadMentors()
@@ -138,6 +145,18 @@ export default function MentorsPage() {
       })
     }
   }, [activeTab])
+
+  useEffect(() => {
+    if (activeTab === 'matches' && !matchesLoaded && currentUserId) {
+      setMatchesLoading(true)
+      computeMentorMatches(currentUserId)
+        .then(data => {
+          setMatches(data)
+          setMatchesLoaded(true)
+        })
+        .finally(() => setMatchesLoading(false))
+    }
+  }, [activeTab, matchesLoaded, currentUserId])
 
   async function loadMentors() {
     setIsLoading(true)
@@ -453,21 +472,157 @@ export default function MentorsPage() {
 
       {/* Tab switcher */}
       <div style={{ display: 'flex', gap: '4px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(139,92,246,0.18)', borderRadius: '12px', padding: '4px', width: 'fit-content' }}>
-        {(['mentors', 'programs'] as const).map((tab) => (
+        {([
+          { id: 'matches', label: 'My Matches', icon: Sparkles },
+          { id: 'mentors', label: 'Mentor Directory', icon: null },
+          { id: 'programs', label: 'My Programs', icon: null },
+        ] as const).map((tab) => (
           <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
             style={{
               padding: '7px 20px', borderRadius: '9px', fontSize: '13px', fontWeight: 500,
               border: 'none', cursor: 'pointer', transition: 'all 0.15s',
-              background: activeTab === tab ? 'rgba(124,58,237,0.25)' : 'transparent',
-              color: activeTab === tab ? '#C4B5FD' : '#7C6A9C',
+              background: activeTab === tab.id ? 'rgba(124,58,237,0.25)' : 'transparent',
+              color: activeTab === tab.id ? '#C4B5FD' : '#7C6A9C',
+              display: 'flex', alignItems: 'center', gap: '6px',
             }}
           >
-            {tab === 'mentors' ? 'Mentor Directory' : 'My Programs'}
+            {tab.icon && <tab.icon className="w-3.5 h-3.5" />}
+            {tab.label}
           </button>
         ))}
       </div>
+
+      {/* My Matches tab */}
+      {activeTab === 'matches' && (
+        <div className="space-y-4">
+          {matchesLoading ? (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[...Array(6)].map((_, i) => (
+                <Card key={i} className="animate-pulse">
+                  <CardContent className="p-6">
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="h-14 w-14 bg-muted rounded-full" />
+                      <div className="flex-1">
+                        <div className="h-5 bg-muted rounded w-3/4 mb-2" />
+                        <div className="h-4 bg-muted rounded w-1/2" />
+                      </div>
+                    </div>
+                    <div className="h-4 bg-muted rounded w-full mb-2" />
+                    <div className="h-4 bg-muted rounded w-2/3" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : matches.length === 0 ? (
+            <Card>
+              <CardContent className="p-12 text-center">
+                <Sparkles className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold mb-2">No matches yet</h3>
+                <p className="text-muted-foreground mb-6">
+                  Add research interests to your profile to get personalised mentor matches
+                </p>
+                <Button variant="outline" asChild style={{ border: '1px solid rgba(168,85,247,0.4)', color: '#C084FC' }}>
+                  <Link href="/profile">Update Profile</Link>
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {matches.map((match) => (
+                <Card key={match.id} className="hover:border-primary/50 transition-colors relative overflow-hidden">
+                  {/* Match score badge */}
+                  <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold z-10"
+                    style={{ background: 'rgba(124,58,237,0.2)', border: '1px solid rgba(139,92,246,0.4)', color: '#C4B5FD' }}>
+                    <Sparkles className="w-3 h-3" />
+                    {Math.round(match.score * 100)}% match
+                  </div>
+                  <CardContent className="p-6">
+                    <div className="flex items-start gap-4 mb-4">
+                      <Link href={`/profile/${match.user_id}`}>
+                        <Avatar className="h-14 w-14 cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all">
+                          <AvatarImage src={match.profile?.avatar_url || undefined} />
+                          <AvatarFallback className="bg-primary/10 text-primary text-lg">
+                            {match.profile?.full_name?.charAt(0) || '?'}
+                          </AvatarFallback>
+                        </Avatar>
+                      </Link>
+                      <div className="flex-1 min-w-0 pr-16">
+                        <Link href={`/profile/${match.user_id}`} className="hover:text-primary transition-colors">
+                          <h3 className="font-semibold truncate">{match.profile?.full_name}</h3>
+                        </Link>
+                        {match.profile?.department && (
+                          <p className="text-sm text-muted-foreground flex items-center gap-1">
+                            <GraduationCap className="h-3 w-3 shrink-0" />
+                            <span className="truncate">{match.profile.department}</span>
+                          </p>
+                        )}
+                        {match.profile?.university_id && (
+                          <p className="text-sm text-muted-foreground flex items-center gap-1">
+                            <Building2 className="h-3 w-3 shrink-0" />
+                            <span className="truncate">{match.profile.university_id}</span>
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {match.bio && (
+                      <p className="text-sm text-muted-foreground line-clamp-2 mb-4">{match.bio}</p>
+                    )}
+
+                    {match.expertise_areas && match.expertise_areas.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mb-4">
+                        {match.expertise_areas.slice(0, 3).map((area) => (
+                          <Badge key={area} variant="secondary" className="text-xs">{area}</Badge>
+                        ))}
+                        {match.expertise_areas.length > 3 && (
+                          <Badge variant="outline" className="text-xs">+{match.expertise_areas.length - 3}</Badge>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
+                      {match.rating && (
+                        <span className="flex items-center gap-1">
+                          <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+                          {Number(match.rating).toFixed(1)}
+                        </span>
+                      )}
+                      {match.total_sessions && match.total_sessions > 0 && (
+                        <span className="flex items-center gap-1">
+                          <MessageSquare className="h-4 w-4" />
+                          {match.total_sessions} sessions
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Match reasons */}
+                    {match.match_reasons.length > 0 && (
+                      <p className="text-xs mb-3" style={{ color: '#9D8BB8' }}>
+                        {match.match_reasons.join(' · ')}
+                      </p>
+                    )}
+
+                    <div className="flex gap-2 pt-3 border-t flex-wrap">
+                      <Button
+                        size="sm"
+                        onClick={() => setProgramModalMentor(match as unknown as MentorWithProfile)}
+                        style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none', flex: 1 }}
+                      >
+                        Request Program
+                      </Button>
+                      <Button size="sm" variant="outline" asChild>
+                        <Link href={`/profile/${match.user_id}`}>Profile</Link>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* My Programs tab */}
       {activeTab === 'programs' && (
