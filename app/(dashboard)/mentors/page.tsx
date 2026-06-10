@@ -179,7 +179,7 @@ export default function MentorsPage() {
         *,
         profile:profiles!mentor_profiles_user_id_fkey(*)
       `)
-      .eq("is_accepting_mentees", true)
+      .or("is_accepting_mentees.is.null,is_accepting_mentees.eq.true")
       .order("rating", { ascending: false })
 
     if (selectedArea !== "All Areas") {
@@ -187,6 +187,10 @@ export default function MentorsPage() {
     }
 
     const { data, error } = await query.limit(30)
+
+    if (error) {
+      console.error("Failed to load mentors:", error)
+    }
 
     if (data && !error) {
       let filtered = data
@@ -362,6 +366,7 @@ export default function MentorsPage() {
         total_sessions: 0,
         rating: 0,
         review_count: 0,
+        is_accepting_mentees: true,
       },
       { onConflict: "user_id" }
     )
