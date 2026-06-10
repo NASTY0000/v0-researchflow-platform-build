@@ -24,6 +24,7 @@ import { motion } from "framer-motion"
 import { PullToRefreshIndicator } from "@/components/ui/PullToRefreshIndicator"
 import { ActivityFeed } from "@/components/dashboard/activity-feed"
 import { GradientText } from "@/components/ui/gradient-text"
+import { useUserState } from "@/hooks/use-user-state"
 
 interface DashboardStats {
   totalIdeas: number
@@ -114,6 +115,8 @@ export default function DashboardPage() {
   useEffect(() => {
     loadDashboard()
   }, [loadDashboard])
+
+  const { state: userState } = useUserState(profile?.id ?? null)
 
   const akiliScore = profile?.akili_score ?? 0
   const currentTier = getCurrentTier(akiliScore)
@@ -406,7 +409,7 @@ export default function DashboardPage() {
           <p className="text-xs mb-6" style={{ color: '#7C6A9C' }}>Track your research journey milestones</p>
           <div className="grid md:grid-cols-3 gap-6">
             {[
-              { label: 'Profile Completion', value: profile.onboarding_completed ? 100 : (profile.onboarding_step || 0) * 20, display: profile.onboarding_completed ? '100%' : `${(profile.onboarding_step || 0) * 20}%` },
+              { label: 'Profile Completion', value: userState?.profile.completion_pct ?? (profile.onboarding_completed ? 100 : (profile.onboarding_step || 0) * 20), display: `${userState?.profile.completion_pct ?? (profile.onboarding_completed ? 100 : (profile.onboarding_step || 0) * 20)}%` },
               { label: 'Ideas Posted', value: Math.min((stats.totalIdeas / 5) * 100, 100), display: `${stats.totalIdeas} / 5` },
               { label: 'Connections Made', value: Math.min((stats.connections / 10) * 100, 100), display: `${stats.connections} / 10` },
             ].map(item => (

@@ -1,16 +1,34 @@
+// Canonical Akili tier definitions.
+// Mirrors the `akili_tiers` table created in supabase/user_state_migration.sql
+// and the tiers returned by the get_user_state(p_user_id) RPC.
+// All UI surfaces should derive tier name/description from this single list
+// (or, for the current user, from useUserState()) so tier names never
+// disagree across pages.
 export const AKILI_TIERS = [
-  { min: 0,     max: 999,      title: 'Emerging Researcher' },
-  { min: 1000,  max: 2499,     title: 'Active Contributor' },
-  { min: 2500,  max: 4999,     title: 'Collaborative Researcher' },
-  { min: 5000,  max: 7999,     title: 'Research Builder' },
-  { min: 8000,  max: 11999,    title: 'Research Leader' },
-  { min: 12000, max: 19999,    title: 'Research Expert' },
-  { min: 20000, max: Infinity, title: 'Research Champion' },
-]
+  { name: 'Emerging Researcher', slug: 'emerging', min: 0, description: 'Just beginning the research journey on ResearchFlow' },
+  { name: 'Scholar Researcher', slug: 'scholar', min: 200, description: 'Actively engaging with research on the platform' },
+  { name: 'Research Fellow', slug: 'fellow', min: 700, description: 'Consistently contributing to the research community' },
+  { name: 'Senior Investigator', slug: 'investigator', min: 1500, description: 'A recognised research contributor' },
+  { name: 'Principal Researcher', slug: 'principal', min: 3000, description: 'An expert and leader in research on ResearchFlow' },
+] as const
+
+export type AkiliTier = (typeof AKILI_TIERS)[number]
+
+export function getAkiliTier(score: number): AkiliTier {
+  let current: AkiliTier = AKILI_TIERS[0]
+  for (const tier of AKILI_TIERS) {
+    if (score >= tier.min) current = tier
+    else break
+  }
+  return current
+}
+
+export function getNextAkiliTier(score: number): AkiliTier | null {
+  return AKILI_TIERS.find(t => t.min > score) ?? null
+}
 
 export function getAkiliTitle(score: number): string {
-  const tier = AKILI_TIERS.find(t => score >= t.min && score <= t.max)
-  return tier?.title ?? 'Emerging Researcher'
+  return getAkiliTier(score).name
 }
 
 export const AKILI_POINTS = {

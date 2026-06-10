@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { ChevronRight } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { getAkiliTitle, AKILI_TIERS } from '@/lib/constants/akili'
+import { getAkiliTitle, getAkiliTier, getNextAkiliTier } from '@/lib/constants/akili'
 import { formatDistanceToNow } from 'date-fns'
 
 interface AkiliBreakdownSheetProps {
@@ -33,9 +33,8 @@ export function AkiliBreakdownSheet({
   const [recentEvents, setRecentEvents] = useState<ScoreEvent[]>([])
   const [thisWeekPoints, setThisWeekPoints] = useState(0)
 
-  const currentTierIndex = AKILI_TIERS.findIndex(t => score >= t.min && score <= t.max)
-  const currentTier = AKILI_TIERS[currentTierIndex] ?? AKILI_TIERS[0]
-  const nextTier = AKILI_TIERS[currentTierIndex + 1]
+  const currentTier = getAkiliTier(score)
+  const nextTier = getNextAkiliTier(score)
   const pointsToNextTier = nextTier ? nextTier.min - score : 0
   const tierProgress = nextTier
     ? Math.round(((score - currentTier.min) / (nextTier.min - currentTier.min)) * 100)
@@ -114,7 +113,7 @@ export function AkiliBreakdownSheet({
                 <div className="h-2 bg-muted rounded-full overflow-hidden">
                   <div className="h-full bg-gradient-to-r from-primary to-primary/60 rounded-full transition-all" style={{ width: `${tierProgress}%` }} />
                 </div>
-                <p className="text-xs text-muted-foreground">Next: {nextTier.title}</p>
+                <p className="text-xs text-muted-foreground">Next: {nextTier.name}</p>
               </div>
             )}
 

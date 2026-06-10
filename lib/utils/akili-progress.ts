@@ -1,22 +1,15 @@
-export const AKILI_TIERS = [
-  { name: 'Emerging Researcher', min: 0,    max: 299  },
-  { name: 'Scholar Researcher',  min: 300,  max: 699  },
-  { name: 'Research Fellow',     min: 700,  max: 1499 },
-  { name: 'Senior Researcher',   min: 1500, max: 2499 },
-  { name: 'Research Leader',     min: 2500, max: Infinity },
-]
+import { getAkiliTier, getNextAkiliTier } from '@/lib/constants/akili'
 
 export function getCurrentTier(score: number) {
-  return AKILI_TIERS.find(t => score >= t.min && score <= t.max) ?? AKILI_TIERS[0]
+  return getAkiliTier(score)
 }
 
 export function getNextTier(score: number) {
-  const idx = AKILI_TIERS.findIndex(t => score >= t.min && score <= t.max)
-  return AKILI_TIERS[idx + 1] ?? null
+  return getNextAkiliTier(score)
 }
 
 export function getPointsToNextTier(score: number): number {
-  const next = getNextTier(score)
+  const next = getNextAkiliTier(score)
   if (!next) return 0
   return next.min - score
 }

@@ -1,4 +1,4 @@
-import { AKILI_TIERS } from '@/lib/constants/akili'
+import { getAkiliTier } from '@/lib/constants/akili'
 
 export type AkiliDimension = 'knowledge' | 'collaboration' | 'mentorship' | 'technical'
 
@@ -35,19 +35,9 @@ export function getDimensionForEvent(eventType: string): AkiliDimension {
   return 'knowledge'
 }
 
-const NARRATIVES: Record<string, string> = {
-  'Emerging Researcher':    'Just beginning the research journey on ResearchFlow',
-  'Active Contributor':     'Building connections and contributing to real research work',
-  'Collaborative Researcher': 'Consistently moving research projects forward with others',
-  'Research Builder':       'A trusted contributor whose work is shaping research outcomes',
-  'Research Leader':        'Recognised by peers for sustained high-quality contributions',
-  'Research Expert':        'An established expert whose collaborations and outputs speak for themselves',
-  'Research Champion':      'Among the top contributors on ResearchFlow — a pillar of African research',
-}
-
 export function getAkiliNarrative(score: number): { title: string; narrative: string } {
-  const tier = AKILI_TIERS.find(t => score >= t.min && score <= t.max) ?? AKILI_TIERS[0]
-  return { title: tier.title, narrative: NARRATIVES[tier.title] ?? '' }
+  const tier = getAkiliTier(score)
+  return { title: tier.name, narrative: tier.description }
 }
 
 export function getDimensionBadge(dimension: AkiliDimension, score: number): string {
