@@ -14,9 +14,3 @@ DO $$ BEGIN
       USING (true);
   END IF;
 END $$;
-
--- Backfill: rows added before is_accepting_mentees existed (or inserted with an
--- explicit NULL) should default to accepting mentees so they appear in the directory.
-UPDATE mentor_profiles
-SET is_accepting_mentees = true
-WHERE is_accepting_mentees IS NULL;
