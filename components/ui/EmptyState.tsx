@@ -87,7 +87,7 @@ export function EmptyState({
       </motion.div>
 
       <motion.h3
-        className="text-lg font-bold text-white mb-2 leading-tight"
+        className="text-lg font-bold text-foreground mb-2 leading-tight"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1, duration: 0.4 }}
@@ -96,8 +96,7 @@ export function EmptyState({
       </motion.h3>
 
       <motion.p
-        className="text-sm leading-relaxed mb-2"
-        style={{ color: 'rgba(192,132,252,0.55)' }}
+        className="text-sm leading-relaxed mb-2 text-muted-foreground"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.15, duration: 0.4 }}
@@ -128,7 +127,7 @@ export function EmptyState({
         >
           <Link
             href={ctaHref}
-            className="w-full h-11 rounded-xl text-white text-sm font-semibold flex items-center justify-center transition-all mb-3"
+            className="w-full h-11 rounded-xl text-primary-foreground text-sm font-semibold flex items-center justify-center transition-all mb-3"
             style={{
               background: 'linear-gradient(135deg,#7C3AED,#A855F7)',
               boxShadow: '0 0 20px rgba(124,58,237,0.3)',
@@ -147,7 +146,7 @@ export function EmptyState({
         >
           <button
             onClick={ctaOnClick}
-            className="w-full h-11 rounded-xl text-white text-sm font-semibold flex items-center justify-center transition-all mb-3"
+            className="w-full h-11 rounded-xl text-primary-foreground text-sm font-semibold flex items-center justify-center transition-all mb-3"
             style={{
               background: 'linear-gradient(135deg,#7C3AED,#A855F7)',
               boxShadow: '0 0 20px rgba(124,58,237,0.3)',
@@ -161,8 +160,7 @@ export function EmptyState({
       {secondaryLabel && secondaryHref && (
         <Link
           href={secondaryHref}
-          className="text-sm transition-colors"
-          style={{ color: 'rgba(168,85,247,0.6)' }}
+          className="text-sm transition-colors text-muted-foreground hover:text-primary"
         >
           {secondaryLabel}
         </Link>

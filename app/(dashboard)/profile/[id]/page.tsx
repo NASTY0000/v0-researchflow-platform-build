@@ -26,6 +26,7 @@ import { ProfileBackground } from '@/components/profile/ProfileBackground'
 import { BookmarkButton } from '@/components/ui/bookmark-button'
 import { FollowButton } from '@/components/ui/follow-button'
 import { ProfilePageSkeleton } from '@/components/ui/skeleton-screens'
+import { getAkiliTitle } from '@/lib/constants/akili'
 
 export default function PublicProfilePage() {
   const params = useParams()
@@ -138,16 +139,6 @@ export default function PublicProfilePage() {
         is_read: false,
       }).then(() => {})
     }
-  }
-
-  function getAkiliTitle(score: number) {
-    if (score >= 20000) return 'Research Champion'
-    if (score >= 12000) return 'Research Expert'
-    if (score >= 8000) return 'Research Leader'
-    if (score >= 5000) return 'Research Builder'
-    if (score >= 2500) return 'Collaborative Researcher'
-    if (score >= 1000) return 'Active Contributor'
-    return 'Emerging Researcher'
   }
 
   if (loading) {

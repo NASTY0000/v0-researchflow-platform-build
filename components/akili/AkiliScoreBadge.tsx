@@ -20,15 +20,15 @@ export function AkiliScoreBadge({ score, showTitle = true, size = 'sm' }: AkiliS
         border: '1px solid rgba(139,92,246,0.25)',
       }}
     >
-      <Zap className={isSm ? 'w-2.5 h-2.5' : 'w-3 h-3'} style={{ color: '#A855F7' }} />
+      <Zap className={isSm ? 'w-2.5 h-2.5' : 'w-3 h-3'} style={{ color: 'var(--primary)' }} />
       <span
         className={`font-bold font-mono tabular-nums ${isSm ? 'text-[10px]' : 'text-xs'}`}
-        style={{ color: '#C084FC' }}
+        style={{ color: 'var(--primary)' }}
       >
         {score.toLocaleString()}
       </span>
       {showTitle && (
-        <span className={isSm ? 'text-[10px]' : 'text-xs'} style={{ color: '#9D8BB8' }}>
+        <span className={`${isSm ? 'text-[10px]' : 'text-xs'} text-muted-foreground`}>
           · {title}
         </span>
       )}

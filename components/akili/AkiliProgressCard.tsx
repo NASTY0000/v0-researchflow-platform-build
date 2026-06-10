@@ -39,8 +39,7 @@ export function AkiliProgressCard({ score, dimensions }: AkiliProgressCardProps)
   ]
 
   return (
-    <div className="rounded-2xl border border-purple-500/18 p-6 space-y-6"
-      style={{ background: 'rgba(255,255,255,0.03)' }}>
+    <div className="rounded-2xl border border-purple-500/18 p-6 space-y-6 bg-banner">
 
       {/* Score + tier */}
       <div className="flex items-center justify-between">
@@ -54,10 +53,10 @@ export function AkiliProgressCard({ score, dimensions }: AkiliProgressCardProps)
             <Zap size={22} className="text-purple-200" fill="currentColor" />
           </div>
           <div>
-            <div className="text-[10px] font-bold uppercase tracking-wider mb-0.5" style={{ color: '#7C6A9C' }}>
+            <div className="text-[10px] font-bold uppercase tracking-wider mb-0.5 text-banner-muted-foreground">
               Akili Score
             </div>
-            <div className="text-3xl font-black leading-none tracking-tight" style={{ color: '#C084FC' }}>
+            <div className="text-3xl font-black leading-none tracking-tight" style={{ color: 'var(--primary)' }}>
               <AnimatePresence mode="wait">
                 <NumberTicker key={score} value={score} />
               </AnimatePresence>
@@ -65,9 +64,9 @@ export function AkiliProgressCard({ score, dimensions }: AkiliProgressCardProps)
           </div>
         </div>
         <div className="text-right">
-          <div className="text-sm font-bold text-white leading-tight">{currentTier.name}</div>
+          <div className="text-sm font-bold text-banner-foreground leading-tight">{currentTier.name}</div>
           {nextTier && (
-            <div className="text-xs mt-0.5" style={{ color: '#7C6A9C' }}>
+            <div className="text-xs mt-0.5 text-banner-muted-foreground">
               {pointsLeft} pts to {nextTier.name}
             </div>
           )}
@@ -77,11 +76,11 @@ export function AkiliProgressCard({ score, dimensions }: AkiliProgressCardProps)
       {/* Progress bar to next tier */}
       {nextTier && (
         <div>
-          <div className="flex justify-between text-[10px] mb-1.5" style={{ color: '#7C6A9C' }}>
+          <div className="flex justify-between text-[10px] mb-1.5 text-banner-muted-foreground">
             <span>{currentTier.name}</span>
             <span>{nextTier.name}</span>
           </div>
-          <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.05)' }}>
+          <div className="h-2 rounded-full overflow-hidden bg-muted">
             <div
               className="h-full rounded-full transition-all duration-1000"
               style={{
@@ -90,7 +89,7 @@ export function AkiliProgressCard({ score, dimensions }: AkiliProgressCardProps)
               }}
             />
           </div>
-          <div className="text-[10px] text-center mt-1.5" style={{ color: '#7C6A9C' }}>
+          <div className="text-[10px] text-center mt-1.5 text-banner-muted-foreground">
             {Math.round(progressPct)}% of the way there
           </div>
         </div>
@@ -101,10 +100,10 @@ export function AkiliProgressCard({ score, dimensions }: AkiliProgressCardProps)
         {dimConfig.map(dim => (
           <div key={dim.key} className="flex items-center gap-3">
             <span className="w-5 h-5 flex items-center justify-center flex-shrink-0">{dim.icon}</span>
-            <div className="w-24 flex-shrink-0 text-xs font-medium" style={{ color: '#9B86B8' }}>
+            <div className="w-24 flex-shrink-0 text-xs font-medium text-banner-muted-foreground">
               {dim.label}
             </div>
-            <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.05)' }}>
+            <div className="flex-1 h-1.5 rounded-full overflow-hidden bg-muted">
               <div
                 className="h-full rounded-full transition-all duration-700"
                 style={{
@@ -113,7 +112,7 @@ export function AkiliProgressCard({ score, dimensions }: AkiliProgressCardProps)
                 }}
               />
             </div>
-            <div className="text-xs font-bold w-14 text-right" style={{ color: '#7C6A9C' }}>
+            <div className="text-xs font-bold w-14 text-right text-banner-muted-foreground">
               {dim.score} pts
             </div>
           </div>
@@ -122,7 +121,7 @@ export function AkiliProgressCard({ score, dimensions }: AkiliProgressCardProps)
 
       {/* Next actions */}
       <div>
-        <div className="text-[10px] font-bold uppercase tracking-wider mb-3" style={{ color: '#7C6A9C' }}>
+        <div className="text-[10px] font-bold uppercase tracking-wider mb-3 text-banner-muted-foreground">
           Earn points now
         </div>
         <div className="space-y-2">
@@ -145,14 +144,14 @@ export function AkiliProgressCard({ score, dimensions }: AkiliProgressCardProps)
             >
               <div className="flex items-center gap-2.5">
                 <div className="w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
-                  style={{ background: 'rgba(139,92,246,0.18)', color: '#A855F7' }}>
+                  style={{ background: 'rgba(139,92,246,0.18)', color: 'var(--primary)' }}>
                   +
                 </div>
                 <div>
-                  <div className="text-xs font-semibold" style={{ color: '#E2D9F3' }}>
+                  <div className="text-xs font-semibold text-banner-foreground">
                     {action.action}
                   </div>
-                  <div className="text-[10px]" style={{ color: '#7C6A9C' }}>
+                  <div className="text-[10px] text-banner-muted-foreground">
                     {action.dimension}
                   </div>
                 </div>

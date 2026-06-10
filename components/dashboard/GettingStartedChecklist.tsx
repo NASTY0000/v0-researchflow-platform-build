@@ -82,29 +82,29 @@ export function GettingStartedChecklist({ userId, akiliScore, joinedAt, hasBio }
 
   if (allDone) {
     return (
-      <div className="relative rounded-2xl p-6 mb-2 text-center" style={{ background: 'linear-gradient(135deg,rgba(124,58,237,0.15),rgba(168,85,247,0.1))', border: '1px solid rgba(139,92,246,0.3)' }}>
-        <button onClick={dismiss} className="absolute top-4 right-4 w-6 h-6 rounded-full flex items-center justify-center text-purple-400/40 hover:text-purple-400 hover:bg-purple-500/15 transition-all text-xs font-bold">
+      <div className="relative rounded-2xl p-6 mb-2 text-center bg-banner" style={{ border: '1px solid rgba(139,92,246,0.3)' }}>
+        <button onClick={dismiss} className="absolute top-4 right-4 w-6 h-6 rounded-full flex items-center justify-center text-primary/40 hover:text-primary hover:bg-primary/15 transition-all text-xs font-bold">
           <X className="w-3 h-3" />
         </button>
         <div className="text-3xl mb-3">🎉</div>
-        <h3 className="text-lg font-bold text-white mb-1">You're all set!</h3>
-        <p className="text-sm" style={{ color: '#7C6A9C' }}>You've completed all the getting started steps. Your research journey is underway.</p>
+        <h3 className="text-lg font-bold text-banner-foreground mb-1">You're all set!</h3>
+        <p className="text-sm text-banner-muted-foreground">You've completed all the getting started steps. Your research journey is underway.</p>
       </div>
     )
   }
 
   return (
-    <div className="relative rounded-2xl p-5 mb-2" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(139,92,246,0.2)' }}>
+    <div className="relative rounded-2xl p-5 mb-2 bg-banner" style={{ border: '1px solid rgba(139,92,246,0.2)' }}>
       <button
         onClick={dismiss}
-        className="absolute top-4 right-4 w-6 h-6 rounded-full flex items-center justify-center text-purple-400/40 hover:text-purple-400 hover:bg-purple-500/15 transition-all"
+        className="absolute top-4 right-4 w-6 h-6 rounded-full flex items-center justify-center text-primary/40 hover:text-primary hover:bg-primary/15 transition-all"
         aria-label="Dismiss checklist"
       >
         <X className="w-3 h-3" />
       </button>
 
       <div className="mb-4 pr-8">
-        <h3 className="font-semibold font-heading text-white mb-1">Get started on ResearchFlow</h3>
+        <h3 className="font-semibold font-heading text-banner-foreground mb-1">Get started on ResearchFlow</h3>
         <div className="flex items-center gap-3">
           <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(139,92,246,0.2)' }}>
             <div
@@ -112,7 +112,7 @@ export function GettingStartedChecklist({ userId, akiliScore, joinedAt, hasBio }
               style={{ width: `${(completed / items.length) * 100}%`, background: 'linear-gradient(90deg,#7C3AED,#A855F7)' }}
             />
           </div>
-          <span className="text-xs font-medium flex-shrink-0" style={{ color: '#7C6A9C' }}>
+          <span className="text-xs font-medium flex-shrink-0 text-banner-muted-foreground">
             {completed}/{items.length}
           </span>
         </div>
@@ -121,7 +121,7 @@ export function GettingStartedChecklist({ userId, akiliScore, joinedAt, hasBio }
       <div className="space-y-2">
         {items.map(item => (
           <Link key={item.key} href={item.completed ? '#' : item.href}>
-            <div className={`flex items-center gap-3 p-3 rounded-xl transition-all duration-200 ${item.completed ? 'opacity-50 cursor-default' : 'cursor-pointer hover:bg-purple-500/8'}`}>
+            <div className={`flex items-center gap-3 p-3 rounded-xl transition-all duration-200 ${item.completed ? 'opacity-50 cursor-default' : 'cursor-pointer hover:bg-primary/8'}`}>
               <div
                 className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-300"
                 style={{
@@ -132,15 +132,15 @@ export function GettingStartedChecklist({ userId, akiliScore, joinedAt, hasBio }
                 {item.completed && <Check className="w-3 h-3 text-white" />}
               </div>
               <div className="flex-1 min-w-0">
-                <p className={`text-sm font-medium ${item.completed ? 'line-through text-white/40' : 'text-white/85'}`}>
+                <p className={`text-sm font-medium ${item.completed ? 'line-through text-banner-muted-foreground' : 'text-banner-foreground/85'}`}>
                   {item.label}
                 </p>
                 {!item.completed && (
-                  <p className="text-xs mt-0.5" style={{ color: '#7C6A9C' }}>{item.description}</p>
+                  <p className="text-xs mt-0.5 text-banner-muted-foreground">{item.description}</p>
                 )}
               </div>
               {!item.completed && (
-                <ArrowRight className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#7C6A9C' }} />
+                <ArrowRight className="w-3.5 h-3.5 flex-shrink-0 text-banner-muted-foreground" />
               )}
             </div>
           </Link>

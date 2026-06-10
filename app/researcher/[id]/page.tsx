@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
+import { getAkiliTitle } from '@/lib/constants/akili'
 
 export async function generateMetadata({
   params,
@@ -65,16 +66,6 @@ export default async function PublicResearcherPage({
     .eq('author_id', id)
     .in('status', ['published', 'featured'])
     .limit(3)
-
-  function getAkiliTitle(score: number) {
-    if (score >= 20000) return 'Research Champion'
-    if (score >= 12000) return 'Research Expert'
-    if (score >= 8000) return 'Research Leader'
-    if (score >= 5000) return 'Research Builder'
-    if (score >= 2500) return 'Collaborative Researcher'
-    if (score >= 1000) return 'Active Contributor'
-    return 'Emerging Researcher'
-  }
 
   return (
     <div style={{ minHeight: '100vh', background: '#05010F', fontFamily: 'system-ui, sans-serif', color: 'white' }}>

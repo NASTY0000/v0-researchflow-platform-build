@@ -9,6 +9,7 @@ import { Crown, Medal, Award } from 'lucide-react'
 import Link from 'next/link'
 import { ListPageSkeleton } from '@/components/ui/skeleton-screens'
 import { TiltCard } from '@/components/ui/micro-interactions'
+import { getAkiliTitle } from '@/lib/constants/akili'
 
 interface LeaderboardUser {
   id: string
@@ -23,15 +24,6 @@ interface LeaderboardUser {
   akili_dimension_technical: number
 }
 
-function getTitle(score: number): string {
-  if (score >= 20000) return 'Research Champion'
-  if (score >= 12000) return 'Research Expert'
-  if (score >= 8000) return 'Research Leader'
-  if (score >= 5000) return 'Research Builder'
-  if (score >= 2500) return 'Collaborative Researcher'
-  if (score >= 1000) return 'Active Contributor'
-  return 'Emerging Researcher'
-}
 
 function getUniversity(uid: string | null | undefined): string {
   if (!uid) return ''
@@ -167,7 +159,7 @@ export default function LeaderboardPage() {
               </div>
               <span className="text-xs text-gray-200 font-medium drop-shadow-sm text-center">🥈 Runner Up</span>
               <Badge className="text-xs bg-white/20 text-white border-white/30">
-                {getTitle(top3[1]?.akili_score || 0)}
+                {getAkiliTitle(top3[1]?.akili_score || 0)}
               </Badge>
             </div>
           </div>
@@ -237,7 +229,7 @@ export default function LeaderboardPage() {
               </div>
               <span className="text-sm text-yellow-100 font-bold drop-shadow-md text-center">🥇 Champion</span>
               <Badge className="text-xs bg-white/25 text-white border-white/40 font-medium">
-                {getTitle(top3[0]?.akili_score || 0)}
+                {getAkiliTitle(top3[0]?.akili_score || 0)}
               </Badge>
             </div>
           </div>
@@ -299,7 +291,7 @@ export default function LeaderboardPage() {
               </div>
               <span className="text-xs text-amber-100 font-medium drop-shadow-sm text-center">🥉 Third Place</span>
               <Badge className="text-xs bg-white/20 text-white border-white/30">
-                {getTitle(top3[2]?.akili_score || 0)}
+                {getAkiliTitle(top3[2]?.akili_score || 0)}
               </Badge>
             </div>
           </div>
@@ -330,11 +322,11 @@ export default function LeaderboardPage() {
                     }`}
                 >
                   {user.id === currentUserId ? (
-                    <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-sm bg-gradient-to-br from-yellow-400/20 to-yellow-600/40 border border-yellow-500/40 text-yellow-400 shadow-inner">
+                    <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-sm bg-gradient-to-br from-yellow-400/20 to-yellow-600/40 border border-yellow-500/40 text-yellow-700 dark:text-yellow-400 shadow-inner">
                       {index + 4}
                     </div>
                   ) : (
-                    <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-sm bg-gradient-to-br from-purple-500/20 to-purple-900/40 border border-purple-500/30 text-purple-300 shadow-inner">
+                    <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-sm bg-gradient-to-br from-purple-500/20 to-purple-900/40 border border-purple-500/30 text-purple-700 dark:text-purple-300 shadow-inner">
                       {index + 4}
                     </div>
                   )}
@@ -366,7 +358,7 @@ export default function LeaderboardPage() {
                       {user.akili_score.toLocaleString()}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {getTitle(user.akili_score)}
+                      {getAkiliTitle(user.akili_score)}
                     </p>
                   </div>
                 </div>

@@ -34,6 +34,7 @@ import type { Profile, PortfolioItem, PortfolioItemType, University } from '@/li
 import { AkiliScoreCard } from '@/components/akili/AkiliScoreCard'
 import { AkiliProgressCard } from '@/components/akili/AkiliProgressCard'
 import { getAkiliNarrative } from '@/lib/utils/akili'
+import { useUserState } from '@/hooks/use-user-state'
 import { shareContent } from '@/lib/utils/share'
 import { ProfileBackground } from '@/components/profile/ProfileBackground'
 import { VerifiedBadge } from '@/components/ui/VerifiedBadge'
@@ -140,6 +141,7 @@ interface AnalyticsData {
 export default function ProfilePage() {
   const router = useRouter()
   const [profile, setProfile] = useState<Profile & { university?: University } | null>(null)
+  const { state: userState } = useUserState(profile?.id ?? null)
   const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([])
   const [activityStats, setActivityStats] = useState<ActivityStats>({
     activeProjects: 0, completedProjects: 0, mentorshipSessions: 0, tasksCompleted: 0
@@ -1000,10 +1002,10 @@ export default function ProfilePage() {
                             id="akili-count"
                             className="text-amber-400 font-black text-lg tracking-tight"
                           >
-                            {profile.akili_score ?? 0}
+                            {userState?.akili.total ?? profile.akili_score ?? 0}
                           </span>
-                          <span className="text-xs font-semibold" style={{ color: 'rgba(196,181,253,0.7)' }}>
-                            · {getAkiliNarrative(profile.akili_score ?? 0).title}
+                          <span className="text-xs font-semibold text-muted-foreground">
+                            · {userState?.akili.tier.name ?? getAkiliNarrative(profile.akili_score ?? 0).title}
                           </span>
                         </div>
                       </div>
@@ -1019,7 +1021,7 @@ export default function ProfilePage() {
                     <div className="flex gap-2 flex-wrap">
                       <RippleButton
                         variant="default"
-                        className="flex items-center gap-2 h-9 px-4 rounded-lg text-sm font-semibold text-purple-300 bg-white/5 border border-purple-500/30 hover:border-purple-500/60 hover:bg-purple-500/10 transition-colors"
+                        className="flex items-center gap-2 h-9 px-4 rounded-lg text-sm font-semibold text-foreground bg-accent/40 border border-primary/30 hover:border-primary/60 hover:bg-accent/60 transition-colors"
                         onClick={() => setIsEditing(true)}
                       >
                         <Edit className="w-3.5 h-3.5" />
@@ -1027,7 +1029,7 @@ export default function ProfilePage() {
                       </RippleButton>
                       <RippleButton
                         variant="default"
-                        className="flex items-center gap-2 h-9 px-4 rounded-lg text-sm font-semibold text-purple-400 bg-purple-500/15 border border-purple-500/35 hover:border-purple-500/60 hover:bg-purple-500/20 transition-colors"
+                        className="flex items-center gap-2 h-9 px-4 rounded-lg text-sm font-semibold text-primary bg-primary/15 border border-primary/35 hover:border-primary/60 hover:bg-primary/20 transition-colors"
                         onClick={handleShareProfile}
                       >
                         {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Share2 className="w-3.5 h-3.5" />}
@@ -1059,7 +1061,7 @@ export default function ProfilePage() {
                         {getAcademicLevelLabel(profile.academic_level)}
                       </span>
                     )}
-                    {!profile.is_verified && (
+                    {(userState?.verification.show_email_prompt ?? !profile.is_verified) && (
                       <Link
                         href="/settings#verification"
                         className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium bg-primary/8 border border-primary/20 text-primary/70 hover:text-primary hover:border-primary/40 transition-all"
