@@ -297,15 +297,17 @@ export default function SettingsPage() {
         <p className="text-xs text-muted-foreground -mt-3">Choose how ResearchFlow looks for you.</p>
         <div className="grid grid-cols-3 gap-3 pt-1">
           {([
-            { value: "light", label: "Light", icon: <Sun className="w-5 h-5" /> },
-            { value: "dark",  label: "Dark",  icon: <Moon className="w-5 h-5" /> },
-            { value: "system",label: "System",icon: <Monitor className="w-5 h-5" /> },
-          ] as const).map(({ value, label, icon }) => (
+            { value: "light", label: "Light", icon: <Sun className="w-5 h-5" />, disabled: true },
+            { value: "dark",  label: "Dark",  icon: <Moon className="w-5 h-5" />, disabled: false },
+            { value: "system",label: "System",icon: <Monitor className="w-5 h-5" />, disabled: true },
+          ] as const).map(({ value, label, icon, disabled }) => (
             <button
               key={value}
               type="button"
-              onClick={() => setTheme(value)}
-              className="flex flex-col items-center gap-2 p-4 rounded-xl border transition-all"
+              disabled={disabled}
+              title={disabled ? "Light theme coming soon" : undefined}
+              onClick={() => !disabled && setTheme(value)}
+              className="flex flex-col items-center gap-2 p-4 rounded-xl border transition-all disabled:opacity-40 disabled:cursor-not-allowed"
               style={{
                 background: theme === value ? "rgba(124,58,237,0.12)" : "transparent",
                 borderColor: theme === value ? "rgba(168,85,247,0.5)" : "var(--border)",
@@ -314,6 +316,7 @@ export default function SettingsPage() {
             >
               {icon}
               <span className="text-sm font-medium">{label}</span>
+              {disabled && <span className="text-[10px] text-muted-foreground">Coming soon</span>}
             </button>
           ))}
         </div>
@@ -675,10 +678,10 @@ export default function SettingsPage() {
         {/* Delete Account */}
         <div className="p-6 rounded-2xl space-y-4 bg-red-500/5 border border-red-500/30">
           <div className="flex items-center gap-2">
-            <AlertTriangle className="w-5 h-5 text-red-400" />
-            <h3 className="text-base font-semibold font-heading text-red-400">Delete Account</h3>
+            <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
+            <h3 className="text-base font-semibold font-heading text-red-600 dark:text-red-400">Delete Account</h3>
           </div>
-          <p className="text-sm text-red-300">
+          <p className="text-sm text-red-700 dark:text-red-300">
             Deleting your account is permanent and cannot be undone. All your data will be removed from ResearchFlow.
           </p>
           <Button variant="destructive" onClick={() => setShowDeleteModal(true)}

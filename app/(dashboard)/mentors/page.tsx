@@ -445,7 +445,7 @@ export default function MentorsPage() {
         <Button
           variant="outline"
           onClick={handleBecomeMentorClick}
-          style={{ border: '1px solid rgba(168,85,247,0.4)', color: '#C084FC' }}
+          style={{ border: '1px solid rgba(168,85,247,0.4)', color: 'var(--primary)' }}
         >
           {currentUserRoles.includes("mentor") ? "Mentor Dashboard" : "Become a Mentor"}
         </Button>
@@ -689,7 +689,7 @@ export default function MentorsPage() {
             <Button
               variant="outline"
               onClick={handleBecomeMentorClick}
-              style={{ border: '1px solid rgba(168,85,247,0.4)', color: '#C084FC' }}
+              style={{ border: '1px solid rgba(168,85,247,0.4)', color: 'var(--primary)' }}
             >
               {currentUserRoles.includes("mentor") ? "Mentor Dashboard" : "Become a Mentor"}
             </Button>

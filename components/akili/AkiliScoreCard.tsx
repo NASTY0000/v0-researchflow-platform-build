@@ -67,7 +67,7 @@ export function AkiliScoreCard({ userId, limit = 5 }: { userId: string; limit?: 
 
   if (isLoading) {
     return (
-      <div className="rounded-2xl p-6 animate-pulse" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(139,92,246,0.15)' }}>
+      <div className="rounded-2xl p-6 animate-pulse bg-banner" style={{ border: '1px solid rgba(139,92,246,0.15)' }}>
         <div className="flex items-center gap-3 mb-4">
           <div className="w-12 h-12 rounded-xl bg-muted" />
           <div className="space-y-2">
@@ -93,25 +93,25 @@ export function AkiliScoreCard({ userId, limit = 5 }: { userId: string; limit?: 
   ]
 
   return (
-    <div className="rounded-2xl p-6 space-y-5" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(139,92,246,0.2)' }}>
+    <div className="rounded-2xl p-6 space-y-5 bg-banner" style={{ border: '1px solid rgba(139,92,246,0.2)' }}>
 
       {/* Total score + title */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
             style={{ background: 'linear-gradient(135deg,rgba(124,58,237,0.3),rgba(168,85,247,0.15))', border: '1px solid rgba(139,92,246,0.4)' }}>
-            <Zap className="w-6 h-6" style={{ color: '#A855F7' }} />
+            <Zap className="w-6 h-6" style={{ color: 'var(--primary)' }} />
           </div>
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: '#7C6A9C' }}>Akili Score</p>
-            <p className="text-3xl font-bold font-heading leading-none mt-0.5" style={{ color: '#C084FC' }}>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-banner-muted-foreground">Akili Score</p>
+            <p className="text-3xl font-bold font-heading leading-none mt-0.5" style={{ color: 'var(--primary)' }}>
               {score.toLocaleString()}
             </p>
           </div>
         </div>
         <div className="text-right">
-          <p className="font-semibold text-sm leading-tight">{title}</p>
-          <p className="text-xs mt-1 leading-relaxed max-w-[160px]" style={{ color: '#7C6A9C' }}>{narrative}</p>
+          <p className="font-semibold text-sm leading-tight text-banner-foreground">{title}</p>
+          <p className="text-xs mt-1 leading-relaxed max-w-[160px] text-banner-muted-foreground">{narrative}</p>
         </div>
       </div>
 
@@ -140,7 +140,7 @@ export function AkiliScoreCard({ userId, limit = 5 }: { userId: string; limit?: 
                   </span>
                 </div>
               </div>
-              <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+              <div className="h-1.5 rounded-full overflow-hidden bg-muted">
                 <div className="h-full rounded-full transition-all duration-700"
                   style={{ width: `${pct}%`, background: `linear-gradient(90deg,${color.bar}70,${color.bar})` }} />
               </div>
@@ -152,7 +152,7 @@ export function AkiliScoreCard({ userId, limit = 5 }: { userId: string; limit?: 
       {/* Recent events */}
       {events.length > 0 ? (
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-widest mb-3" style={{ color: '#7C6A9C' }}>
+          <p className="text-[10px] font-semibold uppercase tracking-widest mb-3 text-banner-muted-foreground">
             Recent Activity
           </p>
           <div className="space-y-0">
@@ -161,10 +161,10 @@ export function AkiliScoreCard({ userId, limit = 5 }: { userId: string; limit?: 
                 className="flex items-start justify-between gap-3 py-2.5"
                 style={{ borderBottom: i < events.length - 1 ? '1px solid rgba(139,92,246,0.1)' : 'none' }}>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs leading-snug" style={{ color: '#C4B5D8' }}>
+                  <p className="text-xs leading-snug text-banner-foreground">
                     {event.description || event.event_type}
                   </p>
-                  <p className="text-[10px] mt-0.5 flex items-center gap-1" style={{ color: '#7C6A9C' }}>
+                  <p className="text-[10px] mt-0.5 flex items-center gap-1 text-banner-muted-foreground">
                     <Clock className="w-2.5 h-2.5" />
                     {formatDistanceToNow(new Date(event.created_at), { addSuffix: true })}
                   </p>
@@ -177,7 +177,7 @@ export function AkiliScoreCard({ userId, limit = 5 }: { userId: string; limit?: 
           </div>
         </div>
       ) : (
-        <p className="text-xs text-center py-1" style={{ color: '#7C6A9C' }}>
+        <p className="text-xs text-center py-1 text-banner-muted-foreground">
           Complete research activities to earn your first Akili Score points
         </p>
       )}

@@ -330,11 +330,11 @@ export default function LeaderboardPage() {
                     }`}
                 >
                   {user.id === currentUserId ? (
-                    <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-sm bg-gradient-to-br from-yellow-400/20 to-yellow-600/40 border border-yellow-500/40 text-yellow-400 shadow-inner">
+                    <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-sm bg-gradient-to-br from-yellow-400/20 to-yellow-600/40 border border-yellow-500/40 text-yellow-700 dark:text-yellow-400 shadow-inner">
                       {index + 4}
                     </div>
                   ) : (
-                    <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-sm bg-gradient-to-br from-purple-500/20 to-purple-900/40 border border-purple-500/30 text-purple-300 shadow-inner">
+                    <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-sm bg-gradient-to-br from-purple-500/20 to-purple-900/40 border border-purple-500/30 text-purple-700 dark:text-purple-300 shadow-inner">
                       {index + 4}
                     </div>
                   )}

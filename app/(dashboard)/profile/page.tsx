@@ -1002,7 +1002,7 @@ export default function ProfilePage() {
                           >
                             {profile.akili_score ?? 0}
                           </span>
-                          <span className="text-xs font-semibold" style={{ color: 'rgba(196,181,253,0.7)' }}>
+                          <span className="text-xs font-semibold text-muted-foreground">
                             · {getAkiliNarrative(profile.akili_score ?? 0).title}
                           </span>
                         </div>
@@ -1019,7 +1019,7 @@ export default function ProfilePage() {
                     <div className="flex gap-2 flex-wrap">
                       <RippleButton
                         variant="default"
-                        className="flex items-center gap-2 h-9 px-4 rounded-lg text-sm font-semibold text-purple-300 bg-white/5 border border-purple-500/30 hover:border-purple-500/60 hover:bg-purple-500/10 transition-colors"
+                        className="flex items-center gap-2 h-9 px-4 rounded-lg text-sm font-semibold text-foreground bg-accent/40 border border-primary/30 hover:border-primary/60 hover:bg-accent/60 transition-colors"
                         onClick={() => setIsEditing(true)}
                       >
                         <Edit className="w-3.5 h-3.5" />
@@ -1027,7 +1027,7 @@ export default function ProfilePage() {
                       </RippleButton>
                       <RippleButton
                         variant="default"
-                        className="flex items-center gap-2 h-9 px-4 rounded-lg text-sm font-semibold text-purple-400 bg-purple-500/15 border border-purple-500/35 hover:border-purple-500/60 hover:bg-purple-500/20 transition-colors"
+                        className="flex items-center gap-2 h-9 px-4 rounded-lg text-sm font-semibold text-primary bg-primary/15 border border-primary/35 hover:border-primary/60 hover:bg-primary/20 transition-colors"
                         onClick={handleShareProfile}
                       >
                         {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Share2 className="w-3.5 h-3.5" />}

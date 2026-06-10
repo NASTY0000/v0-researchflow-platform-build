@@ -235,12 +235,9 @@ export default function FeedPage() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors shrink-0"
-              style={{
-                background: active ? 'rgba(124,58,237,0.15)' : 'rgba(255,255,255,0.03)',
-                color: active ? '#C084FC' : '#9D8BB8',
-                border: `1px solid ${active ? 'rgba(139,92,246,0.3)' : 'rgba(255,255,255,0.06)'}`,
-              }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors shrink-0 ${
+                active ? 'bg-primary/15 text-primary border border-primary/30' : 'bg-muted/50 text-muted-foreground border border-transparent'
+              }`}
             >
               <TabIcon className="w-3.5 h-3.5" />
               {tab.label}
