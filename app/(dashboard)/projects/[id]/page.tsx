@@ -154,6 +154,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
             project={project}
             currentUserId={currentUserId}
             isOwner={currentUserId === project.team?.leader_id}
+            isMember={!!project.team?.team_members?.some((m) => m.user.id === currentUserId)}
           />
         </TabsContent>
 
