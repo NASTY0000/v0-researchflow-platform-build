@@ -183,8 +183,8 @@ export async function submitToChallenge(data: {
   await awardAkiliPoints({
     userId: user.id,
     eventType: 'challenge_submitted',
-    points: challenge.akili_reward || 500,
-    dimension: 'impact' as never,
+    points: 25,
+    dimension: 'knowledge',
     description: `Submitted to challenge: ${challenge.title.slice(0, 60)}`,
   })
 
@@ -325,8 +325,8 @@ export async function declareChallengeWinner(data: {
     await awardAkiliPoints({
       userId: data.winnerId,
       eventType: 'challenge_won',
-      points: (challenge.akili_reward || 500) * 2,
-      dimension: 'impact' as never,
+      points: 150,
+      dimension: 'knowledge',
       description: `Won challenge: ${challenge.title.slice(0, 60)}`,
     })
   }

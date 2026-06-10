@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { useAkiliState } from '@/lib/hooks/use-akili-state'
 import {
-  getAkiliNarrative,
   getDimensionBadge,
   DIMENSION_COLORS,
   DIMENSION_LABELS,
@@ -11,14 +11,6 @@ import {
 } from '@/lib/utils/akili'
 import { Zap, Brain, Users, BookOpen, Wrench, Clock } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
-
-interface AkiliData {
-  akili_score: number
-  akili_dimension_knowledge: number
-  akili_dimension_collaboration: number
-  akili_dimension_mentorship: number
-  akili_dimension_technical: number
-}
 
 interface ScoreEvent {
   id: string
@@ -38,32 +30,22 @@ const DIMENSION_ICONS: Record<AkiliDimension, React.ElementType> = {
 const MAX_DIMENSION = 5000
 
 export function AkiliScoreCard({ userId, limit = 5 }: { userId: string; limit?: number }) {
-  const [data, setData] = useState<AkiliData | null>(null)
+  const { state: akiliState, loading: isLoading } = useAkiliState(userId)
   const [events, setEvents] = useState<ScoreEvent[]>([])
-  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     async function load() {
       const supabase = createClient()
-      const [profileRes, eventsRes] = await Promise.all([
-        supabase
-          .from('profiles')
-          .select('akili_score, akili_dimension_knowledge, akili_dimension_collaboration, akili_dimension_mentorship, akili_dimension_technical')
-          .eq('id', userId)
-          .single(),
-        supabase
-          .from('akili_score_events')
-          .select('id, event_type, points_earned, description, created_at')
-          .eq('user_id', userId)
-          .order('created_at', { ascending: false })
-          .limit(limit),
-      ])
-      if (profileRes.data) setData(profileRes.data as AkiliData)
-      if (eventsRes.data) setEvents(eventsRes.data)
-      setIsLoading(false)
+      const { data } = await supabase
+        .from('akili_score_events')
+        .select('id, event_type, points_earned, description, created_at')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(limit)
+      if (data) setEvents(data)
     }
     load()
-  }, [userId])
+  }, [userId, limit])
 
   if (isLoading) {
     return (
@@ -82,14 +64,15 @@ export function AkiliScoreCard({ userId, limit = 5 }: { userId: string; limit?: 
     )
   }
 
-  const score = data?.akili_score || 0
-  const { title, narrative } = getAkiliNarrative(score)
+  const score = akiliState?.total || 0
+  const title = akiliState?.tier.name || ''
+  const narrative = akiliState?.tier.description || ''
 
   const dimensions: { key: AkiliDimension; score: number }[] = [
-    { key: 'knowledge',     score: data?.akili_dimension_knowledge     || 0 },
-    { key: 'collaboration', score: data?.akili_dimension_collaboration || 0 },
-    { key: 'mentorship',    score: data?.akili_dimension_mentorship    || 0 },
-    { key: 'technical',     score: data?.akili_dimension_technical     || 0 },
+    { key: 'knowledge',     score: akiliState?.dimensions.knowledge     || 0 },
+    { key: 'collaboration', score: akiliState?.dimensions.collaboration || 0 },
+    { key: 'mentorship',    score: akiliState?.dimensions.mentorship    || 0 },
+    { key: 'technical',     score: akiliState?.dimensions.technical     || 0 },
   ]
 
   return (

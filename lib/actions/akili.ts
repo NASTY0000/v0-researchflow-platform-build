@@ -12,6 +12,7 @@ export async function awardAkiliPoints({
   dimension,
   description,
   metadata = {},
+  relatedId,
 }: {
   userId: string
   eventType: string
@@ -19,6 +20,7 @@ export async function awardAkiliPoints({
   dimension: AkiliDimension
   description: string
   metadata?: Record<string, unknown>
+  relatedId?: string
 }) {
   try {
     const admin = createServiceRoleClient()
@@ -31,6 +33,7 @@ export async function awardAkiliPoints({
       dimension,
       description,
       metadata,
+      related_id: relatedId ?? null,
     })
 
     const { data: profile } = await admin
@@ -97,36 +100,40 @@ async function verifyProjectMember(projectId: string) {
   return { userId: user.id }
 }
 
-async function alreadyAwarded(userId: string, eventType: string, metadata: Record<string, unknown>) {
+async function alreadyAwarded(userId: string, eventType: string, relatedId?: string): Promise<boolean> {
   const admin = createServiceRoleClient()
-  const { data } = await admin
+
+  let query = admin
     .from('akili_score_events')
     .select('id')
     .eq('user_id', userId)
     .eq('event_type', eventType)
-    .contains('metadata', metadata)
-    .maybeSingle()
-  return !!data
+
+  if (relatedId) {
+    query = query.eq('related_id', relatedId)
+  }
+
+  const { data } = await query.limit(1)
+  return (data?.length ?? 0) > 0
 }
 
 export async function phaseCompleted(_userId: string, projectId: string, phaseNumber: number, phaseName: string) {
   const result = await verifyProjectMember(projectId)
   if ('error' in result) return { error: result.error }
 
-  const metadata = { project_id: projectId, phase_number: phaseNumber }
-  if (await alreadyAwarded(result.userId, 'phase_completed', metadata)) return { success: true }
+  const eventType = `phase_completed_${phaseNumber}`
+  if (await alreadyAwarded(result.userId, eventType, projectId)) return { success: true }
 
-  return awardAkiliPoints({ userId: result.userId, eventType: 'phase_completed', points: 30, dimension: 'knowledge', description: `Completed Phase ${phaseNumber}: ${phaseName}`, metadata })
+  return awardAkiliPoints({ userId: result.userId, eventType, points: 30, dimension: 'knowledge', description: `Completed Phase ${phaseNumber}: ${phaseName}`, relatedId: projectId, metadata: { project_id: projectId, phase_number: phaseNumber } })
 }
 
 export async function allPhasesCompleted(_userId: string, projectId: string) {
   const result = await verifyProjectMember(projectId)
   if ('error' in result) return { error: result.error }
 
-  const metadata = { project_id: projectId }
-  if (await alreadyAwarded(result.userId, 'all_phases_completed', metadata)) return { success: true }
+  if (await alreadyAwarded(result.userId, 'all_phases_completed', projectId)) return { success: true }
 
-  return awardAkiliPoints({ userId: result.userId, eventType: 'all_phases_completed', points: 75, dimension: 'knowledge', description: 'Completed all 7 research phases', metadata })
+  return awardAkiliPoints({ userId: result.userId, eventType: 'all_phases_completed', points: 75, dimension: 'knowledge', description: 'Completed all 7 research phases', relatedId: projectId, metadata: { project_id: projectId } })
 }
 
 export async function submitToShowcase(userId: string, showcaseId: string) {

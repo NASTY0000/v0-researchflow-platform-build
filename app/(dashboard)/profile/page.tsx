@@ -35,6 +35,7 @@ import { AkiliScoreCard } from '@/components/akili/AkiliScoreCard'
 import { AkiliProgressCard } from '@/components/akili/AkiliProgressCard'
 import { getAkiliNarrative } from '@/lib/utils/akili'
 import { useUserState } from '@/hooks/use-user-state'
+import { useAkiliState } from '@/lib/hooks/use-akili-state'
 import { shareContent } from '@/lib/utils/share'
 import { ProfileBackground } from '@/components/profile/ProfileBackground'
 import { VerifiedBadge } from '@/components/ui/VerifiedBadge'
@@ -142,6 +143,7 @@ export default function ProfilePage() {
   const router = useRouter()
   const [profile, setProfile] = useState<Profile & { university?: University } | null>(null)
   const { state: userState } = useUserState(profile?.id ?? null)
+  const { state: akiliState } = useAkiliState(profile?.id ?? null)
   const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([])
   const [activityStats, setActivityStats] = useState<ActivityStats>({
     activeProjects: 0, completedProjects: 0, mentorshipSessions: 0, tasksCompleted: 0
@@ -772,8 +774,8 @@ export default function ProfilePage() {
             interests={profile.research_interests?.length > 0
               ? profile.research_interests.map((name: string, _i: number, arr: string[]) => ({ name, weight: 1 / arr.length }))
               : [{ name: 'Research', weight: 1 }]}
-            akiliScore={profile.akili_score ?? 0}
-            dimensions={{
+            akiliScore={akiliState?.total ?? profile.akili_score ?? 0}
+            dimensions={akiliState?.dimensions ?? {
               knowledge:     profile.akili_dimension_knowledge     ?? 0,
               collaboration: profile.akili_dimension_collaboration ?? 0,
               mentorship:    profile.akili_dimension_mentorship    ?? 0,
@@ -1002,10 +1004,10 @@ export default function ProfilePage() {
                             id="akili-count"
                             className="text-amber-400 font-black text-lg tracking-tight"
                           >
-                            {userState?.akili.total ?? profile.akili_score ?? 0}
+                            {akiliState?.total ?? profile.akili_score ?? 0}
                           </span>
                           <span className="text-xs font-semibold text-muted-foreground">
-                            · {userState?.akili.tier.name ?? getAkiliNarrative(profile.akili_score ?? 0).title}
+                            · {akiliState?.tier.name ?? getAkiliNarrative(profile.akili_score ?? 0).title}
                           </span>
                         </div>
                       </div>
@@ -1106,8 +1108,8 @@ export default function ProfilePage() {
 
       {/* Akili Score — progress card with tier bar + next actions */}
       <AkiliProgressCard
-        score={profile.akili_score ?? 0}
-        dimensions={{
+        score={akiliState?.total ?? profile.akili_score ?? 0}
+        dimensions={akiliState?.dimensions ?? {
           knowledge:     profile.akili_dimension_knowledge     ?? 0,
           collaboration: profile.akili_dimension_collaboration ?? 0,
           mentorship:    profile.akili_dimension_mentorship    ?? 0,
