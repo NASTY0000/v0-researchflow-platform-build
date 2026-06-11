@@ -28,14 +28,14 @@ const cards: HubCard[] = [
     icon: Star,
     href: '/showcase',
     description: 'Share and celebrate research achievements',
-    image: 'https://images.unsplash.com/photo-1588196749597-9ff075ee6b5b?w=400&h=200&fit=crop',
+    image: 'https://idhejvazaujypjasyhac.supabase.co/storage/v1/object/public/assests/showcase.PNG',
   },
   {
     title: 'Leaderboard',
     icon: BarChart,
     href: '/leaderboard',
     description: 'See the most active researchers on the platform',
-    image: 'https://images.unsplash.com/photo-1567427017947-545c5f8d16ad?w=400&h=200&fit=crop',
+    image: 'https://idhejvazaujypjasyhac.supabase.co/storage/v1/object/public/assests/leaderboard.PNG',
   },
   {
     title: 'Marketplace',
