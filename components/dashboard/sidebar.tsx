@@ -30,6 +30,7 @@ import {
   Settings,
   LogOut,
   ChevronUp,
+  ChevronRight,
   User,
   Shield,
   Bookmark,
@@ -43,6 +44,7 @@ interface NavItem {
   icon: React.ElementType
   badge?: string
   activeOn?: string[]
+  children?: string[]
 }
 import { signOut } from '@/lib/actions/auth'
 import { AkiliScoreBadge } from '@/components/akili/AkiliScoreBadge'
@@ -59,18 +61,21 @@ const hubNavItems: NavItem[] = [
     href: '/collaborate',
     icon: Users,
     activeOn: ['/projects', '/matches', '/mentors', '/agreements', '/network'],
+    children: ['My Projects', 'Find Collaborators', 'Mentor Directory', 'Agreements', 'My Network'],
   },
   {
     title: 'Discover',
     href: '/discover',
     icon: Compass,
     activeOn: ['/ideas', '/grants', '/publications', '/assistant'],
+    children: ['Idea Board', 'Grants & Funding', 'Journals & Conferences', 'AI Research Assistant'],
   },
   {
     title: 'Community',
     href: '/community',
     icon: Users2,
     activeOn: ['/forums', '/peer-review', '/challenges', '/showcase', '/leaderboard', '/marketplace'],
+    children: ['Forums', 'Peer Review', 'Challenges', 'Showcase', 'Leaderboard', 'Marketplace'],
   },
 ]
 
@@ -126,6 +131,56 @@ export function DashboardSidebar({ profile, isVerifiedMentor }: DashboardSidebar
     )
   }
 
+  function HubNavItems({ items }: { items: NavItem[] }) {
+    return (
+      <SidebarMenu>
+        {items.map((item) => {
+          const active = isItemActive(item)
+          return (
+            <SidebarMenuItem key={item.href} className="group/hub relative">
+              <SidebarMenuButton
+                asChild
+                isActive={active}
+                tooltip={item.title}
+              >
+                <Link
+                  href={item.href}
+                  onClick={() => setOpenMobile(false)}
+                  className="flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-2">
+                    <item.icon />
+                    <span>{item.title}</span>
+                  </div>
+                  <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/50 group-hover/hub:text-muted-foreground transition-colors shrink-0" />
+                </Link>
+              </SidebarMenuButton>
+
+              {/* Tooltip showing hub contents */}
+              {item.children && (
+                <div
+                  className="absolute left-full top-0 ml-2 z-50 min-w-48 rounded-lg border border-border bg-popover p-3 shadow-lg opacity-0 invisible pointer-events-none transition-all duration-200 delay-150 group-hover/hub:opacity-100 group-hover/hub:visible"
+                >
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-foreground">
+                    {item.title}
+                  </p>
+                  <ul className="space-y-1">
+                    {item.children.map((child) => (
+                      <li key={child} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <div className="w-1 h-1 rounded-full bg-primary/50" />
+                        {child}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </SidebarMenuItem>
+          )
+        })}
+      </SidebarMenu>
+    )
+  }
+
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
@@ -156,7 +211,7 @@ export function DashboardSidebar({ profile, isVerifiedMentor }: DashboardSidebar
         <SidebarGroup>
           <SidebarGroupLabel>Explore</SidebarGroupLabel>
           <SidebarGroupContent>
-            <NavItems items={hubNavItems} />
+            <HubNavItems items={hubNavItems} />
           </SidebarGroupContent>
         </SidebarGroup>
 
