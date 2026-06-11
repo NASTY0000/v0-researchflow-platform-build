@@ -14,14 +14,14 @@ const cards: HubCard[] = [
     icon: Users,
     href: '/matches',
     description: 'Discover researchers who share your interests',
-    image: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400&h=200&fit=crop',
+    image: 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=400&h=200&fit=crop',
   },
   {
     title: 'Mentor Directory',
     icon: GraduationCap,
     href: '/mentors',
     description: 'Connect with verified research mentors',
-    image: 'https://images.unsplash.com/photo-1571260899304-425eee4c7efc?w=400&h=200&fit=crop',
+    image: 'https://images.unsplash.com/photo-1543269664-647163f8f9b0?w=400&h=200&fit=crop',
   },
   {
     title: 'Agreements',
