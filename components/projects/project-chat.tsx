@@ -30,6 +30,31 @@ export function ProjectChat({ projectId, teamId, currentUserId }: ProjectChatPro
   const [isSending, setIsSending] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
 
+  async function loadMessages(convId: string) {
+    const supabase = createClient()
+
+    console.log("Loading messages for conversation:", convId)
+
+    const { data, error: messagesError } = await supabase
+      .from("messages")
+      .select(`
+        *,
+        sender:profiles!messages_sender_id_fkey(id, full_name, avatar_url)
+      `)
+      .eq("conversation_id", convId)
+      .order("created_at", { ascending: true })
+      .limit(100)
+
+    console.log("Messages found:", data?.length, data)
+
+    if (messagesError) {
+      console.error("Failed to load messages:", messagesError)
+      toast.error(messagesError.message || "Failed to load messages")
+    } else if (data) {
+      setMessages(data)
+    }
+  }
+
   useEffect(() => {
     async function loadConversation() {
       const supabase = createClient()
@@ -86,23 +111,7 @@ export function ProjectChat({ projectId, teamId, currentUserId }: ProjectChatPro
       }
 
       setConversationId(conversation.id)
-
-      const { data, error: messagesError } = await supabase
-        .from("messages")
-        .select(`
-          *,
-          sender:profiles!messages_sender_id_fkey(id, full_name, avatar_url)
-        `)
-        .eq("conversation_id", conversation.id)
-        .order("created_at", { ascending: true })
-        .limit(100)
-
-      if (messagesError) {
-        console.error("Failed to load messages:", messagesError)
-        toast.error(messagesError.message || "Failed to load messages")
-      } else if (data) {
-        setMessages(data)
-      }
+      await loadMessages(conversation.id)
 
       setIsLoading(false)
     }
@@ -135,7 +144,7 @@ export function ProjectChat({ projectId, teamId, currentUserId }: ProjectChatPro
             .single()
 
           if (data) {
-            setMessages((prev) => [...prev, data])
+            setMessages((prev) => (prev.some((m) => m.id === data.id) ? prev : [...prev, data]))
           }
         }
       )
@@ -178,7 +187,11 @@ export function ProjectChat({ projectId, teamId, currentUserId }: ProjectChatPro
       return
     }
 
+    console.log("Message sent to conversation:", conversationId)
+    console.log("Message data:", data)
+
     setNewMessage("")
+    await loadMessages(conversationId)
 
     setIsSending(false)
   }
