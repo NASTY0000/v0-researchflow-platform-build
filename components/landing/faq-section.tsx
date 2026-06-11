@@ -6,6 +6,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion'
+import { Reveal } from './reveal'
 
 const faqs = [
   {
@@ -36,31 +37,37 @@ const faqs = [
 
 export function FaqSection() {
   return (
-    <section id="faq" className="py-24 px-4">
-      <div className="max-w-3xl mx-auto">
-        <div className="text-center mb-12">
-          <p className="label-section mb-3">Got Questions?</p>
-          <h2 className="text-3xl sm:text-4xl font-bold font-heading tracking-tight">
-            Frequently Asked Questions
-          </h2>
-        </div>
+    <section id="faq" className="relative scroll-mt-16 overflow-hidden bg-[#070213] px-4 py-28">
+      <div className="pointer-events-none absolute -left-32 bottom-0 h-80 w-80 rounded-full bg-violet-700/10 blur-[120px]" />
 
-        <Accordion type="single" collapsible className="space-y-3">
-          {faqs.map((faq, i) => (
-            <AccordionItem
-              key={i}
-              value={`item-${i}`}
-              className="rounded-2xl px-6 overflow-hidden bg-card border border-border"
-            >
-              <AccordionTrigger className="text-left font-semibold text-foreground hover:no-underline py-5 hover:text-violet-500 transition-colors">
-                {faq.q}
-              </AccordionTrigger>
-              <AccordionContent className="text-sm leading-relaxed pb-5 text-muted-foreground">
-                {faq.a}
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
+      <div className="relative z-10 mx-auto max-w-3xl">
+        <Reveal className="mb-12 text-center">
+          <p data-reveal className="label-section mb-3 !text-violet-400/80">Got Questions?</p>
+          <h2 data-reveal className="font-heading text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
+            Frequently Asked{' '}
+            <span className="bg-gradient-to-r from-[#C084FC] to-[#818CF8] bg-clip-text text-transparent">Questions</span>
+          </h2>
+        </Reveal>
+
+        <Reveal stagger={0.06}>
+          <Accordion type="single" collapsible className="space-y-3">
+            {faqs.map((faq, i) => (
+              <div data-reveal key={i}>
+                <AccordionItem
+                  value={`item-${i}`}
+                  className="overflow-hidden rounded-2xl border border-violet-500/15 bg-white/[0.025] px-6 backdrop-blur-sm transition-colors duration-300 data-[state=open]:border-violet-400/40 data-[state=open]:bg-white/[0.04]"
+                >
+                  <AccordionTrigger className="py-5 text-left font-semibold text-white transition-colors hover:text-violet-300 hover:no-underline">
+                    {faq.q}
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-5 text-sm leading-relaxed text-[#9D8BB8]">
+                    {faq.a}
+                  </AccordionContent>
+                </AccordionItem>
+              </div>
+            ))}
+          </Accordion>
+        </Reveal>
       </div>
     </section>
   )

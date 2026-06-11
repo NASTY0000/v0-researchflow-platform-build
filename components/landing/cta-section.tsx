@@ -1,0 +1,55 @@
+'use client'
+
+import Link from 'next/link'
+import { ArrowRight } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { MagneticButton } from '@/components/ui/micro-interactions'
+import { Reveal } from './reveal'
+
+export function CtaSection() {
+  return (
+    <section className="relative overflow-hidden bg-[#05010F] px-4 py-28">
+      <div className="mx-auto max-w-5xl">
+        <Reveal>
+          <div
+            data-reveal
+            className="noise relative overflow-hidden rounded-[2rem] border border-violet-500/25 px-8 py-16 text-center sm:px-16 sm:py-20"
+          >
+            {/* Animated aurora backdrop */}
+            <div className="pointer-events-none absolute inset-0 bg-[#0A0318]" />
+            <div className="aurora-blob pointer-events-none absolute -left-24 -top-24 h-96 w-96 rounded-full bg-violet-600/40 blur-[100px]" />
+            <div className="aurora-blob pointer-events-none absolute -bottom-32 -right-16 h-96 w-96 rounded-full bg-fuchsia-600/30 blur-[110px] [animation-delay:-4s]" />
+            <div className="aurora-blob pointer-events-none absolute -bottom-24 left-1/3 h-72 w-72 rounded-full bg-cyan-500/20 blur-[100px] [animation-delay:-8s]" />
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,rgba(255,255,255,0.07),transparent_60%)]" />
+
+            <div className="relative z-10">
+              <p className="label-section mb-4 !text-violet-300/70">Join the movement</p>
+              <h2 className="mx-auto mb-5 max-w-2xl font-heading text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
+                Ready to Transform Your{' '}
+                <span className="bg-gradient-to-r from-[#E9D5FF] to-[#67E8F9] bg-clip-text text-transparent">Research?</span>
+              </h2>
+              <p className="mx-auto mb-10 max-w-2xl text-[#C4B5DE]">
+                Join the growing community of African researchers collaborating, learning, and publishing together.
+              </p>
+              <div className="flex justify-center">
+                <MagneticButton>
+                  <Button
+                    size="lg"
+                    asChild
+                    className="group h-13 rounded-full border-none bg-white px-8 text-base font-semibold text-violet-900 shadow-[0_0_36px_rgba(255,255,255,0.25)] transition-all hover:bg-white hover:shadow-[0_0_56px_rgba(255,255,255,0.4)]"
+                  >
+                    <Link href="/auth/signup">
+                      Create Free Account
+                      <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                    </Link>
+                  </Button>
+                </MagneticButton>
+              </div>
+              <p className="mt-6 text-xs text-[#9D8BB8]">Free forever for core features. No credit card required.</p>
+            </div>
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  )
+}
