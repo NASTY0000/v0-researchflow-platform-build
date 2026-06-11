@@ -7,28 +7,28 @@ const cards: HubCard[] = [
     icon: Lightbulb,
     href: '/ideas',
     description: 'Browse and share research ideas with the community',
-    image: 'https://source.unsplash.com/400x200/?ideas,innovation,lightbulb',
+    image: 'https://images.unsplash.com/photo-1558128410-4a2e5b59cdcd?w=400&h=200&fit=crop',
   },
   {
     title: 'Grants & Funding',
     icon: Target,
     href: '/grants',
     description: 'Find funding opportunities matched to your research areas',
-    image: 'https://source.unsplash.com/400x200/?funding,grant,finance',
+    image: 'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=400&h=200&fit=crop',
   },
   {
     title: 'Journals & Conferences',
     icon: BookOpen,
     href: '/publications',
     description: 'Discover publications and academic events in your field',
-    image: 'https://source.unsplash.com/400x200/?journal,library,academic',
+    image: 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400&h=200&fit=crop',
   },
   {
     title: 'AI Research Assistant',
     icon: Sparkles,
     href: '/assistant',
     description: 'Get AI-powered help with your research questions',
-    image: 'https://source.unsplash.com/400x200/?artificial,intelligence,technology',
+    image: 'https://images.unsplash.com/photo-1677442135703-1787eea5ce01?w=400&h=200&fit=crop',
   },
 ]
 
