@@ -7,14 +7,14 @@ const cards: HubCard[] = [
     icon: Lightbulb,
     href: '/ideas',
     description: 'Browse and share research ideas with the community',
-    image: 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=400&h=200&fit=crop',
+    image: 'https://images.unsplash.com/photo-1542744094-24638eff58bb?w=400&h=200&fit=crop',
   },
   {
     title: 'Grants & Funding',
     icon: Target,
     href: '/grants',
     description: 'Find funding opportunities matched to your research areas',
-    image: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400&h=200&fit=crop',
+    image: 'https://images.unsplash.com/photo-1568234928966-359c35dd8327?w=400&h=200&fit=crop',
   },
   {
     title: 'Journals & Conferences',

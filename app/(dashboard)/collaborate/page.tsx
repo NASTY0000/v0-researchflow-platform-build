@@ -21,7 +21,7 @@ const cards: HubCard[] = [
     icon: GraduationCap,
     href: '/mentors',
     description: 'Connect with verified research mentors',
-    image: 'https://images.unsplash.com/photo-1543269664-647163f8f9b0?w=400&h=200&fit=crop',
+    image: 'https://images.unsplash.com/photo-1606761568499-6d2451b23c66?w=400&h=200&fit=crop',
   },
   {
     title: 'Agreements',
