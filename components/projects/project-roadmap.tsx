@@ -137,6 +137,7 @@ export function ProjectRoadmap({ project, currentUserId = null, isOwner = false,
 
   async function handleMarkComplete(phase: ProjectPhase) {
     if (!currentUserId) return
+    if (!isOwner && !isMember) return
     const prev = phases.find(p => p.phase_number === phase.phase_number - 1)
     if (prev && prev.status !== "completed" && !isOwner) {
       toast.error(`Complete "${prev.phase_name}" first before marking this complete`)

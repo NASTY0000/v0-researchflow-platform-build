@@ -253,7 +253,7 @@ export default function FeedPage() {
             onClick={() => setAfricaOnly(!africaOnly)}
             className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${
               africaOnly
-                ? 'bg-primary text-white border-primary'
+                ? 'bg-primary text-primary-foreground border-primary'
                 : 'bg-background text-muted-foreground border-border hover:border-primary/50'
             }`}
           >
