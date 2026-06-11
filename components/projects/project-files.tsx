@@ -138,7 +138,8 @@ export function ProjectFiles({ projectId, currentUserId, isLead }: ProjectFilesP
         .upload(path, file, { upsert: false })
 
       if (storageError) {
-        toast.error(`Upload failed: ${storageError.message}`)
+        console.error('Upload error:', JSON.stringify(storageError))
+        toast.error(storageError.message || 'Upload failed')
         setIsUploading(false)
         return
       }
