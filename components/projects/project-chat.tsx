@@ -144,19 +144,25 @@ export function ProjectChat({ projectId, teamId, currentUserId }: ProjectChatPro
     setIsSending(true)
     const supabase = createClient()
 
-    const { error } = await supabase.from("messages").insert({
-      conversation_id: conversationId,
-      sender_id: currentUserId,
-      content: newMessage.trim(),
-      message_type: "text",
-    })
+    const { data, error } = await supabase
+      .from("messages")
+      .insert({
+        conversation_id: conversationId,
+        sender_id: currentUserId,
+        content: newMessage.trim(),
+        message_type: "text",
+      })
+      .select()
+      .single()
 
     if (error) {
-      console.error("Failed to send message:", error)
+      console.error("Chat send error:", JSON.stringify(error))
       toast.error(error.message || "Failed to send message")
-    } else {
-      setNewMessage("")
+      setIsSending(false)
+      return
     }
+
+    setNewMessage("")
 
     setIsSending(false)
   }
