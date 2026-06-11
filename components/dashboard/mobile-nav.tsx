@@ -2,9 +2,16 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { Home, Lightbulb, Users, Bell, User } from 'lucide-react'
+import { usePathname, useRouter } from 'next/navigation'
+import { Home, Compass, Bell, User, Users, Users2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from '@/components/ui/sheet'
 
 interface NavTab {
   href: string
@@ -14,11 +21,37 @@ interface NavTab {
 }
 
 const TABS: NavTab[] = [
-  { href: '/dashboard',     label: 'Home',    icon: Home,       exact: true },
-  { href: '/ideas',         label: 'Ideas',   icon: Lightbulb },
-  { href: '/network',       label: 'Network', icon: Users },
+  { href: '/dashboard',     label: 'Home',    icon: Home,    exact: true },
+  { href: '/discover',      label: 'Explore', icon: Compass },
   { href: '/notifications', label: 'Alerts',  icon: Bell },
   { href: '/profile',       label: 'Profile', icon: User },
+]
+
+const EXPLORE_PATHS = [
+  '/collaborate', '/projects', '/matches', '/mentors', '/agreements', '/network',
+  '/discover', '/ideas', '/grants', '/publications', '/assistant',
+  '/community', '/forums', '/peer-review', '/challenges', '/showcase', '/leaderboard', '/marketplace',
+]
+
+const HUBS = [
+  {
+    href: '/collaborate',
+    label: 'Collaborate',
+    description: 'Connect, build, and grow your research network',
+    icon: Users,
+  },
+  {
+    href: '/discover',
+    label: 'Discover',
+    description: 'Explore ideas, funding, and resources for your research',
+    icon: Compass,
+  },
+  {
+    href: '/community',
+    label: 'Community',
+    description: 'Engage with the ResearchFlow research community',
+    icon: Users2,
+  },
 ]
 
 interface MobileNavProps {
@@ -27,8 +60,10 @@ interface MobileNavProps {
 
 export function MobileNav({ initialUnreadCount }: MobileNavProps) {
   const pathname = usePathname()
+  const router = useRouter()
   const [unreadCount, setUnreadCount] = useState(initialUnreadCount)
   const [isMobile, setIsMobile] = useState(false)
+  const [exploreOpen, setExploreOpen] = useState(false)
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768)
@@ -77,8 +112,13 @@ export function MobileNav({ initialUnreadCount }: MobileNavProps) {
     return () => cleanup?.()
   }, [])
 
-  const isActive = (tab: NavTab) =>
-    tab.exact ? pathname === tab.href : pathname.startsWith(tab.href)
+  const isActive = (tab: NavTab) => {
+    if (tab.exact) return pathname === tab.href
+    if (tab.href === '/discover') {
+      return EXPLORE_PATHS.some((path) => pathname === path || pathname.startsWith(path + '/'))
+    }
+    return pathname.startsWith(tab.href)
+  }
 
   if (!isMobile) return null
 
@@ -103,25 +143,10 @@ export function MobileNav({ initialUnreadCount }: MobileNavProps) {
           const active = isActive(tab)
           const Icon = tab.icon
           const isAlerts = tab.href === '/notifications'
+          const isExplore = tab.href === '/discover'
 
-          return (
-            <Link
-              key={tab.href}
-              href={tab.href}
-              onClick={isAlerts ? () => setUnreadCount(0) : undefined}
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '4px',
-                position: 'relative',
-                padding: '10px 14px 4px',
-                borderRadius: '16px',
-                textDecoration: 'none',
-                WebkitTapHighlightColor: 'transparent',
-                minWidth: '56px',
-              }}
-            >
+          const content = (
+            <>
               {/* Icon container */}
               <div
                 style={{
@@ -235,10 +260,83 @@ export function MobileNav({ initialUnreadCount }: MobileNavProps) {
                   }}
                 />
               )}
+            </>
+          )
+
+          const itemStyle: React.CSSProperties = {
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '4px',
+            position: 'relative',
+            padding: '10px 14px 4px',
+            borderRadius: '16px',
+            textDecoration: 'none',
+            WebkitTapHighlightColor: 'transparent',
+            minWidth: '56px',
+            background: 'none',
+            border: 'none',
+          }
+
+          if (isExplore) {
+            return (
+              <button
+                key={tab.href}
+                type="button"
+                onClick={() => setExploreOpen(true)}
+                style={itemStyle}
+              >
+                {content}
+              </button>
+            )
+          }
+
+          return (
+            <Link
+              key={tab.href}
+              href={tab.href}
+              onClick={isAlerts ? () => setUnreadCount(0) : undefined}
+              style={itemStyle}
+            >
+              {content}
             </Link>
           )
         })}
       </nav>
+
+      {/* Explore hub picker */}
+      <Sheet open={exploreOpen} onOpenChange={setExploreOpen}>
+        <SheetContent side="bottom">
+          <SheetHeader>
+            <SheetTitle>Explore</SheetTitle>
+            <SheetDescription>Choose where you'd like to go</SheetDescription>
+          </SheetHeader>
+          <div className="flex flex-col gap-2 px-4 pb-6">
+            {HUBS.map((hub) => {
+              const Icon = hub.icon
+              return (
+                <button
+                  key={hub.href}
+                  type="button"
+                  onClick={() => {
+                    setExploreOpen(false)
+                    router.push(hub.href)
+                  }}
+                  className="flex items-center gap-4 rounded-xl border bg-card p-4 text-left hover:border-primary/50 transition-colors"
+                >
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                    <Icon className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-foreground text-sm">{hub.label}</div>
+                    <div className="text-xs text-muted-foreground">{hub.description}</div>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {/* Keyframe animation */}
       <style>{`

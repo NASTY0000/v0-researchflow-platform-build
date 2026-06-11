@@ -37,11 +37,17 @@ export default async function DashboardLayout({
     .eq('user_id', user.id)
     .eq('is_read', false)
 
+  const { data: mentorProfile } = await supabase
+    .from('mentor_profiles')
+    .select('is_verified')
+    .eq('user_id', user.id)
+    .maybeSingle()
+
   return (
     <>
       <ScrollProgress />
       <SidebarProvider>
-        <DashboardSidebar profile={profile} />
+        <DashboardSidebar profile={profile} isVerifiedMentor={mentorProfile?.is_verified === true} />
         <SidebarInset>
           <DashboardHeader profile={profile} unreadCount={unreadCount || 0} />
           <main className="flex-1 p-4 lg:p-6 pb-20 md:pb-6 bg-background min-h-screen">

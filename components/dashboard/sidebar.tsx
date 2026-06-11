@@ -21,28 +21,19 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Logo } from '@/components/Logo'
 import {
   LayoutDashboard,
-  Lightbulb,
-  Users,
-  FolderKanban,
-  GraduationCap,
-  BookOpen,
-  Store,
+  Sparkles,
   MessageSquare,
-  Award,
-  Trophy,
+  GraduationCap,
+  Users,
+  Compass,
+  Users2,
   Settings,
   LogOut,
   ChevronUp,
   User,
   Shield,
-  UserCheck,
   Bookmark,
-  Sparkles,
-  DollarSign,
   Building2,
-  FileText,
-  ClipboardCheck,
-  BarChart2,
 } from 'lucide-react'
 import type { Profile } from '@/lib/types/database'
 
@@ -51,6 +42,7 @@ interface NavItem {
   href: string
   icon: React.ElementType
   badge?: string
+  activeOn?: string[]
 }
 import { signOut } from '@/lib/actions/auth'
 import { AkiliScoreBadge } from '@/components/akili/AkiliScoreBadge'
@@ -58,44 +50,36 @@ import { AkiliScoreBadge } from '@/components/akili/AkiliScoreBadge'
 const coreNavItems: NavItem[] = [
   { title: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { title: 'My Feed', href: '/feed', icon: Sparkles },
-  { title: 'Idea Board', href: '/ideas', icon: Lightbulb },
   { title: 'Messages', href: '/messages', icon: MessageSquare },
 ]
 
-const collaborateNavItems: NavItem[] = [
-  { title: 'Find Collaborators', href: '/matches', icon: Users },
-  { title: 'My Network', href: '/network', icon: UserCheck },
-  { title: 'My Projects', href: '/projects', icon: FolderKanban },
-]
-
-const discoverNavItems: NavItem[] = [
-  { title: 'Mentor Directory', href: '/mentors', icon: BookOpen },
-  { title: 'AI Assistant', href: '/assistant', icon: Sparkles },
-  { title: 'Grants', href: '/grants', icon: DollarSign },
-  { title: 'Journals & Conferences', href: '/publications', icon: GraduationCap },
-  { title: 'My Analytics', href: '/analytics', icon: BarChart2 },
-]
-
-const communityNavItems: NavItem[] = [
-  { title: 'Forums', href: '/forums', icon: MessageSquare },
-  { title: 'Peer Review', href: '/peer-review', icon: ClipboardCheck },
-  { title: 'Challenges', href: '/challenges', icon: Trophy, badge: 'New' },
-  { title: 'Showcase', href: '/showcase', icon: Award },
-  { title: 'Leaderboard', href: '/leaderboard', icon: Trophy },
-  { title: 'Marketplace', href: '/marketplace', icon: Store },
-]
-
-const accountNavItems: NavItem[] = [
-  { title: 'Saved', href: '/saved', icon: Bookmark },
-  { title: 'Institution', href: '/institution', icon: Building2 },
-  { title: 'Agreements', href: '/agreements', icon: FileText },
+const hubNavItems: NavItem[] = [
+  {
+    title: 'Collaborate',
+    href: '/collaborate',
+    icon: Users,
+    activeOn: ['/projects', '/matches', '/mentors', '/agreements', '/network'],
+  },
+  {
+    title: 'Discover',
+    href: '/discover',
+    icon: Compass,
+    activeOn: ['/ideas', '/grants', '/publications', '/assistant'],
+  },
+  {
+    title: 'Community',
+    href: '/community',
+    icon: Users2,
+    activeOn: ['/forums', '/peer-review', '/challenges', '/showcase', '/leaderboard', '/marketplace'],
+  },
 ]
 
 interface DashboardSidebarProps {
   profile: Profile
+  isVerifiedMentor?: boolean
 }
 
-export function DashboardSidebar({ profile }: DashboardSidebarProps) {
+export function DashboardSidebar({ profile, isVerifiedMentor }: DashboardSidebarProps) {
   const pathname = usePathname()
   const { setOpenMobile } = useSidebar()
 
@@ -111,6 +95,11 @@ export function DashboardSidebar({ profile }: DashboardSidebarProps) {
     }
   }
 
+  const isItemActive = (item: NavItem) => {
+    if (pathname === item.href || pathname.startsWith(item.href + '/')) return true
+    return item.activeOn?.some((path) => pathname === path || pathname.startsWith(path + '/')) ?? false
+  }
+
   function NavItems({ items }: { items: NavItem[] }) {
     return (
       <SidebarMenu>
@@ -118,7 +107,7 @@ export function DashboardSidebar({ profile }: DashboardSidebarProps) {
           <SidebarMenuItem key={item.href}>
             <SidebarMenuButton
               asChild
-              isActive={pathname === item.href || pathname.startsWith(item.href + '/')}
+              isActive={isItemActive(item)}
               tooltip={item.title}
             >
               <Link href={item.href} onClick={() => setOpenMobile(false)}>
@@ -165,34 +154,13 @@ export function DashboardSidebar({ profile }: DashboardSidebarProps) {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>Collaborate</SidebarGroupLabel>
+          <SidebarGroupLabel>Explore</SidebarGroupLabel>
           <SidebarGroupContent>
-            <NavItems items={collaborateNavItems} />
+            <NavItems items={hubNavItems} />
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarGroup>
-          <SidebarGroupLabel>Discover</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <NavItems items={discoverNavItems} />
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupLabel>Community</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <NavItems items={communityNavItems} />
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupLabel>Account</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <NavItems items={accountNavItems} />
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        {profile.roles?.includes('mentor') && (
+        {isVerifiedMentor && (
           <SidebarGroup>
             <SidebarGroupLabel>Mentoring</SidebarGroupLabel>
             <SidebarGroupContent>
@@ -206,28 +174,6 @@ export function DashboardSidebar({ profile }: DashboardSidebarProps) {
                     <Link href="/mentor-dashboard" onClick={() => setOpenMobile(false)}>
                       <GraduationCap />
                       <span>Mentor Dashboard</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
-
-        {(profile.is_admin === true || profile.roles?.includes('admin')) && (
-          <SidebarGroup>
-            <SidebarGroupLabel>Admin</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={pathname === '/admin' || pathname.startsWith('/admin/')}
-                    tooltip="Admin Dashboard"
-                  >
-                    <Link href="/admin" onClick={() => setOpenMobile(false)}>
-                      <Shield />
-                      <span>Admin Dashboard</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -277,9 +223,29 @@ export function DashboardSidebar({ profile }: DashboardSidebarProps) {
                 <DropdownMenuItem asChild>
                   <Link href="/settings">
                     <Settings className="mr-2 h-4 w-4" />
-                    Settings
+                    Account Settings
                   </Link>
                 </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/institution">
+                    <Building2 className="mr-2 h-4 w-4" />
+                    Institution
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/saved">
+                    <Bookmark className="mr-2 h-4 w-4" />
+                    Saved
+                  </Link>
+                </DropdownMenuItem>
+                {(profile.is_admin === true || profile.roles?.includes('admin')) && (
+                  <DropdownMenuItem asChild>
+                    <Link href="/admin">
+                      <Shield className="mr-2 h-4 w-4" />
+                      Admin Dashboard
+                    </Link>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleSignOut}>
                   <LogOut className="mr-2 h-4 w-4" />
