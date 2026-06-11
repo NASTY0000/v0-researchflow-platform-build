@@ -55,6 +55,22 @@ export function ProjectChat({ projectId, teamId, currentUserId }: ProjectChatPro
           return
         }
         conversation = created
+
+        // Add all team members as conversation participants
+        const { data: teamMembers } = await supabase
+          .from("team_members")
+          .select("user_id")
+          .eq("team_id", teamId)
+
+        if (teamMembers?.length) {
+          await supabase.from("conversation_participants").insert(
+            teamMembers.map((m) => ({
+              conversation_id: created.id,
+              user_id: m.user_id,
+              joined_at: new Date().toISOString(),
+            }))
+          )
+        }
       }
 
       if (error) {
