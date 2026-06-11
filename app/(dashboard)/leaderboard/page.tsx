@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { BackToHub } from '@/components/ui/back-to-hub'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -91,6 +92,7 @@ export default function LeaderboardPage() {
 
   return (
     <div className="space-y-8 max-w-4xl mx-auto">
+      <BackToHub href="/community" label="Back to Community" />
       <div>
         <h1 className="text-2xl font-bold">Akili Leaderboard</h1>
         <p className="text-muted-foreground mt-1">Top researchers on ResearchFlow</p>

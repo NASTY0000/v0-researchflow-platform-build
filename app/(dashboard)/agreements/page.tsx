@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { BackToHub } from '@/components/ui/back-to-hub'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
@@ -68,6 +69,7 @@ export default function AgreementsPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-10">
+      <BackToHub href="/collaborate" label="Back to Collaborate" />
 
       <div className="flex items-center justify-between">
         <div className="space-y-1">

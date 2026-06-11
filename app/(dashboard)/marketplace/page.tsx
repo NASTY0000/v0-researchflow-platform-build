@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
+import { BackToHub } from "@/components/ui/back-to-hub"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -340,6 +341,7 @@ export default function MarketplacePage() {
 
   return (
     <div className="space-y-6">
+      <BackToHub href="/community" label="Back to Community" />
       <ContextualHint
         hintKey="hint_marketplace"
         icon="⚡"

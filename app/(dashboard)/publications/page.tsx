@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { BackToHub } from '@/components/ui/back-to-hub'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
@@ -110,6 +111,7 @@ export default function PublicationsPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
+      <BackToHub href="/discover" label="Back to Discover" />
       <div>
         <h1 className="text-2xl font-bold font-heading">Conferences & Journals</h1>
         <p className="text-muted-foreground text-sm mt-1">Find publication venues relevant to your research</p>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { BackToHub } from '@/components/ui/back-to-hub'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
@@ -77,6 +78,7 @@ export default function ForumsPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
+      <BackToHub href="/community" label="Back to Community" />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold font-heading">Discussion Forums</h1>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { formatDistanceToNow } from 'date-fns'
+import { BackToHub } from '@/components/ui/back-to-hub'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { VerifiedBadge } from '@/components/ui/VerifiedBadge'
 import { ReviewForm } from '@/components/peer-review/ReviewForm'
@@ -163,6 +164,7 @@ export default function PeerReviewPage() {
       )}
 
       <div className="max-w-3xl mx-auto space-y-6">
+        <BackToHub href="/community" label="Back to Community" />
         {/* Header */}
         <div>
           <h1 className="text-3xl font-bold font-heading flex items-center gap-3">

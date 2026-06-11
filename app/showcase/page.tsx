@@ -14,6 +14,7 @@ import { Search, BookOpen, Calendar, Eye, ArrowRight, Sparkles, Loader2, Filter 
 import type { ShowcaseEntry, Profile } from '@/lib/types/database'
 import { ListPageSkeleton } from '@/components/ui/skeleton-screens'
 import { ContextualHint } from '@/components/ui/ContextualHint'
+import { BackToHub } from '@/components/ui/back-to-hub'
 
 type EntryWithAuthor = ShowcaseEntry & { author: Profile | null }
 
@@ -96,6 +97,7 @@ export default function ShowcasePage() {
 
       {/* Header */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-12 pb-6 space-y-3">
+        {isLoggedIn && <BackToHub href="/community" label="Back to Community" />}
         <div className="flex items-center gap-2">
           <BookOpen className="w-5 h-5 text-primary" />
           <span className="text-sm font-semibold uppercase tracking-widest text-primary">Research Showcase</span>

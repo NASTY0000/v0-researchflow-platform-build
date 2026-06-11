@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
+import { BackToHub } from "@/components/ui/back-to-hub"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -289,6 +290,7 @@ export default function MatchesPage() {
     <>
     <PullToRefreshIndicator pullDistance={pullDistance} threshold={threshold} isRefreshing={isRefreshing} />
     <div className="space-y-6">
+      <BackToHub href="/collaborate" label="Back to Collaborate" />
       <ContextualHint
         hintKey="hint_collaborators"
         icon="🤝"

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
+import { BackToHub } from "@/components/ui/back-to-hub"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -116,6 +117,7 @@ export default function ProjectsPage() {
 
   return (
     <div className="space-y-6">
+      <BackToHub href="/collaborate" label="Back to Collaborate" />
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>

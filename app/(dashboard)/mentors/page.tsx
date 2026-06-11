@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ChangeEvent } from "react"
 import Link from "next/link"
+import { BackToHub } from "@/components/ui/back-to-hub"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -385,6 +386,7 @@ export default function MentorsPage() {
 
   return (
     <div className="space-y-6">
+      <BackToHub href="/collaborate" label="Back to Collaborate" />
       <ContextualHint
         hintKey="hint_mentors"
         icon="🎓"

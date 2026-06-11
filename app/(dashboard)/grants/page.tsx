@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { BackToHub } from '@/components/ui/back-to-hub'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -185,6 +186,7 @@ export default function GrantsPage() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6 pb-10">
+      <BackToHub href="/discover" label="Back to Discover" />
       <ContextualHint
         hintKey="hint_grants"
         icon="💰"

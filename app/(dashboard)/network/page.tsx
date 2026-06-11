@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { BackToHub } from '@/components/ui/back-to-hub'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -246,6 +247,7 @@ export default function NetworkPage() {
     <>
     <PullToRefreshIndicator pullDistance={pullDistance} threshold={threshold} isRefreshing={isRefreshing} />
     <div className="max-w-4xl mx-auto space-y-6">
+      <BackToHub href="/collaborate" label="Back to Collaborate" />
       <div>
         <h1 className="text-2xl font-bold font-heading" style={{ color: '#E2D9F3' }}>My Network</h1>
         <p className="text-sm mt-1" style={{ color: '#7C6A9C' }}>Manage your connections and discover collaborators</p>

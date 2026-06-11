@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { ContextualHint } from '@/components/ui/ContextualHint'
+import { BackToHub } from '@/components/ui/back-to-hub'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -102,6 +103,7 @@ export default function ChallengesPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
+      <BackToHub href="/community" label="Back to Community" />
       <ContextualHint
         hintKey="hint_challenges"
         icon="🏆"
