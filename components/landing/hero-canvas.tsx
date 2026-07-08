@@ -4,24 +4,46 @@ import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
 
 /**
- * Interactive "global research network" — a particle globe whose nodes are
- * researchers and whose arcs are collaborations, with light pulses traveling
- * between them. Reacts to pointer movement, pauses off-screen, and renders a
- * single static frame when the user prefers reduced motion.
+ * Realistic living Earth centered on Africa: day/night terminator with city
+ * lights, drifting cloud layer, violet atmosphere rim, and pulsing markers on
+ * African university cities connected by animated collaboration arcs.
+ * Reacts to pointer movement, pauses off-screen, and renders static frames
+ * when the user prefers reduced motion.
  */
 
-const NODE_COUNT = 560
-const ARC_COUNT = 64
-const PULSE_COUNT = 18
-const STAR_COUNT = 420
-const GLOBE_RADIUS = 2.15
+const EARTH_RADIUS = 2.35
+const STAR_COUNT = 450
 
-const PALETTE = {
-  violet: new THREE.Color('#8B5CF6'),
-  purple: new THREE.Color('#A855F7'),
-  cyan: new THREE.Color('#22D3EE'),
-  amber: new THREE.Color('#FBBF24'),
-  arc: new THREE.Color('#7C3AED'),
+// African university cities [lat, lon]
+const CITIES: [number, number][] = [
+  [6.52, 3.37],    // Lagos
+  [7.38, 3.95],    // Ibadan
+  [11.08, 7.71],   // Zaria
+  [9.06, 7.49],    // Abuja
+  [5.6, -0.19],    // Accra
+  [6.69, -1.62],   // Kumasi
+  [14.72, -17.47], // Dakar
+  [-1.29, 36.82],  // Nairobi
+  [0.35, 32.58],   // Kampala
+  [-6.79, 39.21],  // Dar es Salaam
+  [9.03, 38.74],   // Addis Ababa
+  [30.04, 31.24],  // Cairo
+  [36.75, 3.06],   // Algiers
+  [33.57, -7.59],  // Casablanca
+  [-33.92, 18.42], // Cape Town
+  [-26.2, 28.05],  // Johannesburg
+  [-17.83, 31.05], // Harare
+  [-1.94, 30.06],  // Kigali
+]
+
+function latLonToVector3(lat: number, lon: number, radius: number) {
+  const phi = (90 - lat) * (Math.PI / 180)
+  const theta = (lon + 180) * (Math.PI / 180)
+  return new THREE.Vector3(
+    -radius * Math.sin(phi) * Math.cos(theta),
+    radius * Math.cos(phi),
+    radius * Math.sin(phi) * Math.sin(theta),
+  )
 }
 
 function makeGlowTexture() {
@@ -38,25 +60,26 @@ function makeGlowTexture() {
   return new THREE.CanvasTexture(canvas)
 }
 
-/** Evenly distribute points on a sphere (fibonacci lattice) with slight jitter. */
-function fibonacciSphere(count: number, radius: number) {
-  const points: THREE.Vector3[] = []
-  const golden = Math.PI * (3 - Math.sqrt(5))
-  for (let i = 0; i < count; i++) {
-    const y = 1 - (i / (count - 1)) * 2
-    const r = Math.sqrt(1 - y * y)
-    const theta = golden * i
-    const jitter = 1 + (Math.random() - 0.5) * 0.04
-    points.push(
-      new THREE.Vector3(
-        Math.cos(theta) * r * radius * jitter,
-        y * radius * jitter,
-        Math.sin(theta) * r * radius * jitter,
-      ),
-    )
+const ATMOSPHERE_VERTEX = /* glsl */ `
+  varying vec3 vNormal;
+  varying vec3 vViewDir;
+  void main() {
+    vNormal = normalize(normalMatrix * normal);
+    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+    vViewDir = normalize(-mvPosition.xyz);
+    gl_Position = projectionMatrix * mvPosition;
   }
-  return points
-}
+`
+
+const ATMOSPHERE_FRAGMENT = /* glsl */ `
+  varying vec3 vNormal;
+  varying vec3 vViewDir;
+  void main() {
+    float rim = pow(1.0 - abs(dot(vNormal, vViewDir)), 2.6);
+    vec3 color = mix(vec3(0.35, 0.45, 1.0), vec3(0.62, 0.4, 1.0), rim);
+    gl_FragColor = vec4(color, rim * 0.9);
+  }
+`
 
 export default function HeroCanvas() {
   const mountRef = useRef<HTMLDivElement>(null)
@@ -71,35 +94,98 @@ export default function HeroCanvas() {
     let height = mount.clientHeight || 1
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' })
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75))
     renderer.setSize(width, height)
     renderer.domElement.style.display = 'block'
     mount.appendChild(renderer.domElement)
 
     const scene = new THREE.Scene()
-    const camera = new THREE.PerspectiveCamera(48, width / height, 0.1, 100)
-    camera.position.set(0, 0.15, 6.4)
+    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100)
+    camera.position.set(0, 0.35, 6.6)
+    camera.lookAt(0, 0, 0)
 
+    // Sun from the upper left; dim violet ambient so the night side stays readable
+    const sun = new THREE.DirectionalLight(0xfff2e0, 2.1)
+    sun.position.set(-5, 2, 3.5)
+    scene.add(sun)
+    scene.add(new THREE.AmbientLight(0x8a7bff, 0.32))
+
+    const disposables: { dispose(): void }[] = []
     const glowTexture = makeGlowTexture()
-    const group = new THREE.Group()
-    scene.add(group)
+    disposables.push(glowTexture)
 
-    // ── Nodes ──
-    const nodePoints = fibonacciSphere(NODE_COUNT, GLOBE_RADIUS)
-    const nodePositions = new Float32Array(NODE_COUNT * 3)
-    const nodeColors = new Float32Array(NODE_COUNT * 3)
-    nodePoints.forEach((p, i) => {
-      nodePositions.set([p.x, p.y, p.z], i * 3)
-      const roll = Math.random()
-      const color = roll < 0.78 ? (roll < 0.4 ? PALETTE.violet : PALETTE.purple) : roll < 0.93 ? PALETTE.cyan : PALETTE.amber
-      nodeColors.set([color.r, color.g, color.b], i * 3)
+    const loader = new THREE.TextureLoader()
+    const loadTexture = (url: string, colorSpace?: THREE.ColorSpace) => {
+      const tex = loader.load(url, () => {
+        if (prefersReducedMotion) renderFrame()
+      })
+      if (colorSpace) tex.colorSpace = colorSpace
+      tex.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 8)
+      disposables.push(tex)
+      return tex
+    }
+
+    // Parallax group (pointer) wraps the spin group (rotation)
+    const parallaxGroup = new THREE.Group()
+    // Sit the planet low in the frame so the copy reads above its horizon
+    parallaxGroup.position.y = -1.35
+    scene.add(parallaxGroup)
+    const earthGroup = new THREE.Group()
+    // Start with Africa (~lon 17E) facing the camera: facing lon L requires
+    // rotation.y = -(PI/2 + L) given the equirect UV mapping used by three.js
+    earthGroup.rotation.y = -(Math.PI / 2 + (17 * Math.PI) / 180)
+    parallaxGroup.add(earthGroup)
+
+    // ── Earth ──
+    const earthGeometry = new THREE.SphereGeometry(EARTH_RADIUS, 96, 96)
+    const earthMaterial = new THREE.MeshPhongMaterial({
+      map: loadTexture('/textures/earth_atmos_2048.jpg', THREE.SRGBColorSpace),
+      normalMap: loadTexture('/textures/earth_normal_2048.jpg'),
+      normalScale: new THREE.Vector2(0.85, 0.85),
+      specularMap: loadTexture('/textures/earth_specular_2048.jpg'),
+      specular: new THREE.Color(0x5577aa),
+      shininess: 18,
+      emissiveMap: loadTexture('/textures/earth_lights_2048.png', THREE.SRGBColorSpace),
+      emissive: new THREE.Color(0xffc97a),
+      emissiveIntensity: 1.15,
     })
-    const nodeGeometry = new THREE.BufferGeometry()
-    nodeGeometry.setAttribute('position', new THREE.BufferAttribute(nodePositions, 3))
-    nodeGeometry.setAttribute('color', new THREE.BufferAttribute(nodeColors, 3))
-    const nodeMaterial = new THREE.PointsMaterial({
-      size: 0.045,
-      vertexColors: true,
+    disposables.push(earthGeometry, earthMaterial)
+    earthGroup.add(new THREE.Mesh(earthGeometry, earthMaterial))
+
+    // ── Clouds ──
+    const cloudGeometry = new THREE.SphereGeometry(EARTH_RADIUS * 1.008, 64, 64)
+    const cloudMaterial = new THREE.MeshLambertMaterial({
+      map: loadTexture('/textures/earth_clouds_1024.png', THREE.SRGBColorSpace),
+      transparent: true,
+      opacity: 0.4,
+      depthWrite: false,
+    })
+    disposables.push(cloudGeometry, cloudMaterial)
+    const clouds = new THREE.Mesh(cloudGeometry, cloudMaterial)
+    earthGroup.add(clouds)
+
+    // ── Atmosphere rim ──
+    const atmosphereGeometry = new THREE.SphereGeometry(EARTH_RADIUS * 1.14, 64, 64)
+    const atmosphereMaterial = new THREE.ShaderMaterial({
+      vertexShader: ATMOSPHERE_VERTEX,
+      fragmentShader: ATMOSPHERE_FRAGMENT,
+      side: THREE.BackSide,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    })
+    disposables.push(atmosphereGeometry, atmosphereMaterial)
+    parallaxGroup.add(new THREE.Mesh(atmosphereGeometry, atmosphereMaterial))
+
+    // ── City markers (pulse with the animation loop) ──
+    const cityPositions = CITIES.map(([lat, lon]) => latLonToVector3(lat, lon, EARTH_RADIUS * 1.005))
+    const markerPositions = new Float32Array(cityPositions.length * 3)
+    cityPositions.forEach((p, i) => markerPositions.set([p.x, p.y, p.z], i * 3))
+    const markerGeometry = new THREE.BufferGeometry()
+    markerGeometry.setAttribute('position', new THREE.BufferAttribute(markerPositions, 3))
+    const markerMaterial = new THREE.PointsMaterial({
+      size: 0.085,
+      color: new THREE.Color('#E9D5FF'),
       map: glowTexture,
       transparent: true,
       opacity: 0.95,
@@ -107,23 +193,30 @@ export default function HeroCanvas() {
       depthWrite: false,
       sizeAttenuation: true,
     })
-    group.add(new THREE.Points(nodeGeometry, nodeMaterial))
+    disposables.push(markerGeometry, markerMaterial)
+    const markers = new THREE.Points(markerGeometry, markerMaterial)
+    earthGroup.add(markers)
 
-    // ── Collaboration arcs between nearby nodes ──
+    // ── Collaboration arcs between cities ──
     const curves: THREE.QuadraticBezierCurve3[] = []
     const arcVertices: number[] = []
-    const segmentsPerArc = 28
+    const usedPairs = new Set<string>()
     let guard = 0
-    while (curves.length < ARC_COUNT && guard < 4000) {
+    while (curves.length < 14 && guard < 500) {
       guard++
-      const a = nodePoints[Math.floor(Math.random() * NODE_COUNT)]
-      const b = nodePoints[Math.floor(Math.random() * NODE_COUNT)]
+      const ai = Math.floor(Math.random() * cityPositions.length)
+      const bi = Math.floor(Math.random() * cityPositions.length)
+      const key = ai < bi ? `${ai}-${bi}` : `${bi}-${ai}`
+      if (ai === bi || usedPairs.has(key)) continue
+      const a = cityPositions[ai]
+      const b = cityPositions[bi]
       const angle = a.angleTo(b)
-      if (angle < 0.35 || angle > 1.25) continue
-      const mid = a.clone().add(b).multiplyScalar(0.5).normalize().multiplyScalar(GLOBE_RADIUS * (1.08 + angle * 0.22))
+      if (angle < 0.12 || angle > 1.35) continue
+      usedPairs.add(key)
+      const mid = a.clone().add(b).multiplyScalar(0.5).normalize().multiplyScalar(EARTH_RADIUS * (1.05 + angle * 0.28))
       const curve = new THREE.QuadraticBezierCurve3(a.clone(), mid, b.clone())
       curves.push(curve)
-      const pts = curve.getPoints(segmentsPerArc)
+      const pts = curve.getPoints(30)
       for (let i = 0; i < pts.length - 1; i++) {
         arcVertices.push(pts[i].x, pts[i].y, pts[i].z, pts[i + 1].x, pts[i + 1].y, pts[i + 1].z)
       }
@@ -131,50 +224,37 @@ export default function HeroCanvas() {
     const arcGeometry = new THREE.BufferGeometry()
     arcGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(arcVertices), 3))
     const arcMaterial = new THREE.LineBasicMaterial({
-      color: PALETTE.arc,
+      color: new THREE.Color('#A78BFA'),
       transparent: true,
-      opacity: 0.16,
+      opacity: 0.35,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     })
-    group.add(new THREE.LineSegments(arcGeometry, arcMaterial))
+    disposables.push(arcGeometry, arcMaterial)
+    earthGroup.add(new THREE.LineSegments(arcGeometry, arcMaterial))
 
-    // ── Light pulses traveling along arcs ──
-    const pulses = Array.from({ length: PULSE_COUNT }, () => ({
-      curve: Math.floor(Math.random() * curves.length),
-      t: Math.random(),
-      speed: 0.0014 + Math.random() * 0.0028,
-    }))
-    const pulsePositions = new Float32Array(PULSE_COUNT * 3)
+    // ── Pulses traveling along arcs ──
+    const pulses = curves.map((_, i) => ({ curve: i, t: Math.random(), speed: 0.0016 + Math.random() * 0.0026 }))
+    const pulsePositions = new Float32Array(pulses.length * 3)
     const pulseGeometry = new THREE.BufferGeometry()
     pulseGeometry.setAttribute('position', new THREE.BufferAttribute(pulsePositions, 3))
     const pulseMaterial = new THREE.PointsMaterial({
-      size: 0.085,
-      color: new THREE.Color('#E9D5FF'),
+      size: 0.11,
+      color: new THREE.Color('#FDE68A'),
       map: glowTexture,
       transparent: true,
-      opacity: 0.9,
+      opacity: 0.95,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
       sizeAttenuation: true,
     })
-    group.add(new THREE.Points(pulseGeometry, pulseMaterial))
+    disposables.push(pulseGeometry, pulseMaterial)
+    earthGroup.add(new THREE.Points(pulseGeometry, pulseMaterial))
 
-    // ── Inner wireframe core ──
-    const coreGeometry = new THREE.IcosahedronGeometry(GLOBE_RADIUS * 0.62, 1)
-    const coreMaterial = new THREE.MeshBasicMaterial({
-      color: PALETTE.violet,
-      wireframe: true,
-      transparent: true,
-      opacity: 0.05,
-    })
-    const core = new THREE.Mesh(coreGeometry, coreMaterial)
-    group.add(core)
-
-    // ── Ambient star field ──
+    // ── Star field ──
     const starPositions = new Float32Array(STAR_COUNT * 3)
     for (let i = 0; i < STAR_COUNT; i++) {
-      const v = new THREE.Vector3().randomDirection().multiplyScalar(9 + Math.random() * 26)
+      const v = new THREE.Vector3().randomDirection().multiplyScalar(12 + Math.random() * 28)
       starPositions.set([v.x, v.y, v.z], i * 3)
     }
     const starGeometry = new THREE.BufferGeometry()
@@ -184,11 +264,12 @@ export default function HeroCanvas() {
       color: new THREE.Color('#C4B5FD'),
       map: glowTexture,
       transparent: true,
-      opacity: 0.45,
+      opacity: 0.5,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
       sizeAttenuation: true,
     })
+    disposables.push(starGeometry, starMaterial)
     const stars = new THREE.Points(starGeometry, starMaterial)
     scene.add(stars)
 
@@ -210,15 +291,19 @@ export default function HeroCanvas() {
       const delta = Math.min(clock.getDelta(), 0.05)
       const elapsed = clock.elapsedTime
 
-      group.rotation.y += delta * 0.055
-      core.rotation.x -= delta * 0.04
-      stars.rotation.y += delta * 0.006
+      // Slow spin keeps the planet alive without losing Africa for minutes
+      earthGroup.rotation.y += delta * 0.011
+      clouds.rotation.y += delta * 0.008
+      stars.rotation.y += delta * 0.004
 
-      pointerCurrent.x += (pointerTarget.x - pointerCurrent.x) * 0.045
-      pointerCurrent.y += (pointerTarget.y - pointerCurrent.y) * 0.045
-      group.rotation.x = pointerCurrent.y * 0.14
-      group.position.x = pointerCurrent.x * 0.22
-      camera.position.y = 0.15 + Math.sin(elapsed * 0.4) * 0.06
+      pointerCurrent.x += (pointerTarget.x - pointerCurrent.x) * 0.04
+      pointerCurrent.y += (pointerTarget.y - pointerCurrent.y) * 0.04
+      parallaxGroup.rotation.y = pointerCurrent.x * 0.1
+      parallaxGroup.rotation.x = pointerCurrent.y * 0.08
+      camera.position.y = 0.35 + Math.sin(elapsed * 0.35) * 0.05
+
+      // Breathe the city markers
+      markerMaterial.size = 0.085 + Math.sin(elapsed * 2.2) * 0.018
 
       const positions = pulseGeometry.getAttribute('position') as THREE.BufferAttribute
       pulses.forEach((pulse, i) => {
@@ -288,17 +373,7 @@ export default function HeroCanvas() {
       resize.disconnect()
       document.removeEventListener('visibilitychange', onVisibility)
       window.removeEventListener('pointermove', onPointerMove)
-      nodeGeometry.dispose()
-      nodeMaterial.dispose()
-      arcGeometry.dispose()
-      arcMaterial.dispose()
-      pulseGeometry.dispose()
-      pulseMaterial.dispose()
-      coreGeometry.dispose()
-      coreMaterial.dispose()
-      starGeometry.dispose()
-      starMaterial.dispose()
-      glowTexture.dispose()
+      disposables.forEach((d) => d.dispose())
       renderer.dispose()
       mount.removeChild(renderer.domElement)
     }

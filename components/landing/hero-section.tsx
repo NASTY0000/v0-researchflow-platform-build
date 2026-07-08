@@ -77,18 +77,19 @@ export function HeroSection() {
         })
       })
 
-      // Cinematic exit while scrolling away
+      // Cinematic exit while scrolling away: the copy drifts up and fades
+      // while the planet stays fully visible until the section leaves.
       gsap.to(contentRef.current, {
-        yPercent: 16,
+        yPercent: 12,
         autoAlpha: 0,
         ease: 'none',
-        scrollTrigger: { trigger: section, start: 'top top', end: '88% top', scrub: true },
+        scrollTrigger: { trigger: section, start: 'top top', end: '92% top', scrub: 0.5 },
       })
       gsap.to(canvasWrapRef.current, {
-        scale: 1.14,
-        autoAlpha: 0.15,
+        scale: 1.07,
+        yPercent: 6,
         ease: 'none',
-        scrollTrigger: { trigger: section, start: 'top top', end: 'bottom top', scrub: true },
+        scrollTrigger: { trigger: section, start: 'top top', end: 'bottom top', scrub: 0.5 },
       })
 
       return () => intro.kill()
@@ -108,7 +109,7 @@ export function HeroSection() {
       </div>
 
       {/* Readability + depth overlays */}
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_42%,rgba(5,1,15,0.55),rgba(5,1,15,0.2)_55%,rgba(5,1,15,0.05))]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_58%_44%_at_50%_34%,rgba(5,1,15,0.5),rgba(5,1,15,0.14)_60%,transparent)]" />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-48 bg-gradient-to-b from-transparent to-[#05010F]" />
       <div className="pointer-events-none absolute inset-0 noise" />
 
