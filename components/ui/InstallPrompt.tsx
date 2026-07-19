@@ -53,7 +53,7 @@ export function InstallPrompt() {
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium">Add ResearchFlow to your home screen</p>
-        <p className="text-xs mt-0.5" style={{ color: '#7C6A9C' }}>
+        <p className="text-xs mt-0.5 text-muted-foreground">
           Access it like a native app
         </p>
       </div>
@@ -71,7 +71,7 @@ export function InstallPrompt() {
       <button
         onClick={handleDismiss}
         className="flex-shrink-0 p-1 rounded-lg"
-        style={{ color: '#7C6A9C' }}
+        className="text-muted-foreground"
       >
         <X className="w-4 h-4" />
       </button>

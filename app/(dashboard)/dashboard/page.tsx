@@ -20,10 +20,9 @@ import type { Profile, ResearchIdea, Match } from "@/lib/types/database"
 import { Skeleton } from "@/components/ui/SkeletonLayouts"
 import { usePullToRefresh } from "@/hooks/usePullToRefresh"
 import { AnimatedCounter } from "@/components/ui/animated-counter"
-import { motion } from "framer-motion"
+import { motion, useReducedMotion } from "framer-motion"
 import { PullToRefreshIndicator } from "@/components/ui/PullToRefreshIndicator"
 import { ActivityFeed } from "@/components/dashboard/activity-feed"
-import { GradientText } from "@/components/ui/gradient-text"
 import { useUserState } from "@/hooks/use-user-state"
 
 interface DashboardStats {
@@ -117,6 +116,7 @@ export default function DashboardPage() {
   }, [loadDashboard])
 
   const { state: userState } = useUserState(profile?.id ?? null)
+  const shouldReduceMotion = useReducedMotion()
 
   const akiliScore = profile?.akili_score ?? 0
   const currentTier = getCurrentTier(akiliScore)
@@ -186,18 +186,16 @@ export default function DashboardPage() {
         <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 20% 50%,rgba(124,58,237,0.2),transparent 60%)' }} />
         <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
             className="space-y-1"
           >
-            <p className="label-section mb-1">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
+            <p className="text-xs text-muted-foreground mb-1">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
             <h1 className="text-3xl font-bold font-heading" style={{ letterSpacing: '-0.03em' }}>
-              {getGreeting()},{' '}
-              <GradientText animate>{profile?.full_name?.split(' ')[0] || 'Researcher'}</GradientText>{' '}
-              👋
+              {getGreeting()}, {profile?.full_name?.split(' ')[0] || 'Researcher'}
             </h1>
-            <p style={{ color: '#7C6A9C' }}>Here&apos;s what&apos;s happening with your research journey</p>
+            <p className="text-muted-foreground">Here&apos;s what&apos;s happening with your research journey</p>
           </motion.div>
           <Button asChild style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', boxShadow: '0 0 20px rgba(124,58,237,0.35)', border: 'none', borderRadius: '8px', flexShrink: 0 }}>
             <Link href="/ideas/new">
@@ -212,17 +210,21 @@ export default function DashboardPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {statCards.map((stat, i) => (
           <Link key={stat.title} href={stat.href}>
-            <div className={`p-5 rounded-2xl cursor-pointer transition-all duration-300 animate-fade-up stagger-${i + 1}`}
-              style={{ ...cardStyle }}
-              onMouseOver={e => { (e.currentTarget as HTMLDivElement).style.borderColor = `${stat.color}66`; (e.currentTarget as HTMLDivElement).style.boxShadow = `0 0 24px ${stat.glow}` }}
-              onMouseOut={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(139,92,246,0.15)'; (e.currentTarget as HTMLDivElement).style.boxShadow = 'none' }}>
+            <div
+              className={`stat-card p-5 rounded-2xl cursor-pointer animate-fade-up stagger-${i + 1}`}
+              style={{
+                ...cardStyle,
+                '--card-accent-border': `${stat.color}66`,
+                '--card-accent-glow': `0 0 24px ${stat.glow}`,
+              } as React.CSSProperties}
+            >
               <div className="flex items-center gap-3">
                 <div className="p-2.5 rounded-xl flex-shrink-0" style={{ background: `${stat.color}18`, border: `1px solid ${stat.color}30` }}>
                   <stat.icon className="h-5 w-5" style={{ color: stat.color }} />
                 </div>
                 <div className="min-w-0">
                   <AnimatedCounter value={stat.value} className="text-2xl font-bold font-heading stat-number" />
-                  <p className="text-xs truncate" style={{ color: '#7C6A9C' }}>
+                  <p className="text-xs truncate text-muted-foreground">
                     {'sub' in stat && stat.sub ? stat.sub : stat.title}
                   </p>
                 </div>
@@ -241,7 +243,7 @@ export default function DashboardPage() {
               <span className="text-sm font-semibold">{currentTier.name}</span>
               <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.25)', color: '#F59E0B' }}>{tierPct}%</span>
             </div>
-            <span className="text-xs" style={{ color: '#7C6A9C' }}>
+            <span className="text-xs text-muted-foreground">
               <span className="font-medium" style={{ color: '#F59E0B' }}>{pointsLeft.toLocaleString()}</span> pts to {nextTier.name}
             </span>
           </div>
@@ -249,9 +251,9 @@ export default function DashboardPage() {
             <motion.div
               className="h-full rounded-full"
               style={{ background: 'linear-gradient(90deg,#D97706,#F59E0B,#FCD34D)' }}
-              initial={{ width: 0 }}
+              initial={shouldReduceMotion ? { width: `${tierPct}%` } : { width: 0 }}
               animate={{ width: `${tierPct}%` }}
-              transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1], delay: 0.3 }}
+              transition={shouldReduceMotion ? { duration: 0 } : { duration: 1.2, ease: [0.22, 1, 0.36, 1], delay: 0.3 }}
             />
           </div>
         </div>
@@ -259,19 +261,19 @@ export default function DashboardPage() {
 
       {/* Quick Actions */}
       <div>
-        <p className="label-section mb-4">Quick Actions</p>
+        <h2 className="text-sm font-semibold mb-4">Quick Actions</h2>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {quickActions.map((action, i) => (
             <Link key={action.title} href={action.href}>
-              <div className={`p-5 rounded-2xl cursor-pointer text-center transition-all duration-300 animate-fade-up stagger-${i + 1}`}
-                style={{ ...cardStyle }}
-                onMouseOver={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(168,85,247,0.4)'; (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)' }}
-                onMouseOut={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(139,92,246,0.15)'; (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)' }}>
+              <div
+                className={`action-card p-5 rounded-2xl cursor-pointer text-center animate-fade-up stagger-${i + 1}`}
+                style={cardStyle}
+              >
                 <div className="w-11 h-11 rounded-xl flex items-center justify-center mx-auto mb-3" style={{ background: `${action.color}20`, border: `1px solid ${action.color}35` }}>
                   <action.icon className="h-5 w-5" style={{ color: action.color }} />
                 </div>
                 <h3 className="font-medium text-sm">{action.title}</h3>
-                <p className="text-xs mt-1" style={{ color: '#7C6A9C' }}>{action.description}</p>
+                <p className="text-xs mt-1 text-muted-foreground">{action.description}</p>
               </div>
             </Link>
           ))}
@@ -284,7 +286,7 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between mb-5">
             <div>
               <h2 className="font-semibold font-heading">Recent Ideas</h2>
-              <p className="text-xs mt-0.5" style={{ color: '#7C6A9C' }}>Latest from the community</p>
+              <p className="text-xs mt-0.5 text-muted-foreground">Latest from the community</p>
             </div>
             <Button variant="ghost" size="sm" asChild style={{ color: '#A855F7' }}>
               <Link href="/ideas">View all <ArrowRight className="ml-1 h-3 w-3" /></Link>
@@ -293,15 +295,13 @@ export default function DashboardPage() {
           <div className="space-y-3">
             {recentIdeas.length > 0 ? recentIdeas.map((idea) => (
               <Link key={idea.id} href={`/ideas/${idea.id}`}>
-                <div className="p-4 rounded-xl transition-all duration-200 cursor-pointer"
-                  style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(139,92,246,0.12)' }}
-                  onMouseOver={e => (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(168,85,247,0.3)'}
-                  onMouseOut={e => (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(139,92,246,0.12)'}>
+                <div className="list-row p-4 rounded-xl cursor-pointer"
+                  style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(139,92,246,0.12)' }}>
                   <h4 className="font-medium text-sm truncate">{idea.title}</h4>
-                  <p className="text-xs mt-1 line-clamp-2" style={{ color: '#7C6A9C' }}>{idea.description}</p>
+                  <p className="text-xs mt-1 line-clamp-2 text-muted-foreground">{idea.description}</p>
                   <div className="flex items-center gap-2 mt-2">
                     <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'rgba(168,85,247,0.12)', border: '1px solid rgba(168,85,247,0.25)', color: '#C084FC' }}>{idea.research_area}</span>
-                    <span className="text-xs flex items-center gap-1" style={{ color: '#7C6A9C' }}>
+                    <span className="text-xs flex items-center gap-1 text-muted-foreground">
                       <TrendingUp className="h-3 w-3" />{idea.upvotes} upvotes
                     </span>
                   </div>
@@ -310,9 +310,9 @@ export default function DashboardPage() {
             )) : (
               <div className="text-center py-10">
                 <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3" style={{ background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(139,92,246,0.2)' }}>
-                  <Lightbulb className="h-6 w-6" style={{ color: '#7C6A9C' }} />
+                  <Lightbulb className="h-6 w-6 text-muted-foreground" />
                 </div>
-                <p className="text-sm" style={{ color: '#7C6A9C' }}>No ideas yet</p>
+                <p className="text-sm text-muted-foreground">No ideas yet</p>
                 <Button variant="link" asChild style={{ color: '#A855F7' }}><Link href="/ideas/new">Post the first idea</Link></Button>
               </div>
             )}
@@ -324,7 +324,7 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between mb-5">
             <div>
               <h2 className="font-semibold font-heading">Suggested Matches</h2>
-              <p className="text-xs mt-0.5" style={{ color: '#7C6A9C' }}>Researchers you might connect with</p>
+              <p className="text-xs mt-0.5 text-muted-foreground">Researchers you might connect with</p>
             </div>
             <Button variant="ghost" size="sm" asChild style={{ color: '#A855F7' }}>
               <Link href="/matches">View all <ArrowRight className="ml-1 h-3 w-3" /></Link>
@@ -335,10 +335,8 @@ export default function DashboardPage() {
               const score = Math.round(Number(match.match_score))
               const isHighMatch = score > 80
               return (
-                <div key={match.id} className="p-4 rounded-xl transition-all duration-200"
-                  style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(139,92,246,0.12)' }}
-                  onMouseOver={e => (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(168,85,247,0.3)'}
-                  onMouseOut={e => (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(139,92,246,0.12)'}>
+                <div key={match.id} className="list-row p-4 rounded-xl"
+                  style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(139,92,246,0.12)' }}>
                   <div className="flex items-center gap-3">
                     <Avatar className="h-10 w-10">
                       <AvatarImage src={(match as any).matched_user?.avatar_url} />
@@ -348,7 +346,7 @@ export default function DashboardPage() {
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <h4 className="font-medium text-sm">{(match as any).matched_user?.full_name}</h4>
-                      <p className="text-xs truncate" style={{ color: '#7C6A9C' }}>{(match as any).matched_user?.department || "Researcher"}</p>
+                      <p className="text-xs truncate text-muted-foreground">{(match as any).matched_user?.department || "Researcher"}</p>
                     </div>
                     <span className={`text-xs px-2.5 py-1 rounded-full font-bold match-pill ${isHighMatch ? 'match-pill-high' : ''}`}
                       style={{ background: isHighMatch ? 'rgba(124,58,237,0.2)' : 'rgba(124,58,237,0.1)', color: isHighMatch ? '#C084FC' : '#A855F7' }}>
@@ -360,9 +358,9 @@ export default function DashboardPage() {
             }) : (
               <div className="text-center py-10">
                 <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3" style={{ background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(139,92,246,0.2)' }}>
-                  <Users className="h-6 w-6" style={{ color: '#7C6A9C' }} />
+                  <Users className="h-6 w-6 text-muted-foreground" />
                 </div>
-                <p className="text-sm" style={{ color: '#7C6A9C' }}>Complete your profile to get matches</p>
+                <p className="text-sm text-muted-foreground">Complete your profile to get matches</p>
                 <Button variant="link" asChild style={{ color: '#A855F7' }}><Link href="/settings">Update profile</Link></Button>
               </div>
             )}
@@ -373,7 +371,7 @@ export default function DashboardPage() {
       {/* Live Activity Feed */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+          <h2 className="font-semibold text-sm flex items-center gap-2">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
@@ -395,7 +393,7 @@ export default function DashboardPage() {
             </div>
             <div>
               <h2 className="font-semibold font-heading">Mentor Dashboard</h2>
-              <p className="text-xs" style={{ color: '#7C6A9C' }}>Manage your mentorship activities</p>
+              <p className="text-xs text-muted-foreground">Manage your mentorship activities</p>
             </div>
           </div>
           <MentorDashboard userId={profile.id} />
@@ -406,7 +404,7 @@ export default function DashboardPage() {
       {profile && (
         <div className="rounded-2xl p-6" style={cardStyle}>
           <h2 className="font-semibold font-heading mb-1">Your Research Progress</h2>
-          <p className="text-xs mb-6" style={{ color: '#7C6A9C' }}>Track your research journey milestones</p>
+          <p className="text-xs mb-6 text-muted-foreground">Track your research journey milestones</p>
           <div className="grid md:grid-cols-3 gap-6">
             {[
               { label: 'Profile Completion', value: userState?.profile.completion_pct ?? (profile.onboarding_completed ? 100 : (profile.onboarding_step || 0) * 20), display: `${userState?.profile.completion_pct ?? (profile.onboarding_completed ? 100 : (profile.onboarding_step || 0) * 20)}%` },
@@ -415,7 +413,7 @@ export default function DashboardPage() {
             ].map(item => (
               <div key={item.label} className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
-                  <span style={{ color: '#7C6A9C' }}>{item.label}</span>
+                  <span className="text-muted-foreground">{item.label}</span>
                   <span className="font-medium" style={{ color: '#C084FC' }}>{item.display}</span>
                 </div>
                 <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>

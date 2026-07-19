@@ -34,7 +34,7 @@ function StatCard({
   return (
     <div style={cardStyle()}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-        <span style={{ fontSize: '13px', color: '#7C6A9C' }}>{label}</span>
+        <span style={{ fontSize: '13px', color: 'var(--muted-foreground)' }}>{label}</span>
         <Icon size={18} style={{ color }} />
       </div>
       <p style={{ fontSize: '32px', fontWeight: 800, color: '#F3F0FF', lineHeight: 1 }}>
@@ -78,7 +78,7 @@ function ChartTooltip({ active, payload, label }: {
         <p style={{ color: '#FBBF24', fontSize: '12px' }}>+{p.payload.delta} pts</p>
       )}
       {p.payload.description && (
-        <p style={{ color: '#7C6A9C', fontSize: '12px', maxWidth: 200 }}>{p.payload.description}</p>
+        <p style={{ color: 'var(--muted-foreground)', fontSize: '12px', maxWidth: 200 }}>{p.payload.description}</p>
       )}
     </div>
   )
@@ -139,7 +139,7 @@ export default function AnalyticsPage() {
             Research Impact
           </h1>
         </div>
-        <p style={{ color: '#7C6A9C', fontSize: '14px' }}>
+        <p style={{ color: 'var(--muted-foreground)', fontSize: '14px' }}>
           Your visibility, engagement, and Akili velocity
         </p>
       </div>
@@ -209,13 +209,13 @@ export default function AnalyticsPage() {
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(139,92,246,0.12)" />
                 <XAxis
                   dataKey="date"
-                  tick={{ fill: '#7C6A9C', fontSize: 10 }}
+                  tick={{ fill: 'var(--muted-foreground)', fontSize: 10 }}
                   tickLine={false}
                   axisLine={false}
                   interval={6}
                 />
                 <YAxis
-                  tick={{ fill: '#7C6A9C', fontSize: 10 }}
+                  tick={{ fill: 'var(--muted-foreground)', fontSize: 10 }}
                   tickLine={false}
                   axisLine={false}
                   allowDecimals={false}
@@ -252,13 +252,13 @@ export default function AnalyticsPage() {
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(139,92,246,0.12)" />
                 <XAxis
                   dataKey="date"
-                  tick={{ fill: '#7C6A9C', fontSize: 10 }}
+                  tick={{ fill: 'var(--muted-foreground)', fontSize: 10 }}
                   tickLine={false}
                   axisLine={false}
                   interval={Math.floor(akiliChartData.length / 5)}
                 />
                 <YAxis
-                  tick={{ fill: '#7C6A9C', fontSize: 10 }}
+                  tick={{ fill: 'var(--muted-foreground)', fontSize: 10 }}
                   tickLine={false}
                   axisLine={false}
                   width={36}
@@ -391,7 +391,7 @@ export default function AnalyticsPage() {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
                   <Heart size={14} style={{ color: '#F43F5E' }} />
-                  <span style={{ fontSize: '13px', color: '#7C6A9C' }}>{idea.review_count ?? 0}</span>
+                  <span style={{ fontSize: '13px', color: 'var(--muted-foreground)' }}>{idea.review_count ?? 0}</span>
                 </div>
               </a>
             ))}
@@ -428,7 +428,7 @@ export default function AnalyticsPage() {
                   <p style={{ fontSize: '13px', color: '#D4C8F0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {event.description || event.event_type}
                   </p>
-                  <p style={{ fontSize: '11px', color: '#7C6A9C', marginTop: '2px' }}>
+                  <p style={{ fontSize: '11px', color: 'var(--muted-foreground)', marginTop: '2px' }}>
                     {formatDistanceToNow(parseISO(event.created_at), { addSuffix: true })}
                   </p>
                 </div>

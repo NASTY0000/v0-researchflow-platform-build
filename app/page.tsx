@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Logo } from '@/components/Logo'
 import {
@@ -8,7 +7,6 @@ import {
   User,
   Users,
   Award,
-  Star,
 } from 'lucide-react'
 import {
   GlobalIllustrations,
@@ -19,7 +17,6 @@ import {
 import { FaqSection } from '@/components/landing/faq-section'
 import { ParallaxHeroWrapper } from '@/components/landing/parallax-hero'
 import { MagneticButton } from '@/components/ui/micro-interactions'
-import { GradientText } from '@/components/ui/gradient-text'
 
 // ── Custom SVG feature icons ──────────────────────────────────────────────────
 
@@ -240,9 +237,8 @@ export default function LandingPage() {
               </div>
 
               <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold font-heading leading-none mb-6 animate-fade-up tracking-tight">
-                <GradientText animate>Collaborate.</GradientText>{' '}
-                <GradientText animate>Discover.</GradientText>{' '}
-                <GradientText animate>Publish.</GradientText>
+                Collaborate. Discover.{' '}
+                <span style={{ color: '#C084FC' }}>Publish.</span>
               </h1>
 
               <p className="text-lg sm:text-xl max-w-2xl mx-auto mb-10 leading-relaxed animate-fade-up stagger-1 text-muted-foreground">
@@ -295,10 +291,8 @@ export default function LandingPage() {
         <FeaturesIllustrations />
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="text-center mb-16">
-            <p className="label-section mb-3">Platform Features</p>
             <h2 className="text-3xl sm:text-4xl font-bold font-heading mb-4 tracking-tight">
-              Everything You Need to{' '}
-              <GradientText>Succeed</GradientText>
+              Everything You Need to Succeed
             </h2>
             <p className="max-w-2xl mx-auto text-muted-foreground">
               From ideation to publication, ResearchFlow provides all the tools for successful research collaboration.
@@ -329,7 +323,6 @@ export default function LandingPage() {
       <section id="how-it-works" className="py-24 px-4 bg-secondary/20">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <p className="label-section mb-3">Getting Started</p>
             <h2 className="text-3xl sm:text-4xl font-bold font-heading mb-4 tracking-tight">
               Get Started in Minutes
             </h2>
@@ -364,16 +357,15 @@ export default function LandingPage() {
                 key={item.step}
                 className={`relative p-8 rounded-2xl animate-fade-up stagger-${i + 1} bg-card border border-border hover:border-primary/35 transition-all duration-300`}
               >
-                <div className="flex items-center gap-4 mb-5">
+                <div className="flex items-center gap-3 mb-5">
                   <div
                     className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
                     style={{ background: `${item.iconColor}18`, border: `1px solid ${item.iconColor}30` }}
                   >
                     <item.icon className="w-6 h-6" style={{ color: item.iconColor }} />
                   </div>
-                  <span className="text-4xl font-black font-heading text-violet-600/20 tracking-tighter leading-none">{item.step}</span>
+                  <span className="text-xs font-mono font-semibold text-muted-foreground">{item.step}</span>
                 </div>
-                <div className="w-8 h-0.5 mb-4 rounded bg-gradient-to-r from-violet-600 to-cyan-500" />
                 <h3 className="text-xl font-semibold font-heading mb-3">{item.title}</h3>
                 <p className="text-muted-foreground text-sm leading-relaxed">{item.description}</p>
               </div>
@@ -387,7 +379,6 @@ export default function LandingPage() {
         <StatsIllustrations />
         <div className="relative z-10 max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <p className="label-section mb-3">Social Proof</p>
             <h2 className="text-3xl sm:text-4xl font-bold font-heading tracking-tight">
               Trusted by Researchers Across Africa
             </h2>
@@ -399,11 +390,6 @@ export default function LandingPage() {
                 key={i}
                 className={`p-6 rounded-2xl animate-fade-up stagger-${i + 1} bg-card border border-border`}
               >
-                <div className="flex gap-1 mb-4">
-                  {[...Array(5)].map((_, j) => (
-                    <Star key={j} className="w-4 h-4 fill-current text-violet-400" />
-                  ))}
-                </div>
                 <p className="mb-6 leading-relaxed text-foreground">&ldquo;{t.quote}&rdquo;</p>
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold bg-gradient-to-br from-violet-600 to-violet-500 text-primary-foreground">
@@ -430,7 +416,6 @@ export default function LandingPage() {
           <div className="p-10 sm:p-16 rounded-3xl relative overflow-hidden bg-gradient-to-r from-purple-700 to-purple-900 dark:from-purple-900 dark:to-[#050118]">
             <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_50%_0%,rgba(255,255,255,0.08),transparent_60%)]" />
             <div className="relative text-white">
-              <p className="label-section mb-4" style={{ color: 'rgba(255,255,255,0.6)' }}>Join the movement</p>
               <h2 className="text-3xl sm:text-4xl font-bold font-heading mb-4 tracking-tight text-white">
                 Ready to Transform Your Research?
               </h2>

@@ -233,7 +233,7 @@ export default function MentorDashboardPage() {
             <GraduationCap className="w-8 h-8" style={{ color: '#A855F7' }} />
           </div>
           <h2 className="text-xl font-bold font-heading mb-2">Complete Your Mentor Application</h2>
-          <p className="text-sm max-w-sm mx-auto mb-6" style={{ color: '#7C6A9C' }}>
+          <p className="text-sm max-w-sm mx-auto mb-6 text-muted-foreground">
             You have the mentor role but haven&apos;t submitted your verification documents yet.
             Complete your application to unlock the mentor dashboard.
           </p>
@@ -295,7 +295,7 @@ export default function MentorDashboardPage() {
         <div className="rounded-2xl p-8 text-center" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(139,92,246,0.15)' }}>
           <Clock className="w-12 h-12 mx-auto mb-4 opacity-30" />
           <p className="font-semibold">Awaiting Verification</p>
-          <p className="text-sm mt-1" style={{ color: '#7C6A9C' }}>
+          <p className="text-sm mt-1 text-muted-foreground">
             Mentor features will unlock once your application is approved by the ResearchFlow team.
           </p>
         </div>
@@ -314,7 +314,7 @@ export default function MentorDashboardPage() {
             </CardHeader>
             <CardContent>
               {pendingRequests.length === 0 ? (
-                <p className="text-sm text-center py-6" style={{ color: '#7C6A9C' }}>
+                <p className="text-sm text-center py-6 text-muted-foreground">
                   No pending requests right now.
                 </p>
               ) : (
@@ -380,7 +380,7 @@ export default function MentorDashboardPage() {
             </CardHeader>
             <CardContent>
               {activeRequests.length === 0 ? (
-                <p className="text-sm text-center py-6" style={{ color: '#7C6A9C' }}>
+                <p className="text-sm text-center py-6 text-muted-foreground">
                   No active mentorships yet.
                 </p>
               ) : (
@@ -400,7 +400,7 @@ export default function MentorDashboardPage() {
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-sm truncate">{req.student?.full_name || 'Student'}</p>
                         {req.project && (
-                          <p className="text-xs truncate" style={{ color: '#7C6A9C' }}>{req.project.title}</p>
+                          <p className="text-xs truncate text-muted-foreground">{req.project.title}</p>
                         )}
                       </div>
                       {req.project && (
@@ -607,7 +607,7 @@ export default function MentorDashboardPage() {
                       <div className="flex items-center gap-3 text-sm">
                         <Calendar className="w-4 h-4 text-primary" />
                         <span>{new Date(slot.available_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
-                        <span style={{ color: '#7C6A9C' }}>{slot.start_time} – {slot.end_time}</span>
+                        <span className="text-muted-foreground">{slot.start_time} – {slot.end_time}</span>
                         {slot.is_booked && <Badge variant="secondary" className="text-xs">Booked</Badge>}
                       </div>
                       {!slot.is_booked && (

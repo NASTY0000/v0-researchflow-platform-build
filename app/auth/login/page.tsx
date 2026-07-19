@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Loader2, Mail, Lock, ArrowLeft } from 'lucide-react'
+import { Loader2, Mail, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react'
 import { signIn, signInWithGoogle } from '@/lib/actions/auth'
 import { createClient } from '@/lib/supabase/client'
 
@@ -28,6 +28,7 @@ function LoginPageInner() {
   const [cleared, setCleared] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
   const emailRef = useRef<HTMLInputElement>(null)
   const passwordRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
@@ -47,7 +48,6 @@ function LoginPageInner() {
     }
   }, [searchParams])
 
-  // Clear any broken OAuth session on page load
   useEffect(() => {
     async function clearBrokenSession() {
       const supabase = createClient()
@@ -62,7 +62,6 @@ function LoginPageInner() {
         return
       }
 
-      // If session exists but getUser fails, it's a broken session — clear it
       const { data: { session } } = await supabase.auth.getSession()
       const { data: { user } } = await supabase.auth.getUser()
       if (session && !user) {
@@ -122,7 +121,7 @@ function LoginPageInner() {
 
           <form action={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="email" className="text-sm font-medium text-muted-foreground">Email</Label>
+              <Label htmlFor="email" className="text-sm font-medium">Email</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input ref={emailRef} id="email" name="email" type="email" placeholder="you@university.edu" required className="pl-10" />
@@ -131,12 +130,28 @@ function LoginPageInner() {
 
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-sm font-medium text-muted-foreground">Password</Label>
+                <Label htmlFor="password" className="text-sm font-medium">Password</Label>
                 <Link href="/auth/forgot-password" className="text-xs text-primary">Forgot password?</Link>
               </div>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input ref={passwordRef} id="password" name="password" type="password" placeholder="Enter your password" required className="pl-10" />
+                <Input
+                  ref={passwordRef}
+                  id="password"
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Enter your password"
+                  required
+                  className="pl-10 pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(v => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
             </div>
 

@@ -10,7 +10,7 @@ export default function ContactPage() {
         </Link>
 
         <h1 className="text-4xl font-bold font-heading mb-4" style={{ letterSpacing: '-0.03em' }}>Contact Us</h1>
-        <p className="text-lg mb-10" style={{ color: '#7C6A9C' }}>We&apos;d love to hear from you.</p>
+        <p className="text-lg mb-10 text-muted-foreground">We&apos;d love to hear from you.</p>
 
         <div className="grid md:grid-cols-2 gap-6 mb-10">
           <div className="p-6 rounded-2xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(139,92,246,0.15)' }}>
@@ -18,7 +18,7 @@ export default function ContactPage() {
               <Mail className="w-5 h-5" style={{ color: '#A855F7' }} />
             </div>
             <h2 className="font-semibold font-heading mb-1">Email</h2>
-            <p className="text-sm mb-2" style={{ color: '#7C6A9C' }}>For general enquiries</p>
+            <p className="text-sm mb-2 text-muted-foreground">For general enquiries</p>
             <a href="mailto:hello@researchflow.app" className="text-sm font-medium" style={{ color: '#A855F7' }}>
               hello@researchflow.app
             </a>
@@ -29,7 +29,7 @@ export default function ContactPage() {
               <MessageSquare className="w-5 h-5" style={{ color: '#A855F7' }} />
             </div>
             <h2 className="font-semibold font-heading mb-1">Support</h2>
-            <p className="text-sm mb-2" style={{ color: '#7C6A9C' }}>For platform support</p>
+            <p className="text-sm mb-2 text-muted-foreground">For platform support</p>
             <a href="mailto:support@researchflow.app" className="text-sm font-medium" style={{ color: '#A855F7' }}>
               support@researchflow.app
             </a>
@@ -37,7 +37,7 @@ export default function ContactPage() {
         </div>
 
         <div className="p-6 rounded-2xl text-center" style={{ background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(139,92,246,0.2)' }}>
-          <p className="text-sm" style={{ color: '#7C6A9C' }}>
+          <p className="text-sm text-muted-foreground">
             Response times are typically within 1–2 business days.
           </p>
         </div>

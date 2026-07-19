@@ -174,7 +174,7 @@ export function MentorVerification({ userId, onComplete, onSkip }: MentorVerific
           </Link>
           <div className="flex items-center gap-2">
             <Shield className="w-4 h-4" style={{ color: '#7C3AED' }} />
-            <span className="text-sm" style={{ color: '#7C6A9C' }}>Mentor Verification</span>
+            <span className="text-sm text-muted-foreground">Mentor Verification</span>
           </div>
         </div>
       </header>
@@ -193,7 +193,7 @@ export function MentorVerification({ userId, onComplete, onSkip }: MentorVerific
             <Card style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(139,92,246,0.2)' }}>
               <CardHeader>
                 <CardTitle className="text-2xl font-heading" style={{ color: '#F3F0FF' }}>Select Your Mentor Tier</CardTitle>
-                <CardDescription style={{ color: '#7C6A9C' }}>
+                <CardDescription className="text-muted-foreground">
                   Choose the category that best describes you
                 </CardDescription>
               </CardHeader>
@@ -218,7 +218,7 @@ export function MentorVerification({ userId, onComplete, onSkip }: MentorVerific
                             : { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(139,92,246,0.2)' }
                           }
                         >
-                          <Icon className="w-6 h-6" style={{ color: selectedTier === tier.tier ? '#F3F0FF' : '#7C6A9C' }} />
+                          <Icon className="w-6 h-6" style={{ color: selectedTier === tier.tier ? '#F3F0FF' : 'var(--muted-foreground)' }} />
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
@@ -229,11 +229,11 @@ export function MentorVerification({ userId, onComplete, onSkip }: MentorVerific
                           <div className="font-semibold text-lg mb-1" style={{ color: selectedTier === tier.tier ? '#C084FC' : '#F3F0FF' }}>
                             {tier.title}
                           </div>
-                          <div className="text-sm mb-3" style={{ color: '#7C6A9C' }}>{tier.subtitle}</div>
+                          <div className="text-sm mb-3 text-muted-foreground">{tier.subtitle}</div>
                           <div className="space-y-1">
-                            <div className="text-xs font-medium" style={{ color: '#7C6A9C' }}>Verified by:</div>
+                            <div className="text-xs font-medium text-muted-foreground">Verified by:</div>
                             {tier.requirements.map((req, i) => (
-                              <div key={i} className="text-xs flex items-center gap-1.5" style={{ color: '#7C6A9C' }}>
+                              <div key={i} className="text-xs flex items-center gap-1.5 text-muted-foreground">
                                 <span className="w-1 h-1 rounded-full" style={{ background: '#7C3AED' }} />
                                 {req}
                               </div>
@@ -249,7 +249,7 @@ export function MentorVerification({ userId, onComplete, onSkip }: MentorVerific
                   <Button
                     variant="ghost"
                     onClick={onSkip}
-                    style={{ color: '#7C6A9C' }}
+                    className="text-muted-foreground"
                   >
                     Skip for now
                   </Button>
@@ -274,12 +274,12 @@ export function MentorVerification({ userId, onComplete, onSkip }: MentorVerific
                   <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'rgba(124,58,237,0.2)', color: '#A855F7' }}>
                     Tier {selectedTier}
                   </span>
-                  <span className="text-sm" style={{ color: '#7C6A9C' }}>
+                  <span className="text-sm text-muted-foreground">
                     {MENTOR_TIERS.find(t => t.tier === selectedTier)?.title}
                   </span>
                 </div>
                 <CardTitle className="text-2xl font-heading" style={{ color: '#F3F0FF' }}>Verification Details</CardTitle>
-                <CardDescription style={{ color: '#7C6A9C' }}>
+                <CardDescription className="text-muted-foreground">
                   Please provide the required information for verification
                 </CardDescription>
               </CardHeader>
@@ -288,7 +288,7 @@ export function MentorVerification({ userId, onComplete, onSkip }: MentorVerific
                 {selectedTier === 1 && (
                   <>
                     <div className="space-y-2">
-                      <Label style={{ color: '#7C6A9C' }}>Institutional Staff Email *</Label>
+                      <Label className="text-muted-foreground">Institutional Staff Email *</Label>
                       <Input
                         type="email"
                         value={staffEmail}
@@ -299,7 +299,7 @@ export function MentorVerification({ userId, onComplete, onSkip }: MentorVerific
                     </div>
 
                     <div className="space-y-2">
-                      <Label style={{ color: '#7C6A9C' }}>Staff ID *</Label>
+                      <Label className="text-muted-foreground">Staff ID *</Label>
                       <Input
                         value={staffId}
                         onChange={(e) => setStaffId(e.target.value)}
@@ -309,7 +309,7 @@ export function MentorVerification({ userId, onComplete, onSkip }: MentorVerific
                     </div>
 
                     <div className="space-y-2">
-                      <Label style={{ color: '#7C6A9C' }}>Staff ID Card Upload * (JPG, PNG, or PDF, max 5MB)</Label>
+                      <Label className="text-muted-foreground">Staff ID Card Upload * (JPG, PNG, or PDF, max 5MB)</Label>
                       <div 
                         onClick={() => fileInputRef.current?.click()}
                         className="border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all"
@@ -332,8 +332,8 @@ export function MentorVerification({ userId, onComplete, onSkip }: MentorVerific
                           </div>
                         ) : (
                           <div>
-                            <Upload className="w-8 h-8 mx-auto mb-2" style={{ color: '#7C6A9C' }} />
-                            <p style={{ color: '#7C6A9C' }}>Click to upload or drag and drop</p>
+                            <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                            <p className="text-muted-foreground">Click to upload or drag and drop</p>
                           </div>
                         )}
                       </div>
@@ -341,7 +341,7 @@ export function MentorVerification({ userId, onComplete, onSkip }: MentorVerific
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label style={{ color: '#7C6A9C' }}>Department *</Label>
+                        <Label className="text-muted-foreground">Department *</Label>
                         <Input
                           value={facultyDepartment}
                           onChange={(e) => setFacultyDepartment(e.target.value)}
@@ -350,7 +350,7 @@ export function MentorVerification({ userId, onComplete, onSkip }: MentorVerific
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label style={{ color: '#7C6A9C' }}>Faculty *</Label>
+                        <Label className="text-muted-foreground">Faculty *</Label>
                         <Input
                           value={faculty}
                           onChange={(e) => setFaculty(e.target.value)}
@@ -366,7 +366,7 @@ export function MentorVerification({ userId, onComplete, onSkip }: MentorVerific
                 {selectedTier === 2 && (
                   <>
                     <div className="space-y-2">
-                      <Label style={{ color: '#7C6A9C' }}>Institutional Email *</Label>
+                      <Label className="text-muted-foreground">Institutional Email *</Label>
                       <Input
                         type="email"
                         value={institutionalEmail}
@@ -377,7 +377,7 @@ export function MentorVerification({ userId, onComplete, onSkip }: MentorVerific
                     </div>
 
                     <div className="space-y-2">
-                      <Label style={{ color: '#7C6A9C' }}>Programme Enrolled *</Label>
+                      <Label className="text-muted-foreground">Programme Enrolled *</Label>
                       <div className="flex gap-3">
                         <button
                           type="button"
@@ -385,7 +385,7 @@ export function MentorVerification({ userId, onComplete, onSkip }: MentorVerific
                           className="flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-all"
                           style={programme === 'msc' 
                             ? { background: 'rgba(124,58,237,0.2)', border: '1px solid rgba(168,85,247,0.5)', color: '#C084FC' }
-                            : { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(139,92,246,0.2)', color: '#7C6A9C' }
+                            : { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(139,92,246,0.2)', color: 'var(--muted-foreground)' }
                           }
                         >
                           MSc
@@ -396,7 +396,7 @@ export function MentorVerification({ userId, onComplete, onSkip }: MentorVerific
                           className="flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-all"
                           style={programme === 'phd' 
                             ? { background: 'rgba(124,58,237,0.2)', border: '1px solid rgba(168,85,247,0.5)', color: '#C084FC' }
-                            : { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(139,92,246,0.2)', color: '#7C6A9C' }
+                            : { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(139,92,246,0.2)', color: 'var(--muted-foreground)' }
                           }
                         >
                           PhD
@@ -405,7 +405,7 @@ export function MentorVerification({ userId, onComplete, onSkip }: MentorVerific
                     </div>
 
                     <div className="space-y-2">
-                      <Label style={{ color: '#7C6A9C' }}>Supervisor Name *</Label>
+                      <Label className="text-muted-foreground">Supervisor Name *</Label>
                       <Input
                         value={supervisorName}
                         onChange={(e) => setSupervisorName(e.target.value)}
@@ -415,7 +415,7 @@ export function MentorVerification({ userId, onComplete, onSkip }: MentorVerific
                     </div>
 
                     <div className="space-y-2">
-                      <Label style={{ color: '#7C6A9C' }}>Supervisor Endorsement Letter * (PDF only, max 5MB)</Label>
+                      <Label className="text-muted-foreground">Supervisor Endorsement Letter * (PDF only, max 5MB)</Label>
                       <div 
                         onClick={() => fileInputRef.current?.click()}
                         className="border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all"
@@ -438,8 +438,8 @@ export function MentorVerification({ userId, onComplete, onSkip }: MentorVerific
                           </div>
                         ) : (
                           <div>
-                            <Upload className="w-8 h-8 mx-auto mb-2" style={{ color: '#7C6A9C' }} />
-                            <p style={{ color: '#7C6A9C' }}>Click to upload or drag and drop</p>
+                            <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                            <p className="text-muted-foreground">Click to upload or drag and drop</p>
                           </div>
                         )}
                       </div>
@@ -451,7 +451,7 @@ export function MentorVerification({ userId, onComplete, onSkip }: MentorVerific
                 {selectedTier === 3 && (
                   <>
                     <div className="space-y-2">
-                      <Label style={{ color: '#7C6A9C' }}>LinkedIn Profile URL *</Label>
+                      <Label className="text-muted-foreground">LinkedIn Profile URL *</Label>
                       <Input
                         type="url"
                         value={linkedinUrl}
@@ -463,7 +463,7 @@ export function MentorVerification({ userId, onComplete, onSkip }: MentorVerific
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label style={{ color: '#7C6A9C' }}>Job Title *</Label>
+                        <Label className="text-muted-foreground">Job Title *</Label>
                         <Input
                           value={jobTitle}
                           onChange={(e) => setJobTitle(e.target.value)}
@@ -472,7 +472,7 @@ export function MentorVerification({ userId, onComplete, onSkip }: MentorVerific
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label style={{ color: '#7C6A9C' }}>Organisation *</Label>
+                        <Label className="text-muted-foreground">Organisation *</Label>
                         <Input
                           value={organisation}
                           onChange={(e) => setOrganisation(e.target.value)}
@@ -483,7 +483,7 @@ export function MentorVerification({ userId, onComplete, onSkip }: MentorVerific
                     </div>
 
                     <div className="space-y-2">
-                      <Label style={{ color: '#7C6A9C' }}>Professional Document * (CV or Certificate, max 5MB)</Label>
+                      <Label className="text-muted-foreground">Professional Document * (CV or Certificate, max 5MB)</Label>
                       <div 
                         onClick={() => fileInputRef.current?.click()}
                         className="border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all"
@@ -506,8 +506,8 @@ export function MentorVerification({ userId, onComplete, onSkip }: MentorVerific
                           </div>
                         ) : (
                           <div>
-                            <Upload className="w-8 h-8 mx-auto mb-2" style={{ color: '#7C6A9C' }} />
-                            <p style={{ color: '#7C6A9C' }}>Click to upload or drag and drop</p>
+                            <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                            <p className="text-muted-foreground">Click to upload or drag and drop</p>
                           </div>
                         )}
                       </div>
@@ -519,11 +519,11 @@ export function MentorVerification({ userId, onComplete, onSkip }: MentorVerific
                 <div className="space-y-4">
                   <div>
                     <Label style={{ color: '#F3F0FF' }}>Expertise Areas *</Label>
-                    <p className="text-sm mt-1" style={{ color: '#7C6A9C' }}>Select your areas of expertise for mentoring</p>
+                    <p className="text-sm mt-1 text-muted-foreground">Select your areas of expertise for mentoring</p>
                   </div>
 
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#7C6A9C' }} />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                       value={expertiseSearch}
                       onChange={(e) => setExpertiseSearch(e.target.value)}
@@ -533,7 +533,7 @@ export function MentorVerification({ userId, onComplete, onSkip }: MentorVerific
                     />
                   </div>
 
-                  <div className="text-sm" style={{ color: '#7C6A9C' }}>
+                  <div className="text-sm text-muted-foreground">
                     {expertiseAreas.length} selected
                   </div>
 
@@ -546,7 +546,7 @@ export function MentorVerification({ userId, onComplete, onSkip }: MentorVerific
                           onClick={() => toggleExpertise(area)}
                           style={expertiseAreas.includes(area)
                             ? { background: 'rgba(124,58,237,0.3)', border: '1px solid rgba(168,85,247,0.6)', color: '#C084FC' }
-                            : { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(139,92,246,0.2)', color: '#7C6A9C' }
+                            : { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(139,92,246,0.2)', color: 'var(--muted-foreground)' }
                           }
                         >
                           {area}
@@ -568,7 +568,7 @@ export function MentorVerification({ userId, onComplete, onSkip }: MentorVerific
                     className="w-full h-2 rounded-full appearance-none cursor-pointer"
                     style={{ background: `linear-gradient(to right, #7C3AED 0%, #7C3AED ${(availableSlots / 20) * 100}%, rgba(255,255,255,0.1) ${(availableSlots / 20) * 100}%, rgba(255,255,255,0.1) 100%)` }}
                   />
-                  <div className="flex justify-between text-xs" style={{ color: '#7C6A9C' }}>
+                  <div className="flex justify-between text-xs text-muted-foreground">
                     <span>1 slot</span>
                     <span>20 slots</span>
                   </div>
@@ -620,7 +620,7 @@ export function MentorVerification({ userId, onComplete, onSkip }: MentorVerific
                 <h2 className="text-3xl font-bold font-heading mb-3" style={{ color: '#F3F0FF' }}>
                   {selectedTier === 3 ? 'Under Manual Review' : 'Profile Under Review'}
                 </h2>
-                <p className="mb-8 max-w-md mx-auto" style={{ color: '#7C6A9C' }}>
+                <p className="mb-8 max-w-md mx-auto text-muted-foreground">
                   {selectedTier === 3 
                     ? 'Your application is under manual review. This takes 24-48 hours. We will notify you by email once approved.'
                     : 'Your mentor profile is under review. You will be notified within 24 hours once verified. In the meantime, you can complete your researcher or collaborator profile.'

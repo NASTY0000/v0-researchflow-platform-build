@@ -317,7 +317,7 @@ export function MentorDashboard({ userId }: MentorDashboardProps) {
                 </div>
                 <div>
                   <p className="text-2xl font-bold" style={{ color: '#F3F0FF' }}>{value}</p>
-                  <p className="text-xs" style={{ color: '#7C6A9C' }}>{label}</p>
+                  <p className="text-xs text-muted-foreground">{label}</p>
                 </div>
               </div>
             </CardContent>
@@ -359,8 +359,8 @@ export function MentorDashboard({ userId }: MentorDashboardProps) {
             ) : requests.length === 0 ? (
               <Card style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(139,92,246,0.2)' }}>
                 <CardContent className="py-12 text-center">
-                  <Bell className="w-12 h-12 mx-auto mb-4" style={{ color: '#7C6A9C' }} />
-                  <p style={{ color: '#7C6A9C' }}>No pending mentorship requests</p>
+                  <Bell className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                  <p className="text-muted-foreground">No pending mentorship requests</p>
                 </CardContent>
               </Card>
             ) : (
@@ -382,12 +382,12 @@ export function MentorDashboard({ userId }: MentorDashboardProps) {
                               <p className="text-sm" style={{ color: '#C084FC' }}>{req.project.title}</p>
                             )}
                           </div>
-                          <span className="text-xs whitespace-nowrap" style={{ color: '#7C6A9C' }}>
+                          <span className="text-xs whitespace-nowrap text-muted-foreground">
                             {new Date(req.created_at).toLocaleDateString()}
                           </span>
                         </div>
                         {req.message && (
-                          <p className="text-sm mt-3" style={{ color: '#7C6A9C' }}>{req.message}</p>
+                          <p className="text-sm mt-3 text-muted-foreground">{req.message}</p>
                         )}
                         {req.brief_url && (
                           <a
@@ -439,8 +439,8 @@ export function MentorDashboard({ userId }: MentorDashboardProps) {
             {activeMentorships.length === 0 ? (
               <Card style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(139,92,246,0.2)' }}>
                 <CardContent className="py-12 text-center">
-                  <Users className="w-12 h-12 mx-auto mb-4" style={{ color: '#7C6A9C' }} />
-                  <p style={{ color: '#7C6A9C' }}>No active mentorships yet</p>
+                  <Users className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                  <p className="text-muted-foreground">No active mentorships yet</p>
                 </CardContent>
               </Card>
             ) : (
@@ -459,7 +459,7 @@ export function MentorDashboard({ userId }: MentorDashboardProps) {
                         {m.project_title && (
                           <p className="text-sm" style={{ color: '#C084FC' }}>{m.project_title}</p>
                         )}
-                        <p className="text-xs mt-1" style={{ color: '#7C6A9C' }}>
+                        <p className="text-xs mt-1 text-muted-foreground">
                           Since {new Date(m.accepted_at).toLocaleDateString()}
                         </p>
                       </div>
@@ -486,7 +486,7 @@ export function MentorDashboard({ userId }: MentorDashboardProps) {
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle style={{ color: '#F3F0FF' }}>Upcoming Availability</CardTitle>
-                  <CardDescription style={{ color: '#7C6A9C' }}>
+                  <CardDescription className="text-muted-foreground">
                     Add specific date/time slots when you&apos;re available for sessions.
                   </CardDescription>
                 </div>
@@ -502,7 +502,7 @@ export function MentorDashboard({ userId }: MentorDashboardProps) {
             </CardHeader>
             <CardContent>
               {slots.length === 0 ? (
-                <div className="py-8 text-center" style={{ color: '#7C6A9C' }}>
+                <div className="py-8 text-center text-muted-foreground">
                   No upcoming slots. Add one to let students book sessions.
                 </div>
               ) : (
@@ -527,7 +527,7 @@ export function MentorDashboard({ userId }: MentorDashboardProps) {
                             <p className="text-sm font-medium" style={{ color: '#F3F0FF' }}>
                               {new Date(slot.available_date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
                             </p>
-                            <p className="text-xs" style={{ color: '#7C6A9C' }}>
+                            <p className="text-xs text-muted-foreground">
                               {slot.start_time.slice(0, 5)} – {slot.end_time.slice(0, 5)}
                             </p>
                           </div>
@@ -542,7 +542,7 @@ export function MentorDashboard({ userId }: MentorDashboardProps) {
                           variant="ghost"
                           disabled={!canDelete || deletingSlotId === slot.id}
                           onClick={() => handleDeleteSlot(slot)}
-                          style={{ color: canDelete ? '#EF4444' : '#7C6A9C' }}
+                          style={{ color: canDelete ? '#EF4444' : 'var(--muted-foreground)' }}
                         >
                           {deletingSlotId === slot.id ? (
                             <Loader2 className="w-4 h-4 animate-spin" />
@@ -565,8 +565,8 @@ export function MentorDashboard({ userId }: MentorDashboardProps) {
             {sessions.length === 0 ? (
               <Card style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(139,92,246,0.2)' }}>
                 <CardContent className="py-12 text-center">
-                  <Calendar className="w-12 h-12 mx-auto mb-4" style={{ color: '#7C6A9C' }} />
-                  <p style={{ color: '#7C6A9C' }}>No sessions yet</p>
+                  <Calendar className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                  <p className="text-muted-foreground">No sessions yet</p>
                 </CardContent>
               </Card>
             ) : (
@@ -581,7 +581,7 @@ export function MentorDashboard({ userId }: MentorDashboardProps) {
                             <h4 className="font-semibold" style={{ color: '#F3F0FF' }}>
                               {(session.student as Profile | undefined)?.full_name || 'Student'}
                             </h4>
-                            <span className="text-xs" style={{ color: '#7C6A9C' }}>
+                            <span className="text-xs text-muted-foreground">
                               {new Date(session.scheduled_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                             </span>
                           </div>
@@ -596,7 +596,7 @@ export function MentorDashboard({ userId }: MentorDashboardProps) {
                                 key={i}
                                 className="w-4 h-4"
                                 style={{
-                                  color: i < (session.student_rating || 0) ? '#EAB308' : '#7C6A9C',
+                                  color: i < (session.student_rating || 0) ? '#EAB308' : 'var(--muted-foreground)',
                                   fill: i < (session.student_rating || 0) ? '#EAB308' : 'transparent',
                                 }}
                               />
@@ -607,7 +607,7 @@ export function MentorDashboard({ userId }: MentorDashboardProps) {
 
                       {isPast && (
                         <div className="space-y-2">
-                          <Label style={{ color: '#7C6A9C', fontSize: '12px' }}>Session Notes</Label>
+                          <Label style={{ color: 'var(--muted-foreground)', fontSize: '12px' }}>Session Notes</Label>
                           <Textarea
                             placeholder="Add notes visible to you and the student..."
                             value={sessionNotes[session.id] ?? (session.notes || '')}

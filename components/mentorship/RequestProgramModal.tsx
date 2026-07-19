@@ -81,11 +81,11 @@ export function RequestProgramModal({ mentor, onClose, onSuccess }: RequestProgr
         <div className="flex items-center justify-between p-5" style={{ borderBottom: '1px solid rgba(139,92,246,0.15)' }}>
           <div>
             <h2 className="text-lg font-bold font-heading">Request Mentorship Program</h2>
-            <p className="text-xs mt-0.5" style={{ color: '#7C6A9C' }}>
+            <p className="text-xs mt-0.5 text-muted-foreground">
               with {mentor.profile.full_name}
             </p>
           </div>
-          <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ color: '#7C6A9C', background: 'rgba(255,255,255,0.05)' }}>
+          <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ color: 'var(--muted-foreground)', background: 'rgba(255,255,255,0.05)' }}>
             <X size={16} />
           </button>
         </div>
@@ -97,7 +97,7 @@ export function RequestProgramModal({ mentor, onClose, onSuccess }: RequestProgr
                 <span style={{ fontSize: '24px' }}>✓</span>
               </div>
               <p className="font-semibold text-lg">Request sent!</p>
-              <p className="text-sm" style={{ color: '#7C6A9C' }}>
+              <p className="text-sm text-muted-foreground">
                 You will be notified when {mentor.profile.full_name} responds.
               </p>
             </div>
@@ -114,7 +114,7 @@ export function RequestProgramModal({ mentor, onClose, onSuccess }: RequestProgr
                 <div>
                   <p className="font-semibold text-sm">{mentor.profile.full_name}</p>
                   {mentor.profile.department && (
-                    <p className="text-xs" style={{ color: '#7C6A9C' }}>{mentor.profile.department}</p>
+                    <p className="text-xs text-muted-foreground">{mentor.profile.department}</p>
                   )}
                 </div>
               </div>
@@ -132,7 +132,7 @@ export function RequestProgramModal({ mentor, onClose, onSuccess }: RequestProgr
                       style={
                         duration === d.months
                           ? { background: 'rgba(124,58,237,0.3)', border: '1px solid rgba(168,85,247,0.5)', color: '#E2D9F3' }
-                          : { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(139,92,246,0.2)', color: '#7C6A9C' }
+                          : { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(139,92,246,0.2)', color: 'var(--muted-foreground)' }
                       }
                     >
                       <Clock size={13} />
@@ -158,7 +158,7 @@ export function RequestProgramModal({ mentor, onClose, onSuccess }: RequestProgr
               <div className="space-y-2">
                 <Label>
                   Goals
-                  <span className="ml-2 text-xs font-normal" style={{ color: '#7C6A9C' }}>
+                  <span className="ml-2 text-xs font-normal text-muted-foreground">
                     {goals.length}/500 · min 30 chars
                   </span>
                 </Label>

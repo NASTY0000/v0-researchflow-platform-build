@@ -109,12 +109,12 @@ export function MilestoneList({ milestones, canComplete = true, onUpdate }: Mile
                 {m.title}
               </p>
               {m.description && !done && (
-                <p style={{ fontSize: '12px', color: '#7C6A9C', marginTop: '2px' }}>{m.description}</p>
+                <p style={{ fontSize: '12px', color: 'var(--muted-foreground)', marginTop: '2px' }}>{m.description}</p>
               )}
               {m.due_date && (
                 <p style={{
                   fontSize: '11px',
-                  color: done ? '#22C55E' : isOverdue ? '#EF4444' : '#7C6A9C',
+                  color: done ? '#22C55E' : isOverdue ? '#EF4444' : 'var(--muted-foreground)',
                   marginTop: '3px',
                 }}>
                   {done

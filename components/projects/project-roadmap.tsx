@@ -206,7 +206,7 @@ export function ProjectRoadmap({ project, currentUserId = null, isOwner = false,
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-semibold" style={{ color: '#E2D9F3' }}>Research Progress</h3>
-              <p className="text-xs mt-0.5" style={{ color: '#7C6A9C' }}>
+              <p className="text-xs mt-0.5 text-muted-foreground">
                 {completedCount} of 7 phases complete
                 {currentPhaseNumber <= 7 && ` · Currently: Phase ${currentPhaseNumber}`}
               </p>
@@ -214,7 +214,7 @@ export function ProjectRoadmap({ project, currentUserId = null, isOwner = false,
             <span className="text-2xl font-bold" style={{ color: '#A855F7' }}>{progressPercent}%</span>
           </div>
           <Progress value={progressPercent} className="h-2" style={{ background: 'rgba(139,92,246,0.15)' }} />
-          <div className="flex gap-4 text-xs" style={{ color: '#7C6A9C' }}>
+          <div className="flex gap-4 text-xs text-muted-foreground">
             <span className="flex items-center gap-1"><CheckCircle2 className="h-3 w-3 text-green-500" />{completedCount} done</span>
             <span className="flex items-center gap-1"><Clock className="h-3 w-3 text-amber-500" />{7 - completedCount} remaining</span>
           </div>
@@ -247,7 +247,7 @@ export function ProjectRoadmap({ project, currentUserId = null, isOwner = false,
                 >
                   {isCompleted
                     ? <CheckCircle2 className="h-5 w-5 text-green-500" />
-                    : <Icon className="h-4 w-4" style={{ color: isCurrent ? '#A855F7' : '#7C6A9C' }} />
+                    : <Icon className="h-4 w-4" style={{ color: isCurrent ? '#A855F7' : 'var(--muted-foreground)' }} />
                   }
                   {isCurrent && (
                     <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full animate-pulse" style={{ background: '#A855F7' }} />
@@ -276,7 +276,7 @@ export function ProjectRoadmap({ project, currentUserId = null, isOwner = false,
                         {isExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
                       </Button>
                     </div>
-                    <p className="text-xs mt-1" style={{ color: '#7C6A9C' }}>{def.description}</p>
+                    <p className="text-xs mt-1 text-muted-foreground">{def.description}</p>
                   </CardHeader>
 
                   {isExpanded && (
@@ -293,7 +293,7 @@ export function ProjectRoadmap({ project, currentUserId = null, isOwner = false,
                       {/* Team avatars */}
                       {teamMembers.length > 0 && (
                         <div>
-                          <p className="text-xs font-medium mb-1.5 flex items-center gap-1" style={{ color: '#7C6A9C' }}>
+                          <p className="text-xs font-medium mb-1.5 flex items-center gap-1 text-muted-foreground">
                             <Users className="h-3 w-3" /> Team
                           </p>
                           <div className="flex -space-x-2">
@@ -310,7 +310,7 @@ export function ProjectRoadmap({ project, currentUserId = null, isOwner = false,
 
                       {/* Notes */}
                       <div>
-                        <p className="text-xs font-medium mb-1.5 flex items-center gap-1" style={{ color: '#7C6A9C' }}>
+                        <p className="text-xs font-medium mb-1.5 flex items-center gap-1 text-muted-foreground">
                           <StickyNote className="h-3 w-3" /> Notes
                         </p>
                         {editingNotes === def.number ? (
@@ -328,7 +328,7 @@ export function ProjectRoadmap({ project, currentUserId = null, isOwner = false,
                                 {savingNotes ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Save'}
                               </Button>
                               <Button size="sm" variant="outline" onClick={() => setEditingNotes(null)}
-                                style={{ border: '1px solid rgba(139,92,246,0.2)', color: '#7C6A9C', background: 'transparent', fontSize: '12px' }}>
+                                style={{ border: '1px solid rgba(139,92,246,0.2)', color: 'var(--muted-foreground)', background: 'transparent', fontSize: '12px' }}>
                                 Cancel
                               </Button>
                             </div>
@@ -341,7 +341,7 @@ export function ProjectRoadmap({ project, currentUserId = null, isOwner = false,
                             }
                             {(isOwner || isMember) && (
                               <Button size="sm" variant="ghost" className="h-6 text-xs opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-                                style={{ color: '#7C6A9C' }}
+                                className="text-muted-foreground"
                                 onClick={() => { setEditingNotes(def.number); setNotesText(phase?.notes || "") }}>
                                 Edit
                               </Button>
@@ -354,7 +354,7 @@ export function ProjectRoadmap({ project, currentUserId = null, isOwner = false,
                       {!isCompleted && (isOwner || isMember) && (
                         <div className="flex items-center gap-2 pt-1">
                           {!prevComplete && !isOwner && (
-                            <p className="text-xs flex items-center gap-1" style={{ color: '#7C6A9C' }}>
+                            <p className="text-xs flex items-center gap-1 text-muted-foreground">
                               <Lock className="h-3 w-3" /> Complete previous phase first
                             </p>
                           )}

@@ -1513,8 +1513,8 @@ export default function ProfilePage() {
                           <stop offset="95%" stopColor="#A855F7" stopOpacity={0} />
                         </linearGradient>
                       </defs>
-                      <XAxis dataKey="week" tick={{ fontSize: 10, fill: '#7C6A9C' }} tickLine={false} axisLine={false} interval={2} />
-                      <YAxis tick={{ fontSize: 10, fill: '#7C6A9C' }} tickLine={false} axisLine={false} />
+                      <XAxis dataKey="week" tick={{ fontSize: 10, fill: 'var(--muted-foreground)' }} tickLine={false} axisLine={false} interval={2} />
+                      <YAxis tick={{ fontSize: 10, fill: 'var(--muted-foreground)' }} tickLine={false} axisLine={false} />
                       <Tooltip
                         contentStyle={{ background: '#1a1625', border: '1px solid rgba(139,92,246,0.3)', borderRadius: 8, fontSize: 12 }}
                         labelStyle={{ color: '#C4B5D8' }}

@@ -145,7 +145,7 @@ export function NotificationsDropdown({ initialUnreadCount }: NotificationsDropd
         <DropdownMenuSeparator style={{ background: 'rgba(139,92,246,0.15)' }} />
 
         {notifications.length === 0 ? (
-          <div className="py-8 text-center" style={{ color: '#7C6A9C' }}>
+          <div className="py-8 text-center text-muted-foreground">
             <Bell className="h-8 w-8 mx-auto mb-2 opacity-40" />
             <p className="text-sm">No notifications yet</p>
           </div>
@@ -167,11 +167,11 @@ export function NotificationsDropdown({ initialUnreadCount }: NotificationsDropd
                   style={{ background: notif.is_read ? 'transparent' : typeColors[notif.type] || '#7C3AED' }}
                 />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium leading-tight" style={{ color: notif.is_read ? '#7C6A9C' : '#E2D9F3' }}>
+                  <p className="text-sm font-medium leading-tight" style={{ color: notif.is_read ? 'var(--muted-foreground)' : '#E2D9F3' }}>
                     {notif.title}
                   </p>
                   {notif.message && (
-                    <p className="text-xs mt-0.5 truncate" style={{ color: '#7C6A9C' }}>{notif.message}</p>
+                    <p className="text-xs mt-0.5 truncate text-muted-foreground">{notif.message}</p>
                   )}
                   <p className="text-xs mt-1" style={{ color: '#4A3F6B' }}>{timeAgo(notif.created_at)}</p>
                 </div>

@@ -375,12 +375,12 @@ export default function MentorsPage() {
             <div className="flex items-center justify-between p-6" style={{ borderBottom: '1px solid rgba(139,92,246,0.15)' }}>
               <div>
                 <h2 className="text-xl font-bold font-heading">Become a Mentor</h2>
-                <p className="text-sm mt-0.5" style={{ color: '#7C6A9C' }}>Choose the tier that matches your background</p>
+                <p className="text-sm mt-0.5 text-muted-foreground">Choose the tier that matches your background</p>
               </div>
               <button
                 onClick={() => setShowBecomeMentorModal(false)}
                 className="w-8 h-8 rounded-lg flex items-center justify-center"
-                style={{ color: '#7C6A9C', background: 'rgba(255,255,255,0.05)' }}
+                style={{ color: 'var(--muted-foreground)', background: 'rgba(255,255,255,0.05)' }}
               >
                 ✕
               </button>
@@ -423,7 +423,7 @@ export default function MentorsPage() {
             </div>
 
             <div className="px-6 pb-6">
-              <p className="text-xs text-center" style={{ color: '#7C6A9C' }}>
+              <p className="text-xs text-center text-muted-foreground">
                 After applying, complete your mentor verification profile in Settings. Your application will be reviewed by the ResearchFlow team.
               </p>
             </div>
@@ -461,7 +461,7 @@ export default function MentorsPage() {
               padding: '7px 20px', borderRadius: '9px', fontSize: '13px', fontWeight: 500,
               border: 'none', cursor: 'pointer', transition: 'all 0.15s',
               background: activeTab === tab ? 'rgba(124,58,237,0.25)' : 'transparent',
-              color: activeTab === tab ? '#C4B5FD' : '#7C6A9C',
+              color: activeTab === tab ? '#C4B5FD' : 'var(--muted-foreground)',
             }}
           >
             {tab === 'mentors' ? 'Mentor Directory' : 'My Programs'}

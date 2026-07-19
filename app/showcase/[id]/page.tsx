@@ -42,8 +42,8 @@ const STATUS_COLORS: Record<string, string> = {
   published: '#22C55E',
   featured: '#EAB308',
   submitted: '#06B6D4',
-  draft: '#7C6A9C',
-  archived: '#7C6A9C',
+  draft: 'var(--muted-foreground)',
+  archived: 'var(--muted-foreground)',
 }
 
 function getApaAuthorName(fullName: string | null | undefined): string {
@@ -292,7 +292,7 @@ export default function ShowcaseEntryPage({
     (c: string) => !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(c)
   ) || []
 
-  const statusColor = STATUS_COLORS[entry.status] || '#7C6A9C'
+  const statusColor = STATUS_COLORS[entry.status] || 'var(--muted-foreground)'
   const publishedYear = entry.published_at
     ? new Date(entry.published_at).getFullYear()
     : null
@@ -309,7 +309,7 @@ export default function ShowcaseEntryPage({
             <ArrowLeft className="h-4 w-4" />
             <span className="hidden sm:inline">Research Showcase</span>
           </Link>
-          <span className="hidden sm:inline text-sm" style={{ color: '#7C6A9C' }}>/</span>
+          <span className="hidden sm:inline text-sm text-muted-foreground">/</span>
           <span className="hidden sm:inline text-sm truncate max-w-xs" style={{ color: '#C4B5D8' }}>{entry.title}</span>
         </div>
         {isLoggedIn ? (
@@ -343,7 +343,7 @@ export default function ShowcaseEntryPage({
             {entry.title}
           </h1>
 
-          <div className="flex flex-wrap items-center gap-4 text-sm" style={{ color: '#7C6A9C' }}>
+          <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
             {entry.published_at && (
               <span className="flex items-center gap-1.5">
                 <Calendar className="h-4 w-4" />
@@ -392,7 +392,7 @@ export default function ShowcaseEntryPage({
                   </Avatar>
                   <div className="text-left">
                     <p className="text-sm font-medium" style={{ color: '#F3F0FF' }}>{member.full_name}</p>
-                    <p className="text-xs" style={{ color: '#7C6A9C' }}>
+                    <p className="text-xs text-muted-foreground">
                       {[member.department, member.university_id].filter(Boolean).join(" · ")}
                     </p>
                   </div>
@@ -488,7 +488,7 @@ export default function ShowcaseEntryPage({
                 className="px-4 py-1.5 rounded-md text-sm font-medium transition-all"
                 style={{
                   background: citationFormat === fmt ? 'rgba(124,58,237,0.3)' : 'transparent',
-                  color: citationFormat === fmt ? '#C4B5FD' : '#7C6A9C',
+                  color: citationFormat === fmt ? '#C4B5FD' : 'var(--muted-foreground)',
                   border: citationFormat === fmt ? '1px solid rgba(139,92,246,0.4)' : '1px solid transparent',
                 }}
               >
@@ -512,7 +512,7 @@ export default function ShowcaseEntryPage({
               {citationCopied ? <CheckCircle2 className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
             </button>
           </div>
-          <p className="text-xs" style={{ color: '#7C6A9C' }}>
+          <p className="text-xs text-muted-foreground">
             {citationFormat === 'apa' && 'APA 7th Edition Format'}
             {citationFormat === 'mla' && 'MLA 9th Edition Format'}
             {citationFormat === 'harvard' && 'Harvard Referencing Format'}
@@ -604,10 +604,10 @@ export default function ShowcaseEntryPage({
                           {r.author?.full_name?.charAt(0) || "?"}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="text-xs truncate" style={{ color: '#7C6A9C' }}>{r.author?.full_name}</span>
+                      <span className="text-xs truncate text-muted-foreground">{r.author?.full_name}</span>
                     </div>
                     <h3 className="font-medium text-sm line-clamp-2" style={{ color: '#F3F0FF' }}>{r.title}</h3>
-                    <p className="text-xs line-clamp-3" style={{ color: '#7C6A9C' }}>{r.abstract}</p>
+                    <p className="text-xs line-clamp-3 text-muted-foreground">{r.abstract}</p>
                     <Link href={`/showcase/${r.id}`}>
                       <Button size="sm" variant="ghost" className="w-full text-xs" style={{ color: '#A855F7' }}>
                         Read More →
@@ -628,7 +628,7 @@ export default function ShowcaseEntryPage({
           >
             <Sparkles className="h-10 w-10 mx-auto" style={{ color: '#A855F7' }} />
             <h3 className="text-xl font-bold font-heading">Join ResearchFlow to Collaborate</h3>
-            <p className="text-sm max-w-md mx-auto" style={{ color: '#7C6A9C' }}>
+            <p className="text-sm max-w-md mx-auto text-muted-foreground">
               Connect with African researchers, share your own research, and build your academic network.
             </p>
             <div className="flex items-center justify-center gap-3">

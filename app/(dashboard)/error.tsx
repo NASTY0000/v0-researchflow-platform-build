@@ -22,7 +22,7 @@ export default function DashboardError({
           <AlertTriangle className="w-8 h-8" style={{ color: '#EF4444' }} />
         </div>
         <h2 className="text-xl font-bold font-heading mb-2">Something went wrong.</h2>
-        <p className="text-sm mb-6" style={{ color: '#7C6A9C' }}>
+        <p className="text-sm mb-6 text-muted-foreground">
           Please refresh the page. If the problem persists, try signing out and back in.
         </p>
         <Button

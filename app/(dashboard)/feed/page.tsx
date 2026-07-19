@@ -269,7 +269,7 @@ export default function FeedPage() {
             className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
             style={{ background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(139,92,246,0.2)' }}
           >
-            <Sparkles className="w-8 h-8" style={{ color: '#7C6A9C' }} />
+            <Sparkles className="w-8 h-8 text-muted-foreground" />
           </div>
           <p className="font-medium mb-1">
             {activeTab === 'for_you' ? 'Your feed is being personalised' : 'Nothing here yet'}
