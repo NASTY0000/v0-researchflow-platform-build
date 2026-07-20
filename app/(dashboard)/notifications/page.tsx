@@ -65,7 +65,7 @@ export default function NotificationsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold font-heading" style={{ letterSpacing: '-0.02em' }}>Notifications</h1>
-          <p className="text-sm mt-0.5" style={{ color: '#7C6A9C' }}>
+          <p className="text-sm mt-0.5 text-muted-foreground">
             {unread.length > 0 ? `${unread.length} unread` : 'All caught up'}
           </p>
         </div>
@@ -96,8 +96,8 @@ export default function NotificationsPage() {
               <div className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style={{ background: n.is_read ? 'transparent' : '#A855F7' }} />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium">{n.title}</p>
-                {n.message && <p className="text-xs mt-0.5" style={{ color: '#7C6A9C' }}>{n.message}</p>}
-                <p className="text-xs mt-1" style={{ color: '#7C6A9C' }}>
+                {n.message && <p className="text-xs mt-0.5 text-muted-foreground">{n.message}</p>}
+                <p className="text-xs mt-1 text-muted-foreground">
                   {new Date(n.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                 </p>
               </div>

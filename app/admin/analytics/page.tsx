@@ -161,8 +161,8 @@ export default function AdminAnalyticsPage() {
             <ResponsiveContainer width="100%" height={200}>
               <LineChart data={data.userGrowth}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(139,92,246,0.1)" />
-                <XAxis dataKey="month" tick={{ fill: '#7C6A9C', fontSize: 11 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: '#7C6A9C', fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                <XAxis dataKey="month" tick={{ fill: 'var(--muted-foreground)', fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: 'var(--muted-foreground)', fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
                 <Tooltip {...tooltipStyle()} />
                 <Line type="monotone" dataKey="count" stroke={PURPLE} strokeWidth={2} dot={{ fill: PURPLE, r: 4 }} name="Users" />
               </LineChart>
@@ -182,8 +182,8 @@ export default function AdminAnalyticsPage() {
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={data.researchActivity}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(139,92,246,0.1)" />
-                <XAxis dataKey="month" tick={{ fill: '#7C6A9C', fontSize: 11 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: '#7C6A9C', fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                <XAxis dataKey="month" tick={{ fill: 'var(--muted-foreground)', fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: 'var(--muted-foreground)', fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
                 <Tooltip {...tooltipStyle()} />
                 <Bar dataKey="count" fill={CYAN} radius={[4, 4, 0, 0]} name="Ideas" />
               </BarChart>
@@ -208,8 +208,8 @@ export default function AdminAnalyticsPage() {
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={data.usersByUniversity} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(139,92,246,0.1)" horizontal={false} />
-                  <XAxis type="number" tick={{ fill: '#7C6A9C', fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
-                  <YAxis dataKey="name" type="category" tick={{ fill: '#7C6A9C', fontSize: 10 }} axisLine={false} tickLine={false} width={90} />
+                  <XAxis type="number" tick={{ fill: 'var(--muted-foreground)', fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                  <YAxis dataKey="name" type="category" tick={{ fill: 'var(--muted-foreground)', fontSize: 10 }} axisLine={false} tickLine={false} width={90} />
                   <Tooltip {...tooltipStyle()} />
                   <Bar dataKey="count" radius={[0, 4, 4, 0]} name="Users">
                     {data.usersByUniversity.map((_, i) => (
@@ -234,8 +234,8 @@ export default function AdminAnalyticsPage() {
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={data.akiliDistribution}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(139,92,246,0.1)" />
-                <XAxis dataKey="range" tick={{ fill: '#7C6A9C', fontSize: 10 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: '#7C6A9C', fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                <XAxis dataKey="range" tick={{ fill: 'var(--muted-foreground)', fontSize: 10 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: 'var(--muted-foreground)', fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
                 <Tooltip {...tooltipStyle()} />
                 <Bar dataKey="count" radius={[4, 4, 0, 0]} name="Users">
                   {data.akiliDistribution.map((_, i) => (
@@ -259,8 +259,8 @@ export default function AdminAnalyticsPage() {
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={data.showcaseActivity}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(139,92,246,0.1)" />
-                <XAxis dataKey="month" tick={{ fill: '#7C6A9C', fontSize: 11 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: '#7C6A9C', fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                <XAxis dataKey="month" tick={{ fill: 'var(--muted-foreground)', fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: 'var(--muted-foreground)', fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
                 <Tooltip {...tooltipStyle()} />
                 <Bar dataKey="count" fill={PINK} radius={[4, 4, 0, 0]} name="Submissions" />
               </BarChart>

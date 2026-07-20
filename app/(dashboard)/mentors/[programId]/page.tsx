@@ -120,7 +120,7 @@ export default function ProgramDetailPage() {
             <h1 className="text-xl font-bold font-heading" style={{ letterSpacing: '-0.02em' }}>
               Mentorship Program
             </h1>
-            <p style={{ fontSize: '14px', color: '#7C6A9C', marginTop: '2px' }}>{program.focus_area}</p>
+            <p style={{ fontSize: '14px', color: 'var(--muted-foreground)', marginTop: '2px' }}>{program.focus_area}</p>
           </div>
           <span style={{ fontSize: '12px', fontWeight: 600, padding: '4px 12px', borderRadius: '100px', background: statusStyle.bg, color: statusStyle.color, flexShrink: 0 }}>
             {statusStyle.label}
@@ -141,7 +141,7 @@ export default function ProgramDetailPage() {
                 </AvatarFallback>
               </Avatar>
               <div>
-                <p style={{ fontSize: '11px', color: '#7C6A9C' }}>{label}</p>
+                <p style={{ fontSize: '11px', color: 'var(--muted-foreground)' }}>{label}</p>
                 <p style={{ fontSize: '14px', fontWeight: 500, color: '#F3F0FF' }}>{person.full_name}</p>
               </div>
             </div>
@@ -150,17 +150,17 @@ export default function ProgramDetailPage() {
 
         {/* Meta row */}
         <div style={{ display: 'flex', gap: '16px', marginTop: '16px', flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#7C6A9C' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--muted-foreground)' }}>
             <Clock size={13} />
             {program.duration_months}-month program
           </div>
           {program.started_at && (
-            <div style={{ fontSize: '12px', color: '#7C6A9C' }}>
+            <div style={{ fontSize: '12px', color: 'var(--muted-foreground)' }}>
               Started {format(parseISO(program.started_at), 'MMM d, yyyy')}
             </div>
           )}
           {program.expected_end_at && program.status === 'active' && (
-            <div style={{ fontSize: '12px', color: '#7C6A9C' }}>
+            <div style={{ fontSize: '12px', color: 'var(--muted-foreground)' }}>
               Ends {format(parseISO(program.expected_end_at), 'MMM d, yyyy')}
             </div>
           )}
@@ -223,7 +223,7 @@ export default function ProgramDetailPage() {
                     <p style={{ fontSize: '13px', color: '#D4C8F0' }}>
                       {format(parseISO(session.scheduled_at), 'MMM d, yyyy · h:mm a')}
                     </p>
-                    <p style={{ fontSize: '11px', color: '#7C6A9C', marginTop: '2px' }}>
+                    <p style={{ fontSize: '11px', color: 'var(--muted-foreground)', marginTop: '2px' }}>
                       {session.format.replace('_', ' ')} · {session.duration_minutes} min
                     </p>
                   </div>
@@ -247,7 +247,7 @@ export default function ProgramDetailPage() {
           <p style={{ fontWeight: 600, fontSize: '14px', color: '#C4B5FD', marginBottom: '4px' }}>
             {allDone ? '🎉 All milestones complete!' : 'Mark Program Complete'}
           </p>
-          <p style={{ fontSize: '13px', color: '#7C6A9C', marginBottom: '14px' }}>
+          <p style={{ fontSize: '13px', color: 'var(--muted-foreground)', marginBottom: '14px' }}>
             {allDone
               ? 'Ready to complete this program? Both parties earn Akili points upon completion.'
               : 'You can complete this program even if not all milestones are done.'}
@@ -336,7 +336,7 @@ export default function ProgramDetailPage() {
           </div>
           <p style={{ fontWeight: 700, fontSize: '18px', color: '#F3F0FF' }}>Program Completed</p>
           {program.completed_at && (
-            <p style={{ fontSize: '13px', color: '#7C6A9C', marginTop: '4px' }}>
+            <p style={{ fontSize: '13px', color: 'var(--muted-foreground)', marginTop: '4px' }}>
               {formatDistanceToNow(parseISO(program.completed_at), { addSuffix: true })}
             </p>
           )}

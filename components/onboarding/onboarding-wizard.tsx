@@ -133,7 +133,7 @@ function UniversityPicker({ value, onChange }: UniversityPickerProps) {
         style={{
           background: 'rgba(255,255,255,0.05)',
           border: open ? '1px solid rgba(168,85,247,0.7)' : '1px solid rgba(139,92,246,0.25)',
-          color: value ? '#F3F0FF' : '#7C6A9C',
+          color: value ? '#F3F0FF' : 'var(--muted-foreground)',
           boxShadow: open ? '0 0 0 2px rgba(124,58,237,0.15)' : 'none',
         }}
       >
@@ -143,13 +143,13 @@ function UniversityPicker({ value, onChange }: UniversityPickerProps) {
             <button
               type="button"
               onClick={e => { e.stopPropagation(); onChange('') }}
-              className="p-0.5 rounded text-[#7C6A9C] hover:text-white transition-colors"
+              className="p-0.5 rounded text-muted-foreground hover:text-white transition-colors"
             >
               <X className="w-3.5 h-3.5" />
             </button>
           )}
           <ChevronDown
-            className="w-4 h-4 text-[#7C6A9C] transition-transform duration-200"
+            className="w-4 h-4 text-muted-foreground transition-transform duration-200"
             style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}
           />
         </div>
@@ -164,7 +164,7 @@ function UniversityPicker({ value, onChange }: UniversityPickerProps) {
           {/* Search */}
           <div className="p-2" style={{ borderBottom: '1px solid rgba(139,92,246,0.15)' }}>
             <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7C6A9C]" />
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input
                 autoFocus
                 type="text"
@@ -184,15 +184,15 @@ function UniversityPicker({ value, onChange }: UniversityPickerProps) {
           {/* Results */}
           <div className="max-h-52 overflow-y-auto">
             {loading ? (
-              <div className="py-6 text-center text-sm" style={{ color: '#7C6A9C' }}>
+              <div className="py-6 text-center text-sm text-muted-foreground">
                 Loading universities...
               </div>
             ) : search.length > 0 && search.length < 2 ? (
-              <div className="px-3 py-4 text-center text-sm" style={{ color: '#7C6A9C' }}>
+              <div className="px-3 py-4 text-center text-sm text-muted-foreground">
                 Keep typing to search...
               </div>
             ) : filtered.length === 0 ? (
-              <div className="py-6 text-center text-sm" style={{ color: '#7C6A9C' }}>
+              <div className="py-6 text-center text-sm text-muted-foreground">
                 No university found for &ldquo;{search}&rdquo;
               </div>
             ) : (
@@ -232,7 +232,7 @@ function UniversityPicker({ value, onChange }: UniversityPickerProps) {
           {/* Footer */}
           <div
             className="px-3 py-2 text-xs"
-            style={{ borderTop: '1px solid rgba(139,92,246,0.15)', color: '#7C6A9C' }}
+            style={{ borderTop: '1px solid rgba(139,92,246,0.15)', color: 'var(--muted-foreground)' }}
           >
             {universities.length} universities available
           </div>
@@ -399,7 +399,7 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
           <Link href="/">
             <Logo variant="horizontal" width={160} />
           </Link>
-          <div className="text-sm" style={{ color: '#7C6A9C' }}>Step {step} of {STEPS.length}</div>
+          <div className="text-sm text-muted-foreground">Step {step} of {STEPS.length}</div>
         </div>
       </header>
 
@@ -413,7 +413,7 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
                   className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300"
                   style={step >= s.id
                     ? { background: 'linear-gradient(135deg,#7C3AED,#A855F7)', color: '#F3F0FF', boxShadow: '0 0 14px rgba(124,58,237,0.4)' }
-                    : { background: 'rgba(255,255,255,0.05)', color: '#7C6A9C', border: '1px solid rgba(139,92,246,0.2)' }
+                    : { background: 'rgba(255,255,255,0.05)', color: 'var(--muted-foreground)', border: '1px solid rgba(139,92,246,0.2)' }
                   }
                 >
                   <s.icon className="w-5 h-5" />
@@ -447,11 +447,11 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
             <Card style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(139,92,246,0.2)' }}>
               <CardHeader>
                 <CardTitle className="text-2xl font-heading" style={{ color: '#F3F0FF' }}>Tell us about yourself</CardTitle>
-                <CardDescription style={{ color: '#7C6A9C' }}>Let&apos;s start with your basic information</CardDescription>
+                <CardDescription className="text-muted-foreground">Let&apos;s start with your basic information</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="fullName" style={{ color: '#7C6A9C' }}>Full Name *</Label>
+                  <Label htmlFor="fullName" className="text-muted-foreground">Full Name *</Label>
                   <Input
                     id="fullName"
                     value={fullName}
@@ -461,7 +461,7 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="bio" style={{ color: '#7C6A9C' }}>Bio</Label>
+                  <Label htmlFor="bio" className="text-muted-foreground">Bio</Label>
                   <Textarea
                     id="bio"
                     value={bio}
@@ -470,7 +470,7 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
                     rows={4}
                     style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(139,92,246,0.25)', color: '#F3F0FF' }}
                   />
-                  <p className="text-xs" style={{ color: '#7C6A9C' }}>This will be visible on your profile</p>
+                  <p className="text-xs text-muted-foreground">This will be visible on your profile</p>
                 </div>
               </CardContent>
             </Card>
@@ -481,11 +481,11 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
             <Card style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(139,92,246,0.2)' }}>
               <CardHeader>
                 <CardTitle className="text-2xl font-heading" style={{ color: '#F3F0FF' }}>Academic Details & Roles</CardTitle>
-                <CardDescription style={{ color: '#7C6A9C' }}>Tell us about your academic background and how you want to participate</CardDescription>
+                <CardDescription className="text-muted-foreground">Tell us about your academic background and how you want to participate</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">
-                  <Label style={{ color: '#7C6A9C' }}>Country *</Label>
+                  <Label className="text-muted-foreground">Country *</Label>
                   <Select value={country} onValueChange={(val) => { setCountry(val); setUniversityId(''); setCustomUniversity('') }}>
                     <SelectTrigger style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(139,92,246,0.25)', color: '#F3F0FF' }}>
                       <SelectValue placeholder="Select your country" />
@@ -499,7 +499,7 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
                 </div>
 
                 <div className="space-y-2">
-                  <Label style={{ color: '#7C6A9C' }}>University / Institution *</Label>
+                  <Label className="text-muted-foreground">University / Institution *</Label>
                   {isNigeria ? (
                     <UniversityPicker
                       value={universityId}
@@ -513,13 +513,13 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
                       style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(139,92,246,0.25)', color: '#F3F0FF' }}
                     />
                   )}
-                  <p className="text-xs" style={{ color: '#7C6A9C' }}>
+                  <p className="text-xs text-muted-foreground">
                     {isNigeria ? 'Select from the list of Nigerian universities' : 'Enter the full name of your institution'}
                   </p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="department" style={{ color: '#7C6A9C' }}>Department / Faculty</Label>
+                  <Label htmlFor="department" className="text-muted-foreground">Department / Faculty</Label>
                   <Input
                     id="department"
                     value={department}
@@ -530,7 +530,7 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
                 </div>
 
                 <div className="space-y-2">
-                  <Label style={{ color: '#7C6A9C' }}>Academic Level</Label>
+                  <Label className="text-muted-foreground">Academic Level</Label>
                   <Select value={academicLevel} onValueChange={(v) => setAcademicLevel(v as AcademicLevel)}>
                     <SelectTrigger style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(139,92,246,0.25)', color: '#F3F0FF' }}>
                       <SelectValue placeholder="Select your level" />
@@ -544,7 +544,7 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
                 </div>
 
                 <div className="space-y-3">
-                  <Label style={{ color: '#7C6A9C' }}>Your Role(s) - Select all that apply</Label>
+                  <Label className="text-muted-foreground">Your Role(s) - Select all that apply</Label>
                   <div className="space-y-3">
                     {USER_ROLES.map((role) => (
                       <button
@@ -571,7 +571,7 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
                             <div className="font-medium" style={{ color: roles.includes(role.value) ? '#C084FC' : '#F3F0FF' }}>
                               {role.label}
                             </div>
-                            <div className="text-sm mt-0.5" style={{ color: '#7C6A9C' }}>{role.description}</div>
+                            <div className="text-sm mt-0.5 text-muted-foreground">{role.description}</div>
                             {role.value === 'mentor' && roles.includes('mentor') && (
                               <div className="text-xs mt-2 px-2 py-1 rounded inline-block" style={{ background: 'rgba(6,182,212,0.15)', color: '#06B6D4' }}>
                                 You&apos;ll complete mentor verification after onboarding
@@ -592,7 +592,7 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
             <Card style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(139,92,246,0.2)' }}>
               <CardHeader>
                 <CardTitle className="text-2xl font-heading" style={{ color: '#F3F0FF' }}>Research Interests</CardTitle>
-                <CardDescription style={{ color: '#7C6A9C' }}>
+                <CardDescription className="text-muted-foreground">
                   Select your research areas (up to 10). Tap &quot;+ Other&quot; to search or add a custom one.
                   {researchInterests.length > 0 && <span style={{ color: '#A855F7' }}> {researchInterests.length} selected</span>}
                 </CardDescription>
@@ -615,14 +615,14 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
             <Card style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(139,92,246,0.2)' }}>
               <CardHeader>
                 <CardTitle className="text-2xl font-heading" style={{ color: '#F3F0FF' }}>Skills & Collaborators</CardTitle>
-                <CardDescription style={{ color: '#7C6A9C' }}>What skills do you have, and what are you looking for?</CardDescription>
+                <CardDescription className="text-muted-foreground">What skills do you have, and what are you looking for?</CardDescription>
               </CardHeader>
               <CardContent className="space-y-8">
                 {/* Your Skills */}
                 <div className="space-y-3">
                   <div>
                     <Label className="text-lg font-medium" style={{ color: '#F3F0FF' }}>Your Skills</Label>
-                    <p className="text-sm mt-1" style={{ color: '#7C6A9C' }}>
+                    <p className="text-sm mt-1 text-muted-foreground">
                       Select skills you can offer (up to 15). Tap &quot;+ Other&quot; to add a custom skill.
                       {skills.length > 0 && <span style={{ color: '#A855F7' }}> {skills.length} selected</span>}
                     </p>
@@ -643,7 +643,7 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
                 <div className="space-y-3">
                   <div>
                     <Label className="text-lg font-medium" style={{ color: '#F3F0FF' }}>What are you looking for in collaborators? *</Label>
-                    <p className="text-sm mt-1" style={{ color: lookingFor.length === 0 ? '#EF4444' : '#7C6A9C' }}>
+                    <p className="text-sm mt-1" style={{ color: lookingFor.length === 0 ? '#EF4444' : 'var(--muted-foreground)' }}>
                       {lookingFor.length === 0
                         ? 'At least 1 required — tap any pill to select'
                         : <span style={{ color: '#A855F7' }}>{lookingFor.length} selected</span>
@@ -674,7 +674,7 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
                     className="w-full h-2 rounded-full appearance-none cursor-pointer"
                     style={{ background: `linear-gradient(to right, #7C3AED 0%, #7C3AED ${(weeklyHours / 40) * 100}%, rgba(255,255,255,0.1) ${(weeklyHours / 40) * 100}%, rgba(255,255,255,0.1) 100%)` }}
                   />
-                  <div className="flex justify-between text-xs" style={{ color: '#7C6A9C' }}>
+                  <div className="flex justify-between text-xs text-muted-foreground">
                     <span>1 hour</span>
                     <span>40 hours</span>
                   </div>
@@ -688,7 +688,7 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
             <Card style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(139,92,246,0.2)' }}>
               <CardHeader>
                 <CardTitle className="text-2xl font-heading" style={{ color: '#F3F0FF' }}>Choose Your Research Identity</CardTitle>
-                <CardDescription style={{ color: '#7C6A9C' }}>This will become the animated background on your public profile</CardDescription>
+                <CardDescription className="text-muted-foreground">This will become the animated background on your public profile</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -734,7 +734,7 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
                       <p className="font-semibold text-sm" style={{ color: profileBackground === 'baobab' ? '#C084FC' : '#F3F0FF' }}>
                         The Baobab
                       </p>
-                      <p className="text-xs mt-1 leading-relaxed" style={{ color: '#7C6A9C' }}>
+                      <p className="text-xs mt-1 leading-relaxed text-muted-foreground">
                         Growing from strong roots. Your profile reflects your place in the African research ecosystem — branches represent your fields, nodes your connections.
                       </p>
                     </div>
@@ -774,7 +774,7 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
                       <p className="font-semibold text-sm" style={{ color: profileBackground === 'constellation' ? '#C084FC' : '#F3F0FF' }}>
                         The Constellation
                       </p>
-                      <p className="text-xs mt-1 leading-relaxed" style={{ color: '#7C6A9C' }}>
+                      <p className="text-xs mt-1 leading-relaxed text-muted-foreground">
                         Reaching for new frontiers. Your profile becomes your mark on the research universe — each star a field you&apos;re exploring, each line a connection you&apos;ve forged.
                       </p>
                     </div>
@@ -795,7 +795,7 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
                   <CheckCircle className="w-10 h-10 text-white" />
                 </div>
                 <h2 className="text-3xl font-bold font-heading mb-3" style={{ color: '#F3F0FF' }}>You&apos;re all set!</h2>
-                <p className="mb-8 max-w-md mx-auto" style={{ color: '#7C6A9C' }}>
+                <p className="mb-8 max-w-md mx-auto text-muted-foreground">
                   Your profile is complete. {isMentorSelected && "You'll be prompted to complete mentor verification next. "}
                   Start exploring research ideas, connecting with collaborators, and building your research journey.
                 </p>

@@ -65,7 +65,7 @@ export function ProgramCard({
             <p style={{ fontWeight: 600, fontSize: '14px', color: '#F3F0FF' }}>
               {otherPerson.full_name}
             </p>
-            <p style={{ fontSize: '11px', color: '#7C6A9C' }}>
+            <p style={{ fontSize: '11px', color: 'var(--muted-foreground)' }}>
               {role === 'mentor' ? 'Mentee' : 'Mentor'}
               {otherPerson.university_name ? ` · ${otherPerson.university_name}` : ''}
             </p>
@@ -97,7 +97,7 @@ export function ProgramCard({
       {total > 0 && (
         <div style={{ marginBottom: '12px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
-            <span style={{ fontSize: '11px', color: '#7C6A9C' }}>Milestones</span>
+            <span style={{ fontSize: '11px', color: 'var(--muted-foreground)' }}>Milestones</span>
             <span style={{ fontSize: '11px', color: '#A855F7' }}>
               <CheckCircle2 size={10} className="inline mr-1" />
               {done}/{total}
@@ -112,12 +112,12 @@ export function ProgramCard({
       {/* Footer */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
         {daysLeft !== null && status === 'active' && (
-          <span style={{ fontSize: '11px', color: daysLeft < 14 ? '#F59E0B' : '#7C6A9C' }}>
+          <span style={{ fontSize: '11px', color: daysLeft < 14 ? '#F59E0B' : 'var(--muted-foreground)' }}>
             {daysLeft > 0 ? `${daysLeft} days left` : 'Overdue'}
           </span>
         )}
         {startedAt && status === 'active' && (
-          <span style={{ fontSize: '11px', color: '#7C6A9C' }}>
+          <span style={{ fontSize: '11px', color: 'var(--muted-foreground)' }}>
             Started {new Date(startedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
           </span>
         )}

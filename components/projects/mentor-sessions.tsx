@@ -329,7 +329,7 @@ export function MentorSessions({ projectId, currentUserId }: MentorSessionsProps
                 <p className="text-sm font-medium" style={{ color: '#F3F0FF' }}>
                   Rate your session with {s.mentor?.full_name}
                 </p>
-                <p className="text-xs" style={{ color: '#7C6A9C' }}>
+                <p className="text-xs text-muted-foreground">
                   {new Date(s.scheduled_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                 </p>
               </div>
@@ -479,7 +479,7 @@ export function MentorSessions({ projectId, currentUserId }: MentorSessionsProps
                                 size="sm"
                                 variant="ghost"
                                 className="gap-1 h-7 text-xs"
-                                style={{ color: '#7C6A9C', border: '1px solid rgba(139,92,246,0.2)' }}
+                                style={{ color: 'var(--muted-foreground)', border: '1px solid rgba(139,92,246,0.2)' }}
                                 onClick={() => { setMeetingLinkSession(session); setMeetingLinkInput("") }}
                               >
                                 <Link2 className="h-3 w-3" />
@@ -498,7 +498,7 @@ export function MentorSessions({ projectId, currentUserId }: MentorSessionsProps
                               key={i}
                               className="h-3 w-3"
                               style={{
-                                color: i < session.student_rating! ? '#EAB308' : '#7C6A9C',
+                                color: i < session.student_rating! ? '#EAB308' : 'var(--muted-foreground)',
                                 fill: i < session.student_rating! ? '#EAB308' : 'transparent',
                               }}
                             />
@@ -599,7 +599,7 @@ export function MentorSessions({ projectId, currentUserId }: MentorSessionsProps
                           <p className="text-sm font-medium" style={{ color: '#F3F0FF' }}>
                             {slotDT.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
                           </p>
-                          <p className="text-xs" style={{ color: '#7C6A9C' }}>
+                          <p className="text-xs text-muted-foreground">
                             {slot.start_time.slice(0, 5)} – {slot.end_time.slice(0, 5)} · {slot.mentor?.full_name}
                           </p>
                         </div>
@@ -692,7 +692,7 @@ export function MentorSessions({ projectId, currentUserId }: MentorSessionsProps
                   <Star
                     className="h-8 w-8"
                     style={{
-                      color: star <= (ratingHover || ratingValue) ? '#EAB308' : '#7C6A9C',
+                      color: star <= (ratingHover || ratingValue) ? '#EAB308' : 'var(--muted-foreground)',
                       fill: star <= (ratingHover || ratingValue) ? '#EAB308' : 'transparent',
                     }}
                   />

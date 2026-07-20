@@ -124,7 +124,7 @@ function VerifyPageInner() {
               <Mail className="w-8 h-8" style={{ color: '#A855F7' }} />
             </div>
             <h1 className="text-2xl font-bold font-heading" style={{ color: '#F3F0FF' }}>Verify your email</h1>
-            <p className="text-sm" style={{ color: '#7C6A9C' }}>
+            <p className="text-sm text-muted-foreground">
               We sent a 6-digit code to{' '}
               {email ? <strong style={{ color: '#C084FC' }}>{email}</strong> : 'your email'}
               . Enter it below or click the link in the email.
@@ -190,7 +190,7 @@ function VerifyPageInner() {
             disabled={isResending}
             variant="outline"
             className="w-full gap-2"
-            style={{ borderColor: 'rgba(139,92,246,0.3)', color: '#7C6A9C', background: 'transparent', borderRadius: '8px' }}
+            style={{ borderColor: 'rgba(139,92,246,0.3)', color: 'var(--muted-foreground)', background: 'transparent', borderRadius: '8px' }}
           >
             {isResending
               ? <><Loader2 className="w-4 h-4 animate-spin" /> Sending...</>
@@ -198,7 +198,7 @@ function VerifyPageInner() {
           </Button>
 
           <div className="flex items-center justify-between pt-2" style={{ borderTop: '1px solid rgba(139,92,246,0.15)' }}>
-            <Link href="/auth/signup" className="inline-flex items-center gap-1.5 text-sm" style={{ color: '#7C6A9C' }}>
+            <Link href="/auth/signup" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
               <ArrowLeft className="w-3.5 h-3.5" /> Wrong email?
             </Link>
             <div className="flex items-center gap-2" style={{ color: '#4A3F6B' }}>

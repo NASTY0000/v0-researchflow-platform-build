@@ -241,7 +241,7 @@ export default function NewProjectPage() {
           <ArrowLeft className="w-4 h-4" /> Back to Projects
         </Link>
         <h1 className="text-2xl font-bold font-heading mt-4" style={{ letterSpacing: '-0.02em' }}>New Project</h1>
-        <p className="text-sm mt-1" style={{ color: '#7C6A9C' }}>Create a research project workspace</p>
+        <p className="text-sm mt-1 text-muted-foreground">Create a research project workspace</p>
       </div>
 
       {error && (
@@ -282,7 +282,7 @@ export default function NewProjectPage() {
           <div className="space-y-2">
             {objectives.map((obj, i) => (
               <div key={i} className="flex gap-2 items-center">
-                <span className="text-sm font-medium w-5 shrink-0" style={{ color: '#7C6A9C' }}>{i + 1}.</span>
+                <span className="text-sm font-medium w-5 shrink-0 text-muted-foreground">{i + 1}.</span>
                 <Input
                   value={obj}
                   onChange={(e) => updateObjective(i, e.target.value)}
@@ -296,7 +296,7 @@ export default function NewProjectPage() {
                     size="icon"
                     className="shrink-0 w-8 h-8"
                     onClick={() => removeObjective(i)}
-                    style={{ color: '#7C6A9C' }}
+                    className="text-muted-foreground"
                   >
                     <X className="w-4 h-4" />
                   </Button>
@@ -354,7 +354,7 @@ export default function NewProjectPage() {
 
         {/* Research Areas */}
         <div className="space-y-2">
-          <Label>Research Areas <span className="text-xs font-normal" style={{ color: '#7C6A9C' }}>(select up to 3)</span></Label>
+          <Label>Research Areas <span className="text-xs font-normal text-muted-foreground">(select up to 3)</span></Label>
           <SearchableMultiSelect
             options={RESEARCH_AREAS}
             value={researchAreas}

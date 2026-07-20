@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
-import { Loader2, Mail, Lock, User, CheckCircle, ArrowLeft } from 'lucide-react'
+import { Loader2, Mail, Lock, User, Eye, EyeOff, CheckCircle, ArrowLeft } from 'lucide-react'
 import { signUp, signInWithGoogle } from '@/lib/actions/auth'
 
 function GoogleIcon({ className }: { className?: string }) {
@@ -30,6 +30,7 @@ export default function SignUpPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
   const [emailType, setEmailType] = useState<'personal' | 'institutional'>('personal')
+  const [showPassword, setShowPassword] = useState(false)
   const [verificationSent, setVerificationSent] = useState(false)
   const [sentToEmail, setSentToEmail] = useState('')
 
@@ -154,7 +155,7 @@ export default function SignUpPage() {
           <form action={handleSubmit} className="space-y-4">
             {/* Full Name */}
             <div className="space-y-1.5">
-              <Label htmlFor="fullName" className="text-sm font-medium text-muted-foreground">Full Name</Label>
+              <Label htmlFor="fullName" className="text-sm font-medium">Full Name</Label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input id="fullName" name="fullName" type="text" placeholder="Your full name" required className="pl-10" />
@@ -163,7 +164,7 @@ export default function SignUpPage() {
 
             {/* Email Type Toggle */}
             <div className="space-y-1.5">
-              <Label className="text-sm font-medium text-muted-foreground">Email Type</Label>
+              <Label className="text-sm font-medium">Email Type</Label>
               <div className="flex gap-2">
                 <button
                   type="button"
@@ -192,7 +193,7 @@ export default function SignUpPage() {
 
             {/* Email */}
             <div className="space-y-1.5">
-              <Label htmlFor="email" className="text-sm font-medium text-muted-foreground">
+              <Label htmlFor="email" className="text-sm font-medium">
                 {emailType === 'personal' ? 'Personal Email Address' : 'Institutional Email Address'}
               </Label>
               <div className="relative">
@@ -215,10 +216,26 @@ export default function SignUpPage() {
 
             {/* Password */}
             <div className="space-y-1.5">
-              <Label htmlFor="password" className="text-sm font-medium text-muted-foreground">Password</Label>
+              <Label htmlFor="password" className="text-sm font-medium">Password</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input id="password" name="password" type="password" placeholder="At least 8 characters" required minLength={8} className="pl-10" />
+                <Input
+                  id="password"
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="At least 8 characters"
+                  required
+                  minLength={8}
+                  className="pl-10 pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(v => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
             </div>
 

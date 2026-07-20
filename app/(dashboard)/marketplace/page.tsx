@@ -434,7 +434,7 @@ export default function MarketplacePage() {
                   value={newAkiliReward}
                   onChange={(e) => setNewAkiliReward(e.target.value)}
                 />
-                <p className="text-xs" style={{ color: '#7C6A9C' }}>
+                <p className="text-xs text-muted-foreground">
                   Set the Akili Points reward for whoever completes this task. Higher rewards attract more applicants.
                 </p>
               </div>
@@ -627,12 +627,12 @@ export default function MarketplacePage() {
           </div>
           <div>
             <h2 className="font-bold font-heading text-lg">Top Contributors This Month</h2>
-            <p className="text-xs" style={{ color: '#7C6A9C' }}>Ranked by Akili Points earned from marketplace tasks</p>
+            <p className="text-xs text-muted-foreground">Ranked by Akili Points earned from marketplace tasks</p>
           </div>
         </div>
 
         {leaderboard.length === 0 ? (
-          <p className="text-sm text-center py-6" style={{ color: '#7C6A9C' }}>
+          <p className="text-sm text-center py-6 text-muted-foreground">
             No marketplace completions this month yet. Be the first!
           </p>
         ) : (
@@ -652,7 +652,7 @@ export default function MarketplacePage() {
                   <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-sm font-bold"
                     style={{
                       background: isWinner ? 'rgba(245,158,11,0.2)' : 'rgba(255,255,255,0.05)',
-                      color: isWinner ? '#F59E0B' : '#7C6A9C',
+                      color: isWinner ? '#F59E0B' : 'var(--muted-foreground)',
                     }}>
                     {index + 1}
                   </div>
@@ -677,7 +677,7 @@ export default function MarketplacePage() {
                       )}
                     </div>
                     {entry.university_id && (
-                      <p className="text-xs flex items-center gap-1 mt-0.5" style={{ color: '#7C6A9C' }}>
+                      <p className="text-xs flex items-center gap-1 mt-0.5 text-muted-foreground">
                         <Building2 className="w-3 h-3" />
                         {entry.university_id}
                       </p>
@@ -690,7 +690,7 @@ export default function MarketplacePage() {
                       <Zap className="w-3.5 h-3.5" />
                       {entry.points_earned.toLocaleString()}
                     </p>
-                    <p className="text-[10px]" style={{ color: '#7C6A9C' }}>
+                    <p className="text-[10px] text-muted-foreground">
                       {entry.tasks_completed} task{entry.tasks_completed !== 1 ? 's' : ''}
                     </p>
                   </div>
@@ -720,7 +720,7 @@ export default function MarketplacePage() {
                 <p className="text-sm font-semibold" style={{ color: '#C084FC' }}>
                   {manageTask?.budget_max || 50} Akili Points reward
                 </p>
-                <p className="text-xs" style={{ color: '#7C6A9C' }}>
+                <p className="text-xs text-muted-foreground">
                   Will be awarded to the researcher who completes this task
                 </p>
               </div>
@@ -733,7 +733,7 @@ export default function MarketplacePage() {
                 <span>Researcher assigned — points will be awarded on completion</span>
               </div>
             ) : (
-              <p className="text-sm" style={{ color: '#7C6A9C' }}>
+              <p className="text-sm text-muted-foreground">
                 No researcher assigned yet. Points will be awarded once an assignee is set.
               </p>
             )}

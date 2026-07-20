@@ -61,7 +61,7 @@ export default function ForgotPasswordPage() {
                 <CheckCircle className="w-8 h-8" style={{ color: '#22C55E' }} />
               </div>
               <h1 className="text-2xl font-bold font-heading mb-2">Check your email</h1>
-              <p className="text-sm mb-6" style={{ color: '#7C6A9C' }}>
+              <p className="text-sm mb-6 text-muted-foreground">
                 We sent a password reset link to <span style={{ color: '#C084FC' }}>{email}</span>
               </p>
               <Button asChild variant="outline" className="w-full" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(139,92,246,0.25)', color: '#F3F0FF', borderRadius: '8px' }}>
@@ -71,7 +71,7 @@ export default function ForgotPasswordPage() {
           ) : (
             <>
               <h1 className="text-2xl font-bold font-heading mb-1" style={{ letterSpacing: '-0.02em' }}>Reset your password</h1>
-              <p className="text-sm mb-6" style={{ color: '#7C6A9C' }}>Enter your email and we&apos;ll send you a reset link</p>
+              <p className="text-sm mb-6 text-muted-foreground">Enter your email and we&apos;ll send you a reset link</p>
 
               {error && (
                 <Alert variant="destructive" className="mb-5" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)' }}>
@@ -81,9 +81,9 @@ export default function ForgotPasswordPage() {
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-1.5">
-                  <Label htmlFor="email" className="text-sm font-medium" style={{ color: '#7C6A9C' }}>Email</Label>
+                  <Label htmlFor="email" className="text-sm font-medium text-muted-foreground">Email</Label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#7C6A9C' }} />
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                       id="email"
                       type="email"
@@ -106,7 +106,7 @@ export default function ForgotPasswordPage() {
           )}
         </div>
 
-        <p className="text-center text-sm mt-6" style={{ color: '#7C6A9C' }}>
+        <p className="text-center text-sm mt-6 text-muted-foreground">
           <Link href="/auth/login" className="inline-flex items-center gap-1 font-medium" style={{ color: '#A855F7' }}>
             <ArrowLeft className="w-3 h-3" /> Back to sign in
           </Link>

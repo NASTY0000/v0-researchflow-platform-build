@@ -61,7 +61,7 @@ export default function TermsPage() {
                 href={`#${s.id}`}
                 className="block text-sm py-1.5 px-3 rounded-lg transition-all"
                 style={{
-                  color: active === s.id ? '#A855F7' : '#7C6A9C',
+                  color: active === s.id ? '#A855F7' : 'var(--muted-foreground)',
                   background: active === s.id ? 'rgba(168,85,247,0.1)' : 'transparent',
                   borderLeft: active === s.id ? '2px solid #A855F7' : '2px solid transparent',
                 }}

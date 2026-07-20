@@ -186,7 +186,7 @@ export function ExternalCard({ item, index = 0 }: ExternalCardProps) {
           {deadline && (
             <span
               className="text-xs flex items-center gap-1 shrink-0"
-              style={{ color: isUrgent ? '#F97316' : '#7C6A9C' }}
+              style={{ color: isUrgent ? '#F97316' : 'var(--muted-foreground)' }}
             >
               <Clock className="w-3 h-3" />
               {isUrgent ? 'Closes soon' : formatDistanceToNow(new Date(deadline), { addSuffix: true })}

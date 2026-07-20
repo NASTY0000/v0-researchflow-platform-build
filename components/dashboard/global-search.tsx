@@ -193,8 +193,8 @@ export function GlobalSearch() {
         {/* Search input */}
         <div className="flex items-center gap-3 px-4 py-3 border-b" style={{ borderColor: 'rgba(139,92,246,0.15)' }}>
           {isSearching
-            ? <Loader2 className="h-5 w-5 shrink-0 animate-spin" style={{ color: '#7C6A9C' }} />
-            : <Search className="h-5 w-5 shrink-0" style={{ color: '#7C6A9C' }} />
+            ? <Loader2 className="h-5 w-5 shrink-0 animate-spin text-muted-foreground" />
+            : <Search className="h-5 w-5 shrink-0 text-muted-foreground" />
           }
           <input
             ref={inputRef}
@@ -206,11 +206,11 @@ export function GlobalSearch() {
             style={{ color: '#E2D9F3' }}
           />
           {query && (
-            <button onClick={() => setQuery('')} style={{ color: '#7C6A9C' }}>
+            <button onClick={() => setQuery('')} className="text-muted-foreground">
               <X className="h-4 w-4" />
             </button>
           )}
-          <kbd className="hidden sm:flex items-center gap-1 text-[11px] px-1.5 py-0.5 rounded" style={{ background: 'rgba(255,255,255,0.06)', color: '#7C6A9C', border: '1px solid rgba(139,92,246,0.2)' }}>
+          <kbd className="hidden sm:flex items-center gap-1 text-[11px] px-1.5 py-0.5 rounded" style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--muted-foreground)', border: '1px solid rgba(139,92,246,0.2)' }}>
             Esc
           </kbd>
         </div>
@@ -226,7 +226,7 @@ export function GlobalSearch() {
                   onClick={() => setQuery(s)}
                   className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-left transition-colors hover:bg-white/5"
                 >
-                  <Clock className="h-4 w-4 shrink-0" style={{ color: '#7C6A9C' }} />
+                  <Clock className="h-4 w-4 shrink-0 text-muted-foreground" />
                   <span className="text-sm" style={{ color: '#A78BFA' }}>{s}</span>
                 </button>
               ))}
@@ -234,14 +234,14 @@ export function GlobalSearch() {
           )}
 
           {!query && recentSearches.length === 0 && (
-            <div className="py-12 text-center" style={{ color: '#7C6A9C' }}>
+            <div className="py-12 text-center text-muted-foreground">
               <Search className="h-10 w-10 mx-auto mb-3 opacity-30" />
               <p className="text-sm">Search for researchers, ideas, mentors and more</p>
             </div>
           )}
 
           {query && !isSearching && !hasResults && (
-            <div className="py-12 text-center" style={{ color: '#7C6A9C' }}>
+            <div className="py-12 text-center text-muted-foreground">
               <p className="text-sm">No results for <span style={{ color: '#A78BFA' }}>"{query}"</span></p>
             </div>
           )}
@@ -261,7 +261,7 @@ export function GlobalSearch() {
                         </Avatar>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate" style={{ color: '#E2D9F3' }}>{r.full_name}</p>
-                          {r.department && <p className="text-xs truncate" style={{ color: '#7C6A9C' }}>{r.department}</p>}
+                          {r.department && <p className="text-xs truncate text-muted-foreground">{r.department}</p>}
                         </div>
                         {r.akili_score != null && (
                           <Badge className="text-xs shrink-0" style={{ background: 'rgba(124,58,237,0.15)', color: '#C4B5FD', border: '1px solid rgba(124,58,237,0.25)' }}>
@@ -286,7 +286,7 @@ export function GlobalSearch() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate" style={{ color: '#E2D9F3' }}>{idea.title}</p>
-                          <p className="text-xs" style={{ color: '#7C6A9C' }}>
+                          <p className="text-xs text-muted-foreground">
                             {idea.research_area} · {idea.author?.full_name || 'Unknown'} · {formatDistanceToNow(new Date(idea.created_at), { addSuffix: true })}
                           </p>
                         </div>
@@ -311,7 +311,7 @@ export function GlobalSearch() {
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate" style={{ color: '#E2D9F3' }}>{prof?.full_name}</p>
                           {m.expertise_areas && m.expertise_areas.length > 0 && (
-                            <p className="text-xs truncate" style={{ color: '#7C6A9C' }}>{m.expertise_areas.slice(0, 2).join(', ')}</p>
+                            <p className="text-xs truncate text-muted-foreground">{m.expertise_areas.slice(0, 2).join(', ')}</p>
                           )}
                         </div>
                         <Badge className="text-xs shrink-0" style={{ background: 'rgba(16,185,129,0.15)', color: '#10B981', border: '1px solid rgba(16,185,129,0.25)' }}>
@@ -335,7 +335,7 @@ export function GlobalSearch() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate" style={{ color: '#E2D9F3' }}>{s.title}</p>
-                          {s.research_area && <p className="text-xs truncate" style={{ color: '#7C6A9C' }}>{s.research_area}</p>}
+                          {s.research_area && <p className="text-xs truncate text-muted-foreground">{s.research_area}</p>}
                         </div>
                       </ResultRow>
                     )

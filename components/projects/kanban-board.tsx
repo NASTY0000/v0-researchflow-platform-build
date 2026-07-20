@@ -398,7 +398,7 @@ export function KanbanBoard({ projectId, teamId, tasks: initialTasks, currentUse
 
               {getTasksByColumn(column.id).length === 0 && (
                 <div className="h-32 rounded-xl flex items-center justify-center text-sm"
-                  style={{ border: '2px dashed rgba(139,92,246,0.2)', color: '#7C6A9C' }}>
+                  style={{ border: '2px dashed rgba(139,92,246,0.2)', color: 'var(--muted-foreground)' }}>
                   Drop tasks here
                 </div>
               )}

@@ -192,7 +192,7 @@ export function DashboardSidebar({ profile, isVerifiedMentor }: DashboardSidebar
                 <span className="text-white">Research</span>
                 <span style={{ color: '#FBBF24' }}>Flow</span>
               </div>
-              <div className="text-xs" style={{ color: '#7C6A9C' }}>
+              <div className="text-xs text-muted-foreground">
                 Collaborate &amp; Discover
               </div>
             </div>

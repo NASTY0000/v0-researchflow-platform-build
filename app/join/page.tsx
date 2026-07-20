@@ -72,7 +72,7 @@ function JoinPageInner() {
               <div className="space-y-1">
                 <p className="text-lg font-semibold" style={{ color: '#E2D9F3' }}>Welcome to the team!</p>
                 {projectTitle && (
-                  <p className="text-sm" style={{ color: '#7C6A9C' }}>
+                  <p className="text-sm text-muted-foreground">
                     You've joined <strong style={{ color: '#C4B5FD' }}>{projectTitle}</strong>
                   </p>
                 )}
@@ -92,7 +92,7 @@ function JoinPageInner() {
               <AlertCircle className="h-12 w-12 mx-auto text-red-500" />
               <div className="space-y-1">
                 <p className="text-lg font-semibold" style={{ color: '#E2D9F3' }}>Invitation issue</p>
-                <p className="text-sm" style={{ color: '#7C6A9C' }}>{message}</p>
+                <p className="text-sm text-muted-foreground">{message}</p>
               </div>
               <Link href="/dashboard">
                 <Button variant="outline" style={{ border: '1px solid rgba(139,92,246,0.3)', color: '#A78BFA', background: 'transparent' }}>
@@ -102,8 +102,8 @@ function JoinPageInner() {
             </>
           ) : (
             <>
-              <AlertCircle className="h-12 w-12 mx-auto" style={{ color: '#7C6A9C' }} />
-              <p className="text-sm" style={{ color: '#7C6A9C' }}>No invitation token found.</p>
+              <AlertCircle className="h-12 w-12 mx-auto text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">No invitation token found.</p>
               <Link href="/dashboard">
                 <Button variant="outline" style={{ border: '1px solid rgba(139,92,246,0.3)', color: '#A78BFA', background: 'transparent' }}>
                   Go to Dashboard

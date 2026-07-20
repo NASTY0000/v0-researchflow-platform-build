@@ -250,7 +250,7 @@ export default function NetworkPage() {
       <BackToHub href="/collaborate" label="Back to Collaborate" />
       <div>
         <h1 className="text-2xl font-bold font-heading" style={{ color: '#E2D9F3' }}>My Network</h1>
-        <p className="text-sm mt-1" style={{ color: '#7C6A9C' }}>Manage your connections and discover collaborators</p>
+        <p className="text-sm mt-1 text-muted-foreground">Manage your connections and discover collaborators</p>
       </div>
 
       <Tabs defaultValue="network">
@@ -306,7 +306,7 @@ export default function NetworkPage() {
                         <Link href={`/profile/${other.id}`} className="hover:text-primary transition-colors">
                           <p className="font-medium truncate" style={{ color: '#E2D9F3' }}>{other.full_name}</p>
                         </Link>
-                        <p className="text-xs truncate" style={{ color: '#7C6A9C' }}>{other.department || other.bio?.slice(0, 60) || 'Researcher'}</p>
+                        <p className="text-xs truncate text-muted-foreground">{other.department || other.bio?.slice(0, 60) || 'Researcher'}</p>
                       </div>
                       <Link href={`/profile/${other.id}`}>
                         <Button variant="outline" size="sm" style={{ border: '1px solid rgba(139,92,246,0.3)', color: '#A78BFA', background: 'transparent' }}>
@@ -330,7 +330,7 @@ export default function NetworkPage() {
               Incoming Requests ({incoming.length})
             </h2>
             {incoming.length === 0 ? (
-              <p className="text-sm py-4" style={{ color: '#7C6A9C' }}>No pending incoming requests</p>
+              <p className="text-sm py-4 text-muted-foreground">No pending incoming requests</p>
             ) : (
               <div className="space-y-3">
                 {incoming.map(conn => {
@@ -350,7 +350,7 @@ export default function NetworkPage() {
                             <Link href={`/profile/${requester.id}`} className="hover:text-primary transition-colors">
                               <p className="font-medium" style={{ color: '#E2D9F3' }}>{requester.full_name}</p>
                             </Link>
-                            <p className="text-xs" style={{ color: '#7C6A9C' }}>{requester.department || 'Researcher'}</p>
+                            <p className="text-xs text-muted-foreground">{requester.department || 'Researcher'}</p>
                             {conn.message && (
                               <p className="text-sm mt-2 p-2 rounded-lg" style={{ background: 'rgba(124,58,237,0.1)', color: '#C4B5FD', fontSize: '13px' }}>
                                 "{conn.message}"
@@ -396,7 +396,7 @@ export default function NetworkPage() {
               Sent Requests ({outgoing.length})
             </h2>
             {outgoing.length === 0 ? (
-              <p className="text-sm py-4" style={{ color: '#7C6A9C' }}>No outgoing requests</p>
+              <p className="text-sm py-4 text-muted-foreground">No outgoing requests</p>
             ) : (
               <div className="space-y-3">
                 {outgoing.map(conn => {
@@ -415,7 +415,7 @@ export default function NetworkPage() {
                           <Link href={`/profile/${recipient.id}`} className="hover:text-primary transition-colors">
                             <p className="font-medium" style={{ color: '#E2D9F3' }}>{recipient.full_name}</p>
                           </Link>
-                          <p className="text-xs" style={{ color: '#7C6A9C' }}>Awaiting response</p>
+                          <p className="text-xs text-muted-foreground">Awaiting response</p>
                         </div>
                         <Button
                           variant="outline"
@@ -440,9 +440,9 @@ export default function NetworkPage() {
           {suggestions.length === 0 ? (
             <Card style={cardStyle}>
               <CardContent className="py-16 text-center">
-                <UserPlus className="h-12 w-12 mx-auto mb-4 opacity-30" style={{ color: '#7C6A9C' }} />
+                <UserPlus className="h-12 w-12 mx-auto mb-4 opacity-30 text-muted-foreground" />
                 <p className="font-medium" style={{ color: '#E2D9F3' }}>No suggestions yet</p>
-                <p className="text-sm mt-1" style={{ color: '#7C6A9C' }}>Post a research idea or complete your profile to get matched</p>
+                <p className="text-sm mt-1 text-muted-foreground">Post a research idea or complete your profile to get matched</p>
                 <div className="flex gap-3 justify-center mt-4">
                   <Link href="/ideas/new">
                     <Button size="sm" style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}>
@@ -475,7 +475,7 @@ export default function NetworkPage() {
                           <Link href={`/profile/${person.id}`} className="hover:text-primary transition-colors">
                             <p className="font-medium" style={{ color: '#E2D9F3' }}>{person.full_name}</p>
                           </Link>
-                          <p className="text-xs" style={{ color: '#7C6A9C' }}>{person.department || 'Researcher'}</p>
+                          <p className="text-xs text-muted-foreground">{person.department || 'Researcher'}</p>
                           <div className="flex items-center gap-1 mt-1">
                             <div className="h-1.5 w-1.5 rounded-full" style={{ background: '#10B981' }} />
                             <span className="text-xs" style={{ color: '#10B981' }}>{suggestion.match_score}% match</span>
@@ -525,9 +525,9 @@ export default function NetworkPage() {
           {following.length === 0 ? (
             <Card style={cardStyle}>
               <CardContent className="py-16 text-center">
-                <UserPlus className="h-12 w-12 mx-auto mb-4 opacity-30" style={{ color: '#7C6A9C' }} />
+                <UserPlus className="h-12 w-12 mx-auto mb-4 opacity-30 text-muted-foreground" />
                 <p className="font-medium" style={{ color: '#E2D9F3' }}>Not following anyone yet</p>
-                <p className="text-sm mt-1" style={{ color: '#7C6A9C' }}>Visit a researcher&apos;s profile and click Follow</p>
+                <p className="text-sm mt-1 text-muted-foreground">Visit a researcher&apos;s profile and click Follow</p>
               </CardContent>
             </Card>
           ) : (
@@ -550,7 +550,7 @@ export default function NetworkPage() {
                             {person.full_name}
                           </Link>
                           {person.department && (
-                            <p className="text-xs truncate" style={{ color: '#7C6A9C' }}>{person.department}</p>
+                            <p className="text-xs truncate text-muted-foreground">{person.department}</p>
                           )}
                         </div>
                       </div>
@@ -594,7 +594,7 @@ export default function NetworkPage() {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">
-            <p className="text-sm" style={{ color: '#7C6A9C' }}>Add a personal message (optional)</p>
+            <p className="text-sm text-muted-foreground">Add a personal message (optional)</p>
             <Textarea
               placeholder="Hi! I'd love to collaborate on research..."
               value={connectMessage}
