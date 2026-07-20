@@ -569,23 +569,34 @@ html {
   inset: 0;
   border-radius: inherit;
   background: radial-gradient(
-    340px circle at var(--mx, 50%) var(--my, 50%),
-    var(--spot-color, rgba(168, 85, 247, 0.14)),
+    400px circle at var(--mx, 50%) var(--my, 50%),
+    var(--spot-color, rgba(168, 85, 247, 0.18)),
     transparent 65%
   );
   opacity: 0;
-  transition: opacity 0.35s ease;
+  transition: opacity 0.3s ease;
   pointer-events: none;
+  z-index: 0;
 }
 .spotlight-card:hover::before {
   opacity: 1;
+}
+
+/* CTA card — pulsing glow border to draw the eye */
+@keyframes cta-border-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0), inset 0 0 0 1px rgba(124,58,237,0.3); }
+  50%       { box-shadow: 0 0 60px 4px rgba(168, 85, 247, 0.18), inset 0 0 0 1px rgba(168,85,247,0.5); }
+}
+.cta-shimmer {
+  animation: cta-border-pulse 5s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .animate-marquee,
   .animate-marquee-reverse,
   .animate-scroll-cue,
-  .aurora-blob {
+  .aurora-blob,
+  .cta-shimmer {
     animation: none;
   }
 }

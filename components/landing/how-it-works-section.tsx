@@ -50,7 +50,6 @@ export function HowItWorksSection() {
         scrollTrigger: { trigger: section, start: 'top 80%', once: true },
       })
 
-      // Central beam draws itself as you scroll through the steps
       gsap.fromTo(
         beamRef.current,
         { scaleY: 0 },
@@ -98,11 +97,15 @@ export function HowItWorksSection() {
       <div className="pointer-events-none absolute left-1/2 top-0 h-px w-2/3 -translate-x-1/2 bg-gradient-to-r from-transparent via-violet-500/30 to-transparent" />
 
       <div className="mx-auto max-w-5xl">
+        {/* No eyebrow — heading stands on its own weight */}
         <div className="mb-20 text-center">
-          <p data-step-head className="label-section mb-3 !text-violet-400/80">Getting Started</p>
-          <h2 data-step-head className="mb-4 font-heading text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
+          <h2
+            data-step-head
+            className="mb-4 font-heading font-extrabold text-white"
+            style={{ fontSize: 'clamp(2rem, 4.5vw, 3.25rem)', lineHeight: 1.1, letterSpacing: '-0.03em' }}
+          >
             Get Started in{' '}
-            <span className="bg-gradient-to-r from-[#C084FC] to-[#818CF8] bg-clip-text text-transparent">Minutes</span>
+            <span className="text-[#C084FC]">Minutes</span>
           </h2>
           <p data-step-head className="text-[#9D8BB8]">
             Join thousands of researchers already collaborating on ResearchFlow.
@@ -110,7 +113,6 @@ export function HowItWorksSection() {
         </div>
 
         <div data-steps className="relative">
-          {/* Track + animated beam */}
           <div className="absolute left-5 top-0 h-full w-px bg-violet-500/15 md:left-1/2 md:-translate-x-1/2" />
           <div
             ref={beamRef}
@@ -120,7 +122,6 @@ export function HowItWorksSection() {
           <div className="space-y-14 md:space-y-24">
             {STEPS.map((item, i) => (
               <div key={item.step} className="relative md:grid md:grid-cols-2 md:gap-16">
-                {/* Node on the beam */}
                 <span
                   data-step-dot
                   className="absolute left-5 top-9 z-10 -translate-x-1/2 md:left-1/2"
@@ -143,11 +144,20 @@ export function HowItWorksSection() {
                       >
                         <item.icon className="h-6 w-6" style={{ color: item.color }} />
                       </div>
-                      <span className="font-heading text-5xl font-extrabold leading-none tracking-tighter text-white/[0.07]">
+                      {/* Step number — visible at 20% opacity, not ghosted to 7% */}
+                      <span
+                        className="font-heading font-extrabold leading-none tracking-tighter"
+                        style={{ fontSize: 'clamp(2.5rem, 5vw, 3.5rem)', color: `${item.color}33` }}
+                      >
                         {item.step}
                       </span>
                     </div>
-                    <h3 className="mb-3 font-heading text-xl font-semibold text-white">{item.title}</h3>
+                    <h3
+                      className="mb-3 font-heading font-semibold text-white"
+                      style={{ fontSize: 'clamp(1.1rem, 2vw, 1.25rem)', letterSpacing: '-0.02em' }}
+                    >
+                      {item.title}
+                    </h3>
                     <p className="text-sm leading-relaxed text-[#9D8BB8]">{item.description}</p>
                   </div>
                 </div>

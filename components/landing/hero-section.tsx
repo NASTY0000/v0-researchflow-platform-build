@@ -10,10 +10,11 @@ import { gsap } from '@/lib/gsap'
 
 const HeroCanvas = dynamic(() => import('./hero-canvas'), { ssr: false })
 
+// Solid colors — no gradient clip text (banned)
 const HEADLINE_WORDS = [
-  { text: 'Collaborate.', gradient: 'from-[#F8F5FF] to-[#C4B5FD]' },
-  { text: 'Discover.', gradient: 'from-[#C084FC] to-[#818CF8]' },
-  { text: 'Publish.', gradient: 'from-[#A855F7] to-[#06B6D4]' },
+  { text: 'Collaborate.', color: '#F0EAFF' },
+  { text: 'Discover.', color: '#D8B4FE' },
+  { text: 'Publish.', color: '#C084FC' },
 ]
 
 const STATS = [
@@ -62,7 +63,6 @@ export function HeroSection() {
         clearProps: 'transform,visibility,opacity',
       })
 
-      // Count the stats up once they enter
       gsap.utils.toArray<HTMLElement>('[data-count-to]').forEach((el) => {
         const target = Number(el.dataset.countTo)
         const counter = { value: 0 }
@@ -77,8 +77,6 @@ export function HeroSection() {
         })
       })
 
-      // Cinematic exit while scrolling away: the copy drifts up and fades
-      // while the planet stays fully visible until the section leaves.
       gsap.to(contentRef.current, {
         yPercent: 12,
         autoAlpha: 0,
@@ -103,12 +101,10 @@ export function HeroSection() {
       ref={sectionRef}
       className="relative flex min-h-[100svh] flex-col items-center justify-center overflow-hidden bg-[#05010F] px-4 pt-28 pb-16"
     >
-      {/* Three.js network globe */}
       <div ref={canvasWrapRef} data-hero-canvas className="absolute inset-0 will-change-transform">
         <HeroCanvas />
       </div>
 
-      {/* Readability + depth overlays */}
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_58%_44%_at_50%_34%,rgba(5,1,15,0.5),rgba(5,1,15,0.14)_60%,transparent)]" />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-48 bg-gradient-to-b from-transparent to-[#05010F]" />
       <div className="pointer-events-none absolute inset-0 noise" />
@@ -124,15 +120,20 @@ export function HeroSection() {
           </span>
         </div>
 
-        <h1 className="mb-7 font-heading text-[11vw] font-extrabold leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl xl:text-[5.25rem]">
+        {/* Headline — solid colors per word, not gradient clip (banned) */}
+        <h1
+          className="mb-7 font-heading font-extrabold"
+          style={{ fontSize: 'clamp(2.75rem, 10vw, 6rem)', lineHeight: 0.95, letterSpacing: '-0.04em' }}
+        >
           {HEADLINE_WORDS.map((word, w) => (
             <span key={word.text} className="inline-block whitespace-nowrap">
-              <span className="inline-block overflow-hidden pb-[0.12em] align-bottom">
+              <span className="inline-block overflow-hidden pb-[0.1em] align-bottom">
                 {word.text.split('').map((char, c) => (
                   <span
                     key={c}
                     data-hero-char
-                    className={`inline-block bg-gradient-to-br ${word.gradient} bg-clip-text text-transparent will-change-transform`}
+                    className="inline-block will-change-transform"
+                    style={{ color: word.color }}
                   >
                     {char}
                   </span>
@@ -173,23 +174,26 @@ export function HeroSection() {
           </MagneticButton>
         </div>
 
-        {/* Stats */}
-        <div className="mt-16 grid w-full max-w-4xl grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
-          {STATS.map((stat) => (
-            <div
-              key={stat.label}
-              data-hero-stat
-              className="group rounded-2xl border border-violet-500/15 bg-white/[0.03] p-5 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-violet-400/40 hover:bg-white/[0.05] hover:shadow-[0_8px_40px_rgba(124,58,237,0.25)]"
-            >
-              <div className="font-heading text-3xl font-extrabold tracking-tight sm:text-4xl">
-                <span className="bg-gradient-to-br from-[#E9D5FF] to-[#818CF8] bg-clip-text text-transparent">
+        {/* Stats — no card chrome, typographic row with dividers */}
+        <div className="mt-20 w-full max-w-3xl">
+          <div className="flex flex-wrap items-stretch justify-center">
+            {STATS.map((stat, i) => (
+              <div
+                key={stat.label}
+                data-hero-stat
+                className={`px-8 py-4 text-center ${i > 0 ? 'border-l border-violet-500/15' : ''}`}
+              >
+                <div
+                  className="font-heading font-extrabold text-white"
+                  style={{ fontSize: 'clamp(1.75rem, 4vw, 2.5rem)', letterSpacing: '-0.04em', lineHeight: 1 }}
+                >
                   <span data-count-to={stat.value}>{stat.value}</span>
-                  {stat.suffix}
-                </span>
+                  <span className="text-[#C084FC]">{stat.suffix}</span>
+                </div>
+                <div className="mt-1.5 text-[11px] text-[#6B5694]">{stat.label}</div>
               </div>
-              <div className="mt-1 text-xs text-[#9D8BB8] sm:text-sm">{stat.label}</div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
 

@@ -1,7 +1,8 @@
 'use client'
 
-import { Star } from 'lucide-react'
+import { useLayoutEffect, useRef } from 'react'
 import { Reveal } from './reveal'
+import { gsap } from '@/lib/gsap'
 
 const TESTIMONIALS = [
   {
@@ -31,16 +32,37 @@ const TESTIMONIALS = [
 ]
 
 export function TestimonialsSection() {
+  const sectionRef = useRef<HTMLElement>(null)
+
+  useLayoutEffect(() => {
+    const mm = gsap.matchMedia()
+    mm.add('(prefers-reduced-motion: no-preference)', () => {
+      gsap.utils.toArray<HTMLElement>('[data-testimonial-card]').forEach((card) => {
+        card.addEventListener('mouseenter', () => {
+          gsap.to(card, { y: -6, duration: 0.35, ease: 'power3.out', overwrite: 'auto' })
+        })
+        card.addEventListener('mouseleave', () => {
+          gsap.to(card, { y: 0, duration: 0.5, ease: 'power2.out', overwrite: 'auto' })
+        })
+      })
+    })
+    return () => mm.revert()
+  }, [])
+
   return (
-    <section id="testimonials" className="relative scroll-mt-16 overflow-hidden bg-[#05010F] px-4 py-28">
+    <section ref={sectionRef} id="testimonials" className="relative scroll-mt-16 overflow-hidden bg-[#05010F] px-4 py-28">
       <div className="pointer-events-none absolute right-0 top-1/3 h-96 w-96 rounded-full bg-fuchsia-700/10 blur-[130px]" />
 
       <div className="relative z-10 mx-auto max-w-7xl">
+        {/* No "Social Proof" eyebrow — heading is the statement */}
         <Reveal className="mb-16 text-center">
-          <p data-reveal className="label-section mb-3 !text-violet-400/80">Social Proof</p>
-          <h2 data-reveal className="font-heading text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
+          <h2
+            data-reveal
+            className="font-heading font-extrabold text-white"
+            style={{ fontSize: 'clamp(2rem, 4.5vw, 3.25rem)', lineHeight: 1.1, letterSpacing: '-0.03em' }}
+          >
             Trusted by Researchers{' '}
-            <span className="bg-gradient-to-r from-[#C084FC] to-[#22D3EE] bg-clip-text text-transparent">Across Africa</span>
+            <span className="text-[#C084FC]">Across Africa</span>
           </h2>
         </Reveal>
 
@@ -49,16 +71,17 @@ export function TestimonialsSection() {
             <figure
               key={t.author}
               data-reveal
-              className="group relative flex flex-col rounded-2xl border border-violet-500/15 bg-white/[0.025] p-7 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1.5 hover:border-violet-400/35 hover:shadow-[0_16px_48px_rgba(124,58,237,0.18)]"
+              data-testimonial-card
+              className="group relative flex flex-col rounded-2xl border border-violet-500/15 bg-white/[0.025] p-7 backdrop-blur-sm transition-[border-color,box-shadow] duration-300 hover:border-violet-400/35 hover:shadow-[0_16px_48px_rgba(124,58,237,0.18)]"
             >
-              <span aria-hidden="true" className="pointer-events-none absolute right-6 top-3 font-heading text-7xl font-extrabold leading-none text-violet-500/10 transition-colors duration-300 group-hover:text-violet-500/20">
+              {/* Decorative quote mark — visible at 20% opacity, not 10% */}
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute right-6 top-3 font-heading font-extrabold leading-none text-violet-500/20 transition-colors duration-300 group-hover:text-violet-500/30"
+                style={{ fontSize: '6rem', lineHeight: 1 }}
+              >
                 &rdquo;
               </span>
-              <div className="mb-4 flex gap-1">
-                {[...Array(5)].map((_, j) => (
-                  <Star key={j} className="h-4 w-4 fill-current text-amber-400" />
-                ))}
-              </div>
               <blockquote className="mb-6 flex-1 leading-relaxed text-[#D8CDEE]">&ldquo;{t.quote}&rdquo;</blockquote>
               <figcaption className="flex items-center gap-3">
                 <div className={`flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br ${t.gradient} text-sm font-bold text-white shadow-[0_0_16px_rgba(124,58,237,0.4)]`}>

@@ -1,6 +1,5 @@
 'use client'
 
-// Shown only if the database fetch returns nothing (e.g. missing env locally)
 const FALLBACK_UNIVERSITIES = [
   'University of Ibadan',
   'University of Cape Town',
@@ -46,16 +45,16 @@ function MarqueeRow({ names, reverse, duration }: { names: string[]; reverse?: b
 export function UniversityMarquee({ universities }: { universities?: string[] }) {
   const names = universities?.length ? universities : FALLBACK_UNIVERSITIES
 
-  // Split into two counter-scrolling rows; ~3s of travel per item keeps the
-  // speed constant no matter how many universities are in the database.
   const mid = Math.ceil(names.length / 2)
   const rowA = names.slice(0, mid)
   const rowB = names.length > 6 ? names.slice(mid) : rowA
 
   return (
     <section className="relative border-y border-violet-500/10 bg-[#080214] py-6">
-      <p className="mb-5 text-center text-[10px] uppercase tracking-[0.35em] text-[#6B5694]">
-        Trusted by researchers at {universities?.length ? `${universities.length}+ universities` : ''}
+      {/* Sentence-case label — not an uppercase eyebrow */}
+      <p className="mb-5 text-center text-xs text-[#6B5694]">
+        Trusted by researchers at{' '}
+        {universities?.length ? `${universities.length}+ universities` : 'universities across Africa'}
       </p>
       <div className="space-y-4">
         <MarqueeRow names={rowA} duration={Math.max(30, rowA.length * 3)} />

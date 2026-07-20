@@ -1,9 +1,7 @@
 'use client'
 
-import { useCallback } from 'react'
+import React, { useCallback } from 'react'
 import { Reveal } from './reveal'
-
-// ── Custom SVG feature icons ──────────────────────────────────────────────────
 
 const IdeasIcon = () => (
   <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
@@ -91,8 +89,9 @@ const FEATURES = [
   {
     icon: IdeasIcon,
     title: 'Idea Board',
-    description: 'Share your research ideas and discover opportunities to collaborate with peers across Africa.',
+    description: 'Share your research ideas and discover opportunities to collaborate with peers across Africa. Post a concept in minutes and watch interest grow.',
     accent: 'rgba(168,85,247,0.14)',
+    bullets: ['Open idea posting', 'Interest gauging', 'Tag & categorise'],
   },
   {
     icon: CollaborateIcon,
@@ -127,7 +126,6 @@ const FEATURES = [
 ]
 
 export function FeaturesSection() {
-  // Track the cursor per-card so the spotlight gradient follows it
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const card = e.currentTarget
     const rect = card.getBoundingClientRect()
@@ -135,42 +133,103 @@ export function FeaturesSection() {
     card.style.setProperty('--my', `${e.clientY - rect.top}px`)
   }, [])
 
+  const featured = FEATURES[0]
+  const rest = FEATURES.slice(1)
+
   return (
     <section id="features" className="relative scroll-mt-16 overflow-hidden bg-[#05010F] px-4 py-28">
-      {/* Ambient glows */}
       <div className="pointer-events-none absolute -left-40 top-20 h-96 w-96 rounded-full bg-violet-700/15 blur-[120px]" />
       <div className="pointer-events-none absolute -right-40 bottom-20 h-96 w-96 rounded-full bg-cyan-600/10 blur-[120px]" />
 
       <div className="relative z-10 mx-auto max-w-7xl">
+        {/* No eyebrow — heading stands alone */}
         <Reveal className="mb-16 text-center">
-          <p data-reveal className="label-section mb-3 !text-violet-400/80">Platform Features</p>
-          <h2 data-reveal className="mb-4 font-heading text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
+          <h2
+            data-reveal
+            className="mb-4 font-heading font-extrabold text-white"
+            style={{ fontSize: 'clamp(2rem, 4.5vw, 3.25rem)', lineHeight: 1.1, letterSpacing: '-0.03em' }}
+          >
             Everything You Need to{' '}
-            <span className="bg-gradient-to-r from-[#C084FC] to-[#22D3EE] bg-clip-text text-transparent">Succeed</span>
+            <span className="text-[#C084FC]">Succeed</span>
           </h2>
           <p data-reveal className="mx-auto max-w-2xl text-[#9D8BB8]">
             From ideation to publication, ResearchFlow provides all the tools for successful research collaboration.
           </p>
         </Reveal>
 
-        <Reveal className="grid gap-5 md:grid-cols-2 lg:grid-cols-3" stagger={0.08}>
-          {FEATURES.map((feature) => (
+        {/* Bento-style layout — featured card + grid breaks the identical-card ban */}
+        <Reveal>
+          {/* Row 1: featured (2/3 width) + two stacked cards (1/3 width) */}
+          <div data-reveal className="mb-5 grid gap-5 md:grid-cols-3">
+            {/* Featured card — spans 2 cols, horizontal layout */}
             <div
-              key={feature.title}
-              data-reveal
               onMouseMove={handleMouseMove}
-              className="spotlight-card group relative overflow-hidden rounded-2xl border border-violet-500/15 bg-white/[0.025] p-7 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1.5 hover:border-violet-400/40 hover:shadow-[0_16px_48px_rgba(124,58,237,0.22)]"
-              style={{ '--spot-color': feature.accent } as React.CSSProperties}
+              className="spotlight-card group relative overflow-hidden rounded-2xl border border-violet-500/20 bg-white/[0.025] p-8 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1.5 hover:border-violet-400/50 hover:shadow-[0_16px_56px_rgba(124,58,237,0.3)] md:col-span-2"
+              style={{ '--spot-color': featured.accent } as React.CSSProperties}
             >
-              <div className="relative z-10">
-                <div className="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-xl border border-violet-500/20 bg-violet-600/10 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3">
-                  <feature.icon />
+              <div className="relative z-10 flex h-full flex-col justify-between gap-8 sm:flex-row sm:items-start">
+                <div className="flex-1">
+                  <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-2xl border border-violet-500/25 bg-violet-600/12 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3">
+                    <featured.icon />
+                  </div>
+                  <h3
+                    className="mb-3 font-heading font-bold text-white"
+                    style={{ fontSize: 'clamp(1.25rem, 2.5vw, 1.75rem)', letterSpacing: '-0.02em' }}
+                  >
+                    {featured.title}
+                  </h3>
+                  <p className="mb-6 max-w-xs leading-relaxed text-[#9D8BB8]">{featured.description}</p>
                 </div>
-                <h3 className="mb-2 font-heading text-lg font-semibold text-white">{feature.title}</h3>
-                <p className="text-sm leading-relaxed text-[#9D8BB8]">{feature.description}</p>
+                {/* Mini feature list — makes this card visually distinct */}
+                <ul className="flex shrink-0 flex-col gap-2 sm:mt-1 sm:min-w-[160px]">
+                  {featured.bullets?.map((b) => (
+                    <li key={b} className="flex items-center gap-2.5 text-sm text-[#B7A8D4]">
+                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#C084FC]" />
+                      {b}
+                    </li>
+                  ))}
+                </ul>
               </div>
             </div>
-          ))}
+
+            {/* Cards 2 and 3 stacked in the right column */}
+            {rest.slice(0, 2).map((feature) => (
+              <div
+                key={feature.title}
+                onMouseMove={handleMouseMove}
+                className="spotlight-card group relative overflow-hidden rounded-2xl border border-violet-500/15 bg-white/[0.025] p-7 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1.5 hover:border-violet-400/40 hover:shadow-[0_16px_48px_rgba(124,58,237,0.22)]"
+                style={{ '--spot-color': feature.accent } as React.CSSProperties}
+              >
+                <div className="relative z-10">
+                  <div className="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-xl border border-violet-500/20 bg-violet-600/10 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3">
+                    <feature.icon />
+                  </div>
+                  <h3 className="mb-2 font-heading text-lg font-semibold text-white">{feature.title}</h3>
+                  <p className="text-sm leading-relaxed text-[#9D8BB8]">{feature.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Row 2: three equal cards */}
+          <div data-reveal className="grid gap-5 md:grid-cols-3">
+            {rest.slice(2).map((feature) => (
+              <div
+                key={feature.title}
+                onMouseMove={handleMouseMove}
+                className="spotlight-card group relative overflow-hidden rounded-2xl border border-violet-500/15 bg-white/[0.025] p-7 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1.5 hover:border-violet-400/40 hover:shadow-[0_16px_48px_rgba(124,58,237,0.22)]"
+                style={{ '--spot-color': feature.accent } as React.CSSProperties}
+              >
+                <div className="relative z-10">
+                  <div className="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-xl border border-violet-500/20 bg-violet-600/10 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3">
+                    <feature.icon />
+                  </div>
+                  <h3 className="mb-2 font-heading text-lg font-semibold text-white">{feature.title}</h3>
+                  <p className="text-sm leading-relaxed text-[#9D8BB8]">{feature.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </Reveal>
       </div>
     </section>

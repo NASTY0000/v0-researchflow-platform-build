@@ -41,11 +41,15 @@ export function FaqSection() {
       <div className="pointer-events-none absolute -left-32 bottom-0 h-80 w-80 rounded-full bg-violet-700/10 blur-[120px]" />
 
       <div className="relative z-10 mx-auto max-w-3xl">
+        {/* No "Got Questions?" eyebrow — heading carries its own weight */}
         <Reveal className="mb-12 text-center">
-          <p data-reveal className="label-section mb-3 !text-violet-400/80">Got Questions?</p>
-          <h2 data-reveal className="font-heading text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
+          <h2
+            data-reveal
+            className="font-heading font-extrabold text-white"
+            style={{ fontSize: 'clamp(2rem, 4.5vw, 3.25rem)', lineHeight: 1.1, letterSpacing: '-0.03em' }}
+          >
             Frequently Asked{' '}
-            <span className="bg-gradient-to-r from-[#C084FC] to-[#818CF8] bg-clip-text text-transparent">Questions</span>
+            <span className="text-[#C084FC]">Questions</span>
           </h2>
         </Reveal>
 
