@@ -1,762 +1,940 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback, useRef } from "react"
+import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { BackToHub } from "@/components/ui/back-to-hub"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Input } from "@/components/ui/input"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { EmptyState } from "@/components/ui/EmptyState"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
-import {
-  Briefcase,
-  Search,
-  Plus,
-  Clock,
-  Zap,
-  Calendar,
-  Trophy,
+  ShoppingBag,
   Loader2,
-  CheckCircle,
-  Building2,
+  AlertTriangle,
+  Calendar,
+  MessageSquare,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  Edit2,
+  ChevronRight,
+  Wrench,
+  FileText,
+  Send,
+  ToggleLeft,
+  ToggleRight,
+  Plus,
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
-import type { MarketplaceTask, Profile } from "@/lib/types/database"
-import { completeMarketplaceTask } from "@/lib/actions/akili"
-import { EmptyState } from "@/components/ui/EmptyState"
-import { ContextualHint } from "@/components/ui/ContextualHint"
-import { SearchableMultiSelect } from "@/components/ui/searchable-multi-select"
-import { DeleteButton } from "@/components/ui/delete-button"
-import { formatDistanceToNow } from "date-fns"
 import { toast } from "sonner"
+import { formatDistanceToNow, isPast, differenceInDays } from "date-fns"
+import { sendServiceEnquiry, respondToEnquiry } from "@/lib/actions/marketplace"
+import { CreateListingModal } from "@/components/marketplace/create-listing-modal"
+import { CreateRequestModal } from "@/components/marketplace/create-request-modal"
+import { SendEnquiryModal } from "@/components/marketplace/send-enquiry-modal"
+import type {
+  ServiceCategory,
+  ServiceListing,
+  ServiceRequest,
+  ServiceEnquiry,
+} from "@/lib/types/marketplace"
+import type { Profile } from "@/lib/types/database"
 
-interface TaskWithPoster extends MarketplaceTask {
-  poster: Profile
-  budget_max: number | null
-  budget_min: number | null
+const PROHIBITED_USE_NOTICE =
+  "ResearchFlow Marketplace is for legitimate research support services. " +
+  "Do not offer or request the writing of thesis or dissertation content, " +
+  "completion of assessed coursework, ghost authorship, or any work to be " +
+  "presented as your own without acknowledgement. " +
+  "Listings that breach this will be removed."
+
+// ── deadline helpers ────────────────────────────────────────────────────────
+
+function deadlineStatus(deadline: string | null): 'none' | 'expired' | 'urgent' | 'soon' | 'open' {
+  if (!deadline) return 'none'
+  const d = new Date(deadline)
+  if (isPast(d)) return 'expired'
+  const days = differenceInDays(d, new Date())
+  if (days <= 3) return 'urgent'
+  if (days <= 10) return 'soon'
+  return 'open'
 }
 
-interface LeaderboardEntry {
-  user_id: string
-  full_name: string | null
-  avatar_url: string | null
-  university_id: string | null
-  tasks_completed: number
-  points_earned: number
+function deadlineColor(status: ReturnType<typeof deadlineStatus>): string {
+  if (status === 'expired') return 'text-destructive'
+  if (status === 'urgent') return 'text-destructive'
+  if (status === 'soon') return 'text-orange-500'
+  return 'text-muted-foreground'
 }
 
-const TASK_CATEGORIES = [
-  "Data Collection",
-  "Data Analysis and Statistics",
-  "Literature Review",
-  "Systematic Review and Meta-analysis",
-  "Research Writing and Editing",
-  "Grant Writing",
-  "Laboratory Work",
-  "Field Research",
-  "Survey Design and Distribution",
-  "Qualitative Research",
-  "Quantitative Research",
-  "Mixed Methods Research",
-  "Software and Web Development",
-  "Mobile App Development",
-  "Database Management",
-  "Machine Learning and AI",
-  "Data Visualisation",
-  "Graphic Design and Illustrations",
-  "Science Communication",
-  "Transcription and Translation",
-  "Proofreading and Copyediting",
-  "Presentation Design",
-  "Video and Multimedia Production",
-  "Social Media and Outreach",
-  "Project Coordination",
-  "Ethics Application Support",
-  "Protocol Development",
-  "Clinical Research Support",
-  "Environmental Sampling",
-  "GIS and Mapping",
-  "Other",
-]
+// ── types ───────────────────────────────────────────────────────────────────
 
-const FILTER_CATEGORIES = ["All Categories", ...TASK_CATEGORIES]
+type ListingWithProvider = ServiceListing & { provider?: Profile; category?: ServiceCategory }
+type RequestWithRequester = ServiceRequest & { requester?: Profile; category?: ServiceCategory }
+type EnquiryFull = ServiceEnquiry & {
+  sender?: Profile
+  recipient?: Profile
+  listing?: { id: string; title: string; provider_id: string } | null
+  request?: { id: string; title: string; requester_id: string } | null
+}
 
-const TASK_TYPES = [
-  { value: 'research',              label: 'Research' },
-  { value: 'data_collection',       label: 'Data Collection' },
-  { value: 'data_analysis',         label: 'Data Analysis' },
-  { value: 'statistical_analysis',  label: 'Statistical Analysis' },
-  { value: 'literature_review',     label: 'Literature Review' },
-  { value: 'writing',               label: 'Writing' },
-  { value: 'grant_writing',         label: 'Grant Writing' },
-  { value: 'proofreading',          label: 'Proofreading and Editing' },
-  { value: 'coding',                label: 'Coding and Development' },
-  { value: 'design',                label: 'Design' },
-  { value: 'presentation',          label: 'Presentation' },
-  { value: 'laboratory',            label: 'Laboratory Work' },
-  { value: 'field_research',        label: 'Field Research' },
-  { value: 'survey',                label: 'Survey and Questionnaire' },
-  { value: 'transcription',         label: 'Transcription' },
-  { value: 'translation',           label: 'Translation' },
-  { value: 'science_communication', label: 'Science Communication' },
-  { value: 'project_management',    label: 'Project Management' },
-  { value: 'review',                label: 'Peer Review' },
-  { value: 'other',                 label: 'Other' },
-]
+// ── sub-components ──────────────────────────────────────────────────────────
 
-const MARKETPLACE_SKILLS = [
-  "Python", "R", "SPSS", "STATA", "SAS", "Excel", "MATLAB",
-  "SQL", "PostgreSQL", "MongoDB", "Firebase",
-  "JavaScript", "TypeScript", "React", "Next.js", "Node.js",
-  "Machine Learning", "Deep Learning", "NLP", "Computer Vision",
-  "TensorFlow", "PyTorch", "scikit-learn", "Pandas", "NumPy",
-  "Data Visualisation", "Tableau", "Power BI", "R Shiny", "D3.js",
-  "Statistical Analysis", "Regression Analysis", "Bayesian Statistics",
-  "Qualitative Analysis", "Thematic Analysis", "NVivo", "ATLAS.ti",
-  "Systematic Review", "Meta-analysis", "PRISMA", "Cochrane",
-  "Quantitative Research", "Mixed Methods Research", "Survey Design",
-  "Literature Review", "Academic Writing", "Technical Writing",
-  "Grant Writing", "Science Communication", "Copyediting", "Proofreading",
-  "Transcription", "Translation", "French", "Swahili", "Arabic", "Hausa",
-  "GIS", "ArcGIS", "QGIS", "Remote Sensing", "Spatial Analysis",
-  "Field Research", "Data Collection", "Interviewing", "Focus Groups",
-  "Laboratory Work", "PCR", "Cell Culture", "Microscopy", "Titration",
-  "Clinical Research", "Ethics Application", "Protocol Writing",
-  "Graphic Design", "Figma", "Adobe Illustrator", "Adobe Photoshop",
-  "Video Editing", "Presentation Design", "Canva",
-  "Project Management", "Trello", "Notion", "Asana", "JIRA",
-  "Social Media Management", "Science Outreach",
-]
+function ListingCard({
+  listing,
+  currentUserId,
+  onEnquire,
+  onEdit,
+}: {
+  listing: ListingWithProvider
+  currentUserId: string | null
+  onEnquire: (listing: ListingWithProvider) => void
+  onEdit: (listing: ListingWithProvider) => void
+}) {
+  const isOwn = listing.provider_id === currentUserId
+  const provider = listing.provider
+
+  return (
+    <Card className="hover:border-primary/40 transition-colors">
+      <CardContent className="p-5 space-y-3">
+        {/* Header */}
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <Link href={`/profile/${listing.provider_id}`}>
+              <Avatar className="h-8 w-8 shrink-0 hover:ring-2 hover:ring-primary/40 transition-all">
+                <AvatarImage src={provider?.avatar_url ?? undefined} />
+                <AvatarFallback className="text-xs bg-primary/10 text-primary">
+                  {provider?.full_name?.charAt(0) ?? "?"}
+                </AvatarFallback>
+              </Avatar>
+            </Link>
+            <div className="min-w-0">
+              <Link href={`/profile/${listing.provider_id}`} className="text-sm font-medium hover:underline truncate block">
+                {provider?.full_name ?? "Researcher"}
+              </Link>
+              {provider?.faculty && (
+                <p className="text-xs text-muted-foreground truncate">{provider.faculty}</p>
+              )}
+            </div>
+          </div>
+          {listing.category && (
+            <Badge variant="secondary" className="shrink-0 text-xs">{listing.category.name}</Badge>
+          )}
+        </div>
+
+        {/* Title & description */}
+        <div>
+          <h3 className="font-semibold text-sm line-clamp-1">{listing.title}</h3>
+          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{listing.description}</p>
+        </div>
+
+        {/* Tools */}
+        {listing.tools && listing.tools.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {listing.tools.slice(0, 4).map(t => (
+              <span key={t} className="inline-flex items-center gap-0.5 rounded-full border border-border px-2 py-0.5 text-[11px]">
+                <Wrench className="h-2.5 w-2.5 text-muted-foreground" />
+                {t}
+              </span>
+            ))}
+            {listing.tools.length > 4 && (
+              <span className="text-[11px] text-muted-foreground">+{listing.tools.length - 4} more</span>
+            )}
+          </div>
+        )}
+
+        {/* Rate + turnaround */}
+        {(listing.rate_note || listing.turnaround_note) && (
+          <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-muted-foreground">
+            {listing.rate_note && (
+              <span>Rate: <span className="text-foreground">{listing.rate_note}</span>
+                <span className="text-muted-foreground"> · Arranged privately</span>
+              </span>
+            )}
+            {listing.turnaround_note && (
+              <span>Turnaround: <span className="text-foreground">{listing.turnaround_note}</span></span>
+            )}
+          </div>
+        )}
+
+        {/* Actions */}
+        <div className="pt-1">
+          {isOwn ? (
+            <Button size="sm" variant="outline" className="w-full gap-1.5" onClick={() => onEdit(listing)}>
+              <Edit2 className="h-3.5 w-3.5" /> Edit listing
+            </Button>
+          ) : (
+            <Button size="sm" className="w-full gap-1.5" onClick={() => onEnquire(listing)}>
+              <Send className="h-3.5 w-3.5" /> Send enquiry
+            </Button>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function RequestCard({
+  request,
+  currentUserId,
+  onEnquire,
+  onEdit,
+}: {
+  request: RequestWithRequester
+  currentUserId: string | null
+  onEnquire: (request: RequestWithRequester) => void
+  onEdit: (request: RequestWithRequester) => void
+}) {
+  const isOwn = request.requester_id === currentUserId
+  const requester = request.requester
+  const dlStatus = deadlineStatus(request.deadline)
+  const dlColor = deadlineColor(dlStatus)
+
+  return (
+    <Card className="hover:border-primary/40 transition-colors">
+      <CardContent className="p-5 space-y-3">
+        {/* Header */}
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <Link href={`/profile/${request.requester_id}`}>
+              <Avatar className="h-8 w-8 shrink-0 hover:ring-2 hover:ring-primary/40 transition-all">
+                <AvatarImage src={requester?.avatar_url ?? undefined} />
+                <AvatarFallback className="text-xs bg-primary/10 text-primary">
+                  {requester?.full_name?.charAt(0) ?? "?"}
+                </AvatarFallback>
+              </Avatar>
+            </Link>
+            <div className="min-w-0">
+              <Link href={`/profile/${request.requester_id}`} className="text-sm font-medium hover:underline truncate block">
+                {requester?.full_name ?? "Researcher"}
+              </Link>
+              {requester?.faculty && (
+                <p className="text-xs text-muted-foreground truncate">{requester.faculty}</p>
+              )}
+            </div>
+          </div>
+          {request.category && (
+            <Badge variant="secondary" className="shrink-0 text-xs">{request.category.name}</Badge>
+          )}
+        </div>
+
+        {/* Title & description */}
+        <div>
+          <h3 className="font-semibold text-sm line-clamp-1">{request.title}</h3>
+          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{request.description}</p>
+        </div>
+
+        {/* Budget + deadline */}
+        <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs">
+          {request.budget_note && (
+            <span className="text-muted-foreground">
+              Budget: <span className="text-foreground">{request.budget_note}</span>
+              <span className="text-muted-foreground"> · Arranged privately</span>
+            </span>
+          )}
+          {request.deadline && (
+            <span className={`flex items-center gap-1 ${dlColor}`}>
+              <Calendar className="h-3 w-3" />
+              {dlStatus === 'expired' ? 'Deadline passed' : `Due ${formatDistanceToNow(new Date(request.deadline), { addSuffix: true })}`}
+            </span>
+          )}
+        </div>
+
+        {/* Actions */}
+        <div className="pt-1">
+          {isOwn ? (
+            <Button size="sm" variant="outline" className="w-full gap-1.5" onClick={() => onEdit(request)}>
+              <Edit2 className="h-3.5 w-3.5" /> Edit request
+            </Button>
+          ) : (
+            <Button size="sm" className="w-full gap-1.5" onClick={() => onEnquire(request)}>
+              <MessageSquare className="h-3.5 w-3.5" /> Send enquiry
+            </Button>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function AgreementsPrompt({ otherUserId, otherName }: { otherUserId: string; otherName: string }) {
+  return (
+    <div className="flex items-start gap-2.5 rounded-lg border border-border bg-muted/40 px-3 py-2.5 mt-2">
+      <FileText className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+      <p className="text-xs text-muted-foreground leading-relaxed">
+        Recording what was agreed protects both of you.{" "}
+        <Link href="/agreements" className="text-primary underline underline-offset-2">Create an agreement</Link>{" "}
+        covering scope, timeline, and how this contribution will be acknowledged.
+        You can also{" "}
+        <Link href={`/messages?user=${otherUserId}`} className="text-primary underline underline-offset-2">
+          message {otherName} directly
+        </Link>.
+      </p>
+    </div>
+  )
+}
+
+// ── main page ───────────────────────────────────────────────────────────────
 
 export default function MarketplacePage() {
-  const [tasks, setTasks] = useState<TaskWithPoster[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState("All Categories")
-  const [showNewTask, setShowNewTask] = useState(false)
+  const searchParams = useSearchParams()
+  const initialTab = searchParams.get("tab") === "my" ? "my" : "listings"
+
+  const [activeTab, setActiveTab] = useState(initialTab)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
 
-  // New task form
-  const [newTitle, setNewTitle] = useState("")
-  const [newDescription, setNewDescription] = useState("")
-  const [newCategory, setNewCategory] = useState("")
-  const [newTaskType, setNewTaskType] = useState("")
-  const [newAkiliReward, setNewAkiliReward] = useState("50")
-  const [newDeadline, setNewDeadline] = useState("")
-  const [newSkills, setNewSkills] = useState<string[]>([])
-  const [isCreating, setIsCreating] = useState(false)
+  // Categories
+  const [categories, setCategories] = useState<ServiceCategory[]>([])
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
 
-  // Task completion
-  const [manageTask, setManageTask] = useState<TaskWithPoster | null>(null)
-  const [isCompleting, setIsCompleting] = useState(false)
+  // Listings tab
+  const [listings, setListings] = useState<ListingWithProvider[]>([])
+  const [listingsLoading, setListingsLoading] = useState(true)
 
-  // Leaderboard
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
+  // Requests tab
+  const [requests, setRequests] = useState<RequestWithRequester[]>([])
+  const [requestsLoading, setRequestsLoading] = useState(true)
+
+  // My activity tab
+  const [myListings, setMyListings] = useState<ServiceListing[]>([])
+  const [myRequests, setMyRequests] = useState<ServiceRequest[]>([])
+  const [enquiriesReceived, setEnquiriesReceived] = useState<EnquiryFull[]>([])
+  const [enquiriesSent, setEnquiriesSent] = useState<EnquiryFull[]>([])
+  const [myLoading, setMyLoading] = useState(false)
+  const myLoadedRef = useRef(false)
+
+  // User projects (for CreateRequestModal)
+  const [userProjects, setUserProjects] = useState<{ id: string; title: string }[]>([])
+
+  // Modals
+  const [showListingModal, setShowListingModal] = useState(false)
+  const [showRequestModal, setShowRequestModal] = useState(false)
+  const [editListing, setEditListing] = useState<ServiceListing | null>(null)
+  const [editRequest, setEditRequest] = useState<ServiceRequest | null>(null)
+  const [enquireTarget, setEnquireTarget] = useState<
+    { type: 'listing'; item: ListingWithProvider } | { type: 'request'; item: RequestWithRequester } | null
+  >(null)
+
+  // Responding
+  const [respondingId, setRespondingId] = useState<string | null>(null)
+  const [togglingId, setTogglingId] = useState<string | null>(null)
+
+  // ── init ──────────────────────────────────────────────────────────────────
 
   useEffect(() => {
-    loadTasks()
-    loadLeaderboard()
-  }, [selectedCategory, searchQuery])
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        setCurrentUserId(user.id)
+        supabase
+          .from('projects')
+          .select('id, title')
+          .eq('status', 'active')
+          .then(({ data: teams }) => {
+            // get projects where user is team member
+            supabase
+              .from('team_members')
+              .select('team_id')
+              .eq('user_id', user.id)
+              .then(({ data: memberships }) => {
+                const teamIds = (memberships ?? []).map((m: { team_id: string }) => m.team_id)
+                if (teamIds.length > 0) {
+                  supabase
+                    .from('projects')
+                    .select('id, title')
+                    .in('team_id', teamIds)
+                    .then(({ data }) => setUserProjects(data ?? []))
+                }
+              })
+          })
+      }
+    })
 
-  async function loadTasks() {
-    setIsLoading(true)
+    supabase
+      .from('service_categories')
+      .select('*')
+      .order('name')
+      .then(({ data }) => setCategories(data ?? []))
+  }, [])
+
+  // ── load listings ─────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    if (activeTab !== 'listings') return
+    setListingsLoading(true)
+    const supabase = createClient()
+    let q = supabase
+      .from('service_listings')
+      .select(`*, provider:profiles!service_listings_provider_id_fkey(id, full_name, avatar_url, faculty), category:service_categories!service_listings_category_id_fkey(id, name, slug, icon)`)
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
+    if (selectedCategory) q = q.eq('category_id', selectedCategory)
+    q.limit(60).then(({ data }) => {
+      setListings((data ?? []) as ListingWithProvider[])
+      setListingsLoading(false)
+    })
+  }, [activeTab, selectedCategory])
+
+  // ── load requests ─────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    if (activeTab !== 'requests') return
+    setRequestsLoading(true)
+    const supabase = createClient()
+    let q = supabase
+      .from('service_requests')
+      .select(`*, requester:profiles!service_requests_requester_id_fkey(id, full_name, avatar_url, faculty), category:service_categories!service_requests_category_id_fkey(id, name, slug, icon)`)
+      .eq('status', 'open')
+      .order('created_at', { ascending: false })
+    if (selectedCategory) q = q.eq('category_id', selectedCategory)
+    q.limit(60).then(({ data }) => {
+      setRequests((data ?? []) as RequestWithRequester[])
+      setRequestsLoading(false)
+    })
+  }, [activeTab, selectedCategory])
+
+  // ── load my activity ──────────────────────────────────────────────────────
+
+  const loadMyActivity = useCallback(async () => {
+    if (!currentUserId) return
+    setMyLoading(true)
     const supabase = createClient()
 
-    const { data: { user } } = await supabase.auth.getUser()
-    if (user) setCurrentUserId(user.id)
+    const [
+      { data: ml },
+      { data: mr },
+      { data: er },
+      { data: es },
+    ] = await Promise.all([
+      supabase.from('service_listings').select('*').eq('provider_id', currentUserId).order('created_at', { ascending: false }),
+      supabase.from('service_requests').select('*').eq('requester_id', currentUserId).order('created_at', { ascending: false }),
+      supabase
+        .from('service_enquiries')
+        .select(`*, sender:profiles!service_enquiries_sender_id_fkey(id, full_name, avatar_url), listing:service_listings(id, title, provider_id), request:service_requests(id, title, requester_id)`)
+        .eq('recipient_id', currentUserId)
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('service_enquiries')
+        .select(`*, recipient:profiles!service_enquiries_recipient_id_fkey(id, full_name, avatar_url), listing:service_listings(id, title, provider_id), request:service_requests(id, title, requester_id)`)
+        .eq('sender_id', currentUserId)
+        .order('created_at', { ascending: false }),
+    ])
 
-    let query = supabase
-      .from("marketplace_tasks")
-      .select(`*, poster:profiles!poster_id(id, full_name, avatar_url, university_id)`)
-      .eq("status", "open")
-      .order("created_at", { ascending: false })
+    setMyListings(ml ?? [])
+    setMyRequests(mr ?? [])
+    setEnquiriesReceived((er ?? []) as EnquiryFull[])
+    setEnquiriesSent((es ?? []) as EnquiryFull[])
+    setMyLoading(false)
+  }, [currentUserId])
 
-    if (selectedCategory !== "All Categories") {
-      query = query.eq("category", selectedCategory)
+  useEffect(() => {
+    if (activeTab === 'my' && !myLoadedRef.current && currentUserId) {
+      myLoadedRef.current = true
+      loadMyActivity()
     }
-    if (searchQuery) {
-      query = query.or(`title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`)
-    }
+  }, [activeTab, currentUserId, loadMyActivity])
 
-    const { data, error } = await query.limit(50)
-    if (data && !error) setTasks(data as TaskWithPoster[])
-    setIsLoading(false)
+  // ── handlers ──────────────────────────────────────────────────────────────
+
+  async function handleEnquiryConfirm(message: string): Promise<string | null> {
+    if (!enquireTarget) return 'No target selected.'
+    const args = enquireTarget.type === 'listing'
+      ? { listingId: enquireTarget.item.id, message }
+      : { requestId: enquireTarget.item.id, message }
+    const result = await sendServiceEnquiry(args)
+    if ('error' in result && result.error) return result.error
+    toast.success(`Enquiry sent!`)
+    setEnquireTarget(null)
+    return null
   }
 
-  async function loadLeaderboard() {
-    try {
-      const supabase = createClient()
-      const monthStart = new Date()
-      monthStart.setDate(1)
-      monthStart.setHours(0, 0, 0, 0)
-
-      const { data: events } = await supabase
-        .from("akili_score_events")
-        .select("user_id, points_earned, event_type")
-        .in("event_type", ["completeMarketplaceTask", "receive4to5StarOnMarketplaceTask"])
-        .gte("created_at", monthStart.toISOString())
-
-      if (!events || events.length === 0) return
-
-      const userMap: Record<string, { points: number; tasks: number }> = {}
-      for (const event of events) {
-        if (!userMap[event.user_id]) userMap[event.user_id] = { points: 0, tasks: 0 }
-        userMap[event.user_id].points += event.points_earned
-        if (event.event_type === "completeMarketplaceTask") userMap[event.user_id].tasks++
-      }
-
-      const sorted = Object.entries(userMap)
-        .sort(([, a], [, b]) => b.points - a.points)
-        .slice(0, 5)
-
-      if (!sorted.length) return
-
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, full_name, avatar_url, university_id")
-        .in("id", sorted.map(([id]) => id))
-
-      setLeaderboard(
-        sorted.map(([userId, stats]) => {
-          const profile = profiles?.find((p) => p.id === userId)
-          return {
-            user_id: userId,
-            full_name: profile?.full_name || null,
-            avatar_url: profile?.avatar_url || null,
-            university_id: profile?.university_id || null,
-            tasks_completed: stats.tasks,
-            points_earned: stats.points,
-          }
-        })
-      )
-    } catch {
-      // leaderboard is non-critical
-    }
-  }
-
-  async function handleCreateTask() {
-    if (!newTitle.trim()) { toast.error("Please add a task title"); return }
-    if (!newTaskType) { toast.error("Please select a task type"); return }
-    if (!newCategory) { toast.error("Please select a category"); return }
-    if (!newDescription.trim()) { toast.error("Please add a description"); return }
-
-    setIsCreating(true)
-
-    try {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { toast.error("You must be signed in to post a task"); return }
-
-      const reward = Math.min(500, Math.max(1, parseInt(newAkiliReward) || 50))
-
-      console.log("Task insert payload:", {
-        title: newTitle.trim(),
-        task_type: newTaskType,
-        category: newCategory,
-        skills_required: newSkills,
-        poster_id: user.id,
-      })
-
-      const { error } = await supabase.from("marketplace_tasks").insert({
-        poster_id: user.id,
-        title: newTitle.trim(),
-        description: newDescription.trim(),
-        category: newCategory,
-        task_type: newTaskType,
-        skills_required: newSkills,
-        budget_max: reward,
-        deadline: newDeadline || null,
-        status: "open",
-      })
-
-      if (error) {
-        console.error("Marketplace insert error:", error)
-        toast.error(error.message || "Failed to post task. Please try again.")
-        return
-      }
-
-      toast.success("Task posted successfully!")
-      setShowNewTask(false)
-      resetNewTaskForm()
-      loadTasks()
-    } catch (err) {
-      console.error("Unexpected error posting task:", err)
-      toast.error("Something went wrong. Please try again.")
-    } finally {
-      setIsCreating(false)
-    }
-  }
-
-  async function handleCompleteTask() {
-    if (!manageTask) return
-    setIsCompleting(true)
-
-    const supabase = createClient()
-    const reward = manageTask.budget_max || 50
-
-    await supabase
-      .from("marketplace_tasks")
-      .update({ status: "completed" })
-      .eq("id", manageTask.id)
-
-    if (manageTask.assigned_to) {
-      completeMarketplaceTask(manageTask.assigned_to, manageTask.id).catch(() => {})
-      toast.success(`Task complete! Akili points awarded to the researcher.`)
+  async function handleRespond(enquiryId: string, action: 'accepted' | 'declined') {
+    setRespondingId(enquiryId)
+    const result = await respondToEnquiry(enquiryId, action)
+    if ('error' in result && result.error) {
+      toast.error(result.error)
     } else {
-      toast.success("Task marked as complete.")
+      toast.success(action === 'accepted' ? 'Enquiry accepted.' : 'Enquiry declined.')
+      setEnquiriesReceived(prev =>
+        prev.map(e => e.id === enquiryId ? { ...e, status: action } : e)
+      )
     }
-
-    setManageTask(null)
-    setIsCompleting(false)
-    loadTasks()
+    setRespondingId(null)
   }
 
-  function resetNewTaskForm() {
-    setNewTitle("")
-    setNewDescription("")
-    setNewCategory("")
-    setNewTaskType("")
-    setNewAkiliReward("50")
-    setNewDeadline("")
-    setNewSkills([])
+  async function toggleListingStatus(listing: ServiceListing) {
+    setTogglingId(listing.id)
+    const next = listing.status === 'active' ? 'inactive' : 'active'
+    const supabase = createClient()
+    const { error } = await supabase
+      .from('service_listings')
+      .update({ status: next })
+      .eq('id', listing.id)
+      .eq('provider_id', currentUserId ?? '')
+    if (error) { toast.error(error.message); }
+    else {
+      setMyListings(prev => prev.map(l => l.id === listing.id ? { ...l, status: next } : l))
+      toast.success(next === 'active' ? 'Listing activated.' : 'Listing deactivated.')
+    }
+    setTogglingId(null)
   }
+
+  async function toggleRequestStatus(request: ServiceRequest) {
+    setTogglingId(request.id)
+    const next = request.status === 'open' ? 'closed' : 'open'
+    const supabase = createClient()
+    const { error } = await supabase
+      .from('service_requests')
+      .update({ status: next })
+      .eq('id', request.id)
+      .eq('requester_id', currentUserId ?? '')
+    if (error) { toast.error(error.message); }
+    else {
+      setMyRequests(prev => prev.map(r => r.id === request.id ? { ...r, status: next } : r))
+      toast.success(next === 'open' ? 'Request reopened.' : 'Request closed.')
+    }
+    setTogglingId(null)
+  }
+
+  function onListingSuccess() {
+    setShowListingModal(false)
+    setEditListing(null)
+    myLoadedRef.current = false
+    if (activeTab === 'my') {
+      myLoadedRef.current = true
+      loadMyActivity()
+    }
+    if (activeTab === 'listings') {
+      setListingsLoading(true)
+      const supabase = createClient()
+      supabase
+        .from('service_listings')
+        .select(`*, provider:profiles!service_listings_provider_id_fkey(id, full_name, avatar_url, faculty), category:service_categories!service_listings_category_id_fkey(id, name, slug, icon)`)
+        .eq('status', 'active')
+        .order('created_at', { ascending: false })
+        .limit(60)
+        .then(({ data }) => { setListings((data ?? []) as ListingWithProvider[]); setListingsLoading(false) })
+    }
+    toast.success(editListing ? 'Listing updated.' : 'Listing posted!')
+  }
+
+  function onRequestSuccess() {
+    setShowRequestModal(false)
+    setEditRequest(null)
+    myLoadedRef.current = false
+    if (activeTab === 'my') {
+      myLoadedRef.current = true
+      loadMyActivity()
+    }
+    if (activeTab === 'requests') {
+      setRequestsLoading(true)
+      const supabase = createClient()
+      supabase
+        .from('service_requests')
+        .select(`*, requester:profiles!service_requests_requester_id_fkey(id, full_name, avatar_url, faculty), category:service_categories!service_requests_category_id_fkey(id, name, slug, icon)`)
+        .eq('status', 'open')
+        .order('created_at', { ascending: false })
+        .limit(60)
+        .then(({ data }) => { setRequests((data ?? []) as RequestWithRequester[]); setRequestsLoading(false) })
+    }
+    toast.success(editRequest ? 'Request updated.' : 'Request posted!')
+  }
+
+  // ── category chips ────────────────────────────────────────────────────────
+
+  const CategoryChips = () => (
+    <div className="flex flex-wrap gap-2">
+      <button
+        onClick={() => setSelectedCategory(null)}
+        className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+          !selectedCategory
+            ? 'border-primary bg-primary/10 text-primary'
+            : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground'
+        }`}
+      >
+        All
+      </button>
+      {categories.map(c => (
+        <button
+          key={c.id}
+          onClick={() => setSelectedCategory(selectedCategory === c.id ? null : c.id)}
+          className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+            selectedCategory === c.id
+              ? 'border-primary bg-primary/10 text-primary'
+              : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground'
+          }`}
+        >
+          {c.name}
+        </button>
+      ))}
+    </div>
+  )
+
+  // ── enquiry status badge ──────────────────────────────────────────────────
+
+  function EnquiryStatusBadge({ status }: { status: 'pending' | 'accepted' | 'declined' }) {
+    if (status === 'pending') return <Badge variant="secondary" className="gap-1"><Clock className="h-3 w-3" />Pending</Badge>
+    if (status === 'accepted') return <Badge className="gap-1 bg-green-600 hover:bg-green-600"><CheckCircle2 className="h-3 w-3" />Accepted</Badge>
+    return <Badge variant="destructive" className="gap-1"><XCircle className="h-3 w-3" />Declined</Badge>
+  }
+
+  // ── render ────────────────────────────────────────────────────────────────
 
   return (
     <div className="space-y-6">
       <BackToHub href="/community" label="Back to Community" />
-      <ContextualHint
-        hintKey="hint_marketplace"
-        icon="⚡"
-        title="Welcome to the Task Marketplace"
-        description="Post a research task to find skilled help, or browse open tasks to offer your expertise and earn recognition."
-      />
+
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold font-heading flex items-center gap-2">
-            <Briefcase className="h-8 w-8 text-primary" />
-            Task Marketplace
+          <h1 className="text-2xl font-bold font-heading flex items-center gap-2">
+            <ShoppingBag className="h-6 w-6 text-primary" />
+            Research Services
           </h1>
-          <p className="text-muted-foreground mt-1">
-            Find research tasks or post your own for collaborators
+          <p className="text-sm text-muted-foreground mt-1">
+            Connect with researchers offering or requesting research support services.
           </p>
         </div>
-        <Dialog open={showNewTask} onOpenChange={setShowNewTask}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Post Task
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle>Post a Task</DialogTitle>
-              <DialogDescription>
-                Posting is always free. Set an Akili Points reward to attract applicants.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
-              <div className="space-y-2">
-                <Label>Title</Label>
-                <Input
-                  placeholder="e.g., Need help with statistical analysis"
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Description</Label>
-                <Textarea
-                  placeholder="Describe the task in detail..."
-                  value={newDescription}
-                  onChange={(e) => setNewDescription(e.target.value)}
-                  rows={4}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Task Type *</Label>
-                <select
-                  value={newTaskType}
-                  onChange={(e) => setNewTaskType(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-lg border border-input bg-background text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
-                  required
-                >
-                  <option value="" disabled>Select task type...</option>
-                  {TASK_TYPES.map((type) => (
-                    <option key={type.value} value={type.value}>{type.label}</option>
-                  ))}
-                </select>
-              </div>
+        <div className="flex gap-2 shrink-0">
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => { setEditListing(null); setShowListingModal(true) }}>
+            <Plus className="h-3.5 w-3.5" /> Offer a service
+          </Button>
+          <Button size="sm" className="gap-1.5" onClick={() => { setEditRequest(null); setShowRequestModal(true) }}>
+            <Plus className="h-3.5 w-3.5" /> Post a request
+          </Button>
+        </div>
+      </div>
 
-              <div className="space-y-2">
-                <Label>Category</Label>
-                <Select value={newCategory} onValueChange={setNewCategory}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {TASK_CATEGORIES.map((cat) => (
-                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+      {/* Integrity notice */}
+      <div className="flex items-start gap-2.5 rounded-lg border border-border bg-muted/40 px-3 py-2.5">
+        <AlertTriangle className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+        <p className="text-xs text-muted-foreground leading-relaxed">{PROHIBITED_USE_NOTICE}</p>
+      </div>
 
-              {/* Akili Points reward */}
-              <div className="space-y-2">
-                <Label className="flex items-center gap-1.5">
-                  <Zap className="w-3.5 h-3.5" style={{ color: '#A855F7' }} />
-                  Akili Points Reward (1–500)
-                </Label>
-                <Input
-                  type="number"
-                  min={1}
-                  max={500}
-                  placeholder="50"
-                  value={newAkiliReward}
-                  onChange={(e) => setNewAkiliReward(e.target.value)}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Set the Akili Points reward for whoever completes this task. Higher rewards attract more applicants.
-                </p>
-              </div>
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={v => { setActiveTab(v); if (v !== 'my') myLoadedRef.current = false }}>
+        <TabsList className="w-full sm:w-auto">
+          <TabsTrigger value="listings">Offering services</TabsTrigger>
+          <TabsTrigger value="requests">Requesting help</TabsTrigger>
+          <TabsTrigger value="my">My activity</TabsTrigger>
+        </TabsList>
 
-              <div className="space-y-2">
-                <Label>Deadline</Label>
-                <Input
-                  type="date"
-                  value={newDeadline}
-                  onChange={(e) => setNewDeadline(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Required Skills</Label>
-                <SearchableMultiSelect
-                  options={MARKETPLACE_SKILLS}
-                  value={newSkills}
-                  onChange={setNewSkills}
-                  placeholder="Select required skills..."
-                  searchPlaceholder="Search or add a skill..."
-                  allowCustom={true}
-                />
-              </div>
+        {/* ── Listings tab ── */}
+        <TabsContent value="listings" className="space-y-4 mt-4">
+          <CategoryChips />
+          {listingsLoading ? (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[...Array(6)].map((_, i) => (
+                <Card key={i} className="animate-pulse"><CardContent className="p-5"><div className="h-24 bg-muted rounded" /></CardContent></Card>
+              ))}
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowNewTask(false)}>
-                Cancel
-              </Button>
-              <Button
-                onClick={handleCreateTask}
-                disabled={isCreating || !newTitle.trim() || !newTaskType || !newDescription.trim() || !newCategory}
-              >
-                {isCreating ? (
-                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Posting...</>
+          ) : listings.length === 0 ? (
+            <EmptyState
+              icon="🛠️"
+              title="No services listed yet"
+              description="Be the first to offer a research support service."
+              ctaLabel="Offer a service"
+              ctaOnClick={() => { setEditListing(null); setShowListingModal(true) }}
+            />
+          ) : (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {listings.map(l => (
+                <ListingCard
+                  key={l.id}
+                  listing={l}
+                  currentUserId={currentUserId}
+                  onEnquire={item => setEnquireTarget({ type: 'listing', item })}
+                  onEdit={item => { setEditListing(item); setShowListingModal(true) }}
+                />
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        {/* ── Requests tab ── */}
+        <TabsContent value="requests" className="space-y-4 mt-4">
+          <CategoryChips />
+          {requestsLoading ? (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[...Array(6)].map((_, i) => (
+                <Card key={i} className="animate-pulse"><CardContent className="p-5"><div className="h-24 bg-muted rounded" /></CardContent></Card>
+              ))}
+            </div>
+          ) : requests.length === 0 ? (
+            <EmptyState
+              icon="📋"
+              title="No service requests yet"
+              description="Post what your research project needs and let providers come to you."
+              ctaLabel="Post a request"
+              ctaOnClick={() => { setEditRequest(null); setShowRequestModal(true) }}
+            />
+          ) : (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {requests.map(r => (
+                <RequestCard
+                  key={r.id}
+                  request={r}
+                  currentUserId={currentUserId}
+                  onEnquire={item => setEnquireTarget({ type: 'request', item })}
+                  onEdit={item => { setEditRequest(item); setShowRequestModal(true) }}
+                />
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        {/* ── My activity tab ── */}
+        <TabsContent value="my" className="space-y-6 mt-4">
+          {myLoading ? (
+            <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+          ) : (
+            <>
+              {/* My listings */}
+              <section className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h2 className="font-semibold">My listings</h2>
+                  <Button size="sm" variant="outline" className="gap-1.5" onClick={() => { setEditListing(null); setShowListingModal(true) }}>
+                    <Plus className="h-3.5 w-3.5" /> New listing
+                  </Button>
+                </div>
+                {myListings.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">You haven&apos;t posted any service listings yet.</p>
                 ) : (
-                  "Post Task"
-                )}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      {/* Filters */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search tasks..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="w-full md:w-[200px]">
-                <SelectValue placeholder="Category" />
-              </SelectTrigger>
-              <SelectContent>
-                {FILTER_CATEGORIES.map((cat) => (
-                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Task grid */}
-      {isLoading ? (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[...Array(6)].map((_, i) => (
-            <Card key={i} className="animate-pulse">
-              <CardContent className="p-6">
-                <div className="h-6 bg-muted rounded w-3/4 mb-3" />
-                <div className="h-4 bg-muted rounded w-full mb-2" />
-                <div className="h-4 bg-muted rounded w-2/3" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : tasks.length > 0 ? (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {tasks.map((task) => (
-            <Card key={task.id} className="hover:border-primary/50 transition-colors">
-              <CardContent className="p-6">
-                {/* Category + reward */}
-                <div className="flex items-start justify-between mb-3">
-                  <Badge variant="secondary">{task.category}</Badge>
-                  {task.budget_max ? (
-                    <span className="text-sm font-semibold flex items-center gap-1" style={{ color: '#C084FC' }}>
-                      <Zap className="h-3.5 w-3.5" />
-                      {task.budget_max} Akili Points
-                    </span>
-                  ) : (
-                    <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(139,92,246,0.2)', color: '#9D8BB8' }}>
-                      Earn Akili Points
-                    </span>
-                  )}
-                </div>
-
-                <h3 className="font-semibold text-lg mb-2 line-clamp-2">{task.title}</h3>
-                <p className="text-muted-foreground text-sm line-clamp-3 mb-4">{task.description}</p>
-
-                {/* Skills */}
-                {task.skills_required && task.skills_required.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mb-4">
-                    {task.skills_required.slice(0, 3).map((skill) => (
-                      <Badge key={skill} variant="outline" className="text-xs">{skill}</Badge>
+                  <div className="space-y-2">
+                    {myListings.map(l => (
+                      <div key={l.id} className="flex items-center justify-between gap-3 rounded-lg border border-border p-3">
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium truncate">{l.title}</p>
+                          <p className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(l.created_at), { addSuffix: true })}</p>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Badge variant={l.status === 'active' ? 'default' : 'secondary'} className="text-xs">
+                            {l.status === 'active' ? 'Active' : 'Inactive'}
+                          </Badge>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7"
+                            disabled={togglingId === l.id}
+                            onClick={() => toggleListingStatus(l)}
+                            title={l.status === 'active' ? 'Deactivate' : 'Activate'}
+                          >
+                            {togglingId === l.id
+                              ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              : l.status === 'active'
+                                ? <ToggleRight className="h-4 w-4 text-primary" />
+                                : <ToggleLeft className="h-4 w-4 text-muted-foreground" />
+                            }
+                          </Button>
+                          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setEditListing(l); setShowListingModal(true) }}>
+                            <Edit2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </div>
                     ))}
-                    {task.skills_required.length > 3 && (
-                      <Badge variant="outline" className="text-xs">+{task.skills_required.length - 3}</Badge>
-                    )}
                   </div>
                 )}
+              </section>
 
-                {/* Meta */}
-                <div className="flex items-center gap-4 text-xs text-muted-foreground mb-4">
-                  {task.deadline && (
-                    <span className="flex items-center gap-1">
-                      <Calendar className="h-3 w-3" />
-                      Due {formatDistanceToNow(new Date(task.deadline), { addSuffix: false })}
-                    </span>
-                  )}
-                  <span className="flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    {formatDistanceToNow(new Date(task.created_at), { addSuffix: true })}
-                  </span>
+              {/* My requests */}
+              <section className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h2 className="font-semibold">My requests</h2>
+                  <Button size="sm" variant="outline" className="gap-1.5" onClick={() => { setEditRequest(null); setShowRequestModal(true) }}>
+                    <Plus className="h-3.5 w-3.5" /> New request
+                  </Button>
                 </div>
-
-                {/* Poster & actions */}
-                <div className="flex items-center justify-between pt-4 border-t">
-                  <Link href={`/profile/${task.poster_id}`} className="flex items-center gap-2 group">
-                    <Avatar className="h-6 w-6 cursor-pointer group-hover:ring-2 group-hover:ring-primary/50 transition-all duration-200">
-                      <AvatarImage src={task.poster?.avatar_url || undefined} />
-                      <AvatarFallback className="text-xs bg-primary/10 text-primary">
-                        {task.poster?.full_name?.charAt(0) || "?"}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="text-sm truncate max-w-[100px] group-hover:text-primary group-hover:underline transition-colors">
-                      {task.poster?.full_name || "Anonymous"}
-                    </span>
-                  </Link>
-                  {task.poster_id === currentUserId ? (
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline" onClick={() => setManageTask(task)}>
-                        Manage
-                      </Button>
-                      <DeleteButton
-                        label="Delete"
-                        onDelete={async () => {
-                          const supabase = createClient()
-                          const { error } = await supabase
-                            .from('marketplace_tasks')
-                            .delete()
-                            .eq('id', task.id)
-                            .eq('poster_id', currentUserId)
-                          if (error) throw error
-                          setTasks(prev => prev.filter(t => t.id !== task.id))
-                        }}
-                      />
-                    </div>
-                  ) : (
-                    <Button size="sm">Apply</Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        <EmptyState
-          icon="⚡"
-          title={searchQuery || selectedCategory !== "All Categories" ? "No results for this search" : "No tasks posted yet"}
-          description={searchQuery || selectedCategory !== "All Categories" ? "Try different keywords or adjust your filters." : "Be the first to post a research task!"}
-          ctaLabel={searchQuery || selectedCategory !== "All Categories" ? "Clear Filters" : "Post a Task"}
-          ctaOnClick={searchQuery || selectedCategory !== "All Categories" ? undefined : () => setShowNewTask(true)}
-          ctaHref={searchQuery || selectedCategory !== "All Categories" ? "/marketplace" : undefined}
-        />
-      )}
-
-      {/* Monthly leaderboard */}
-      <div className="rounded-2xl p-6" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(139,92,246,0.2)' }}>
-        <div className="flex items-center gap-3 mb-5">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-            style={{ background: 'linear-gradient(135deg,rgba(245,158,11,0.25),rgba(245,158,11,0.1))', border: '1px solid rgba(245,158,11,0.3)' }}>
-            <Trophy className="w-5 h-5" style={{ color: '#F59E0B' }} />
-          </div>
-          <div>
-            <h2 className="font-bold font-heading text-lg">Top Contributors This Month</h2>
-            <p className="text-xs text-muted-foreground">Ranked by Akili Points earned from marketplace tasks</p>
-          </div>
-        </div>
-
-        {leaderboard.length === 0 ? (
-          <p className="text-sm text-center py-6 text-muted-foreground">
-            No marketplace completions this month yet. Be the first!
-          </p>
-        ) : (
-          <div className="space-y-3">
-            {leaderboard.map((entry, index) => {
-              const isWinner = index === 0
-              return (
-                <div
-                  key={entry.user_id}
-                  className="flex items-center gap-4 p-3 rounded-xl"
-                  style={{
-                    background: isWinner ? 'rgba(245,158,11,0.06)' : 'rgba(255,255,255,0.02)',
-                    border: isWinner ? '1px solid rgba(245,158,11,0.25)' : '1px solid rgba(139,92,246,0.1)',
-                  }}
-                >
-                  {/* Rank */}
-                  <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-sm font-bold"
-                    style={{
-                      background: isWinner ? 'rgba(245,158,11,0.2)' : 'rgba(255,255,255,0.05)',
-                      color: isWinner ? '#F59E0B' : 'var(--muted-foreground)',
-                    }}>
-                    {index + 1}
+                {myRequests.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">You haven&apos;t posted any service requests yet.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {myRequests.map(r => (
+                      <div key={r.id} className="flex items-center justify-between gap-3 rounded-lg border border-border p-3">
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium truncate">{r.title}</p>
+                          <p className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(r.created_at), { addSuffix: true })}</p>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Badge variant={r.status === 'open' ? 'default' : 'secondary'} className="text-xs">
+                            {r.status === 'open' ? 'Open' : 'Closed'}
+                          </Badge>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7"
+                            disabled={togglingId === r.id}
+                            onClick={() => toggleRequestStatus(r)}
+                            title={r.status === 'open' ? 'Close request' : 'Reopen request'}
+                          >
+                            {togglingId === r.id
+                              ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              : r.status === 'open'
+                                ? <ToggleRight className="h-4 w-4 text-primary" />
+                                : <ToggleLeft className="h-4 w-4 text-muted-foreground" />
+                            }
+                          </Button>
+                          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setEditRequest(r); setShowRequestModal(true) }}>
+                            <Edit2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
+                )}
+              </section>
 
-                  {/* Avatar */}
-                  <Avatar className="h-9 w-9 shrink-0">
-                    <AvatarImage src={entry.avatar_url || undefined} />
-                    <AvatarFallback className="text-sm" style={{ background: 'rgba(124,58,237,0.2)', color: '#C084FC' }}>
-                      {entry.full_name?.charAt(0) || '?'}
-                    </AvatarFallback>
-                  </Avatar>
+              {/* Enquiries received */}
+              <section className="space-y-3">
+                <h2 className="font-semibold">Enquiries received</h2>
+                {enquiriesReceived.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No enquiries received yet.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {enquiriesReceived.map(e => {
+                      const contextTitle = e.listing?.title ?? e.request?.title ?? 'your listing'
+                      const senderName = e.sender?.full_name ?? 'Researcher'
+                      const senderId = e.sender_id
+                      return (
+                        <div key={e.id} className="rounded-lg border border-border p-4 space-y-2">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <Link href={`/profile/${senderId}`}>
+                                <Avatar className="h-7 w-7 shrink-0">
+                                  <AvatarImage src={e.sender?.avatar_url ?? undefined} />
+                                  <AvatarFallback className="text-xs bg-primary/10 text-primary">{senderName.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                              </Link>
+                              <div className="min-w-0">
+                                <Link href={`/profile/${senderId}`} className="text-sm font-medium hover:underline">{senderName}</Link>
+                                <p className="text-xs text-muted-foreground truncate">re: {contextTitle}</p>
+                              </div>
+                            </div>
+                            <EnquiryStatusBadge status={e.status} />
+                          </div>
 
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-semibold text-sm truncate">{entry.full_name || 'Researcher'}</span>
-                      {isWinner && (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
-                          style={{ background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.3)', color: '#F59E0B' }}>
-                          ResearchFlow Expert
-                        </span>
-                      )}
-                    </div>
-                    {entry.university_id && (
-                      <p className="text-xs flex items-center gap-1 mt-0.5 text-muted-foreground">
-                        <Building2 className="w-3 h-3" />
-                        {entry.university_id}
-                      </p>
-                    )}
+                          <p className="text-sm text-muted-foreground line-clamp-3 pl-9">{e.message}</p>
+
+                          {e.status === 'accepted' && (
+                            <AgreementsPrompt otherUserId={senderId} otherName={senderName} />
+                          )}
+
+                          {e.status === 'pending' && (
+                            <div className="flex gap-2 pt-1 pl-9">
+                              <Button
+                                size="sm"
+                                className="gap-1.5"
+                                disabled={respondingId === e.id}
+                                onClick={() => handleRespond(e.id, 'accepted')}
+                              >
+                                {respondingId === e.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-3 w-3" />}
+                                Accept
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="gap-1.5 text-destructive hover:text-destructive"
+                                disabled={respondingId === e.id}
+                                onClick={() => handleRespond(e.id, 'declined')}
+                              >
+                                <XCircle className="h-3 w-3" />
+                                Decline
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
                   </div>
+                )}
+              </section>
 
-                  {/* Stats */}
-                  <div className="text-right shrink-0">
-                    <p className="font-bold text-sm flex items-center gap-1 justify-end" style={{ color: '#C084FC' }}>
-                      <Zap className="w-3.5 h-3.5" />
-                      {entry.points_earned.toLocaleString()}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground">
-                      {entry.tasks_completed} task{entry.tasks_completed !== 1 ? 's' : ''}
-                    </p>
+              {/* Enquiries sent */}
+              <section className="space-y-3">
+                <h2 className="font-semibold">Enquiries sent</h2>
+                {enquiriesSent.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">You haven&apos;t sent any enquiries yet.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {enquiriesSent.map(e => {
+                      const contextTitle = e.listing?.title ?? e.request?.title ?? 'a listing'
+                      const recipientName = e.recipient?.full_name ?? 'Researcher'
+                      const recipientId = e.recipient_id
+                      return (
+                        <div key={e.id} className="rounded-lg border border-border p-4 space-y-2">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <Link href={`/profile/${recipientId}`}>
+                                <Avatar className="h-7 w-7 shrink-0">
+                                  <AvatarImage src={e.recipient?.avatar_url ?? undefined} />
+                                  <AvatarFallback className="text-xs bg-primary/10 text-primary">{recipientName.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                              </Link>
+                              <div className="min-w-0">
+                                <Link href={`/profile/${recipientId}`} className="text-sm font-medium hover:underline">{recipientName}</Link>
+                                <p className="text-xs text-muted-foreground truncate">re: {contextTitle}</p>
+                              </div>
+                            </div>
+                            <EnquiryStatusBadge status={e.status} />
+                          </div>
+
+                          <p className="text-sm text-muted-foreground line-clamp-3 pl-9">{e.message}</p>
+
+                          {e.status === 'accepted' && (
+                            <AgreementsPrompt otherUserId={recipientId} otherName={recipientName} />
+                          )}
+
+                          {e.status === 'accepted' && (
+                            <div className="pl-9 pt-1">
+                              <Link href={`/messages?user=${recipientId}`}>
+                                <Button size="sm" variant="outline" className="gap-1.5">
+                                  <MessageSquare className="h-3.5 w-3.5" />
+                                  Message {recipientName}
+                                  <ChevronRight className="h-3.5 w-3.5" />
+                                </Button>
+                              </Link>
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
                   </div>
-                </div>
-              )
-            })}
-          </div>
-        )}
-      </div>
+                )}
+              </section>
+            </>
+          )}
+        </TabsContent>
+      </Tabs>
 
-      {/* Manage / Complete Task dialog */}
-      <Dialog open={!!manageTask} onOpenChange={(open) => { if (!open) setManageTask(null) }}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Manage Task</DialogTitle>
-            <DialogDescription className="line-clamp-2">
-              {manageTask?.title}
-            </DialogDescription>
-          </DialogHeader>
+      {/* Modals */}
+      <SendEnquiryModal
+        open={!!enquireTarget}
+        targetTitle={
+          enquireTarget?.type === 'listing'
+            ? enquireTarget.item.title
+            : enquireTarget?.item.title ?? ''
+        }
+        onConfirm={handleEnquiryConfirm}
+        onCancel={() => setEnquireTarget(null)}
+      />
 
-          <div className="space-y-4 py-2">
-            {/* Reward info */}
-            <div className="flex items-center gap-3 p-3 rounded-xl"
-              style={{ background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.2)' }}>
-              <Zap className="w-5 h-5 shrink-0" style={{ color: '#A855F7' }} />
-              <div>
-                <p className="text-sm font-semibold" style={{ color: '#C084FC' }}>
-                  {manageTask?.budget_max || 50} Akili Points reward
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Will be awarded to the researcher who completes this task
-                </p>
-              </div>
-            </div>
+      <CreateListingModal
+        open={showListingModal}
+        categories={categories}
+        editListing={editListing}
+        onSuccess={onListingSuccess}
+        onCancel={() => { setShowListingModal(false); setEditListing(null) }}
+      />
 
-            {/* Assignee status */}
-            {manageTask?.assigned_to ? (
-              <div className="flex items-center gap-2 text-sm">
-                <CheckCircle className="w-4 h-4 text-green-500" />
-                <span>Researcher assigned — points will be awarded on completion</span>
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                No researcher assigned yet. Points will be awarded once an assignee is set.
-              </p>
-            )}
-          </div>
-
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setManageTask(null)}>
-              Close
-            </Button>
-            <Button
-              onClick={handleCompleteTask}
-              disabled={isCompleting}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              {isCompleting ? (
-                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Completing...</>
-              ) : (
-                <><CheckCircle className="mr-2 h-4 w-4" />Mark Complete</>
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <CreateRequestModal
+        open={showRequestModal}
+        categories={categories}
+        userProjects={userProjects}
+        editRequest={editRequest}
+        onSuccess={onRequestSuccess}
+        onCancel={() => { setShowRequestModal(false); setEditRequest(null) }}
+      />
     </div>
   )
 }
