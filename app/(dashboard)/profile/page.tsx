@@ -43,6 +43,7 @@ import Link from 'next/link'
 import { RippleButton } from '@/components/ui/RippleButton'
 import { MilestoneToast } from '@/components/ui/MilestoneToast'
 import { useMilestones } from '@/hooks/useMilestones'
+import { toast } from 'sonner'
 
 // ── Animation helpers (module-level, no hooks) ────────────────────────────────
 
@@ -333,8 +334,9 @@ export default function ProfilePage() {
 
   async function loadAll() {
     setIsLoading(true)
+    try {
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { setIsLoading(false); return }
+    if (!user) { return }
 
     const [profileResult, portfolioResult] = await Promise.all([
       supabase.from('profiles').select('*').eq('id', user.id).single(),
@@ -399,8 +401,11 @@ export default function ProfilePage() {
     setActivityStats(prev => ({ ...prev, mentorshipSessions: sessionCount || 0 }))
 
     if (mentorResult.data) setMentorInfo(mentorResult.data)
-
-    setIsLoading(false)
+    } catch {
+      toast.error('Failed to load profile data. Please refresh.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   async function saveProfile() {
@@ -410,6 +415,9 @@ export default function ProfilePage() {
     if (!error) {
       setProfile({ ...profile, ...editForm })
       setIsEditing(false)
+      toast.success('Profile saved.')
+    } else {
+      toast.error('Failed to save profile. Please try again.')
     }
     setIsSaving(false)
   }
@@ -517,6 +525,11 @@ export default function ProfilePage() {
 
   async function savePortfolioItem() {
     if (!portfolioForm.title.trim() || !profile) return
+    const urlValue = portfolioForm.url.trim()
+    if (urlValue && !/^https?:\/\/.+/.test(urlValue)) {
+      toast.error('URL must start with http:// or https://')
+      return
+    }
     setPortfolioSaving(true)
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { setPortfolioSaving(false); return }
@@ -531,17 +544,19 @@ export default function ProfilePage() {
       item_type: portfolioForm.item_type,
       title: portfolioForm.title.trim(),
       description: portfolioForm.description.trim() || null,
-      url: portfolioForm.url.trim() || null,
+      url: urlValue || null,
       date: dateStr,
       user_id: user.id,
     }
 
     if (editingItem) {
-      const { data } = await supabase.from('portfolio_items').update(payload).eq('id', editingItem.id).select().single()
+      const { data, error } = await supabase.from('portfolio_items').update(payload).eq('id', editingItem.id).select().single()
       if (data) setPortfolioItems(prev => prev.map(i => i.id === editingItem.id ? data : i))
+      else if (error) { toast.error('Failed to save item.'); setPortfolioSaving(false); return }
     } else {
-      const { data } = await supabase.from('portfolio_items').insert(payload).select().single()
+      const { data, error } = await supabase.from('portfolio_items').insert(payload).select().single()
       if (data) setPortfolioItems(prev => [data, ...prev])
+      else if (error) { toast.error('Failed to add item.'); setPortfolioSaving(false); return }
     }
 
     setShowPortfolioModal(false)
@@ -549,7 +564,12 @@ export default function ProfilePage() {
   }
 
   async function deletePortfolioItem(id: string) {
-    await supabase.from('portfolio_items').delete().eq('id', id)
+    const { error } = await supabase.from('portfolio_items').delete().eq('id', id)
+    if (error) {
+      toast.error('Failed to delete item. Please try again.')
+      setDeletingItemId(null)
+      return
+    }
     setPortfolioItems(prev => prev.filter(i => i.id !== id))
     setDeletingItemId(null)
   }
@@ -1308,46 +1328,48 @@ export default function ProfilePage() {
         </TabsContent>
 
         <TabsContent value="activity" className="space-y-6">
-          {/* Stats Grid */}
-          <div className={`grid gap-4 ${profile.roles?.includes('mentor') ? 'grid-cols-2 md:grid-cols-4' : 'grid-cols-2 md:grid-cols-3'}`}>
-            <Card>
-              <CardContent className="p-5 flex flex-col items-center text-center gap-2">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <FolderOpen className="w-5 h-5 text-primary" />
+          {/* Stats strip */}
+          <div className="rounded-xl border overflow-hidden">
+            <div className={`grid divide-x divide-border ${profile.roles?.includes('mentor') ? 'grid-cols-2 md:grid-cols-4' : 'grid-cols-3'}`}>
+              <div className="flex items-center gap-3 p-4">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                  <FolderOpen className="w-4 h-4 text-primary" />
                 </div>
-                <p className="text-3xl font-bold">{activityStats.activeProjects}</p>
-                <p className="text-xs text-muted-foreground">Active Projects</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-5 flex flex-col items-center text-center gap-2">
-                <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center">
-                  <CheckCircle2 className="w-5 h-5 text-green-500" />
+                <div>
+                  <p className="text-xl font-bold tabular-nums leading-none">{activityStats.activeProjects}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Active Projects</p>
                 </div>
-                <p className="text-3xl font-bold">{activityStats.completedProjects}</p>
-                <p className="text-xs text-muted-foreground">Completed Projects</p>
-              </CardContent>
-            </Card>
-            {profile.roles?.includes('mentor') && (
-              <Card>
-                <CardContent className="p-5 flex flex-col items-center text-center gap-2">
-                  <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
-                    <Users className="w-5 h-5 text-accent" />
+              </div>
+              <div className="flex items-center gap-3 p-4">
+                <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center shrink-0">
+                  <CheckCircle2 className="w-4 h-4 text-green-500" />
+                </div>
+                <div>
+                  <p className="text-xl font-bold tabular-nums leading-none">{activityStats.completedProjects}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Completed</p>
+                </div>
+              </div>
+              {profile.roles?.includes('mentor') && (
+                <div className="flex items-center gap-3 p-4">
+                  <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
+                    <Users className="w-4 h-4 text-accent" />
                   </div>
-                  <p className="text-3xl font-bold">{activityStats.mentorshipSessions}</p>
-                  <p className="text-xs text-muted-foreground">Mentorship Sessions</p>
-                </CardContent>
-              </Card>
-            )}
-            <Card>
-              <CardContent className="p-5 flex flex-col items-center text-center gap-2">
-                <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center">
-                  <ListChecks className="w-5 h-5 text-orange-500" />
+                  <div>
+                    <p className="text-xl font-bold tabular-nums leading-none">{activityStats.mentorshipSessions}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Sessions</p>
+                  </div>
                 </div>
-                <p className="text-3xl font-bold">{activityStats.tasksCompleted}</p>
-                <p className="text-xs text-muted-foreground">Tasks Completed</p>
-              </CardContent>
-            </Card>
+              )}
+              <div className="flex items-center gap-3 p-4">
+                <div className="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center shrink-0">
+                  <ListChecks className="w-4 h-4 text-orange-500" />
+                </div>
+                <div>
+                  <p className="text-xl font-bold tabular-nums leading-none">{activityStats.tasksCompleted}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Tasks Done</p>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Akili Score */}
@@ -1378,22 +1400,26 @@ export default function ProfilePage() {
                     <Badge variant="secondary">{mentorInfo.tier}</Badge>
                   )}
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <div className="text-center p-3 rounded-xl bg-muted/50">
-                    <p className="text-2xl font-bold text-primary">{mentorInfo.total_sessions}</p>
-                    <p className="text-xs text-muted-foreground">Total Sessions</p>
+                <div className="flex flex-wrap gap-x-6 gap-y-2 pt-1">
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-xl font-bold tabular-nums text-primary">{mentorInfo.total_sessions}</span>
+                    <span className="text-sm text-muted-foreground">Sessions</span>
                   </div>
-                  <div className="text-center p-3 rounded-xl bg-muted/50">
-                    <div className="flex items-center justify-center gap-1">
-                      <p className="text-2xl font-bold">{mentorInfo.rating > 0 ? mentorInfo.rating.toFixed(1) : '—'}</p>
-                      {mentorInfo.rating > 0 && <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />}
-                    </div>
-                    <p className="text-xs text-muted-foreground">Avg Rating</p>
+                  <div className="flex items-center gap-1.5">
+                    {mentorInfo.rating > 0 ? (
+                      <>
+                        <span className="text-xl font-bold tabular-nums">{mentorInfo.rating.toFixed(1)}</span>
+                        <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />
+                      </>
+                    ) : (
+                      <span className="text-xl font-bold tabular-nums">—</span>
+                    )}
+                    <span className="text-sm text-muted-foreground">Avg Rating</span>
                   </div>
                   {mentorInfo.specialty && (
-                    <div className="text-center p-3 rounded-xl bg-muted/50">
-                      <p className="text-sm font-semibold truncate">{mentorInfo.specialty}</p>
-                      <p className="text-xs text-muted-foreground">Specialty</p>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-sm font-semibold">{mentorInfo.specialty}</span>
+                      <span className="text-xs text-muted-foreground">Specialty</span>
                     </div>
                   )}
                 </div>
@@ -1443,18 +1469,18 @@ export default function ProfilePage() {
               <CardDescription>Your published and contributed works</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <div className="text-center p-3 rounded-xl bg-muted/50">
-                  <p className="text-2xl font-bold">{portfolioItems.filter(i => i.item_type === 'publication').length}</p>
-                  <p className="text-xs text-muted-foreground">Publications</p>
+              <div className="flex flex-wrap gap-x-6 gap-y-2">
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-xl font-bold tabular-nums">{portfolioItems.filter(i => i.item_type === 'publication').length}</span>
+                  <span className="text-sm text-muted-foreground">Publications</span>
                 </div>
-                <div className="text-center p-3 rounded-xl bg-muted/50">
-                  <p className="text-2xl font-bold">{portfolioItems.filter(i => i.item_type === 'presentation').length}</p>
-                  <p className="text-xs text-muted-foreground">Presentations</p>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-xl font-bold tabular-nums">{portfolioItems.filter(i => i.item_type === 'presentation').length}</span>
+                  <span className="text-sm text-muted-foreground">Presentations</span>
                 </div>
-                <div className="text-center p-3 rounded-xl bg-muted/50">
-                  <p className="text-2xl font-bold">{portfolioItems.filter(i => ['award','certificate'].includes(i.item_type)).length}</p>
-                  <p className="text-xs text-muted-foreground">Awards & Certs</p>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-xl font-bold tabular-nums">{portfolioItems.filter(i => ['award','certificate'].includes(i.item_type)).length}</span>
+                  <span className="text-sm text-muted-foreground">Awards & Certs</span>
                 </div>
               </div>
             </CardContent>
@@ -1466,46 +1492,48 @@ export default function ProfilePage() {
             <ListPageSkeleton type="card" count={3} />
           ) : analyticsData ? (
             <>
-              {/* Stat cards */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Card>
-                  <CardContent className="p-5 flex flex-col items-center text-center gap-2">
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                      <Eye className="w-5 h-5 text-primary" />
+              {/* Stat strip */}
+              <div className="rounded-xl border overflow-hidden">
+                <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-border">
+                  <div className="flex items-center gap-3 p-4">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                      <Eye className="w-4 h-4 text-primary" />
                     </div>
-                    <p className="text-3xl font-bold">{profile.portfolio_views || 0}</p>
-                    <p className="text-xs text-muted-foreground">Profile Views</p>
-                  </CardContent>
-                </Card>
-                <Card className="cursor-pointer hover:border-primary/40 transition-colors" onClick={() => router.push('/ideas')}>
-                  <CardContent className="p-5 flex flex-col items-center text-center gap-2">
-                    <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center">
-                      <Lightbulb className="w-5 h-5 text-cyan-500" />
+                    <div>
+                      <p className="text-xl font-bold tabular-nums leading-none">{profile.portfolio_views || 0}</p>
+                      <p className="text-xs text-muted-foreground mt-1">Profile Views</p>
                     </div>
-                    <p className="text-3xl font-bold">{analyticsData.ideasPerformance.reduce((a, i) => a + i.views, 0)}</p>
-                    <p className="text-xs text-muted-foreground">Idea Views</p>
-                  </CardContent>
-                </Card>
-                <Card className="cursor-pointer hover:border-primary/40 transition-colors" onClick={() => router.push('/network')}>
-                  <CardContent className="p-5 flex flex-col items-center text-center gap-2">
-                    <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center">
-                      <Users className="w-5 h-5 text-violet-500" />
+                  </div>
+                  <button className="flex items-center gap-3 p-4 hover:bg-muted/40 transition-colors text-left w-full" onClick={() => router.push('/ideas')}>
+                    <div className="w-8 h-8 rounded-lg bg-cyan-500/10 flex items-center justify-center shrink-0">
+                      <Lightbulb className="w-4 h-4 text-cyan-500" />
                     </div>
-                    <p className="text-3xl font-bold">{analyticsData.collaborationRequests}</p>
-                    <p className="text-xs text-muted-foreground">Pending Requests</p>
-                  </CardContent>
-                </Card>
-                <Card className="cursor-pointer hover:border-primary/40 transition-colors" onClick={() => router.push('/leaderboard')}>
-                  <CardContent className="p-5 flex flex-col items-center text-center gap-2">
-                    <div className="w-10 h-10 rounded-xl bg-yellow-500/10 flex items-center justify-center">
-                      <TrendingUp className="w-5 h-5 text-yellow-500" />
+                    <div>
+                      <p className="text-xl font-bold tabular-nums leading-none">{analyticsData.ideasPerformance.reduce((a, i) => a + i.views, 0)}</p>
+                      <p className="text-xs text-muted-foreground mt-1">Idea Views</p>
                     </div>
-                    <p className="text-3xl font-bold">
-                      {analyticsData.leaderboardRank ? `#${analyticsData.leaderboardRank}` : '—'}
-                    </p>
-                    <p className="text-xs text-muted-foreground">Leaderboard Rank</p>
-                  </CardContent>
-                </Card>
+                  </button>
+                  <button className="flex items-center gap-3 p-4 hover:bg-muted/40 transition-colors text-left w-full" onClick={() => router.push('/network')}>
+                    <div className="w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center shrink-0">
+                      <Users className="w-4 h-4 text-violet-500" />
+                    </div>
+                    <div>
+                      <p className="text-xl font-bold tabular-nums leading-none">{analyticsData.collaborationRequests}</p>
+                      <p className="text-xs text-muted-foreground mt-1">Pending Requests</p>
+                    </div>
+                  </button>
+                  <button className="flex items-center gap-3 p-4 hover:bg-muted/40 transition-colors text-left w-full" onClick={() => router.push('/leaderboard')}>
+                    <div className="w-8 h-8 rounded-lg bg-yellow-500/10 flex items-center justify-center shrink-0">
+                      <TrendingUp className="w-4 h-4 text-yellow-500" />
+                    </div>
+                    <div>
+                      <p className="text-xl font-bold tabular-nums leading-none">
+                        {analyticsData.leaderboardRank ? `#${analyticsData.leaderboardRank}` : '—'}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">Leaderboard Rank</p>
+                    </div>
+                  </button>
+                </div>
               </div>
 
               {/* Score growth chart */}
