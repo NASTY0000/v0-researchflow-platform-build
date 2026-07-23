@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import {
@@ -23,14 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
-import {
-  Plus,
-  GripVertical,
-  Calendar,
-  MoreHorizontal,
-  Loader2,
-  ArrowRight,
-} from "lucide-react"
+import { Plus, GripVertical, Calendar, MoreHorizontal, Loader2, ArrowRight } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -52,47 +45,47 @@ interface KanbanBoardProps {
   isLead?: boolean
 }
 
-interface Column {
-  id: string
-  title: string
-}
-
-const COLUMNS: Column[] = [
-  { id: "todo", title: "To Do" },
+const COLUMNS = [
+  { id: "todo",        title: "To Do"       },
   { id: "in_progress", title: "In Progress" },
-  { id: "review", title: "Review" },
-  { id: "done", title: "Done" },
+  { id: "review",      title: "Review"      },
+  { id: "done",        title: "Done"        },
 ]
 
 const COLUMN_ACCENT: Record<string, string> = {
-  todo: '#A855F7',
-  in_progress: '#06B6D4',
-  review: '#F59E0B',
-  done: '#22C55E',
+  todo:        "#A855F7",
+  in_progress: "#06B6D4",
+  review:      "#F59E0B",
+  done:        "#22C55E",
 }
 
 const PRIORITIES = [
-  { value: "low", label: "Low", color: "text-muted-foreground" },
-  { value: "medium", label: "Medium", color: "text-yellow-500" },
-  { value: "high", label: "High", color: "text-orange-500" },
-  { value: "urgent", label: "Urgent", color: "text-red-500" },
+  { value: "low",    label: "Low",    color: "text-muted-foreground" },
+  { value: "medium", label: "Medium", color: "text-yellow-500"       },
+  { value: "high",   label: "High",   color: "text-orange-500"       },
+  { value: "urgent", label: "Urgent", color: "text-red-500"          },
 ]
 
-export function KanbanBoard({ projectId, teamId, tasks: initialTasks, currentUserId = null, isLead = false }: KanbanBoardProps) {
-  const [tasks, setTasks] = useState<Task[]>(initialTasks)
+export function KanbanBoard({
+  projectId,
+  teamId,
+  tasks: initialTasks,
+  currentUserId = null,
+  isLead = false,
+}: KanbanBoardProps) {
+  const [tasks, setTasks]             = useState<Task[]>(initialTasks)
   const [teamMembers, setTeamMembers] = useState<{ user: Profile }[]>([])
   const [showNewTask, setShowNewTask] = useState(false)
-  const [isCreating, setIsCreating] = useState(false)
+  const [isCreating, setIsCreating]   = useState(false)
   const [draggedTask, setDraggedTask] = useState<Task | null>(null)
-  const [dragOverColumn, setDragOverColumn] = useState<string | null>(null)
+  const [dragOverCol, setDragOverCol] = useState<string | null>(null)
 
-  // New task form
-  const [newTitle, setNewTitle] = useState("")
+  const [newTitle,       setNewTitle]       = useState("")
   const [newDescription, setNewDescription] = useState("")
-  const [newPriority, setNewPriority] = useState("medium")
-  const [newAssignee, setNewAssignee] = useState("")
-  const [newDueDate, setNewDueDate] = useState("")
-  const [newStatus, setNewStatus] = useState("todo")
+  const [newPriority,    setNewPriority]    = useState("medium")
+  const [newAssignee,    setNewAssignee]    = useState("")
+  const [newDueDate,     setNewDueDate]     = useState("")
+  const [newStatus,      setNewStatus]      = useState("todo")
 
   useEffect(() => {
     async function loadTeamMembers() {
@@ -118,20 +111,18 @@ export function KanbanBoard({ projectId, teamId, tasks: initialTasks, currentUse
 
   async function handleCreateTask() {
     if (!newTitle.trim()) return
-
     setIsCreating(true)
     const supabase = createClient()
-
     const { data, error } = await supabase
       .from("tasks")
       .insert({
-        project_id: projectId,
-        title: newTitle.trim(),
+        project_id:  projectId,
+        title:       newTitle.trim(),
         description: newDescription.trim() || null,
-        status: newStatus,
-        priority: newPriority,
+        status:      newStatus,
+        priority:    newPriority,
         assigned_to: newAssignee || null,
-        due_date: newDueDate || null,
+        due_date:    newDueDate  || null,
       })
       .select()
       .single()
@@ -143,25 +134,19 @@ export function KanbanBoard({ projectId, teamId, tasks: initialTasks, currentUse
       console.error("Failed to create task:", error)
       toast.error(error?.message || "Failed to create task")
     }
-
     setIsCreating(false)
   }
 
   async function handleMoveTask(taskId: string, newStatusVal: string) {
-    const prevTasks = tasks
-    // Optimistic update
-    setTasks(tasks.map((t) => (t.id === taskId ? { ...t, status: newStatusVal } : t)))
-
+    const prev = tasks
+    setTasks(tasks.map(t => t.id === taskId ? { ...t, status: newStatusVal } : t))
     const supabase = createClient()
     const { error } = await supabase.from("tasks").update({ status: newStatusVal }).eq("id", taskId)
-
     if (error) {
-      console.error("Failed to update task status:", error)
       toast.error(error.message || "Failed to move task")
-      setTasks(prevTasks) // revert
+      setTasks(prev)
       return
     }
-
     if (newStatusVal === "done") {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) await completeAssignedTask(user.id, taskId)
@@ -171,64 +156,49 @@ export function KanbanBoard({ projectId, teamId, tasks: initialTasks, currentUse
   async function handleDeleteTask(taskId: string) {
     const supabase = createClient()
     const { error } = await supabase.from("tasks").delete().eq("id", taskId)
-    if (error) {
-      console.error("Failed to delete task:", error)
-      toast.error(error.message || "Failed to delete task")
-      return
-    }
-    setTasks(tasks.filter((t) => t.id !== taskId))
+    if (error) { toast.error(error.message || "Failed to delete task"); return }
+    setTasks(tasks.filter(t => t.id !== taskId))
   }
 
-  function handleDragStart(task: Task) {
-    setDraggedTask(task)
-  }
+  function handleDragStart(task: Task) { setDraggedTask(task) }
+  function handleDragEnd()             { setDraggedTask(null); setDragOverCol(null) }
 
-  function handleDragEnd() {
-    setDraggedTask(null)
-    setDragOverColumn(null)
-  }
-
-  function handleDragOver(e: React.DragEvent, columnId: string) {
+  function handleDragOver(e: React.DragEvent, colId: string) {
     e.preventDefault()
-    setDragOverColumn(columnId)
+    setDragOverCol(colId)
   }
 
-  function handleDrop(e: React.DragEvent, columnId: string) {
+  function handleDrop(e: React.DragEvent, colId: string) {
     e.preventDefault()
-    setDragOverColumn(null)
+    setDragOverCol(null)
     if (!draggedTask) return
-    if (draggedTask.status !== columnId) {
-      handleMoveTask(draggedTask.id, columnId)
-    }
+    if (draggedTask.status !== colId) handleMoveTask(draggedTask.id, colId)
     setDraggedTask(null)
   }
 
-  function getTasksByColumn(columnId: string) {
-    return tasks.filter((task) => task.status === columnId)
+  function getTasksByColumn(colId: string) {
+    return tasks.filter(t => t.status === colId)
   }
-
-  function getAssigneeName(userId: string | null) {
-    if (!userId) return null
-    return teamMembers.find((m) => m.user.id === userId)?.user.full_name || null
-  }
-
-  const isDragging = !!draggedTask
 
   return (
     <div className="space-y-4">
-      {/* Header */}
+      {/* Board header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <h2 className="text-base font-semibold">Task Board</h2>
-          <Badge variant="secondary" className="tabular-nums">{tasks.length}</Badge>
+          <h2 className="text-lg font-semibold">Task Board</h2>
+          <Badge variant="secondary">{tasks.length} tasks</Badge>
         </div>
-        <Button size="sm" onClick={() => openAddTask("todo")}>
-          <Plus className="mr-1.5 h-4 w-4" />
+        <Button
+          size="sm"
+          className="rounded-full gap-1.5"
+          onClick={() => openAddTask("todo")}
+        >
+          <Plus className="h-4 w-4" />
           Add Task
         </Button>
       </div>
 
-      {/* Create task dialog */}
+      {/* Add task dialog */}
       <Dialog open={showNewTask} onOpenChange={setShowNewTask}>
         <DialogContent>
           <DialogHeader>
@@ -241,8 +211,8 @@ export function KanbanBoard({ projectId, teamId, tasks: initialTasks, currentUse
               <Input
                 placeholder="Task title"
                 value={newTitle}
-                onChange={(e) => setNewTitle(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleCreateTask()}
+                onChange={e => setNewTitle(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && !e.shiftKey && handleCreateTask()}
                 autoFocus
               />
             </div>
@@ -251,7 +221,7 @@ export function KanbanBoard({ projectId, teamId, tasks: initialTasks, currentUse
               <Textarea
                 placeholder="Optional description"
                 value={newDescription}
-                onChange={(e) => setNewDescription(e.target.value)}
+                onChange={e => setNewDescription(e.target.value)}
                 rows={2}
               />
             </div>
@@ -259,11 +229,9 @@ export function KanbanBoard({ projectId, teamId, tasks: initialTasks, currentUse
               <div className="space-y-2">
                 <Label>Status</Label>
                 <Select value={newStatus} onValueChange={setNewStatus}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {COLUMNS.map((c) => (
+                    {COLUMNS.map(c => (
                       <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>
                     ))}
                   </SelectContent>
@@ -272,11 +240,9 @@ export function KanbanBoard({ projectId, teamId, tasks: initialTasks, currentUse
               <div className="space-y-2">
                 <Label>Priority</Label>
                 <Select value={newPriority} onValueChange={setNewPriority}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {PRIORITIES.map((p) => (
+                    {PRIORITIES.map(p => (
                       <SelectItem key={p.value} value={p.value}>
                         <span className={p.color}>{p.label}</span>
                       </SelectItem>
@@ -289,13 +255,11 @@ export function KanbanBoard({ projectId, teamId, tasks: initialTasks, currentUse
               <div className="space-y-2">
                 <Label>Assignee</Label>
                 <Select value={newAssignee} onValueChange={setNewAssignee}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Unassigned" />
-                  </SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="Unassigned" /></SelectTrigger>
                   <SelectContent>
-                    {teamMembers.map((member) => (
-                      <SelectItem key={member.user.id} value={member.user.id}>
-                        {member.user.full_name}
+                    {teamMembers.map(m => (
+                      <SelectItem key={m.user.id} value={m.user.id}>
+                        {m.user.full_name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -303,75 +267,72 @@ export function KanbanBoard({ projectId, teamId, tasks: initialTasks, currentUse
               </div>
               <div className="space-y-2">
                 <Label>Due Date</Label>
-                <Input
-                  type="date"
-                  value={newDueDate}
-                  onChange={(e) => setNewDueDate(e.target.value)}
-                />
+                <Input type="date" value={newDueDate} onChange={e => setNewDueDate(e.target.value)} />
               </div>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowNewTask(false)}>Cancel</Button>
             <Button onClick={handleCreateTask} disabled={isCreating || !newTitle.trim()}>
-              {isCreating ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Creating…</> : "Create Task"}
+              {isCreating
+                ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Creating…</>
+                : "Create Task"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Kanban columns — horizontal scroll on mobile */}
-      <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory md:grid md:grid-cols-4 md:overflow-visible">
-        {COLUMNS.map((column) => {
-          const colTasks = getTasksByColumn(column.id)
-          const isOver = dragOverColumn === column.id
+      {/* Columns — stacked vertically */}
+      <div className="space-y-4">
+        {COLUMNS.map(column => {
+          const colTasks  = getTasksByColumn(column.id)
+          const accent    = COLUMN_ACCENT[column.id]
+          const isOver    = dragOverCol === column.id
+          const otherCols = COLUMNS.filter(c => c.id !== column.id)
 
           return (
             <div
               key={column.id}
-              className="flex flex-col gap-3 min-w-[280px] snap-start md:min-w-0"
-              onDragOver={(e) => handleDragOver(e, column.id)}
-              onDragLeave={() => setDragOverColumn(null)}
-              onDrop={(e) => handleDrop(e, column.id)}
+              className="space-y-3"
+              onDragOver={e => handleDragOver(e, column.id)}
+              onDragLeave={() => setDragOverCol(null)}
+              onDrop={e => handleDrop(e, column.id)}
             >
               {/* Column header */}
-              <div className="flex items-center justify-between px-1">
+              <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
+                  <span className="h-2.5 w-2.5 rounded-full" style={{ background: accent }} />
+                  <span className="font-semibold">{column.title}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
                   <span
-                    className="h-2 w-2 rounded-full shrink-0"
-                    style={{ background: COLUMN_ACCENT[column.id] }}
-                  />
-                  <span className="text-sm font-semibold">{column.title}</span>
-                  <span
-                    className="text-xs px-1.5 py-0.5 rounded-full tabular-nums font-medium"
-                    style={{
-                      background: `${COLUMN_ACCENT[column.id]}15`,
-                      color: COLUMN_ACCENT[column.id],
-                    }}
+                    className="h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold tabular-nums"
+                    style={{ background: `${accent}20`, color: accent }}
                   >
                     {colTasks.length}
                   </span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-muted-foreground"
+                    onClick={() => openAddTask(column.id)}
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                  </Button>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6 text-muted-foreground hover:text-foreground"
-                  onClick={() => openAddTask(column.id)}
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                </Button>
               </div>
 
-              {/* Drop zone */}
+              {/* Drop zone with dashed border */}
               <div
-                className={`flex flex-col gap-2 min-h-[180px] rounded-xl p-2 transition-colors ${
-                  isOver ? 'bg-muted/60 ring-1 ring-border' : 'bg-muted/20'
+                className={`rounded-xl border-2 border-dashed min-h-[160px] p-3 space-y-2 transition-colors ${
+                  isOver
+                    ? "border-primary/50 bg-primary/5"
+                    : "border-border"
                 }`}
               >
-                {colTasks.map((task) => {
-                  const assigneeName = getAssigneeName(task.assigned_to)
-                  const priorityColor = PRIORITIES.find(p => p.value === task.priority)?.color || ''
-                  const otherColumns = COLUMNS.filter(c => c.id !== column.id)
+                {colTasks.map(task => {
+                  const assignee     = teamMembers.find(m => m.user.id === task.assigned_to)
+                  const priorityMeta = PRIORITIES.find(p => p.value === task.priority)
 
                   return (
                     <Card
@@ -384,8 +345,10 @@ export function KanbanBoard({ projectId, teamId, tasks: initialTasks, currentUse
                       <CardContent className="p-3 space-y-2">
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex items-center gap-1.5 min-w-0">
-                            <GripVertical className="h-4 w-4 text-muted-foreground/50 shrink-0" />
-                            <span className="font-medium text-sm leading-snug line-clamp-2">{task.title}</span>
+                            <GripVertical className="h-4 w-4 text-muted-foreground/40 shrink-0" />
+                            <span className="font-medium text-sm leading-snug line-clamp-2">
+                              {task.title}
+                            </span>
                           </div>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -394,8 +357,7 @@ export function KanbanBoard({ projectId, teamId, tasks: initialTasks, currentUse
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              {/* Move to — mobile fallback for drag and drop */}
-                              {otherColumns.map((col) => (
+                              {otherCols.map(col => (
                                 <DropdownMenuItem
                                   key={col.id}
                                   onClick={() => handleMoveTask(task.id, col.id)}
@@ -421,14 +383,16 @@ export function KanbanBoard({ projectId, teamId, tasks: initialTasks, currentUse
                         </div>
 
                         {task.description && (
-                          <p className="text-xs text-muted-foreground line-clamp-2 pl-5">{task.description}</p>
+                          <p className="text-xs text-muted-foreground line-clamp-2 pl-5">
+                            {task.description}
+                          </p>
                         )}
 
-                        <div className="flex items-center justify-between pt-0.5 pl-5">
-                          <div className="flex items-center gap-1.5">
-                            {task.priority && task.priority !== 'medium' && (
-                              <span className={`text-[11px] font-medium ${priorityColor}`}>
-                                {task.priority}
+                        <div className="flex items-center justify-between pl-5">
+                          <div className="flex items-center gap-2">
+                            {priorityMeta && task.priority !== "medium" && (
+                              <span className={`text-[11px] font-medium ${priorityMeta.color}`}>
+                                {priorityMeta.label}
                               </span>
                             )}
                             {task.due_date && (
@@ -438,10 +402,10 @@ export function KanbanBoard({ projectId, teamId, tasks: initialTasks, currentUse
                               </span>
                             )}
                           </div>
-                          {assigneeName && (
+                          {assignee && (
                             <Avatar className="h-5 w-5">
                               <AvatarFallback className="text-[9px] bg-primary/10 text-primary">
-                                {assigneeName.charAt(0)}
+                                {assignee.user.full_name?.charAt(0) || "?"}
                               </AvatarFallback>
                             </Avatar>
                           )}
@@ -451,19 +415,9 @@ export function KanbanBoard({ projectId, teamId, tasks: initialTasks, currentUse
                   )
                 })}
 
-                {/* Empty state */}
                 {colTasks.length === 0 && (
-                  <div
-                    className={`flex-1 flex items-center justify-center rounded-lg text-sm transition-colors ${
-                      isDragging && isOver
-                        ? 'border-2 border-dashed border-primary/40 text-primary/60'
-                        : isDragging
-                        ? 'border-2 border-dashed border-muted-foreground/20 text-muted-foreground/40'
-                        : 'text-muted-foreground/40'
-                    }`}
-                    style={{ minHeight: '80px' }}
-                  >
-                    {isDragging ? 'Drop here' : 'No tasks'}
+                  <div className="flex items-center justify-center min-h-[100px] text-sm text-muted-foreground/50">
+                    Drop tasks here
                   </div>
                 )}
               </div>
