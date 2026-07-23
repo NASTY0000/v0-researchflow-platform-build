@@ -4,8 +4,9 @@ import { createClient } from '@/lib/supabase/server'
 import { phaseCompleted, allPhasesCompleted } from '@/lib/actions/akili'
 
 export interface EvidenceAnswer {
-  q: string
-  a: string
+  id: string   // question ID, e.g. 'challenges'
+  q: string    // full question text
+  a: string    // user's answer
 }
 
 export async function submitPhaseCompletion({
@@ -51,9 +52,20 @@ export async function submitPhaseCompletion({
     .single()
   if (!membership) return { error: 'Not a member of this project team' }
 
-  // 3. Update phase to completed and store evidence in notes as JSON
+  // 3. Build structured storage
   const now = new Date().toISOString()
-  const notesJson = JSON.stringify({ ev: evidence, nt: '' })
+
+  // completion_answers: JSONB keyed by question ID (matches get_challenge_keywords() SQL)
+  const completionAnswers: Record<string, string> = {}
+  for (const e of evidence) {
+    completionAnswers[e.id] = e.a
+  }
+
+  // completion_summary: plain text for length-based analytics
+  const completionSummary = evidence
+    .filter(e => e.a.trim())
+    .map(e => `${e.q}\n${e.a.trim()}`)
+    .join('\n\n')
 
   const { error: updateError } = await supabase
     .from('project_phases')
@@ -61,7 +73,8 @@ export async function submitPhaseCompletion({
       status: 'completed',
       completed_at: now,
       completed_by: user.id,
-      notes: notesJson,
+      completion_answers: completionAnswers,
+      completion_summary: completionSummary || null,
     })
     .eq('id', phaseId)
 
@@ -81,13 +94,17 @@ export async function submitPhaseCompletion({
     void allPhasesCompleted(user.id, projectId)
   }
 
-  return { success: true, completedAt: now, completedBy: user.id, notesJson }
+  return {
+    success: true,
+    completedAt: now,
+    completedBy: user.id,
+    completionAnswers,
+    completionSummary,
+  }
 }
 
 export async function updatePhaseNotes({
   phaseId,
-  projectId,
-  currentNotesRaw,
   newNote,
 }: {
   phaseId: string
@@ -99,24 +116,11 @@ export async function updatePhaseNotes({
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Not authenticated' }
 
-  // Preserve existing evidence if notes field is JSON
-  let stored: string
-  try {
-    const parsed = JSON.parse(currentNotesRaw ?? '')
-    if (parsed && typeof parsed === 'object' && 'ev' in parsed) {
-      stored = JSON.stringify({ ...parsed, nt: newNote.trim() })
-    } else {
-      stored = newNote.trim()
-    }
-  } catch {
-    stored = newNote.trim()
-  }
-
   const { error } = await supabase
     .from('project_phases')
-    .update({ notes: stored || null })
+    .update({ notes: newNote.trim() || null })
     .eq('id', phaseId)
 
   if (error) return { error: error.message }
-  return { success: true, stored }
+  return { success: true, stored: newNote.trim() || null }
 }

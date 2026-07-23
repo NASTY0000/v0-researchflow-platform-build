@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import React, { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import {
@@ -50,6 +50,7 @@ export function PhaseCompletionModal({
     setServerError(null)
 
     const evidence: EvidenceAnswer[] = questions.map(q => ({
+      id: q.id,
       q: q.question,
       a: answers[q.id] ?? "",
     }))
@@ -73,6 +74,9 @@ export function PhaseCompletionModal({
           <DialogDescription>
             Answer the questions below to verify and record your progress before marking this phase complete.
           </DialogDescription>
+          <p className="text-xs text-muted-foreground/70 mt-1">
+            Your team can see this submission. Anonymised patterns may be used to improve ResearchFlow.
+          </p>
         </DialogHeader>
 
         <div className="space-y-5 py-1">

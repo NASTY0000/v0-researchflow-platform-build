@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/sidebar'
 import {
   LayoutDashboard, Users, Shield, FileText, AlertTriangle,
-  Building2, BarChart3, Megaphone, ArrowLeft, DollarSign,
+  Building2, BarChart3, Megaphone, ArrowLeft, DollarSign, FlaskConical,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Logo } from '@/components/Logo'
@@ -22,6 +22,7 @@ const adminNavItems = [
   { title: 'Moderation', href: '/admin/moderation', icon: AlertTriangle },
   { title: 'Universities', href: '/admin/universities', icon: Building2 },
   { title: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
+  { title: 'Research Insights', href: '/admin/research-insights', icon: FlaskConical },
   { title: 'Broadcast', href: '/admin/broadcast', icon: Megaphone },
   { title: 'Grants', href: '/admin/grants', icon: DollarSign },
   { title: 'Grant Applications', href: '/admin/grants/applications', icon: FileText },

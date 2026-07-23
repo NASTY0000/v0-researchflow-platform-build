@@ -57,24 +57,8 @@ interface ProjectPhase {
   notes: string | null
   completed_at: string | null
   completed_by: string | null
-}
-
-interface ParsedNotes {
-  ev: EvidenceAnswer[]
-  nt: string
-}
-
-function parseNotes(raw: string | null): { evidence: EvidenceAnswer[] | null; noteText: string } {
-  if (!raw) return { evidence: null, noteText: "" }
-  try {
-    const parsed: ParsedNotes = JSON.parse(raw)
-    if (parsed && typeof parsed === "object" && "ev" in parsed) {
-      return { evidence: parsed.ev ?? [], noteText: parsed.nt ?? "" }
-    }
-  } catch {
-    // plain text note
-  }
-  return { evidence: null, noteText: raw }
+  completion_answers: Record<string, string> | null
+  completion_summary: string | null
 }
 
 const PHASE_DEFS = [
@@ -183,7 +167,14 @@ export function ProjectRoadmap({
     setPhases((prev: ProjectPhase[]) =>
       prev.map((p: ProjectPhase) => {
         if (p.id === completingPhase.id)
-          return { ...p, status: "completed" as const, completed_at: result.completedAt, completed_by: result.completedBy, notes: result.notesJson }
+          return {
+            ...p,
+            status: "completed" as const,
+            completed_at: result.completedAt,
+            completed_by: result.completedBy,
+            completion_answers: result.completionAnswers,
+            completion_summary: result.completionSummary ?? null,
+          }
         if (next && p.id === next.id)
           return { ...p, status: "in_progress" as const }
         return p
@@ -205,7 +196,7 @@ export function ProjectRoadmap({
     const result = await updatePhaseNotes({
       phaseId: phase.id,
       projectId: project.id,
-      currentNotesRaw: phase.notes,
+      currentNotesRaw: null,
       newNote: notesText,
     })
     if (!("error" in result)) {
@@ -263,8 +254,9 @@ export function ProjectRoadmap({
             const Icon       = def.icon
             const prevComplete = def.number === 1 || phases.find(p => p.phase_number === def.number - 1)?.status === "completed"
 
-            const { evidence, noteText } = parseNotes(phase?.notes ?? null)
-            const hasEvidence = isCompleted && evidence && evidence.length > 0
+            const completionAnswers = phase?.completion_answers ?? null
+            const noteText = phase?.notes ?? ""
+            const hasEvidence = isCompleted && completionAnswers && Object.keys(completionAnswers).length > 0
 
             return (
               <div key={def.number} className="relative pl-16">
@@ -319,12 +311,19 @@ export function ProjectRoadmap({
                           <p className="text-xs" style={{ color: '#22C55E' }}>
                             Completed {new Date(phase.completed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                           </p>
-                          {hasEvidence && (
+                          {hasEvidence && completionAnswers && (
                             <Button
                               size="sm"
                               variant="ghost"
                               className="h-6 text-xs gap-1 text-muted-foreground hover:text-foreground"
-                              onClick={() => setViewingEvidence({ phase: phase!, evidence: evidence! })}
+                              onClick={() => {
+                                const ev: EvidenceAnswer[] = Object.entries(completionAnswers).map(([id, a]) => ({
+                                  id,
+                                  q: PHASE_QUESTIONS[def.number]?.find((q: { id: string }) => q.id === id)?.question ?? id,
+                                  a: String(a),
+                                }))
+                                setViewingEvidence({ phase: phase!, evidence: ev })
+                              }}
                             >
                               <FileText className="h-3 w-3" />
                               View submission
