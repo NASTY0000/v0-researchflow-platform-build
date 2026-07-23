@@ -17,6 +17,8 @@ import {
   GraduationCap,
   ChevronDown,
   ChevronUp,
+  Target,
+  ListChecks,
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import type { Project, Team, Profile, Task } from "@/lib/types/database"
@@ -103,28 +105,17 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
 
   return (
     <div className="space-y-5">
-      {/* Compact header */}
-      <div>
-        <div className="flex items-center gap-2 mb-3">
-          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" asChild>
+      {/* Header */}
+      <div className="space-y-3">
+        {/* Top bar: back + settings */}
+        <div className="flex items-center justify-between">
+          <Button variant="ghost" size="sm" className="gap-1.5 -ml-2 text-muted-foreground" asChild>
             <Link href="/projects">
               <ArrowLeft className="h-4 w-4" />
+              Back
             </Link>
           </Button>
-          <div className="flex items-center gap-2 min-w-0">
-            <h1 className="text-xl font-bold font-heading leading-tight truncate">
-              {project.title}
-            </h1>
-            <Badge variant={STATUS_VARIANT[project.status] ?? "outline"} className="shrink-0">
-              {project.status}
-            </Badge>
-            {project.research_area && (
-              <Badge variant="outline" className="shrink-0 hidden sm:inline-flex">
-                {project.research_area}
-              </Badge>
-            )}
-          </div>
-          <Button variant="outline" size="sm" className="ml-auto shrink-0" asChild>
+          <Button variant="outline" size="sm" asChild>
             <Link href={`/projects/${id}/settings`}>
               <Settings className="h-3.5 w-3.5 sm:mr-1.5" />
               <span className="hidden sm:inline">Settings</span>
@@ -132,39 +123,71 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
           </Button>
         </div>
 
-        {/* Description — truncated with expand toggle */}
-        {aim && (
-          <div className="pl-10">
-            <p
-              className={`text-sm text-muted-foreground leading-relaxed transition-all ${descExpanded ? '' : 'line-clamp-2'}`}
-            >
-              {aim}
-            </p>
-            {objectivesList.length > 0 && descExpanded && (
-              <ul className="mt-2 space-y-1">
-                {objectivesList.map((obj: string, i: number) => (
-                  <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
-                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary/50" />
-                    <span>{obj}</span>
-                  </li>
-                ))}
-              </ul>
+        {/* Title */}
+        <div>
+          <h1 className="font-heading font-bold leading-tight tracking-tight text-foreground"
+            style={{ fontSize: 'clamp(1.25rem, 4vw, 1.75rem)' }}>
+            {project.title}
+          </h1>
+          <div className="flex flex-wrap gap-2 mt-2">
+            <Badge variant={STATUS_VARIANT[project.status] ?? "outline"}>
+              {project.status}
+            </Badge>
+            {project.research_area && (
+              <Badge variant="outline">{project.research_area}</Badge>
             )}
+          </div>
+        </div>
+
+        {/* Description panel — collapsed by default */}
+        {aim && (
+          <div className="border-t border-border pt-3 space-y-3">
+            {/* Research Aim */}
+            <div>
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <Target className="h-3.5 w-3.5 text-primary" />
+                <span className="text-xs font-semibold text-muted-foreground">Research Aim</span>
+              </div>
+              <p className={`text-sm leading-relaxed ${descExpanded ? '' : 'line-clamp-2'}`}>
+                {aim}
+              </p>
+            </div>
+
+            {/* Objectives — only when expanded */}
+            {objectivesList.length > 0 && descExpanded && (
+              <div>
+                <div className="flex items-center gap-1.5 mb-2">
+                  <ListChecks className="h-3.5 w-3.5 text-primary" />
+                  <span className="text-xs font-semibold text-muted-foreground">Objectives</span>
+                </div>
+                <ol className="space-y-2">
+                  {objectivesList.map((obj: string, i: number) => (
+                    <li key={i} className="flex gap-3 text-sm">
+                      <span className="shrink-0 h-6 w-7 rounded-md bg-primary/10 text-primary text-[11px] font-bold flex items-center justify-center tabular-nums">
+                        {String(i + 1).padStart(2, '0')}
+                      </span>
+                      <span className="leading-relaxed pt-0.5 text-muted-foreground">{obj}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            )}
+
+            {/* Expand / collapse toggle */}
             {(aim.length > 120 || objectivesList.length > 0) && (
               <button
                 onClick={() => setDescExpanded(!descExpanded)}
-                className="mt-1 flex items-center gap-1 text-xs text-primary/70 hover:text-primary transition-colors"
+                className="flex items-center gap-1 text-xs text-primary/70 hover:text-primary transition-colors"
               >
-                {descExpanded ? (
-                  <><ChevronUp className="h-3 w-3" /> Less</>
-                ) : (
-                  <><ChevronDown className="h-3 w-3" /> {objectivesList.length > 0 ? `More + ${objectivesList.length} objectives` : 'More'}</>
-                )}
+                {descExpanded
+                  ? <><ChevronUp className="h-3 w-3" /> Less</>
+                  : <><ChevronDown className="h-3 w-3" /> {objectivesList.length > 0 ? `More + ${objectivesList.length} objectives` : 'More'}</>
+                }
               </button>
             )}
 
             {/* Metadata strip */}
-            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground pt-1 border-t border-border">
               {project.current_phase && (
                 <span className="flex items-center gap-1">
                   <Route className="h-3 w-3" />
@@ -175,9 +198,6 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                 <Users className="h-3 w-3" />
                 {memberCount} {memberCount === 1 ? 'member' : 'members'}
               </span>
-              {project.research_area && (
-                <span className="sm:hidden">{project.research_area}</span>
-              )}
             </div>
           </div>
         )}

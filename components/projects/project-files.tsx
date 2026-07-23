@@ -83,14 +83,29 @@ export function ProjectFiles({ projectId, currentUserId, isLead }: ProjectFilesP
     setIsLoading(true)
     const { data, error } = await supabase
       .from('project_files')
-      .select('*, uploader:profiles!uploaded_by_id(full_name)')
+      .select('*')
       .eq('project_id', projectId)
       .order('created_at', { ascending: false })
 
     if (!error && data) {
+      // Fetch uploader names in a separate query — avoids FK relationship requirement
+      const uploaderIds = [...new Set(
+        data.map((f: any) => f.uploaded_by_id).filter(Boolean)
+      )] as string[]
+      let nameMap: Record<string, string> = {}
+      if (uploaderIds.length > 0) {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('id, full_name')
+          .in('id', uploaderIds)
+        nameMap = Object.fromEntries(
+          (profileData || []).map((p: any) => [p.id, p.full_name || 'Unknown'])
+        )
+      }
+
       const mapped = data.map((f: any) => ({
         ...f,
-        uploaded_by_name: f.uploader?.full_name || 'Unknown',
+        uploaded_by_name: nameMap[f.uploaded_by_id] || 'Unknown',
         is_latest: f.is_latest ?? true,
         version: f.version ?? 1,
       })) as ProjectFile[]
@@ -170,7 +185,7 @@ export function ProjectFiles({ projectId, currentUserId, isLead }: ProjectFilesP
           is_latest: true,
           created_at: new Date().toISOString(),
         })
-        .select('*, uploader:profiles!uploaded_by_id(full_name)')
+        .select('*')
         .single()
 
       if (dbError) {
