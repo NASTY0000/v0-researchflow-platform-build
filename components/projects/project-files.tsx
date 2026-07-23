@@ -7,9 +7,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table"
-import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
@@ -23,18 +20,21 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 
+// Matches the actual DB schema exactly
 interface ProjectFile {
   id: string
-  name: string
-  url: string
-  size: number
-  file_type: string
-  uploaded_by_id: string | null
-  uploaded_by_name?: string
+  project_id: string
+  file_name: string        // DB: file_name
+  file_url: string         // DB: file_url
+  file_size: number        // DB: file_size
+  file_type: string        // DB: file_type
+  uploaded_by: string | null  // DB: uploaded_by
+  uploaded_by_name?: string   // computed from profiles
   created_at: string
   version: number
   parent_file_id: string | null
   is_latest: boolean
+  folder?: string | null
 }
 
 interface ProjectFilesProps {
@@ -57,16 +57,15 @@ function formatFileSize(bytes: number): string {
 }
 
 export function ProjectFiles({ projectId, currentUserId, isLead }: ProjectFilesProps) {
-  const [files, setFiles] = useState<ProjectFile[]>([])
-  const [allVersions, setAllVersions] = useState<Record<string, ProjectFile[]>>({})
+  const [files, setFiles]               = useState<ProjectFile[]>([])
+  const [allVersions, setAllVersions]   = useState<Record<string, ProjectFile[]>>({})
   const [expandedHistory, setExpandedHistory] = useState<Record<string, boolean>>({})
-  const [searchQuery, setSearchQuery] = useState('')
-  const [isDragging, setIsDragging] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
-  const [isUploading, setIsUploading] = useState(false)
+  const [searchQuery, setSearchQuery]   = useState('')
+  const [isDragging, setIsDragging]     = useState(false)
+  const [isLoading, setIsLoading]       = useState(true)
+  const [isUploading, setIsUploading]   = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Version conflict dialog
   const [versionDialog, setVersionDialog] = useState<{
     open: boolean
     file: File | null
@@ -75,9 +74,7 @@ export function ProjectFiles({ projectId, currentUserId, isLead }: ProjectFilesP
 
   const supabase = createClient()
 
-  useEffect(() => {
-    loadFiles()
-  }, [projectId])
+  useEffect(() => { loadFiles() }, [projectId])
 
   async function loadFiles() {
     setIsLoading(true)
@@ -88,9 +85,9 @@ export function ProjectFiles({ projectId, currentUserId, isLead }: ProjectFilesP
       .order('created_at', { ascending: false })
 
     if (!error && data) {
-      // Fetch uploader names in a separate query — avoids FK relationship requirement
+      // Fetch uploader names separately (no FK join needed)
       const uploaderIds = [...new Set(
-        data.map((f: any) => f.uploaded_by_id).filter(Boolean)
+        data.map((f: any) => f.uploaded_by).filter(Boolean)
       )] as string[]
       let nameMap: Record<string, string> = {}
       if (uploaderIds.length > 0) {
@@ -105,14 +102,13 @@ export function ProjectFiles({ projectId, currentUserId, isLead }: ProjectFilesP
 
       const mapped = data.map((f: any) => ({
         ...f,
-        uploaded_by_name: nameMap[f.uploaded_by_id] || 'Unknown',
+        uploaded_by_name: nameMap[f.uploaded_by] || 'Unknown',
         is_latest: f.is_latest ?? true,
-        version: f.version ?? 1,
+        version:   f.version   ?? 1,
       })) as ProjectFile[]
 
       setFiles(mapped.filter(f => f.is_latest))
 
-      // Group all versions by parent_file_id (or id for originals)
       const versionMap: Record<string, ProjectFile[]> = {}
       for (const file of mapped) {
         if (!file.is_latest) {
@@ -127,15 +123,11 @@ export function ProjectFiles({ projectId, currentUserId, isLead }: ProjectFilesP
   }
 
   async function handleFilesSelected(selectedFiles: File[]) {
-    if (selectedFiles.length === 0) return
-    for (const file of selectedFiles) {
-      await processFileUpload(file)
-    }
+    for (const file of selectedFiles) await processFileUpload(file)
   }
 
   async function processFileUpload(file: File) {
-    // Check for existing file with same name (latest version)
-    const existing = files.find(f => f.name.toLowerCase() === file.name.toLowerCase())
+    const existing = files.find(f => f.file_name.toLowerCase() === file.name.toLowerCase())
     if (existing) {
       setVersionDialog({ open: true, file, existingFile: existing })
       return
@@ -146,14 +138,15 @@ export function ProjectFiles({ projectId, currentUserId, isLead }: ProjectFilesP
   async function uploadFile(file: File, existingFile: ProjectFile | null, version: number) {
     setIsUploading(true)
     try {
-      const ext = file.name.split('.').pop()
+      const ext  = file.name.split('.').pop()
       const path = `${projectId}/${Date.now()}-${file.name}`
+
       const { error: storageError } = await supabase.storage
         .from('project-files')
         .upload(path, file, { upsert: false })
 
       if (storageError) {
-        console.error('Upload error:', JSON.stringify(storageError))
+        console.error('Storage upload error:', JSON.stringify(storageError))
         toast.error(storageError.message || 'Upload failed')
         setIsUploading(false)
         return
@@ -165,37 +158,34 @@ export function ProjectFiles({ projectId, currentUserId, isLead }: ProjectFilesP
       const { data: { user } } = await supabase.auth.getUser()
 
       if (existingFile) {
-        // Mark old version as not latest
         await supabase.from('project_files').update({ is_latest: false }).eq('id', existingFile.id)
       }
 
       const parentId = existingFile?.parent_file_id || existingFile?.id || null
 
-      const { data: newFile, error: dbError } = await supabase
+      const { error: dbError } = await supabase
         .from('project_files')
         .insert({
-          project_id: projectId,
-          name: file.name,
-          url: publicUrl,
-          size: file.size,
-          file_type: file.type || ext || 'unknown',
-          uploaded_by_id: user?.id || null,
+          project_id:     projectId,
+          file_name:      file.name,            // correct column name
+          file_url:       publicUrl,            // correct column name
+          file_size:      file.size,            // correct column name
+          file_type:      file.type || ext || 'unknown',
+          uploaded_by:    user?.id || null,     // correct column name
           version,
           parent_file_id: parentId,
-          is_latest: true,
-          created_at: new Date().toISOString(),
+          is_latest:      true,
         })
-        .select('*')
-        .single()
 
       if (dbError) {
-        console.error('Failed to save file record:', dbError)
-        toast.error(dbError.message || 'Failed to save file record.')
+        console.error('DB insert error:', JSON.stringify(dbError))
+        toast.error(dbError.message || 'File uploaded but could not be saved')
       } else {
         toast.success(version > 1 ? `Uploaded v${version} of ${file.name}` : `${file.name} uploaded`)
         await loadFiles()
       }
     } catch (err) {
+      console.error('Upload exception:', err)
       toast.error('Upload error. Please try again.')
     }
     setIsUploading(false)
@@ -216,17 +206,15 @@ export function ProjectFiles({ projectId, currentUserId, isLead }: ProjectFilesP
   }
 
   async function handleRestore(oldVersion: ProjectFile, currentLatest: ProjectFile) {
-    // Mark current latest as not latest
     await supabase.from('project_files').update({ is_latest: false }).eq('id', currentLatest.id)
-    // Mark old version as latest
-    await supabase.from('project_files').update({ is_latest: true }).eq('id', oldVersion.id)
+    await supabase.from('project_files').update({ is_latest: true  }).eq('id', oldVersion.id)
     toast.success(`Restored to v${oldVersion.version}`)
     await loadFiles()
   }
 
   async function handleDelete(file: ProjectFile) {
     await supabase.from('project_files').delete().eq('id', file.id)
-    toast.success(`${file.name} deleted`)
+    toast.success(`${file.file_name} deleted`)
     await loadFiles()
   }
 
@@ -235,36 +223,41 @@ export function ProjectFiles({ projectId, currentUserId, isLead }: ProjectFilesP
   }
 
   const filteredFiles = files.filter(f =>
-    f.name.toLowerCase().includes(searchQuery.toLowerCase())
+    f.file_name.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
   return (
     <div className="space-y-6">
       {/* Version conflict dialog */}
-      <Dialog open={versionDialog.open} onOpenChange={(o) => !o && setVersionDialog({ open: false, file: null, existingFile: null })}>
+      <Dialog
+        open={versionDialog.open}
+        onOpenChange={o => !o && setVersionDialog({ open: false, file: null, existingFile: null })}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>File Already Exists</DialogTitle>
             <DialogDescription>
-              A file named <strong>{versionDialog.file?.name}</strong> already exists (v{versionDialog.existingFile?.version}).
-              How would you like to proceed?
+              A file named <strong>{versionDialog.file?.name}</strong> already exists
+              (v{versionDialog.existingFile?.version}). How would you like to proceed?
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 sm:gap-0">
             <Button variant="outline" onClick={handleUploadAsNew}>Upload as New File</Button>
-            <Button onClick={handleUploadAsVersion} style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}>
+            <Button onClick={handleUploadAsVersion}>
               Upload as Version {(versionDialog.existingFile?.version || 1) + 1}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Upload Area */}
+      {/* Upload area */}
       <Card
-        className={`border-2 border-dashed transition-colors ${isDragging ? 'border-primary bg-primary/5' : 'border-border'}`}
-        onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
+        className={`border-2 border-dashed transition-colors ${
+          isDragging ? 'border-primary bg-primary/5' : 'border-border'
+        }`}
+        onDragOver={e => { e.preventDefault(); setIsDragging(true) }}
         onDragLeave={() => setIsDragging(false)}
-        onDrop={(e) => {
+        onDrop={e => {
           e.preventDefault(); setIsDragging(false)
           handleFilesSelected(Array.from(e.dataTransfer.files))
         }}
@@ -273,7 +266,7 @@ export function ProjectFiles({ projectId, currentUserId, isLead }: ProjectFilesP
           {isUploading ? (
             <div className="space-y-3">
               <Loader2 className="h-10 w-10 mx-auto animate-spin text-primary" />
-              <p className="text-muted-foreground">Uploading...</p>
+              <p className="text-muted-foreground">Uploading…</p>
             </div>
           ) : (
             <>
@@ -285,7 +278,7 @@ export function ProjectFiles({ projectId, currentUserId, isLead }: ProjectFilesP
                 type="file"
                 multiple
                 className="hidden"
-                onChange={(e) => handleFilesSelected(Array.from(e.target.files || []))}
+                onChange={e => handleFilesSelected(Array.from(e.target.files || []))}
               />
               <Button onClick={() => fileInputRef.current?.click()}>
                 <Upload className="mr-2 h-4 w-4" />Browse Files
@@ -298,20 +291,22 @@ export function ProjectFiles({ projectId, currentUserId, isLead }: ProjectFilesP
         </CardContent>
       </Card>
 
-      {/* Files List */}
+      {/* Files list */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
             <div>
               <CardTitle>Project Files</CardTitle>
-              <CardDescription>{files.length} file{files.length !== 1 ? 's' : ''} uploaded</CardDescription>
+              <CardDescription>
+                {files.length} file{files.length !== 1 ? 's' : ''} uploaded
+              </CardDescription>
             </div>
-            <div className="relative w-64">
+            <div className="relative w-56">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search files..."
+                placeholder="Search files…"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={e => setSearchQuery(e.target.value)}
                 className="pl-10"
               />
             </div>
@@ -324,27 +319,25 @@ export function ProjectFiles({ projectId, currentUserId, isLead }: ProjectFilesP
             </div>
           ) : filteredFiles.length > 0 ? (
             <div className="space-y-2">
-              {filteredFiles.map((file) => {
-                const FileIcon = getFileIcon(file.file_type || file.name)
-                const versions = allVersions[file.parent_file_id || file.id] || []
+              {filteredFiles.map(file => {
+                const FileIcon   = getFileIcon(file.file_type || file.file_name)
+                const versions   = allVersions[file.parent_file_id || file.id] || []
                 const hasHistory = versions.length > 0
                 const isExpanded = expandedHistory[file.id]
+
                 return (
                   <div key={file.id} className="rounded-lg border border-border overflow-hidden">
-                    {/* Main file row */}
                     <div className="flex items-center gap-3 p-3 hover:bg-muted/50 transition-colors">
                       <div className="p-2 rounded-lg bg-primary/10 shrink-0">
                         <FileIcon className="h-4 w-4 text-primary" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-medium text-sm truncate">{file.name}</span>
-                          <Badge variant="secondary" className="text-xs shrink-0">
-                            v{file.version}
-                          </Badge>
+                          <span className="font-medium text-sm truncate">{file.file_name}</span>
+                          <Badge variant="secondary" className="text-xs shrink-0">v{file.version}</Badge>
                         </div>
                         <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
-                          <span>{formatFileSize(file.size)}</span>
+                          <span>{formatFileSize(file.file_size)}</span>
                           <span>{file.uploaded_by_name}</span>
                           <span>{new Date(file.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                         </div>
@@ -352,8 +345,7 @@ export function ProjectFiles({ projectId, currentUserId, isLead }: ProjectFilesP
                       <div className="flex items-center gap-1 shrink-0">
                         {hasHistory && (
                           <Button
-                            variant="ghost"
-                            size="sm"
+                            variant="ghost" size="sm"
                             onClick={() => toggleHistory(file.id)}
                             className="text-xs text-muted-foreground h-7 gap-1"
                           >
@@ -369,11 +361,14 @@ export function ProjectFiles({ projectId, currentUserId, isLead }: ProjectFilesP
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => window.open(file.url, '_blank')}>
+                            <DropdownMenuItem onClick={() => window.open(file.file_url, '_blank')}>
                               <Download className="mr-2 h-4 w-4" />Download
                             </DropdownMenuItem>
-                            {(isLead || file.uploaded_by_id === currentUserId) && (
-                              <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(file)}>
+                            {(isLead || file.uploaded_by === currentUserId) && (
+                              <DropdownMenuItem
+                                className="text-destructive"
+                                onClick={() => handleDelete(file)}
+                              >
                                 <Trash2 className="mr-2 h-4 w-4" />Delete
                               </DropdownMenuItem>
                             )}
@@ -386,8 +381,7 @@ export function ProjectFiles({ projectId, currentUserId, isLead }: ProjectFilesP
                     {isExpanded && hasHistory && (
                       <div className="border-t border-border bg-muted/30">
                         <div className="p-3 space-y-2">
-                          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide px-1">Version History</p>
-                          {/* Current version */}
+                          <p className="text-xs font-medium text-muted-foreground px-1">Version History</p>
                           <div className="flex items-center justify-between px-2 py-1.5 rounded-md bg-primary/5 border border-primary/15">
                             <div className="text-sm">
                               <span className="font-medium">v{file.version}</span>
@@ -395,11 +389,10 @@ export function ProjectFiles({ projectId, currentUserId, isLead }: ProjectFilesP
                               <span className="text-muted-foreground ml-2">· {file.uploaded_by_name}</span>
                               <span className="text-muted-foreground ml-2">· {new Date(file.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                             </div>
-                            <Button size="sm" variant="ghost" onClick={() => window.open(file.url, '_blank')} className="h-6 text-xs">
+                            <Button size="sm" variant="ghost" onClick={() => window.open(file.file_url, '_blank')} className="h-6 text-xs">
                               <Download className="h-3 w-3 mr-1" />Download
                             </Button>
                           </div>
-                          {/* Old versions */}
                           {[...versions].sort((a, b) => b.version - a.version).map(v => (
                             <div key={v.id} className="flex items-center justify-between px-2 py-1.5 rounded-md hover:bg-muted/50">
                               <div className="text-sm text-muted-foreground">
@@ -408,7 +401,7 @@ export function ProjectFiles({ projectId, currentUserId, isLead }: ProjectFilesP
                                 <span className="ml-2">· {new Date(v.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                               </div>
                               <div className="flex items-center gap-1">
-                                <Button size="sm" variant="ghost" onClick={() => window.open(v.url, '_blank')} className="h-6 text-xs">
+                                <Button size="sm" variant="ghost" onClick={() => window.open(v.file_url, '_blank')} className="h-6 text-xs">
                                   <Download className="h-3 w-3 mr-1" />Download
                                 </Button>
                                 {isLead && (
