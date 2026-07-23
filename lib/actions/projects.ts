@@ -161,7 +161,6 @@ export async function reopenPhase(
   const { error: historyError } = await supabase
     .from('phase_submission_history')
     .insert({
-      phase_id:            phase.id,
       project_id:          projectId,
       phase_number:        phase.phase_number,
       phase_name:          phase.phase_name,
