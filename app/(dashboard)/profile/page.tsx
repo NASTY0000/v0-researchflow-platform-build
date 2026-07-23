@@ -64,7 +64,7 @@ function triggerSparkleBurst(elementId: string) {
       position: 'fixed', width: isDiamond ? '5px' : '4px', height: isDiamond ? '5px' : '4px',
       borderRadius: isDiamond ? '1px' : '50%', backgroundColor: colors[i],
       transform: isDiamond ? 'rotate(45deg)' : 'none',
-      left: `${cx}px`, top: `${cy}px`, pointerEvents: 'none', zIndex: '9999',
+      left: `${cx}px`, top: `${cy}px`, pointerEvents: 'none', zIndex: '999',
       boxShadow: `0 0 4px ${colors[i]}, 0 0 8px ${colors[i]}`,
     })
     document.body.appendChild(spark)
@@ -206,9 +206,13 @@ export default function ProfilePage() {
     }
   }, [profile?.akili_score])
 
-  // Stats cards IntersectionObserver
+  // Stats cards IntersectionObserver — only animates when user has no reduced-motion preference
   useEffect(() => {
     const cards = document.querySelectorAll('.stat-card-animate')
+    const prefersMotion = !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (prefersMotion) {
+      cards.forEach(card => card.classList.add('stat-will-animate'))
+    }
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -721,13 +725,13 @@ export default function ProfilePage() {
       {cropSrc && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
           <div className="bg-background border rounded-2xl shadow-2xl w-full max-w-lg">
-            <div className="flex items-center justify-between p-5 border-b">
+            <div className="flex items-center justify-between p-6 border-b">
               <h2 className="text-lg font-semibold">Crop Photo</h2>
               <Button variant="ghost" size="icon" onClick={() => setCropSrc(null)}>
                 <X className="w-4 h-4" />
               </Button>
             </div>
-            <div className="p-5 flex justify-center">
+            <div className="p-6 flex justify-center">
               <ReactCrop
                 crop={crop}
                 onChange={(c) => setCrop(c)}
@@ -745,11 +749,10 @@ export default function ProfilePage() {
                 />
               </ReactCrop>
             </div>
-            <div className="flex gap-3 p-5 border-t">
+            <div className="flex gap-3 p-6 border-t">
               <Button
                 onClick={handleCropAndUpload}
                 disabled={isUploadingAvatar}
-                style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}
                 className="flex-1"
               >
                 {isUploadingAvatar ? (
@@ -760,15 +763,18 @@ export default function ProfilePage() {
               </Button>
               <Button variant="outline" onClick={() => setCropSrc(null)}>Cancel</Button>
             </div>
-            {avatarError && <p className="text-xs text-destructive px-5 pb-4">{avatarError}</p>}
+            {avatarError && <p className="text-xs text-destructive px-6 pb-4">{avatarError}</p>}
           </div>
         </div>
       )}
 
       {/* Header Card */}
-      <div className="relative rounded-2xl overflow-hidden border border-primary/20 shadow-[0_0_40px_rgba(124,58,237,0.15),0_0_80px_rgba(124,58,237,0.05)]">
+      <div
+        className="relative rounded-2xl overflow-hidden border border-primary/20"
+        style={{ boxShadow: '0 0 40px color-mix(in oklch, var(--primary) 15%, transparent), 0 0 80px color-mix(in oklch, var(--primary) 5%, transparent)' }}
+      >
         {/* Animated canvas banner — first child, flush to top edge */}
-        <div className="relative h-52" style={{ background: '#05010F' }}>
+        <div className="relative h-52 bg-muted dark:bg-background">
           <ProfileBackground
             backgroundStyle={profile.profile_background ?? 'baobab'}
             interests={profile.research_interests?.length > 0
@@ -796,10 +802,12 @@ export default function ProfilePage() {
           .avatar-ring-pulse { animation: avatar-ring-pulse 2.8s ease-in-out infinite; }
           .avatar-ring-pulse-fast { animation: avatar-ring-pulse 0.9s ease-in-out infinite; }
           .stat-card-animate {
-            opacity: 0; transform: translateY(24px);
             transition: opacity 0.55s ease, transform 0.55s ease;
           }
-          .stat-card-animate.is-visible { opacity: 1; transform: translateY(0); }
+          @media (prefers-reduced-motion: no-preference) {
+            .stat-card-animate.stat-will-animate { opacity: 0; transform: translateY(24px); }
+            .stat-card-animate.is-visible { opacity: 1; transform: translateY(0); }
+          }
         `}</style>
 
         <div className="px-8 pb-8">
@@ -819,7 +827,7 @@ export default function ProfilePage() {
                 className="avatar-ring-pulse rounded-full"
                 style={{
                   position: 'absolute', inset: '-8px',
-                  border: '4px solid rgba(124,58,237,0.25)',
+                  border: '4px solid color-mix(in oklch, var(--primary) 25%, transparent)',
                   borderRadius: '9999px',
                   pointerEvents: 'none',
                 }}
@@ -850,8 +858,8 @@ export default function ProfilePage() {
                 <Avatar
                   className="w-24 h-24 transition-transform duration-200 group-hover:scale-[1.06]"
                   style={{
-                    border: '3px solid #7C3AED',
-                    boxShadow: '0 0 0 5px rgba(124,58,237,0.2), 0 0 24px rgba(124,58,237,0.45)',
+                    border: '3px solid var(--primary)',
+                    boxShadow: '0 0 0 5px color-mix(in oklch, var(--primary) 20%, transparent), 0 0 24px color-mix(in oklch, var(--primary) 45%, transparent)',
                     transition: 'box-shadow 300ms ease, transform 200ms cubic-bezier(0.34,1.56,0.64,1)',
                   }}
                 >
@@ -888,7 +896,18 @@ export default function ProfilePage() {
                     </div>
                     <div>
                       <Label>Academic Level</Label>
-                      <Input value={editForm.academic_level} onChange={(e) => setEditForm({ ...editForm, academic_level: e.target.value })} placeholder="e.g., undergraduate" />
+                      <Select value={editForm.academic_level} onValueChange={(v) => setEditForm({ ...editForm, academic_level: v })}>
+                        <SelectTrigger className="mt-1">
+                          <SelectValue placeholder="Select level" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="undergraduate">Undergraduate</SelectItem>
+                          <SelectItem value="masters">Masters Student</SelectItem>
+                          <SelectItem value="phd">PhD Candidate</SelectItem>
+                          <SelectItem value="postdoc">Postdoctoral</SelectItem>
+                          <SelectItem value="faculty">Faculty</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
                   <div>
@@ -995,8 +1014,7 @@ export default function ProfilePage() {
                       <div className="flex items-center gap-2 mt-2">
                         <div
                           id="akili-hero-badge"
-                          className="relative flex items-center gap-1.5 px-3 py-1.5 rounded-full cursor-pointer select-none"
-                          style={{ background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.35)' }}
+                          className="relative flex items-center gap-1.5 px-3 py-1.5 rounded-full cursor-pointer select-none bg-primary/15 border border-primary/35"
                           onClick={() => triggerSparkleBurst('akili-hero-badge')}
                         >
                           <span className="text-amber-400 text-sm">⚡</span>
@@ -1069,8 +1087,8 @@ export default function ProfilePage() {
                         className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium bg-primary/8 border border-primary/20 text-primary/70 hover:text-primary hover:border-primary/40 transition-all"
                       >
                         <svg viewBox="0 0 16 16" width="11" height="11" fill="none">
-                          <path d="M8 1L2 4.5V8c0 3.5 2.5 6.75 6 7.5C11.5 14.75 14 11.5 14 8V4.5L8 1Z" fill="rgba(124,58,237,0.4)" stroke="#7C3AED" strokeWidth="1"/>
-                          <path d="M5.5 8L7 9.5L10.5 6" stroke="white" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M8 1L2 4.5V8c0 3.5 2.5 6.75 6 7.5C11.5 14.75 14 11.5 14 8V4.5L8 1Z" fill="color-mix(in oklch, var(--primary) 40%, transparent)" stroke="var(--primary)" strokeWidth="1"/>
+                          <path d="M5.5 8L7 9.5L10.5 6" stroke="var(--primary-foreground)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
                         Verify your university email →
                       </Link>
@@ -1121,15 +1139,17 @@ export default function ProfilePage() {
       <Tabs defaultValue="skills" className="space-y-4" onValueChange={(v) => {
         if (v === 'analytics' && !analyticsData && profile) loadAnalytics(profile.id)
       }}>
-        <TabsList>
-          <TabsTrigger value="skills">Skills & Interests</TabsTrigger>
-          <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
-          <TabsTrigger value="activity">Activity</TabsTrigger>
-          <TabsTrigger value="analytics">
-            <BarChart3 className="w-3.5 h-3.5 mr-1.5" />
-            Analytics
-          </TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto scrollbar-none">
+          <TabsList className="flex-nowrap w-max min-w-full sm:w-auto">
+            <TabsTrigger value="skills">Skills & Interests</TabsTrigger>
+            <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
+            <TabsTrigger value="activity">Activity</TabsTrigger>
+            <TabsTrigger value="analytics">
+              <BarChart3 className="w-3.5 h-3.5 mr-1.5" />
+              Analytics
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="skills" className="space-y-4">
           <div className="grid md:grid-cols-2 gap-6">
@@ -1140,15 +1160,12 @@ export default function ProfilePage() {
               </CardHeader>
               <CardContent>
                 {profile.research_interests && profile.research_interests.length > 0 ? (
-                  <div className="space-y-2">
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Research Interests</p>
-                    <div className="flex flex-wrap gap-2">
-                      {profile.research_interests.map(interest => (
-                        <span key={interest} className="border border-violet-500 bg-transparent text-violet-400 rounded-full px-3 py-1 text-xs font-medium hover:bg-violet-500/10 transition-colors">
-                          {interest}
-                        </span>
-                      ))}
-                    </div>
+                  <div className="flex flex-wrap gap-2">
+                    {profile.research_interests.map(interest => (
+                      <span key={interest} className="border border-primary/50 text-primary rounded-full px-3 py-1 text-xs font-medium hover:bg-primary/10 transition-colors">
+                        {interest}
+                      </span>
+                    ))}
                   </div>
                 ) : (
                   <p className="text-sm text-muted-foreground">No research interests added yet.</p>
@@ -1163,15 +1180,12 @@ export default function ProfilePage() {
               </CardHeader>
               <CardContent>
                 {profile.skills && profile.skills.length > 0 ? (
-                  <div className="space-y-2">
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Skills</p>
-                    <div className="flex flex-wrap gap-2">
-                      {profile.skills.map(skill => (
-                        <span key={skill} className="bg-primary/10 text-primary border border-primary/20 rounded-full px-3 py-1 text-xs font-medium">
-                          {skill}
-                        </span>
-                      ))}
-                    </div>
+                  <div className="flex flex-wrap gap-2">
+                    {profile.skills.map(skill => (
+                      <span key={skill} className="bg-primary/10 text-primary border border-primary/20 rounded-full px-3 py-1 text-xs font-medium">
+                        {skill}
+                      </span>
+                    ))}
                   </div>
                 ) : (
                   <p className="text-sm text-muted-foreground">No skills added yet.</p>
@@ -1186,15 +1200,12 @@ export default function ProfilePage() {
               </CardHeader>
               <CardContent>
                 {profile.looking_for && profile.looking_for.length > 0 ? (
-                  <div className="space-y-2">
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Looking For</p>
-                    <div className="flex flex-wrap gap-2">
-                      {profile.looking_for.map(item => (
-                        <span key={item} className="border border-teal-500/50 bg-transparent text-teal-400 rounded-full px-3 py-1 text-xs font-medium hover:bg-teal-500/10 transition-colors">
-                          {item}
-                        </span>
-                      ))}
-                    </div>
+                  <div className="flex flex-wrap gap-2">
+                    {profile.looking_for.map(item => (
+                      <span key={item} className="border border-[var(--cyan)]/50 text-[var(--cyan)] rounded-full px-3 py-1 text-xs font-medium hover:bg-[var(--cyan)]/10 transition-colors">
+                        {item}
+                      </span>
+                    ))}
                   </div>
                 ) : (
                   <p className="text-sm text-muted-foreground">Not specified.</p>
@@ -1347,7 +1358,7 @@ export default function ProfilePage() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <Shield className="w-5 h-5 text-primary" />
+                  <GraduationCap className="w-5 h-5 text-primary" />
                   Mentor Profile
                 </CardTitle>
                 <CardDescription>Your mentorship activity and status</CardDescription>
@@ -1392,7 +1403,7 @@ export default function ProfilePage() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <Shield className="w-5 h-5 text-primary" />
+                  <GraduationCap className="w-5 h-5 text-primary" />
                   Mentor Profile
                 </CardTitle>
                 <CardDescription>Your mentorship application status</CardDescription>
@@ -1518,9 +1529,9 @@ export default function ProfilePage() {
                       <XAxis dataKey="week" tick={{ fontSize: 10, fill: 'var(--muted-foreground)' }} tickLine={false} axisLine={false} interval={2} />
                       <YAxis tick={{ fontSize: 10, fill: 'var(--muted-foreground)' }} tickLine={false} axisLine={false} />
                       <Tooltip
-                        contentStyle={{ background: '#1a1625', border: '1px solid rgba(139,92,246,0.3)', borderRadius: 8, fontSize: 12 }}
-                        labelStyle={{ color: '#C4B5D8' }}
-                        itemStyle={{ color: '#A855F7' }}
+                        contentStyle={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12 }}
+                        labelStyle={{ color: 'var(--muted-foreground)' }}
+                        itemStyle={{ color: 'var(--primary)' }}
                       />
                       <Area type="monotone" dataKey="score" stroke="#A855F7" strokeWidth={2} fill="url(#akiliGrad)" />
                     </AreaChart>
@@ -1623,7 +1634,13 @@ export default function ProfilePage() {
           ) : (
             <div className="text-center py-16">
               <BarChart3 className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
-              <p className="text-muted-foreground">Click the Analytics tab to load your data.</p>
+              <p className="text-muted-foreground">Couldn&apos;t load analytics.</p>
+              <button
+                onClick={() => profile && loadAnalytics(profile.id)}
+                className="mt-3 text-sm text-primary underline underline-offset-2 hover:text-primary/80 transition-colors"
+              >
+                Try again
+              </button>
             </div>
           )}
         </TabsContent>
