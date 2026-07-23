@@ -790,8 +790,8 @@ export default function ProfilePage() {
 
       {/* Header Card */}
       <div
-        className="relative rounded-2xl overflow-hidden border border-primary/20"
-        style={{ boxShadow: '0 0 40px color-mix(in oklch, var(--primary) 15%, transparent), 0 0 80px color-mix(in oklch, var(--primary) 5%, transparent)' }}
+        className="relative rounded-2xl overflow-hidden border border-primary/40"
+        style={{ boxShadow: '0 0 40px color-mix(in oklch, var(--primary) 22%, transparent), 0 0 80px color-mix(in oklch, var(--primary) 9%, transparent)' }}
       >
         {/* Animated canvas banner — first child, flush to top edge */}
         <div className="relative h-52 bg-muted dark:bg-background">
@@ -1003,8 +1003,8 @@ export default function ProfilePage() {
                     <div>
                       <div className="flex items-center gap-2 flex-wrap">
                         <h1
-                          className="text-2xl font-bold font-heading"
-                          style={{ letterSpacing: '-0.02em' }}
+                          className="text-3xl md:text-4xl font-heading font-bold"
+                          style={{ letterSpacing: '-0.03em', fontWeight: 800 }}
                         >
                           {profile.full_name}
                         </h1>
@@ -1061,7 +1061,7 @@ export default function ProfilePage() {
                     <div className="flex gap-2 flex-wrap">
                       <RippleButton
                         variant="default"
-                        className="flex items-center gap-2 h-9 px-4 rounded-lg text-sm font-semibold text-foreground bg-accent/40 border border-primary/30 hover:border-primary/60 hover:bg-accent/60 transition-colors"
+                        className="flex items-center gap-2 h-9 px-4 rounded-lg text-sm font-semibold text-foreground bg-accent/50 border border-primary/50 hover:border-primary/70 hover:bg-accent/70 transition-colors"
                         onClick={() => setIsEditing(true)}
                       >
                         <Edit className="w-3.5 h-3.5" />
@@ -1069,16 +1069,16 @@ export default function ProfilePage() {
                       </RippleButton>
                       <RippleButton
                         variant="default"
-                        className="flex items-center gap-2 h-9 px-4 rounded-lg text-sm font-semibold text-primary bg-primary/15 border border-primary/35 hover:border-primary/60 hover:bg-primary/20 transition-colors"
+                        className="flex items-center gap-2 h-9 px-4 rounded-lg text-sm font-semibold text-primary-foreground bg-primary border border-primary hover:bg-primary/90 transition-colors"
                         onClick={handleShareProfile}
                       >
-                        {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Share2 className="w-3.5 h-3.5" />}
+                        {copied ? <Check className="w-3.5 h-3.5 text-green-300" /> : <Share2 className="w-3.5 h-3.5" />}
                         {copied ? 'Link Copied!' : 'Share Profile'}
                       </RippleButton>
                     </div>
                   </div>
 
-                  {profile.bio && <p className="text-muted-foreground">{profile.bio}</p>}
+                  {profile.bio && <p className="text-sm text-muted-foreground leading-relaxed max-w-prose">{profile.bio}</p>}
 
                   <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                     <span className="flex items-center gap-1">
@@ -1097,7 +1097,7 @@ export default function ProfilePage() {
 
                   <div className="flex flex-wrap gap-2">
                     {profile.academic_level && (
-                      <span className="bg-primary/15 text-primary border border-primary/25 rounded-full px-3 py-1 text-xs font-semibold">
+                      <span className="bg-primary/20 text-primary border border-primary/40 rounded-full px-3 py-1 text-xs font-semibold">
                         {getAcademicLevelLabel(profile.academic_level)}
                       </span>
                     )}
@@ -1127,15 +1127,15 @@ export default function ProfilePage() {
             {!isEditing && (
               <div className="flex md:flex-col gap-4 md:gap-3 text-center md:text-right shrink-0">
                 <div className="stat-card-animate" data-delay="0">
-                  <p className="text-2xl font-bold text-primary">{profile.projects_completed}</p>
+                  <p className="text-2xl font-heading font-bold tabular-nums text-primary">{profile.projects_completed}</p>
                   <p className="text-xs text-muted-foreground">Projects</p>
                 </div>
                 <div className="stat-card-animate" data-delay="100">
-                  <p className="text-2xl font-bold text-accent">{profile.connections_count}</p>
+                  <p className="text-2xl font-heading font-bold tabular-nums text-accent">{profile.connections_count}</p>
                   <p className="text-xs text-muted-foreground">Connections</p>
                 </div>
                 <div className="stat-card-animate" data-delay="200">
-                  <p className="text-2xl font-bold">{profile.portfolio_views}</p>
+                  <p className="text-2xl font-heading font-bold tabular-nums">{profile.portfolio_views}</p>
                   <p className="text-xs text-muted-foreground">Profile Views</p>
                 </div>
               </div>
@@ -1175,14 +1175,14 @@ export default function ProfilePage() {
           <div className="grid md:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Research Interests</CardTitle>
+                <CardTitle className="text-lg font-heading">Research Interests</CardTitle>
                 <CardDescription>Areas you want to explore</CardDescription>
               </CardHeader>
               <CardContent>
                 {profile.research_interests && profile.research_interests.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
                     {profile.research_interests.map(interest => (
-                      <span key={interest} className="border border-primary/50 text-primary rounded-full px-3 py-1 text-xs font-medium hover:bg-primary/10 transition-colors">
+                      <span key={interest} className="border border-primary/50 text-primary rounded-full px-3.5 py-1.5 text-xs font-semibold hover:bg-primary/10 transition-colors">
                         {interest}
                       </span>
                     ))}
@@ -1195,14 +1195,14 @@ export default function ProfilePage() {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Skills Offered</CardTitle>
+                <CardTitle className="text-lg font-heading">Skills Offered</CardTitle>
                 <CardDescription>What you can contribute</CardDescription>
               </CardHeader>
               <CardContent>
                 {profile.skills && profile.skills.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
                     {profile.skills.map(skill => (
-                      <span key={skill} className="bg-primary/10 text-primary border border-primary/20 rounded-full px-3 py-1 text-xs font-medium">
+                      <span key={skill} className="bg-primary/10 text-primary border border-primary/20 rounded-full px-3.5 py-1.5 text-xs font-semibold">
                         {skill}
                       </span>
                     ))}
@@ -1215,14 +1215,14 @@ export default function ProfilePage() {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Looking For</CardTitle>
+                <CardTitle className="text-lg font-heading">Looking For</CardTitle>
                 <CardDescription>What you need in collaborators</CardDescription>
               </CardHeader>
               <CardContent>
                 {profile.looking_for && profile.looking_for.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
                     {profile.looking_for.map(item => (
-                      <span key={item} className="border border-[var(--cyan)]/50 text-[var(--cyan)] rounded-full px-3 py-1 text-xs font-medium hover:bg-[var(--cyan)]/10 transition-colors">
+                      <span key={item} className="border border-[var(--cyan)]/50 text-[var(--cyan)] rounded-full px-3.5 py-1.5 text-xs font-semibold hover:bg-[var(--cyan)]/10 transition-colors">
                         {item}
                       </span>
                     ))}
@@ -1235,7 +1235,7 @@ export default function ProfilePage() {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Availability</CardTitle>
+                <CardTitle className="text-lg font-heading">Availability</CardTitle>
                 <CardDescription>Time commitment per week</CardDescription>
               </CardHeader>
               <CardContent>
@@ -1256,7 +1256,7 @@ export default function ProfilePage() {
         <TabsContent value="portfolio" className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-medium">Portfolio Items</h3>
+              <h3 className="text-lg font-heading font-bold">Portfolio Items</h3>
               <p className="text-sm text-muted-foreground">Showcase your work and achievements</p>
             </div>
             <Button onClick={openAddModal}>
@@ -1284,7 +1284,7 @@ export default function ProfilePage() {
                           {getPortfolioIcon(item.item_type)}
                         </div>
                         <div>
-                          <CardTitle className="text-base">{item.title}</CardTitle>
+                          <CardTitle className="text-base font-heading">{item.title}</CardTitle>
                           <CardDescription className="text-xs">
                             {item.item_type.charAt(0).toUpperCase() + item.item_type.slice(1)}
                             {item.date && ` · ${new Date(item.date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`}
@@ -1379,7 +1379,7 @@ export default function ProfilePage() {
           {mentorInfo ? (
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
+                <CardTitle className="text-lg font-heading flex items-center gap-2">
                   <GraduationCap className="w-5 h-5 text-primary" />
                   Mentor Profile
                 </CardTitle>
@@ -1428,7 +1428,7 @@ export default function ProfilePage() {
           ) : profile.roles?.includes('mentor') ? (
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
+                <CardTitle className="text-lg font-heading flex items-center gap-2">
                   <GraduationCap className="w-5 h-5 text-primary" />
                   Mentor Profile
                 </CardTitle>
@@ -1462,7 +1462,7 @@ export default function ProfilePage() {
           {/* Research Output */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
+              <CardTitle className="text-lg font-heading flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-primary" />
                 Research Output
               </CardTitle>
@@ -1539,7 +1539,7 @@ export default function ProfilePage() {
               {/* Score growth chart */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
+                  <CardTitle className="text-lg font-heading flex items-center gap-2">
                     <TrendingUp className="w-5 h-5 text-primary" />
                     Akili Score Growth
                   </CardTitle>
@@ -1572,7 +1572,7 @@ export default function ProfilePage() {
                 {analyticsData.dimensionBreakdown.length > 0 && (
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-lg">Score Dimensions</CardTitle>
+                      <CardTitle className="text-lg font-heading">Score Dimensions</CardTitle>
                       <CardDescription>Breakdown by contribution type</CardDescription>
                     </CardHeader>
                     <CardContent className="flex items-center gap-6">
