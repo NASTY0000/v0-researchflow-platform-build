@@ -204,6 +204,140 @@ export async function reopenPhase(
   return { success: true, phaseId: phase.id }
 }
 
+export async function requestToJoinProject(
+  projectId: string,
+  message: string,
+  skillsOffered: string[],
+) {
+  if (!message || message.trim().length < 50) {
+    return { error: 'Please provide a message of at least 50 characters.' }
+  }
+
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  // Verify project is public and open
+  const { data: project } = await supabase
+    .from('projects')
+    .select('id, team_id, title, is_public, is_open_to_collaborators, team:teams(leader_id)')
+    .eq('id', projectId)
+    .single()
+  if (!project) return { error: 'Project not found' }
+  if (!project.is_public || !(project as Record<string, unknown>).is_open_to_collaborators) {
+    return { error: 'This project is not accepting collaboration requests.' }
+  }
+
+  // Not already a member
+  const { data: membership } = await supabase
+    .from('team_members')
+    .select('id')
+    .eq('team_id', project.team_id)
+    .eq('user_id', user.id)
+    .maybeSingle()
+  if (membership) return { error: 'You are already a member of this project.' }
+
+  // No existing pending request
+  const { data: existing } = await supabase
+    .from('project_join_requests')
+    .select('id, status')
+    .eq('project_id', projectId)
+    .eq('requester_id', user.id)
+    .maybeSingle()
+  if (existing) return { error: 'You already have a request for this project.', existingStatus: existing.status }
+
+  const { data: request, error: insertError } = await supabase
+    .from('project_join_requests')
+    .insert({
+      project_id: projectId,
+      requester_id: user.id,
+      message: message.trim(),
+      skills_offered: skillsOffered,
+      status: 'pending',
+    })
+    .select('id')
+    .single()
+  if (insertError) return { error: insertError.message }
+
+  // Notify team leader
+  const leaderId = (project.team as { leader_id: string } | null)?.leader_id
+  if (leaderId) {
+    await supabase.from('notifications').insert({
+      user_id: leaderId,
+      type: 'system',
+      title: 'New collaboration request',
+      message: `Someone has requested to join "${project.title}"`,
+      link: `/projects/${projectId}?tab=team`,
+      is_read: false,
+    })
+  }
+
+  return { success: true, requestId: request.id }
+}
+
+export async function respondToJoinRequest(
+  requestId: string,
+  action: 'accepted' | 'declined',
+  responseMessage?: string,
+) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const { data: request } = await supabase
+    .from('project_join_requests')
+    .select('id, project_id, requester_id, status')
+    .eq('id', requestId)
+    .single()
+  if (!request) return { error: 'Request not found' }
+  if (request.status !== 'pending') return { error: 'This request has already been responded to.' }
+
+  const { data: project } = await supabase
+    .from('projects')
+    .select('team_id, title, team:teams(leader_id)')
+    .eq('id', request.project_id)
+    .single()
+  if (!project) return { error: 'Project not found' }
+
+  const leaderId = (project.team as { leader_id: string } | null)?.leader_id
+  if (leaderId !== user.id) return { error: 'Only the team lead can respond to join requests.' }
+
+  const now = new Date().toISOString()
+  const { error: updateError } = await supabase
+    .from('project_join_requests')
+    .update({
+      status: action,
+      responded_by: user.id,
+      responded_at: now,
+      response_message: responseMessage?.trim() || null,
+    })
+    .eq('id', requestId)
+  if (updateError) return { error: updateError.message }
+
+  if (action === 'accepted') {
+    const { error: memberError } = await supabase
+      .from('team_members')
+      .insert({ team_id: project.team_id, user_id: request.requester_id, role: 'contributor' })
+    if (memberError) return { error: `Failed to add to team: ${memberError.message}` }
+  }
+
+  const notifTitle = action === 'accepted' ? 'Collaboration request accepted!' : 'Collaboration request declined'
+  const notifMsg = action === 'accepted'
+    ? `You've been added to "${project.title}". Welcome to the team!`
+    : `Your request to join "${project.title}" was not accepted.${responseMessage ? ` Reason: ${responseMessage.trim()}` : ''}`
+
+  await supabase.from('notifications').insert({
+    user_id: request.requester_id,
+    type: 'system',
+    title: notifTitle,
+    message: notifMsg,
+    link: action === 'accepted' ? `/projects/${request.project_id}` : null,
+    is_read: false,
+  })
+
+  return { success: true }
+}
+
 export async function updatePhaseNotes({
   phaseId,
   newNote,

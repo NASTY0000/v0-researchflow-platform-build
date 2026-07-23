@@ -38,12 +38,18 @@ import {
   Loader2,
   Search,
   Send,
+  CheckCircle2,
+  XCircle,
+  Clock,
 } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import type { Project, Team, Profile } from "@/lib/types/database"
+import type { Project, Team, Profile, ProjectJoinRequest } from "@/lib/types/database"
 import { inviteByEmail } from "@/lib/actions/invitations"
+import { respondToJoinRequest } from "@/lib/actions/projects"
 import { createClient } from "@/lib/supabase/client"
 import { toast } from "sonner"
+import { useEffect } from "react"
+import { formatDistanceToNow } from "date-fns"
 
 interface ProjectTeamProps {
   project: Project & {
@@ -61,7 +67,9 @@ const ROLES = [
 ]
 
 export function ProjectTeam({ project, currentUserId }: ProjectTeamProps) {
-  const [showInvite, setShowInvite] = useState(false)
+  const [joinRequests, setJoinRequests]     = useState<ProjectJoinRequest[]>([])
+  const [respondingId, setRespondingId]     = useState<string | null>(null)
+  const [showInvite, setShowInvite]         = useState(false)
   const [inviteMode, setInviteMode] = useState<"search" | "email">("search")
   const [searchQuery, setSearchQuery] = useState("")
   const [searchResults, setSearchResults] = useState<Profile[]>([])
@@ -73,6 +81,30 @@ export function ProjectTeam({ project, currentUserId }: ProjectTeamProps) {
 
   const members = project.team?.team_members || []
   const isLead = members.find((m) => m.user.id === currentUserId)?.role === "lead"
+
+  useEffect(() => {
+    if (!isLead) return
+    const supabase = createClient()
+    supabase
+      .from('project_join_requests')
+      .select('*, requester:profiles(id, full_name, avatar_url, department, level, skills)')
+      .eq('project_id', project.id)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false })
+      .then(({ data }) => { if (data) setJoinRequests(data as unknown as ProjectJoinRequest[]) })
+  }, [isLead, project.id])
+
+  async function handleRespond(requestId: string, action: 'accepted' | 'declined') {
+    setRespondingId(requestId)
+    const result = await respondToJoinRequest(requestId, action)
+    setRespondingId(null)
+    if ('error' in result && result.error) {
+      toast.error(result.error)
+      return
+    }
+    setJoinRequests(prev => prev.filter(r => r.id !== requestId))
+    toast.success(action === 'accepted' ? 'Collaborator added to the team.' : 'Request declined.')
+  }
 
   async function handleSearch(q: string) {
     setSearchQuery(q)
@@ -318,6 +350,87 @@ export function ProjectTeam({ project, currentUserId }: ProjectTeamProps) {
           )}
         </CardContent>
       </Card>
+
+      {/* Join Requests — lead only */}
+      {isLead && joinRequests.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Clock className="h-4 w-4 text-primary" />
+              Collaboration Requests
+              <Badge variant="secondary" className="ml-1">{joinRequests.length}</Badge>
+            </CardTitle>
+            <CardDescription>Researchers who want to join this project</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {joinRequests.map(req => {
+              const requester = req.requester as (Profile & { level?: string; skills?: string[] }) | undefined
+              const isResponding = respondingId === req.id
+              return (
+                <div key={req.id} className="rounded-lg border border-border p-4 space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage src={requester?.avatar_url || undefined} />
+                        <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                          {requester?.full_name?.charAt(0) || '?'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="text-sm font-semibold">{requester?.full_name || 'Unknown'}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {[requester?.department, (requester as Record<string, unknown>)?.level as string].filter(Boolean).join(' · ')}
+                        </p>
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground shrink-0">
+                      {formatDistanceToNow(new Date(req.created_at), { addSuffix: true })}
+                    </p>
+                  </div>
+
+                  {requester?.skills && requester.skills.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {requester.skills.slice(0, 8).map(skill => (
+                        <Badge key={skill} variant="outline" className="text-xs py-0">
+                          {skill}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+
+                  <p className="text-sm text-muted-foreground leading-relaxed">{req.message}</p>
+
+                  <div className="flex gap-2 pt-1">
+                    <Button
+                      size="sm"
+                      onClick={() => handleRespond(req.id, 'accepted')}
+                      disabled={isResponding}
+                      className="gap-1.5"
+                    >
+                      {isResponding
+                        ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        : <CheckCircle2 className="h-3.5 w-3.5" />}
+                      Accept
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleRespond(req.id, 'declined')}
+                      disabled={isResponding}
+                      className="gap-1.5"
+                    >
+                      {isResponding
+                        ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        : <XCircle className="h-3.5 w-3.5" />}
+                      Decline
+                    </Button>
+                  </div>
+                </div>
+              )
+            })}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Team Stats */}
       <div className="grid grid-cols-3 gap-4">

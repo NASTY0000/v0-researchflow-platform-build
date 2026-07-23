@@ -28,7 +28,8 @@ export default function ProjectSettingsPage({ params }: { params: Promise<{ id: 
   const [title, setTitle] = useState("")
   const [aim, setAim] = useState("")
   const [objectives, setObjectives] = useState<string[]>([""])
-  const [isPublic, setIsPublic] = useState(true)
+  const [isPublic, setIsPublic]                           = useState(true)
+  const [isOpenToCollaborators, setIsOpenToCollaborators] = useState(false)
 
   useEffect(() => {
     async function loadProject() {
@@ -42,7 +43,7 @@ export default function ProjectSettingsPage({ params }: { params: Promise<{ id: 
       const { data, error } = await supabase
         .from("projects")
         .select(`
-          id, title, description, is_public,
+          id, title, description, is_public, is_open_to_collaborators,
           team:teams(leader_id, team_members(user_id))
         `)
         .eq("id", id)
@@ -64,6 +65,7 @@ export default function ProjectSettingsPage({ params }: { params: Promise<{ id: 
       setIsLead(team?.leader_id === user.id)
       setTitle(data.title || "")
       setIsPublic(data.is_public ?? true)
+      setIsOpenToCollaborators((data as Record<string, unknown>).is_open_to_collaborators === true)
 
       const raw = data.description || ""
       const hasObjectives = raw.includes(OBJECTIVES_MARKER)
@@ -114,7 +116,12 @@ export default function ProjectSettingsPage({ params }: { params: Promise<{ id: 
 
     const { error } = await supabase
       .from("projects")
-      .update({ title: title.trim(), description, is_public: isPublic })
+      .update({
+        title: title.trim(),
+        description,
+        is_public: isPublic,
+        is_open_to_collaborators: isPublic ? isOpenToCollaborators : false,
+      })
       .eq("id", id)
 
     if (error) {
@@ -202,7 +209,7 @@ export default function ProjectSettingsPage({ params }: { params: Promise<{ id: 
         <CardHeader>
           <CardTitle>Visibility</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-sm font-medium">Public Project</p>
@@ -211,7 +218,28 @@ export default function ProjectSettingsPage({ params }: { params: Promise<{ id: 
                 Only team members can edit regardless of visibility.
               </p>
             </div>
-            <Switch checked={isPublic} onCheckedChange={setIsPublic} />
+            <Switch
+              checked={isPublic}
+              onCheckedChange={(val) => {
+                setIsPublic(val)
+                if (!val) setIsOpenToCollaborators(false)
+              }}
+            />
+          </div>
+
+          <div className={`flex items-start justify-between gap-4 pt-4 border-t border-border transition-opacity ${!isPublic ? 'opacity-40 pointer-events-none' : ''}`}>
+            <div>
+              <p className="text-sm font-medium">Open to Collaborators</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Allow other researchers to request to join this project. Requests go to the team lead for approval.
+                {!isPublic && <span className="block mt-0.5 text-amber-400/80">Requires a public project.</span>}
+              </p>
+            </div>
+            <Switch
+              checked={isOpenToCollaborators}
+              onCheckedChange={setIsOpenToCollaborators}
+              disabled={!isPublic}
+            />
           </div>
         </CardContent>
       </Card>

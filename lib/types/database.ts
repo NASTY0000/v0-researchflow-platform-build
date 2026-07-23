@@ -286,11 +286,27 @@ export interface Project {
   target_end_date: string | null
   status: ProjectStatus
   is_public: boolean
+  is_open_to_collaborators: boolean
   created_at: string
   updated_at: string
   // Joined fields
   team?: Team
   tasks?: Task[]
+}
+
+export interface ProjectJoinRequest {
+  id: string
+  project_id: string
+  requester_id: string
+  message: string
+  skills_offered: string[]
+  status: 'pending' | 'accepted' | 'declined'
+  responded_by: string | null
+  responded_at: string | null
+  response_message: string | null
+  created_at: string
+  // Joined
+  requester?: Profile
 }
 
 export interface Task {

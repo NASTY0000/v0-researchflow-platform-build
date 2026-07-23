@@ -1,4 +1,4 @@
-import { FolderOpen, Users, GraduationCap, FileText, Network } from 'lucide-react'
+import { FolderOpen, Users, GraduationCap, FileText, Network, UserPlus } from 'lucide-react'
 import { HubPageHeader, HubCardGrid, type HubCard } from '@/components/dashboard/hub-page'
 
 const cards: HubCard[] = [
@@ -29,6 +29,13 @@ const cards: HubCard[] = [
     href: '/agreements',
     description: 'Manage your research partnership agreements',
     image: 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=400&h=200&fit=crop',
+  },
+  {
+    title: 'Open Projects',
+    icon: UserPlus,
+    href: '/projects/discover',
+    description: 'Find active research projects that are recruiting collaborators',
+    image: 'https://images.unsplash.com/photo-1543286386-713bdd548da4?w=400&h=200&fit=crop',
   },
   {
     title: 'My Network',

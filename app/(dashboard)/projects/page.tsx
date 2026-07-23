@@ -16,6 +16,7 @@ import {
   Clock,
   ArrowRight,
   MoreHorizontal,
+  UserPlus,
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -58,8 +59,9 @@ const PHASE_ORDER = [
 ]
 
 export default function ProjectsPage() {
-  const [projects, setProjects] = useState<ProjectWithTeam[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [projects, setProjects]           = useState<ProjectWithTeam[]>([])
+  const [isLoading, setIsLoading]         = useState(true)
+  const [filterRecruiting, setFilterRecruiting] = useState(false)
 
   useEffect(() => {
     async function loadProjects() {
@@ -111,6 +113,10 @@ export default function ProjectsPage() {
     return Math.round(((index + 1) / PHASE_ORDER.length) * 100)
   }
 
+  const visibleProjects = filterRecruiting
+    ? projects.filter(p => (p as Record<string, unknown>).is_open_to_collaborators)
+    : projects
+
   if (isLoading) {
     return <div className="max-w-4xl mx-auto px-4 py-8"><ListPageSkeleton type="card" count={4} /></div>
   }
@@ -134,10 +140,37 @@ export default function ProjectsPage() {
         </Button>
       </div>
 
+      {/* Filter chips */}
+      {projects.length > 0 && (
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setFilterRecruiting(false)}
+            className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors
+              ${!filterRecruiting
+                ? 'bg-primary text-primary-foreground border-primary'
+                : 'border-border text-muted-foreground hover:border-primary/30 hover:text-foreground'
+              }`}
+          >
+            All
+          </button>
+          <button
+            onClick={() => setFilterRecruiting(true)}
+            className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors
+              ${filterRecruiting
+                ? 'bg-primary text-primary-foreground border-primary'
+                : 'border-border text-muted-foreground hover:border-primary/30 hover:text-foreground'
+              }`}
+          >
+            <UserPlus className="h-3 w-3" />
+            Recruiting collaborators
+          </button>
+        </div>
+      )}
+
       {/* Projects Grid */}
-      {projects.length > 0 ? (
+      {visibleProjects.length > 0 ? (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {projects.map((project) => (
+          {visibleProjects.map((project) => (
             <Link key={project.id} href={`/projects/${project.id}`}>
               <Card className="hover:border-primary/50 transition-all h-full cursor-pointer group">
                 <CardHeader className="pb-3">
@@ -166,7 +199,7 @@ export default function ProjectsPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {/* Status Badge */}
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <Badge
                       variant={
                         project.status === "active"
@@ -180,6 +213,12 @@ export default function ProjectsPage() {
                     </Badge>
                     {project.research_area && (
                       <Badge variant="outline">{project.research_area}</Badge>
+                    )}
+                    {(project as Record<string, unknown>).is_open_to_collaborators && (
+                      <Badge variant="outline" className="gap-1 border-primary/40 text-primary bg-primary/8">
+                        <UserPlus className="h-3 w-3" />
+                        Recruiting
+                      </Badge>
                     )}
                   </div>
 
@@ -235,6 +274,11 @@ export default function ProjectsPage() {
               </Card>
             </Link>
           ))}
+        </div>
+      ) : filterRecruiting ? (
+        <div className="rounded-xl border border-border bg-muted/30 p-8 text-center text-sm text-muted-foreground">
+          None of your projects are currently recruiting collaborators.
+          Enable "Open to Collaborators" in a project's Settings to appear here.
         </div>
       ) : (
         <EmptyState

@@ -19,9 +19,14 @@ import {
   ChevronUp,
   Target,
   ListChecks,
+  UserPlus,
+  Clock,
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import type { Project, Team, Profile, Task } from "@/lib/types/database"
+import { JoinRequestModal } from "@/components/projects/join-request-modal"
+import { requestToJoinProject } from "@/lib/actions/projects"
+import { toast } from "sonner"
 import { KanbanBoard } from "@/components/projects/kanban-board"
 import { ProjectChat } from "@/components/projects/project-chat"
 import { ProjectRoadmap } from "@/components/projects/project-roadmap"
@@ -50,13 +55,25 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
   const [activeTab, setActiveTab] = useState("kanban")
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [descExpanded, setDescExpanded] = useState(false)
+  const [joinRequestStatus, setJoinRequestStatus] = useState<'none' | 'pending' | 'declined'>('none')
+  const [showJoinModal, setShowJoinModal] = useState(false)
+  const [userSkills, setUserSkills] = useState<string[]>([])
 
   useEffect(() => {
     async function loadProject() {
       const supabase = createClient()
 
       const { data: { user } } = await supabase.auth.getUser()
-      if (user) setCurrentUserId(user.id)
+      if (user) {
+        setCurrentUserId(user.id)
+        // Load user profile skills for join modal
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('skills')
+          .eq('id', user.id)
+          .single()
+        if (profile?.skills) setUserSkills(profile.skills as string[])
+      }
 
       const { data, error } = await supabase
         .from("projects")
@@ -80,6 +97,21 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
       }
 
       setProject(data)
+
+      // Check join request status for non-members
+      if (user) {
+        const isMem = data.team?.team_members?.some((m: { user: Profile }) => m.user.id === user.id)
+        if (!isMem) {
+          const { data: req } = await supabase
+            .from('project_join_requests')
+            .select('status')
+            .eq('project_id', id)
+            .eq('requester_id', user.id)
+            .maybeSingle()
+          if (req) setJoinRequestStatus(req.status as 'pending' | 'declined')
+        }
+      }
+
       setIsLoading(false)
     }
 
@@ -92,6 +124,16 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
 
   const isLead = currentUserId === project.team?.leader_id
   const isMember = !!project.team?.team_members?.some((m) => m.user.id === currentUserId)
+  const isOpenToCollaborators = !!(project as Record<string, unknown>).is_open_to_collaborators
+
+  async function handleJoinRequest(message: string, skillsOffered: string[]) {
+    const result = await requestToJoinProject(project!.id, message, skillsOffered)
+    if ('error' in result && result.error) return result.error
+    setJoinRequestStatus('pending')
+    setShowJoinModal(false)
+    toast.success('Request sent! The team lead will review it.')
+    return null
+  }
 
   const raw = project.description || ''
   const objMarker = '\n\nObjectives:\n'
@@ -107,7 +149,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
     <div className="space-y-5">
       {/* Header */}
       <div className="space-y-3">
-        {/* Top bar: back + settings */}
+        {/* Top bar: back + actions */}
         <div className="flex items-center justify-between">
           <Button variant="ghost" size="sm" className="gap-1.5 -ml-2 text-muted-foreground" asChild>
             <Link href="/projects">
@@ -115,12 +157,38 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
               Back
             </Link>
           </Button>
-          <Button variant="outline" size="sm" asChild>
-            <Link href={`/projects/${id}/settings`}>
-              <Settings className="h-3.5 w-3.5 sm:mr-1.5" />
-              <span className="hidden sm:inline">Settings</span>
-            </Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            {/* Join button — shown only to non-members on public+open projects */}
+            {!isMember && project.is_public && (
+              isOpenToCollaborators ? (
+                joinRequestStatus === 'pending' ? (
+                  <Button variant="outline" size="sm" disabled className="gap-1.5 text-muted-foreground">
+                    <Clock className="h-3.5 w-3.5" />
+                    Request Pending
+                  </Button>
+                ) : joinRequestStatus === 'declined' ? (
+                  <Button variant="outline" size="sm" disabled className="gap-1.5 text-muted-foreground">
+                    Request Declined
+                  </Button>
+                ) : (
+                  <Button size="sm" onClick={() => setShowJoinModal(true)} className="gap-1.5">
+                    <UserPlus className="h-3.5 w-3.5" />
+                    Request to Join
+                  </Button>
+                )
+              ) : (
+                <span className="text-xs text-muted-foreground">Not accepting collaborators</span>
+              )
+            )}
+            {isMember && (
+              <Button variant="outline" size="sm" asChild>
+                <Link href={`/projects/${id}/settings`}>
+                  <Settings className="h-3.5 w-3.5 sm:mr-1.5" />
+                  <span className="hidden sm:inline">Settings</span>
+                </Link>
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Title */}
@@ -267,6 +335,14 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
           <MentorSessions projectId={project.id} currentUserId={currentUserId} />
         </TabsContent>
       </Tabs>
+
+      <JoinRequestModal
+        open={showJoinModal}
+        projectTitle={project.title}
+        userSkills={userSkills}
+        onConfirm={handleJoinRequest}
+        onCancel={() => setShowJoinModal(false)}
+      />
     </div>
   )
 }
