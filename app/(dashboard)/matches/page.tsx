@@ -31,9 +31,10 @@ import {
   RefreshCw,
   Users,
   BookOpen,
+  FolderOpen,
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
-import type { Match, Profile } from "@/lib/types/database"
+import type { Match, Profile, Team } from "@/lib/types/database"
 import { AkiliScoreBadge } from "@/components/akili/AkiliScoreBadge"
 import { VerifiedBadge } from "@/components/ui/VerifiedBadge"
 import { ContextualHint } from "@/components/ui/ContextualHint"
@@ -44,6 +45,60 @@ import { PullToRefreshIndicator } from "@/components/ui/PullToRefreshIndicator"
 import { StaggerContainer, StaggerItem } from "@/components/ui/stagger-container"
 import { HoverCardLift } from "@/components/ui/hover-card-lift"
 import { toast } from "sonner"
+import { JoinRequestModal } from "@/components/projects/join-request-modal"
+import { requestToJoinProject } from "@/lib/actions/projects"
+
+// ── Project recruiting types ──────────────────────────────────────────────────
+interface RecruitingProject {
+  id: string
+  title: string
+  description: string | null
+  research_area: string | null
+  status: string
+  updated_at: string
+  team_id: string
+  team: (Team & {
+    leader_id: string
+    leader: Profile | null
+    team_members: { user_id: string }[]
+  }) | null
+  _score: number
+}
+
+// ── Scoring helper — same weighted approach as computeMentorMatches ────────────
+// researchScore * 0.60 + skillsScore * 0.30 + recencyScore * 0.10
+function scoreProject(
+  project: Omit<RecruitingProject, '_score'>,
+  viewerInterests: string[],
+  viewerSkills: string[],
+  newestMs: number,
+  oldestMs: number,
+): number {
+  const area = (project.research_area ?? '').toLowerCase()
+  const text = `${project.title} ${project.description ?? ''}`.toLowerCase()
+
+  // Research alignment — mirrors the exact/partial logic in computeMentorMatches
+  let researchScore = 0
+  for (const interest of viewerInterests) {
+    const i = interest.toLowerCase()
+    if (area === i) { researchScore = 1.0; break }
+    if (area.includes(i) || i.includes(area)) researchScore = Math.max(researchScore, 0.5)
+  }
+
+  // Skills relevance — viewer skills that appear in title/description
+  let skillHits = 0
+  for (const skill of viewerSkills) {
+    if (text.includes(skill.toLowerCase())) skillHits++
+  }
+  const skillsScore = viewerSkills.length > 0 ? Math.min(skillHits / viewerSkills.length, 1.0) : 0
+
+  // Recency — normalised within the result window
+  const updatedMs = new Date(project.updated_at).getTime()
+  const range = newestMs - oldestMs
+  const recencyScore = range > 0 ? (updatedMs - oldestMs) / range : 1.0
+
+  return researchScore * 0.60 + skillsScore * 0.30 + recencyScore * 0.10
+}
 
 interface MatchWithProfile extends Match {
   matched_user: Profile
@@ -61,9 +116,100 @@ export default function MatchesPage() {
   const [interestToast, setInterestToast] = useState<string | null>(null)
   const [verifiedOnly, setVerifiedOnly] = useState(false)
 
+  // Projects recruiting state
+  const [recruitingProjects, setRecruitingProjects] = useState<RecruitingProject[]>([])
+  const [projectsLoading, setProjectsLoading] = useState(false)
+  const [joinTarget, setJoinTarget] = useState<RecruitingProject | null>(null)
+  const [joinRequestsSent, setJoinRequestsSent] = useState<Set<string>>(new Set())
+  const [viewerProfile, setViewerProfile] = useState<{ interests: string[]; skills: string[] }>({ interests: [], skills: [] })
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+
   useEffect(() => {
     loadMatches()
+    loadRecruitingProjects()
   }, [])
+
+  async function loadRecruitingProjects() {
+    setProjectsLoading(true)
+    const supabase = createClient()
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { setProjectsLoading(false); return }
+    setCurrentUserId(user.id)
+
+    // Load viewer profile for scoring
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('research_interests, skills')
+      .eq('id', user.id)
+      .single()
+
+    const interests: string[] = (profile?.research_interests as string[] | null) ?? []
+    const skills: string[]    = (profile?.skills           as string[] | null) ?? []
+    setViewerProfile({ interests, skills })
+
+    // Load viewer's current team memberships to exclude projects they're already in
+    const { data: memberships } = await supabase
+      .from('team_members')
+      .select('team_id')
+      .eq('user_id', user.id)
+    const myTeamIds = new Set((memberships ?? []).map((m: { team_id: string }) => m.team_id))
+
+    // Load all public recruiting projects
+    const { data: raw } = await supabase
+      .from('projects')
+      .select(`
+        id, title, description, research_area, status, updated_at, team_id,
+        team:teams(
+          leader_id,
+          leader:profiles!teams_leader_id_fkey(id, full_name, avatar_url, department),
+          team_members(user_id)
+        )
+      `)
+      .eq('is_public', true)
+      .eq('is_open_to_collaborators', true)
+      .eq('status', 'active')
+      .order('updated_at', { ascending: false })
+      .limit(50)
+
+    const projects = ((raw ?? []) as unknown as Omit<RecruitingProject, '_score'>[])
+      .filter(p => !myTeamIds.has(p.team_id))
+
+    if (projects.length === 0) { setRecruitingProjects([]); setProjectsLoading(false); return }
+
+    const timestamps = projects.map(p => new Date(p.updated_at).getTime())
+    const newestMs = Math.max(...timestamps)
+    const oldestMs = Math.min(...timestamps)
+
+    const scored: RecruitingProject[] = projects.map(p => ({
+      ...p,
+      _score: scoreProject(p, interests, skills, newestMs, oldestMs),
+    }))
+
+    scored.sort((a, b) => b._score - a._score)
+    setRecruitingProjects(scored)
+
+    // Also load existing join requests so we can pre-populate sent state
+    const { data: existingRequests } = await supabase
+      .from('project_join_requests')
+      .select('project_id')
+      .eq('requester_id', user.id)
+      .in('status', ['pending', 'accepted'])
+    const sent = new Set((existingRequests ?? []).map((r: { project_id: string }) => r.project_id))
+    setJoinRequestsSent(sent)
+
+    setProjectsLoading(false)
+  }
+
+  async function handleJoinRequest(message: string, skillsOffered: string[]) {
+    if (!joinTarget) return null
+    const result = await requestToJoinProject(joinTarget.id, message, skillsOffered)
+    if ('error' in result && result.error) return result.error
+    setJoinRequestsSent(prev => new Set([...prev, joinTarget.id]))
+    setJoinTarget(null)
+    toast.success('Request sent! The team lead will review it.')
+    return null
+  }
 
   async function loadMatches() {
     setIsLoading(true)
@@ -324,7 +470,7 @@ export default function MatchesPage() {
       </div>
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v); if (v === 'projects' && recruitingProjects.length === 0 && !projectsLoading) loadRecruitingProjects() }}>
         <div className="flex items-center justify-between flex-wrap gap-2">
         <TabsList>
           <TabsTrigger value="all" className="gap-2">
@@ -338,6 +484,13 @@ export default function MatchesPage() {
           <TabsTrigger value="mentors" className="gap-2">
             <BookOpen className="h-4 w-4" />
             Mentors ({matches.filter((m) => m.match_type === "mentor").length})
+          </TabsTrigger>
+          <TabsTrigger value="projects" className="gap-2">
+            <FolderOpen className="h-4 w-4" />
+            Projects recruiting
+            {recruitingProjects.length > 0 && (
+              <span className="ml-0.5">({recruitingProjects.length})</span>
+            )}
           </TabsTrigger>
         </TabsList>
         <button
@@ -356,7 +509,139 @@ export default function MatchesPage() {
         </button>
         </div>
 
-        <TabsContent value={activeTab} className="mt-6">
+        {/* ── Projects recruiting tab content ── */}
+        <TabsContent value="projects" className="mt-6">
+          {projectsLoading ? (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {Array.from({ length: 4 }).map((_, i) => <MatchCardSkeleton key={i} />)}
+            </div>
+          ) : recruitingProjects.length > 0 ? (
+            <StaggerContainer className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {recruitingProjects.map(project => {
+                const team = project.team as RecruitingProject['team']
+                const leader = team?.leader as Profile | null
+                const memberCount = team?.team_members?.length ?? 0
+                const area = project.research_area
+                const alreadySent = joinRequestsSent.has(project.id)
+
+                // Highlight viewer skills that appear in the project text
+                const text = `${project.title} ${project.description ?? ''}`.toLowerCase()
+                const matchingSkills = viewerProfile.skills.filter(s => text.includes(s.toLowerCase()))
+
+                // Relevance badge: score ≥ 0.3 → "Matches your interests"
+                const isRelevant = project._score >= 0.3
+
+                return (
+                  <StaggerItem key={project.id}>
+                  <HoverCardLift>
+                  <Card className="hover:border-primary/50 transition-colors group h-full flex flex-col">
+                    <CardContent className="p-5 flex flex-col flex-1 gap-4">
+                      {/* Header: title + relevance badge */}
+                      <div className="space-y-1.5">
+                        <div className="flex items-start justify-between gap-2">
+                          <Link href={`/projects/${project.id}`} className="hover:text-primary transition-colors">
+                            <h3 className="font-semibold text-sm leading-snug line-clamp-2">{project.title}</h3>
+                          </Link>
+                          {isRelevant && (
+                            <Badge variant="outline" className="shrink-0 text-[10px] px-1.5 py-0 border-primary/40 text-primary bg-primary/5">
+                              <Sparkles className="h-2.5 w-2.5 mr-0.5" />
+                              Match
+                            </Badge>
+                          )}
+                        </div>
+                        {area && (
+                          <Badge variant="secondary" className="text-xs w-fit">{area}</Badge>
+                        )}
+                      </div>
+
+                      {/* Research aim — 2-line truncation */}
+                      {project.description && (
+                        <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
+                          {project.description}
+                        </p>
+                      )}
+
+                      {/* Skills from viewer profile that match the project text */}
+                      {viewerProfile.skills.length > 0 && (
+                        <div className="space-y-1">
+                          <p className="text-[10px] font-medium text-muted-foreground flex items-center gap-1">
+                            <Target className="h-3 w-3" />
+                            Your relevant skills
+                          </p>
+                          <div className="flex flex-wrap gap-1">
+                            {viewerProfile.skills.slice(0, 6).map(skill => {
+                              const highlighted = matchingSkills.includes(skill)
+                              return (
+                                <span
+                                  key={skill}
+                                  className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium transition-colors
+                                    ${highlighted
+                                      ? 'bg-primary/12 border-primary/40 text-primary'
+                                      : 'border-border text-muted-foreground'
+                                    }`}
+                                >
+                                  {skill}
+                                </span>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Team info */}
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground mt-auto">
+                        {leader && (
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <Avatar className="h-5 w-5 shrink-0">
+                              <AvatarImage src={leader.avatar_url || undefined} />
+                              <AvatarFallback className="text-[9px] bg-primary/10 text-primary">
+                                {leader.full_name?.charAt(0) ?? '?'}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="truncate">{leader.full_name}</span>
+                          </div>
+                        )}
+                        <span className="flex items-center gap-1 shrink-0 ml-auto">
+                          <Users className="h-3 w-3" />
+                          {memberCount} {memberCount === 1 ? 'member' : 'members'}
+                        </span>
+                      </div>
+
+                      {/* CTA */}
+                      {alreadySent ? (
+                        <Button size="sm" variant="outline" disabled className="w-full gap-1.5 text-muted-foreground">
+                          <Clock className="h-3.5 w-3.5" />
+                          Request pending
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          className="w-full gap-1.5"
+                          onClick={() => setJoinTarget(project)}
+                        >
+                          <UserPlus className="h-3.5 w-3.5" />
+                          Request to Join
+                        </Button>
+                      )}
+                    </CardContent>
+                  </Card>
+                  </HoverCardLift>
+                  </StaggerItem>
+                )
+              })}
+            </StaggerContainer>
+          ) : (
+            <EmptyState
+              icon="🔬"
+              title="No projects are recruiting right now"
+              description="Check back soon, or start your own project and invite collaborators."
+              ctaLabel="Create a project"
+              ctaHref="/projects/new"
+            />
+          )}
+        </TabsContent>
+
+        <TabsContent value={activeTab === 'projects' ? '__never__' : activeTab} className="mt-6">
           {filteredMatches.length > 0 ? (
             <StaggerContainer className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredMatches.map((match) => (
@@ -528,6 +813,15 @@ export default function MatchesPage() {
           🤝 {interestToast}
         </div>
       )}
+
+      {/* Join Request Modal */}
+      <JoinRequestModal
+        open={!!joinTarget}
+        projectTitle={joinTarget?.title ?? ''}
+        userSkills={viewerProfile.skills}
+        onConfirm={handleJoinRequest}
+        onCancel={() => setJoinTarget(null)}
+      />
 
       {/* Connect Dialog */}
       <Dialog open={!!selectedMatch} onOpenChange={() => setSelectedMatch(null)}>
