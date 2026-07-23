@@ -5,7 +5,7 @@ import {
   ResponsiveContainer, Cell, FunnelChart, Funnel, LabelList,
 } from 'recharts'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { TrendingDown, FileCheck2, MessageSquare } from 'lucide-react'
+import { TrendingDown, FileCheck2, MessageSquare, RotateCcw } from 'lucide-react'
 
 const PURPLE = '#A855F7'
 const CYAN   = '#22D3EE'
@@ -39,9 +39,11 @@ interface Props {
   totalCompletions: number
   totalWithEvidence: number
   keywords: KeywordRow[]
+  reopenByPhase: Record<number, number>
+  totalReopened: number
 }
 
-export function PhaseChartsClient({ byPhase, totalCompletions, totalWithEvidence, keywords }: Props) {
+export function PhaseChartsClient({ byPhase, totalCompletions, totalWithEvidence, keywords, reopenByPhase, totalReopened }: Props) {
   // Funnel: reachCount is cumulative — how many phases ever reached this phase
   // We approximate by summing completedCount from this phase onward
   const funnelData = byPhase.map(row => ({
@@ -65,15 +67,21 @@ export function PhaseChartsClient({ byPhase, totalCompletions, totalWithEvidence
   // Top 20 keywords
   const topKeywords = keywords.slice(0, 20)
 
+  // Per-phase reopen data (aligned to PHASE_DEFS order 1–7)
+  const reopenData = byPhase.map(row => ({
+    name:   `Ph ${row.phase_number}`,
+    reopened: reopenByPhase[row.phase_number] ?? 0,
+  }))
+
   return (
     <div className="space-y-6">
       {/* Stat row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: 'Total Completions',   value: totalCompletions,                color: PURPLE },
-          { label: 'With Evidence',        value: totalWithEvidence,               color: GREEN  },
-          { label: 'Legacy (no evidence)', value: totalCompletions - totalWithEvidence, color: AMBER },
-          { label: 'Phases Tracked',       value: byPhase.length,                 color: CYAN   },
+          { label: 'Total Completions',   value: totalCompletions,                         color: PURPLE },
+          { label: 'With Evidence',        value: totalWithEvidence,                        color: GREEN  },
+          { label: 'Legacy (no evidence)', value: totalCompletions - totalWithEvidence,     color: AMBER  },
+          { label: 'Phases Reopened',      value: totalReopened,                            color: '#F97316' },
         ].map(s => (
           <div
             key={s.label}
@@ -196,6 +204,37 @@ export function PhaseChartsClient({ byPhase, totalCompletions, totalWithEvidence
           </CardContent>
         </Card>
       </div>
+
+      {/* Reopen frequency — a phase frequently reopened signals a definition problem */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <RotateCcw className="w-4 h-4 text-orange-400" />Reopen Frequency
+          </CardTitle>
+          <CardDescription>
+            Times each phase has been reopened — frequent reopens signal a poorly-defined phase or a genuinely difficult step
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {totalReopened === 0 ? (
+            <div className="h-[200px] flex items-center justify-center text-sm text-muted-foreground">No phases reopened yet</div>
+          ) : (
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={reopenData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(139,92,246,0.1)" />
+                <XAxis dataKey="name" tick={{ fill: 'var(--muted-foreground)', fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: 'var(--muted-foreground)', fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                <Tooltip {...tooltipStyle()} formatter={(v: number) => [v, 'Reopens']} />
+                <Bar dataKey="reopened" name="Reopened" fill="#F97316" radius={[4, 4, 0, 0]}>
+                  {reopenData.map((_, i) => (
+                    <Cell key={i} fill={`hsl(${24 + i * 8}, 85%, 55%)`} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </CardContent>
+      </Card>
     </div>
   )
 }

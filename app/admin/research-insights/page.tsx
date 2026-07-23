@@ -36,17 +36,27 @@ interface Submission {
 
 export default async function ResearchInsightsPage() {
   const supabase = await createClient()
-  const admin = createServiceRoleClient()
+  const admin    = createServiceRoleClient()
 
   // Aggregate analytics via RPC (SECURITY DEFINER)
-  const { data: analyticsRaw } = await supabase
-    .rpc('get_phase_analytics')
+  const [analyticsRes, keywordsRes] = await Promise.all([
+    supabase.rpc('get_phase_analytics'),
+    supabase.rpc('get_challenge_keywords'),
+  ])
 
-  const { data: keywordsRaw } = await supabase
-    .rpc('get_challenge_keywords')
+  const analytics = analyticsRes.data  as AnalyticsResult | null
+  const keywords  = (keywordsRes.data  as KeywordRow[]    | null) ?? []
 
-  const analytics = analyticsRaw as AnalyticsResult | null
-  const keywords  = (keywordsRaw as KeywordRow[] | null) ?? []
+  // Reopen stats — per phase count from history table
+  const { data: reopenRaw } = await admin
+    .from('phase_submission_history')
+    .select('phase_number')
+
+  const reopenByPhase: Record<number, number> = {}
+  ;(reopenRaw ?? []).forEach((r: { phase_number: number }) => {
+    reopenByPhase[r.phase_number] = (reopenByPhase[r.phase_number] || 0) + 1
+  })
+  const totalReopened = Object.values(reopenByPhase).reduce((s, n) => s + n, 0)
 
   // Individual submissions via service role — bypasses RLS; admin only
   const { data: submissionsRaw } = await admin
@@ -58,9 +68,9 @@ export default async function ResearchInsightsPage() {
 
   const submissions = (submissionsRaw ?? []) as unknown as Submission[]
 
-  const byPhase    = analytics?.by_phase           ?? []
-  const totalCompletions   = analytics?.total_completions   ?? 0
-  const totalWithEvidence  = analytics?.total_with_evidence ?? 0
+  const byPhase           = analytics?.by_phase           ?? []
+  const totalCompletions  = analytics?.total_completions  ?? 0
+  const totalWithEvidence = analytics?.total_with_evidence ?? 0
 
   return (
     <div className="space-y-8">
@@ -78,6 +88,8 @@ export default async function ResearchInsightsPage() {
         totalCompletions={totalCompletions}
         totalWithEvidence={totalWithEvidence}
         keywords={keywords}
+        reopenByPhase={reopenByPhase}
+        totalReopened={totalReopened}
       />
 
       {/* Individual submissions — admin-only, server-rendered */}
@@ -115,7 +127,6 @@ export default async function ResearchInsightsPage() {
                   key={sub.id}
                   className="rounded-xl border border-border bg-card p-4 space-y-3"
                 >
-                  {/* Submission header */}
                   <div className="flex flex-wrap items-center gap-2 text-sm">
                     <span className="font-semibold text-foreground">
                       {sub.project?.title ?? 'Untitled project'}
@@ -134,7 +145,6 @@ export default async function ResearchInsightsPage() {
                     )}
                   </div>
 
-                  {/* Answers */}
                   {entries.length > 0 ? (
                     <dl className="space-y-2.5">
                       {entries.map(([key, val]) => (

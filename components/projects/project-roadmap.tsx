@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -13,6 +13,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import {
   CheckCircle2,
   Clock,
@@ -30,15 +36,19 @@ import {
   Users,
   StickyNote,
   FileText,
+  MoreHorizontal,
+  RotateCcw,
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import type { Project, Profile } from "@/lib/types/database"
 import { ShowcaseSubmit } from "./showcase-submit"
 import { PhaseCompletionModal } from "./phase-completion-modal"
+import { ReopenPhaseModal } from "./reopen-phase-modal"
 import { PHASE_QUESTIONS } from "@/lib/projects/phase-questions"
-import { submitPhaseCompletion, updatePhaseNotes } from "@/lib/actions/projects"
+import { submitPhaseCompletion, updatePhaseNotes, reopenPhase } from "@/lib/actions/projects"
 import type { EvidenceAnswer } from "@/lib/actions/projects"
 import { toast } from "sonner"
+import { format } from "date-fns"
 
 interface ProjectRoadmapProps {
   project: Project
@@ -61,19 +71,39 @@ interface ProjectPhase {
   completion_summary: string | null
 }
 
+interface PhaseHistoryRow {
+  id: string
+  phase_id: string
+  project_id: string
+  phase_number: number
+  phase_name: string
+  completed_by: string | null
+  completed_at: string | null
+  completion_summary: string | null
+  completion_answers: Record<string, string> | null
+  reopened_by: string | null
+  reopened_at: string | null
+  reopen_reason: string | null
+}
+
 const PHASE_DEFS = [
-  { number: 1, name: "Topic Refinement",    icon: Search,      description: "Define research questions, scope, and objectives" },
-  { number: 2, name: "Literature Review",   icon: BookOpen,    description: "Review existing research and identify knowledge gaps" },
+  { number: 1, name: "Topic Refinement",    icon: Search,       description: "Define research questions, scope, and objectives" },
+  { number: 2, name: "Literature Review",   icon: BookOpen,     description: "Review existing research and identify knowledge gaps" },
   { number: 3, name: "Methodology Design",  icon: FlaskConical, description: "Design research approach, methods, and protocols" },
-  { number: 4, name: "Data Collection",     icon: Database,    description: "Gather, organise, and clean research data" },
-  { number: 5, name: "Data Analysis",       icon: BarChart3,   description: "Analyse data, interpret findings, and draw conclusions" },
-  { number: 6, name: "Writing and Review",  icon: FileEdit,    description: "Write, peer-review, and refine the research paper" },
-  { number: 7, name: "Showcase Submission", icon: Send,        description: "Submit research to the ResearchFlow showcase" },
+  { number: 4, name: "Data Collection",     icon: Database,     description: "Gather, organise, and clean research data" },
+  { number: 5, name: "Data Analysis",       icon: BarChart3,    description: "Analyse data, interpret findings, and draw conclusions" },
+  { number: 6, name: "Writing and Review",  icon: FileEdit,     description: "Write, peer-review, and refine the research paper" },
+  { number: 7, name: "Showcase Submission", icon: Send,         description: "Submit research to the ResearchFlow showcase" },
 ]
 
 function getInitials(name: string | null) {
   if (!name) return "?"
   return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)
+}
+
+function fmt(iso: string | null) {
+  if (!iso) return "—"
+  return format(new Date(iso), "d MMM yyyy")
 }
 
 export function ProjectRoadmap({
@@ -82,21 +112,59 @@ export function ProjectRoadmap({
   isOwner = false,
   isMember = false,
 }: ProjectRoadmapProps) {
-  const [phases, setPhases]             = useState<ProjectPhase[]>([])
-  const [teamMembers, setTeamMembers]   = useState<Profile[]>([])
+  const [phases, setPhases]               = useState<ProjectPhase[]>([])
+  const [teamMembers, setTeamMembers]     = useState<Profile[]>([])
   const [expandedPhase, setExpandedPhase] = useState<number | null>(null)
-  const [isLoading, setIsLoading]       = useState(true)
-  const [editingNotes, setEditingNotes] = useState<number | null>(null)
-  const [notesText, setNotesText]       = useState("")
-  const [savingNotes, setSavingNotes]   = useState(false)
+  const [expandedHistory, setExpandedHistory] = useState<number | null>(null)
+  const [isLoading, setIsLoading]         = useState(true)
+  const [editingNotes, setEditingNotes]   = useState<number | null>(null)
+  const [notesText, setNotesText]         = useState("")
+  const [savingNotes, setSavingNotes]     = useState(false)
 
-  // Phase completion modal state
+  // History
+  const [phaseHistory, setPhaseHistory]   = useState<PhaseHistoryRow[]>([])
+  const [historyProfiles, setHistoryProfiles] = useState<Record<string, string>>({})
+
+  // Modals
   const [completingPhase, setCompletingPhase] = useState<ProjectPhase | null>(null)
-
-  // Evidence viewer state
+  const [reopeningPhase,  setReopeningPhase]  = useState<ProjectPhase | null>(null)
   const [viewingEvidence, setViewingEvidence] = useState<{ phase: ProjectPhase; evidence: EvidenceAnswer[] } | null>(null)
 
   useEffect(() => { loadData() }, [project.id])
+
+  async function loadHistory(supabase: ReturnType<typeof createClient>) {
+    const { data: history } = await supabase
+      .from("phase_submission_history")
+      .select("*")
+      .eq("project_id", project.id)
+      .order("reopened_at", { ascending: false })
+
+    if (!history || history.length === 0) return
+
+    setPhaseHistory(history as PhaseHistoryRow[])
+
+    // Resolve names for completers and reopeners
+    const userIds = [
+      ...new Set(
+        history.flatMap((h: PhaseHistoryRow) =>
+          [h.completed_by, h.reopened_by].filter(Boolean) as string[]
+        )
+      ),
+    ]
+    if (userIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, full_name")
+        .in("id", userIds)
+      if (profiles) {
+        setHistoryProfiles(
+          Object.fromEntries(
+            (profiles as { id: string; full_name: string | null }[]).map(p => [p.id, p.full_name ?? "Unknown"])
+          )
+        )
+      }
+    }
+  }
 
   async function loadData() {
     setIsLoading(true)
@@ -124,56 +192,59 @@ export function ProjectRoadmap({
       setPhases(existingPhases as ProjectPhase[])
     } else if (!error) {
       const defaults = PHASE_DEFS.map(p => ({
-        project_id: project.id,
+        project_id:  project.id,
         phase_number: p.number,
-        phase_name: p.name,
-        status: "not_started" as const,
+        phase_name:  p.name,
+        status:      "not_started" as const,
       }))
       const { data: created } = await supabase
         .from("project_phases")
         .insert(defaults)
         .select()
       if (created) setPhases(created as ProjectPhase[])
-      else setPhases(defaults.map((p, i) => ({ ...p, id: String(i), assigned_to: null, notes: null, completed_at: null, completed_by: null })))
+      else setPhases(defaults.map((p, i) => ({
+        ...p, id: String(i), assigned_to: null, notes: null,
+        completed_at: null, completed_by: null,
+        completion_answers: null, completion_summary: null,
+      })))
     }
 
+    await loadHistory(supabase)
     setIsLoading(false)
   }
 
-  const completedCount  = phases.filter((p: ProjectPhase) => p.status === "completed").length
-  const progressPercent = Math.round((completedCount / 7) * 100)
-  const allComplete     = completedCount === 7
+  const completedCount     = phases.filter((p: ProjectPhase) => p.status === "completed").length
+  const progressPercent    = Math.round((completedCount / 7) * 100)
+  const allComplete        = completedCount === 7
   const currentPhaseNumber = phases.find((p: ProjectPhase) => p.status === "in_progress")?.phase_number
     ?? (completedCount < 7 ? completedCount + 1 : 7)
 
   async function handleConfirmComplete(evidence: EvidenceAnswer[]): Promise<string | null> {
     if (!completingPhase) return "No phase selected"
 
-    const next = phases.find((p: ProjectPhase) => p.phase_number === completingPhase.phase_number + 1)
-
+    const next   = phases.find((p: ProjectPhase) => p.phase_number === completingPhase.phase_number + 1)
     const result = await submitPhaseCompletion({
-      projectId: project.id,
-      phaseId: completingPhase.id,
-      phaseNumber: completingPhase.phase_number,
-      phaseName: completingPhase.phase_name,
-      nextPhaseId: next?.id ?? null,
+      projectId:      project.id,
+      phaseId:        completingPhase.id,
+      phaseNumber:    completingPhase.phase_number,
+      phaseName:      completingPhase.phase_name,
+      nextPhaseId:    next?.id ?? null,
       evidence,
       totalCompleted: completedCount,
     })
 
     if ("error" in result) return result.error
 
-    // Optimistic update
     setPhases((prev: ProjectPhase[]) =>
       prev.map((p: ProjectPhase) => {
         if (p.id === completingPhase.id)
           return {
             ...p,
-            status: "completed" as const,
-            completed_at: result.completedAt,
-            completed_by: result.completedBy,
-            completion_answers: result.completionAnswers,
-            completion_summary: result.completionSummary ?? null,
+            status:              "completed" as const,
+            completed_at:        result.completedAt,
+            completed_by:        result.completedBy,
+            completion_answers:  result.completionAnswers,
+            completion_summary:  result.completionSummary ?? null,
           }
         if (next && p.id === next.id)
           return { ...p, status: "in_progress" as const }
@@ -181,27 +252,46 @@ export function ProjectRoadmap({
       })
     )
 
-    if (completedCount + 1 === 7) {
-      toast.success("All phases complete! +75 bonus Akili points!")
-    } else {
-      toast.success(`Phase complete! +30 Akili points`)
-    }
-
+    toast.success(completedCount + 1 === 7 ? "All phases complete! +75 bonus Akili points!" : "Phase complete! +30 Akili points")
     setCompletingPhase(null)
+    return null
+  }
+
+  async function handleReopenConfirm(reason: string): Promise<string | null> {
+    if (!reopeningPhase) return "No phase selected"
+
+    const result = await reopenPhase(project.id, reopeningPhase.phase_number, reason)
+    if ("error" in result) return result.error
+
+    setPhases((prev: ProjectPhase[]) =>
+      prev.map((p: ProjectPhase) =>
+        p.id === reopeningPhase.id
+          ? { ...p, status: "in_progress" as const, completed_at: null, completed_by: null, completion_answers: null, completion_summary: null }
+          : p
+      )
+    )
+
+    toast.success("Phase reopened — the team can now resubmit")
+    setReopeningPhase(null)
+
+    // Reload history to show the new entry
+    await loadHistory(createClient())
     return null
   }
 
   async function handleSaveNotes(phase: ProjectPhase) {
     setSavingNotes(true)
     const result = await updatePhaseNotes({
-      phaseId: phase.id,
-      projectId: project.id,
+      phaseId:         phase.id,
+      projectId:       project.id,
       currentNotesRaw: null,
-      newNote: notesText,
+      newNote:         notesText,
     })
     if (!("error" in result)) {
       toast.success("Notes saved")
-      setPhases((prev: ProjectPhase[]) => prev.map((p: ProjectPhase) => p.id === phase.id ? { ...p, notes: result.stored ?? null } : p))
+      setPhases((prev: ProjectPhase[]) =>
+        prev.map((p: ProjectPhase) => p.id === phase.id ? { ...p, notes: result.stored ?? null } : p)
+      )
     } else {
       toast.error("Failed to save notes")
     }
@@ -245,18 +335,25 @@ export function ProjectRoadmap({
         <div className="absolute left-6 top-0 bottom-0 w-0.5" style={{ background: 'rgba(139,92,246,0.2)' }} />
         <div className="space-y-4">
           {PHASE_DEFS.map((def) => {
-            const phase      = phases.find(p => p.phase_number === def.number)
-            const status     = phase?.status ?? "not_started"
-            const isCompleted = status === "completed"
-            const isCurrent  = status === "in_progress" || (!isCompleted && def.number === currentPhaseNumber)
-            const isUpcoming = !isCompleted && !isCurrent
-            const isExpanded = expandedPhase === def.number
-            const Icon       = def.icon
-            const prevComplete = def.number === 1 || phases.find(p => p.phase_number === def.number - 1)?.status === "completed"
+            const phase         = phases.find(p => p.phase_number === def.number)
+            const status        = phase?.status ?? "not_started"
+            const isCompleted   = status === "completed"
+            const isCurrent     = status === "in_progress" || (!isCompleted && def.number === currentPhaseNumber)
+            const isUpcoming    = !isCompleted && !isCurrent
+            const isExpanded    = expandedPhase === def.number
+            const Icon          = def.icon
+            const prevComplete  = def.number === 1 || phases.find(p => p.phase_number === def.number - 1)?.status === "completed"
 
             const completionAnswers = phase?.completion_answers ?? null
-            const noteText = phase?.notes ?? ""
-            const hasEvidence = isCompleted && completionAnswers && Object.keys(completionAnswers).length > 0
+            const noteText          = phase?.notes ?? ""
+            const hasEvidence       = isCompleted && completionAnswers && Object.keys(completionAnswers).length > 0
+
+            // Reopen visibility: lead or the person who completed
+            const canReopen = isCompleted && (isOwner || (!!currentUserId && phase?.completed_by === currentUserId))
+
+            // History for this phase
+            const phaseHistoryRows = phaseHistory.filter(h => h.phase_number === def.number)
+            const historyCount     = phaseHistoryRows.length
 
             return (
               <div key={def.number} className="relative pl-16">
@@ -294,22 +391,48 @@ export function ProjectRoadmap({
                         {isCompleted && <Badge className="text-xs shrink-0" style={{ background: 'rgba(34,197,94,0.15)', color: '#22C55E', border: '1px solid rgba(34,197,94,0.3)' }}>Complete</Badge>}
                         {isCurrent  && <Badge className="text-xs shrink-0" style={{ background: 'rgba(124,58,237,0.15)', color: '#A855F7', border: '1px solid rgba(124,58,237,0.3)' }}>In Progress</Badge>}
                       </div>
-                      <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0">
-                        {isExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-                      </Button>
+                      <div className="flex items-center gap-0.5">
+                        {/* Kebab menu — deliberate reopen, visible only to eligible users */}
+                        {canReopen && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 shrink-0 text-muted-foreground"
+                                onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                              >
+                                <MoreHorizontal className="h-3.5 w-3.5" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+                              <DropdownMenuItem
+                                className="gap-2 text-amber-400 focus:text-amber-300 focus:bg-amber-500/10"
+                                onClick={() => phase && setReopeningPhase(phase)}
+                              >
+                                <RotateCcw className="h-3.5 w-3.5" />
+                                Reopen phase
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
+                        <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0">
+                          {isExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                        </Button>
+                      </div>
                     </div>
                     <p className="text-xs mt-1 text-muted-foreground">{def.description}</p>
                   </CardHeader>
 
                   {isExpanded && (
-                    <CardContent className="p-4 pt-0 space-y-4" onClick={e => e.stopPropagation()}>
+                    <CardContent className="p-4 pt-0 space-y-4" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
                       <div className="h-px" style={{ background: 'rgba(139,92,246,0.1)' }} />
 
                       {/* Completion info + view submission */}
                       {isCompleted && phase?.completed_at && (
                         <div className="flex items-center justify-between">
                           <p className="text-xs" style={{ color: '#22C55E' }}>
-                            Completed {new Date(phase.completed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                            Completed {fmt(phase.completed_at)}
                           </p>
                           {hasEvidence && completionAnswers && (
                             <Button
@@ -328,6 +451,68 @@ export function ProjectRoadmap({
                               <FileText className="h-3 w-3" />
                               View submission
                             </Button>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Reopen history */}
+                      {historyCount > 0 && (
+                        <div>
+                          <button
+                            className="flex items-center gap-1 text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors"
+                            onClick={() => setExpandedHistory(expandedHistory === def.number ? null : def.number)}
+                          >
+                            <RotateCcw className="h-3 w-3" />
+                            Reopened {historyCount} time{historyCount > 1 ? "s" : ""}
+                            {expandedHistory === def.number
+                              ? <ChevronUp className="h-3 w-3 ml-0.5" />
+                              : <ChevronDown className="h-3 w-3 ml-0.5" />
+                            }
+                          </button>
+
+                          {expandedHistory === def.number && (
+                            <div className="mt-3 space-y-4 border-l-2 pl-3" style={{ borderColor: 'rgba(251,191,36,0.2)' }}>
+                              {phaseHistoryRows.map((h, i) => {
+                                const answers   = h.completion_answers ?? {}
+                                const entries   = Object.entries(answers).filter(([, v]) => String(v).trim())
+                                const completer = historyProfiles[h.completed_by ?? ""] ?? "Unknown"
+                                const reopener  = historyProfiles[h.reopened_by  ?? ""] ?? "Unknown"
+
+                                return (
+                                  <div key={h.id} className="text-xs space-y-2">
+                                    {/* Completion snapshot */}
+                                    <p className="font-medium text-muted-foreground">
+                                      Submission {historyCount - i}: completed by {completer} on {fmt(h.completed_at)}
+                                    </p>
+                                    {entries.length > 0 ? (
+                                      <dl className="space-y-1.5 pl-2">
+                                        {entries.map(([key, val]) => (
+                                          <div key={key}>
+                                            <dt className="text-muted-foreground/60 capitalize">{key.replace(/_/g, " ")}</dt>
+                                            <dd className="text-foreground/70 whitespace-pre-wrap">{String(val)}</dd>
+                                          </div>
+                                        ))}
+                                      </dl>
+                                    ) : (
+                                      <p className="text-muted-foreground/50 italic pl-2">No answers recorded</p>
+                                    )}
+
+                                    {/* Reopen event */}
+                                    <div className="flex items-start gap-1.5 pt-1 border-t" style={{ borderColor: 'rgba(251,191,36,0.15)' }}>
+                                      <RotateCcw className="h-3 w-3 text-amber-400/60 mt-0.5 shrink-0" />
+                                      <div>
+                                        <span className="text-muted-foreground">
+                                          Reopened by {reopener} on {fmt(h.reopened_at)}
+                                        </span>
+                                        {h.reopen_reason && (
+                                          <p className="text-muted-foreground/60 italic mt-0.5">"{h.reopen_reason}"</p>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                )
+                              })}
+                            </div>
                           )}
                         </div>
                       )}
@@ -359,7 +544,7 @@ export function ProjectRoadmap({
                           <div className="space-y-2">
                             <Textarea
                               value={notesText}
-                              onChange={e => setNotesText(e.target.value)}
+                              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setNotesText(e.target.value)}
                               placeholder="Add progress notes for this phase..."
                               rows={3}
                               style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(139,92,246,0.2)', color: '#E2D9F3', fontSize: '13px' }}
@@ -391,7 +576,7 @@ export function ProjectRoadmap({
                         )}
                       </div>
 
-                      {/* Actions */}
+                      {/* Mark complete action */}
                       {!isCompleted && (isOwner || isMember) && (
                         <div className="flex items-center gap-2 pt-1">
                           {!prevComplete && !isOwner && (
@@ -431,8 +616,21 @@ export function ProjectRoadmap({
         />
       )}
 
+      {/* Reopen confirmation modal */}
+      {reopeningPhase && (
+        <ReopenPhaseModal
+          open={!!reopeningPhase}
+          phaseName={reopeningPhase.phase_name}
+          hasLaterCompleted={phases.some(
+            (p: ProjectPhase) => p.phase_number > reopeningPhase.phase_number && p.status === "completed"
+          )}
+          onConfirm={handleReopenConfirm}
+          onCancel={() => setReopeningPhase(null)}
+        />
+      )}
+
       {/* Evidence viewer dialog */}
-      <Dialog open={!!viewingEvidence} onOpenChange={open => { if (!open) setViewingEvidence(null) }}>
+      <Dialog open={!!viewingEvidence} onOpenChange={(open: boolean) => { if (!open) setViewingEvidence(null) }}>
         <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base">
