@@ -4,19 +4,17 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Progress } from "@/components/ui/progress"
 import { Textarea } from "@/components/ui/textarea"
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
 import {
   CheckCircle2,
-  Circle,
   Clock,
   ChevronDown,
   ChevronUp,
@@ -31,11 +29,15 @@ import {
   Loader2,
   Users,
   StickyNote,
+  FileText,
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import type { Project, Profile } from "@/lib/types/database"
-import { phaseCompleted, allPhasesCompleted } from "@/lib/actions/akili"
 import { ShowcaseSubmit } from "./showcase-submit"
+import { PhaseCompletionModal } from "./phase-completion-modal"
+import { PHASE_QUESTIONS } from "@/lib/projects/phase-questions"
+import { submitPhaseCompletion, updatePhaseNotes } from "@/lib/actions/projects"
+import type { EvidenceAnswer } from "@/lib/actions/projects"
 import { toast } from "sonner"
 
 interface ProjectRoadmapProps {
@@ -57,14 +59,32 @@ interface ProjectPhase {
   completed_by: string | null
 }
 
+interface ParsedNotes {
+  ev: EvidenceAnswer[]
+  nt: string
+}
+
+function parseNotes(raw: string | null): { evidence: EvidenceAnswer[] | null; noteText: string } {
+  if (!raw) return { evidence: null, noteText: "" }
+  try {
+    const parsed: ParsedNotes = JSON.parse(raw)
+    if (parsed && typeof parsed === "object" && "ev" in parsed) {
+      return { evidence: parsed.ev ?? [], noteText: parsed.nt ?? "" }
+    }
+  } catch {
+    // plain text note
+  }
+  return { evidence: null, noteText: raw }
+}
+
 const PHASE_DEFS = [
-  { number: 1, name: "Topic Refinement", icon: Search, description: "Define research questions, scope, and objectives" },
-  { number: 2, name: "Literature Review", icon: BookOpen, description: "Review existing research and identify knowledge gaps" },
-  { number: 3, name: "Methodology Design", icon: FlaskConical, description: "Design research approach, methods, and protocols" },
-  { number: 4, name: "Data Collection", icon: Database, description: "Gather, organise, and clean research data" },
-  { number: 5, name: "Data Analysis", icon: BarChart3, description: "Analyse data, interpret findings, and draw conclusions" },
-  { number: 6, name: "Writing and Review", icon: FileEdit, description: "Write, peer-review, and refine the research paper" },
-  { number: 7, name: "Showcase Submission", icon: Send, description: "Submit research to the ResearchFlow showcase" },
+  { number: 1, name: "Topic Refinement",    icon: Search,      description: "Define research questions, scope, and objectives" },
+  { number: 2, name: "Literature Review",   icon: BookOpen,    description: "Review existing research and identify knowledge gaps" },
+  { number: 3, name: "Methodology Design",  icon: FlaskConical, description: "Design research approach, methods, and protocols" },
+  { number: 4, name: "Data Collection",     icon: Database,    description: "Gather, organise, and clean research data" },
+  { number: 5, name: "Data Analysis",       icon: BarChart3,   description: "Analyse data, interpret findings, and draw conclusions" },
+  { number: 6, name: "Writing and Review",  icon: FileEdit,    description: "Write, peer-review, and refine the research paper" },
+  { number: 7, name: "Showcase Submission", icon: Send,        description: "Submit research to the ResearchFlow showcase" },
 ]
 
 function getInitials(name: string | null) {
@@ -72,15 +92,25 @@ function getInitials(name: string | null) {
   return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)
 }
 
-export function ProjectRoadmap({ project, currentUserId = null, isOwner = false, isMember = false }: ProjectRoadmapProps) {
-  const [phases, setPhases] = useState<ProjectPhase[]>([])
-  const [teamMembers, setTeamMembers] = useState<Profile[]>([])
+export function ProjectRoadmap({
+  project,
+  currentUserId = null,
+  isOwner = false,
+  isMember = false,
+}: ProjectRoadmapProps) {
+  const [phases, setPhases]             = useState<ProjectPhase[]>([])
+  const [teamMembers, setTeamMembers]   = useState<Profile[]>([])
   const [expandedPhase, setExpandedPhase] = useState<number | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [markingComplete, setMarkingComplete] = useState<number | null>(null)
+  const [isLoading, setIsLoading]       = useState(true)
   const [editingNotes, setEditingNotes] = useState<number | null>(null)
-  const [notesText, setNotesText] = useState("")
-  const [savingNotes, setSavingNotes] = useState(false)
+  const [notesText, setNotesText]       = useState("")
+  const [savingNotes, setSavingNotes]   = useState(false)
+
+  // Phase completion modal state
+  const [completingPhase, setCompletingPhase] = useState<ProjectPhase | null>(null)
+
+  // Evidence viewer state
+  const [viewingEvidence, setViewingEvidence] = useState<{ phase: ProjectPhase; evidence: EvidenceAnswer[] } | null>(null)
 
   useEffect(() => { loadData() }, [project.id])
 
@@ -88,7 +118,6 @@ export function ProjectRoadmap({ project, currentUserId = null, isOwner = false,
     setIsLoading(true)
     const supabase = createClient()
 
-    // Load team members
     const { data: members } = await supabase
       .from("team_members")
       .select("user:profiles(id, full_name, avatar_url)")
@@ -101,7 +130,6 @@ export function ProjectRoadmap({ project, currentUserId = null, isOwner = false,
       )
     }
 
-    // Load or auto-create phases
     const { data: existingPhases, error } = await supabase
       .from("project_phases")
       .select("*")
@@ -111,7 +139,6 @@ export function ProjectRoadmap({ project, currentUserId = null, isOwner = false,
     if (!error && existingPhases && existingPhases.length > 0) {
       setPhases(existingPhases as ProjectPhase[])
     } else if (!error) {
-      // Auto-create phases
       const defaults = PHASE_DEFS.map(p => ({
         project_id: project.id,
         phase_number: p.number,
@@ -129,60 +156,61 @@ export function ProjectRoadmap({ project, currentUserId = null, isOwner = false,
     setIsLoading(false)
   }
 
-  const completedCount = phases.filter(p => p.status === "completed").length
+  const completedCount  = phases.filter((p: ProjectPhase) => p.status === "completed").length
   const progressPercent = Math.round((completedCount / 7) * 100)
-  const allComplete = completedCount === 7
-  const currentPhaseNumber = phases.find(p => p.status === "in_progress")?.phase_number
+  const allComplete     = completedCount === 7
+  const currentPhaseNumber = phases.find((p: ProjectPhase) => p.status === "in_progress")?.phase_number
     ?? (completedCount < 7 ? completedCount + 1 : 7)
 
-  async function handleMarkComplete(phase: ProjectPhase) {
-    if (!currentUserId) return
-    if (!isOwner && !isMember) return
-    const prev = phases.find(p => p.phase_number === phase.phase_number - 1)
-    if (prev && prev.status !== "completed" && !isOwner) {
-      toast.error(`Complete "${prev.phase_name}" first before marking this complete`)
-      return
-    }
-    setMarkingComplete(phase.phase_number)
-    const supabase = createClient()
-    const now = new Date().toISOString()
+  async function handleConfirmComplete(evidence: EvidenceAnswer[]): Promise<string | null> {
+    if (!completingPhase) return "No phase selected"
 
-    const { error } = await supabase
-      .from("project_phases")
-      .update({ status: "completed", completed_at: now, completed_by: currentUserId })
-      .eq("id", phase.id)
+    const next = phases.find((p: ProjectPhase) => p.phase_number === completingPhase.phase_number + 1)
 
-    if (error) { toast.error("Failed to update phase"); setMarkingComplete(null); return }
+    const result = await submitPhaseCompletion({
+      projectId: project.id,
+      phaseId: completingPhase.id,
+      phaseNumber: completingPhase.phase_number,
+      phaseName: completingPhase.phase_name,
+      nextPhaseId: next?.id ?? null,
+      evidence,
+      totalCompleted: completedCount,
+    })
 
-    // Mark next phase as in_progress
-    const next = phases.find(p => p.phase_number === phase.phase_number + 1)
-    if (next) {
-      await supabase.from("project_phases").update({ status: "in_progress" }).eq("id", next.id)
-    }
+    if ("error" in result) return result.error
 
-    // Award Akili points (+30 per phase, +75 bonus for all 7 complete)
-    phaseCompleted(currentUserId, project.id, phase.phase_number, phase.phase_name).catch(() => {})
+    // Optimistic update
+    setPhases((prev: ProjectPhase[]) =>
+      prev.map((p: ProjectPhase) => {
+        if (p.id === completingPhase.id)
+          return { ...p, status: "completed" as const, completed_at: result.completedAt, completed_by: result.completedBy, notes: result.notesJson }
+        if (next && p.id === next.id)
+          return { ...p, status: "in_progress" as const }
+        return p
+      })
+    )
+
     if (completedCount + 1 === 7) {
-      allPhasesCompleted(currentUserId, project.id).catch(() => {})
       toast.success("All phases complete! +75 bonus Akili points!")
     } else {
       toast.success(`Phase complete! +30 Akili points`)
     }
 
-    loadData()
-    setMarkingComplete(null)
+    setCompletingPhase(null)
+    return null
   }
 
   async function handleSaveNotes(phase: ProjectPhase) {
     setSavingNotes(true)
-    const supabase = createClient()
-    const { error } = await supabase
-      .from("project_phases")
-      .update({ notes: notesText.trim() || null })
-      .eq("id", phase.id)
-    if (!error) {
+    const result = await updatePhaseNotes({
+      phaseId: phase.id,
+      projectId: project.id,
+      currentNotesRaw: phase.notes,
+      newNote: notesText,
+    })
+    if (!("error" in result)) {
       toast.success("Notes saved")
-      setPhases(prev => prev.map(p => p.id === phase.id ? { ...p, notes: notesText.trim() || null } : p))
+      setPhases((prev: ProjectPhase[]) => prev.map((p: ProjectPhase) => p.id === phase.id ? { ...p, notes: result.stored ?? null } : p))
     } else {
       toast.error("Failed to save notes")
     }
@@ -221,19 +249,22 @@ export function ProjectRoadmap({ project, currentUserId = null, isOwner = false,
         </CardContent>
       </Card>
 
-      {/* Phase Timeline — vertical */}
+      {/* Phase Timeline */}
       <div className="relative">
         <div className="absolute left-6 top-0 bottom-0 w-0.5" style={{ background: 'rgba(139,92,246,0.2)' }} />
         <div className="space-y-4">
           {PHASE_DEFS.map((def) => {
-            const phase = phases.find(p => p.phase_number === def.number)
-            const status = phase?.status ?? "not_started"
+            const phase      = phases.find(p => p.phase_number === def.number)
+            const status     = phase?.status ?? "not_started"
             const isCompleted = status === "completed"
-            const isCurrent = status === "in_progress" || (!isCompleted && def.number === currentPhaseNumber)
+            const isCurrent  = status === "in_progress" || (!isCompleted && def.number === currentPhaseNumber)
             const isUpcoming = !isCompleted && !isCurrent
             const isExpanded = expandedPhase === def.number
-            const Icon = def.icon
+            const Icon       = def.icon
             const prevComplete = def.number === 1 || phases.find(p => p.phase_number === def.number - 1)?.status === "completed"
+
+            const { evidence, noteText } = parseNotes(phase?.notes ?? null)
+            const hasEvidence = isCompleted && evidence && evidence.length > 0
 
             return (
               <div key={def.number} className="relative pl-16">
@@ -269,7 +300,7 @@ export function ProjectRoadmap({ project, currentUserId = null, isOwner = false,
                       <div className="flex items-center gap-2 min-w-0">
                         <CardTitle className="text-sm truncate" style={{ color: '#E2D9F3' }}>{def.name}</CardTitle>
                         {isCompleted && <Badge className="text-xs shrink-0" style={{ background: 'rgba(34,197,94,0.15)', color: '#22C55E', border: '1px solid rgba(34,197,94,0.3)' }}>Complete</Badge>}
-                        {isCurrent && <Badge className="text-xs shrink-0" style={{ background: 'rgba(124,58,237,0.15)', color: '#A855F7', border: '1px solid rgba(124,58,237,0.3)' }}>In Progress</Badge>}
+                        {isCurrent  && <Badge className="text-xs shrink-0" style={{ background: 'rgba(124,58,237,0.15)', color: '#A855F7', border: '1px solid rgba(124,58,237,0.3)' }}>In Progress</Badge>}
                       </div>
                       <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0">
                         {isExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
@@ -282,11 +313,24 @@ export function ProjectRoadmap({ project, currentUserId = null, isOwner = false,
                     <CardContent className="p-4 pt-0 space-y-4" onClick={e => e.stopPropagation()}>
                       <div className="h-px" style={{ background: 'rgba(139,92,246,0.1)' }} />
 
-                      {/* Completion info */}
+                      {/* Completion info + view submission */}
                       {isCompleted && phase?.completed_at && (
-                        <p className="text-xs" style={{ color: '#22C55E' }}>
-                          Completed {new Date(phase.completed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                        </p>
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs" style={{ color: '#22C55E' }}>
+                            Completed {new Date(phase.completed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                          </p>
+                          {hasEvidence && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-6 text-xs gap-1 text-muted-foreground hover:text-foreground"
+                              onClick={() => setViewingEvidence({ phase: phase!, evidence: evidence! })}
+                            >
+                              <FileText className="h-3 w-3" />
+                              View submission
+                            </Button>
+                          )}
+                        </div>
                       )}
 
                       {/* Team avatars */}
@@ -334,13 +378,13 @@ export function ProjectRoadmap({ project, currentUserId = null, isOwner = false,
                           </div>
                         ) : (
                           <div className="group flex items-start gap-2">
-                            {phase?.notes
-                              ? <p className="text-xs flex-1 whitespace-pre-wrap" style={{ color: '#C4B5FD' }}>{phase.notes}</p>
+                            {noteText
+                              ? <p className="text-xs flex-1 whitespace-pre-wrap" style={{ color: '#C4B5FD' }}>{noteText}</p>
                               : <p className="text-xs flex-1" style={{ color: '#4A3F6B' }}>No notes yet.</p>
                             }
                             {(isOwner || isMember) && (
                               <Button size="sm" variant="ghost" className="h-6 text-xs opacity-0 group-hover:opacity-100 transition-opacity shrink-0 text-muted-foreground"
-                                onClick={() => { setEditingNotes(def.number); setNotesText(phase?.notes || "") }}>
+                                onClick={() => { setEditingNotes(def.number); setNotesText(noteText) }}>
                                 Edit
                               </Button>
                             )}
@@ -359,14 +403,10 @@ export function ProjectRoadmap({ project, currentUserId = null, isOwner = false,
                           {(prevComplete || isOwner) && (
                             <Button
                               size="sm"
-                              disabled={markingComplete === def.number}
-                              onClick={() => phase && handleMarkComplete(phase)}
+                              onClick={() => phase && setCompletingPhase(phase)}
                               style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none', fontSize: '12px' }}
                             >
-                              {markingComplete === def.number
-                                ? <><Loader2 className="h-3 w-3 animate-spin mr-1" />Saving...</>
-                                : <><CheckCircle2 className="h-3 w-3 mr-1" />Mark Complete</>
-                              }
+                              <CheckCircle2 className="h-3 w-3 mr-1" />Mark Complete
                             </Button>
                           )}
                         </div>
@@ -379,6 +419,43 @@ export function ProjectRoadmap({ project, currentUserId = null, isOwner = false,
           })}
         </div>
       </div>
+
+      {/* Phase completion modal */}
+      {completingPhase && (
+        <PhaseCompletionModal
+          open={!!completingPhase}
+          phaseName={completingPhase.phase_name}
+          phaseNumber={completingPhase.phase_number}
+          questions={PHASE_QUESTIONS[completingPhase.phase_number] ?? []}
+          onConfirm={handleConfirmComplete}
+          onCancel={() => setCompletingPhase(null)}
+        />
+      )}
+
+      {/* Evidence viewer dialog */}
+      <Dialog open={!!viewingEvidence} onOpenChange={open => { if (!open) setViewingEvidence(null) }}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <FileText className="h-4 w-4 text-green-500" />
+              Phase {viewingEvidence?.phase.phase_number} Submission
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-5 py-1">
+            {viewingEvidence?.evidence.map((item, i) => (
+              <div key={i} className="space-y-1.5">
+                <p className="text-xs font-medium text-muted-foreground">
+                  <span className="tabular-nums mr-1.5">{i + 1}.</span>{item.q}
+                </p>
+                <p className="text-sm leading-relaxed whitespace-pre-wrap rounded-lg p-3"
+                  style={{ background: 'rgba(124,58,237,0.08)', color: '#C4B5FD' }}>
+                  {item.a.trim() || <span className="italic opacity-50">No answer provided</span>}
+                </p>
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Showcase */}
       <ShowcaseSubmit

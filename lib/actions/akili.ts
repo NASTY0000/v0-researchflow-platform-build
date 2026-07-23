@@ -117,7 +117,19 @@ async function alreadyAwarded(userId: string, eventType: string, relatedId?: str
   return (data?.length ?? 0) > 0
 }
 
-export async function phaseCompleted(_userId: string, projectId: string, phaseNumber: number, phaseName: string) {
+export async function phaseCompleted(
+  _userId: string,
+  projectId: string,
+  phaseNumber: number,
+  phaseName: string,
+  evidence?: { q: string; a: string }[],
+) {
+  // Server-side evidence validation when evidence is supplied
+  if (evidence !== undefined) {
+    const hasContent = evidence.some(e => e.a.trim().length >= 10)
+    if (!hasContent) return { error: 'Please provide a meaningful answer to at least one question.' }
+  }
+
   const result = await verifyProjectMember(projectId)
   if ('error' in result) return { error: result.error }
 
