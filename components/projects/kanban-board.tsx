@@ -59,10 +59,10 @@ interface Column {
 }
 
 const COLUMNS: Column[] = [
-  { id: "todo", title: "To Do", color: "border-t-[#A855F7]" },
-  { id: "in_progress", title: "In Progress", color: "border-t-[#06B6D4]" },
-  { id: "review", title: "Review", color: "border-t-[#F59E0B]" },
-  { id: "done", title: "Done", color: "border-t-[#22C55E]" },
+  { id: "todo", title: "To Do", color: "" },
+  { id: "in_progress", title: "In Progress", color: "" },
+  { id: "review", title: "Review", color: "" },
+  { id: "done", title: "Done", color: "" },
 ]
 
 const COLUMN_ACCENT: Record<string, string> = {
@@ -308,15 +308,15 @@ export function KanbanBoard({ projectId, teamId, tasks: initialTasks, currentUse
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, column.id)}
           >
-            <div className={`p-3 rounded-xl border-t-2 ${column.color}`}
-              style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(139,92,246,0.15)', borderTopColor: COLUMN_ACCENT[column.id], borderTopWidth: '2px' }}>
-              <div className="flex items-center justify-between">
-                <h3 className="font-medium text-sm" style={{ color: COLUMN_ACCENT[column.id] }}>{column.title}</h3>
-                <span className="text-xs px-2 py-0.5 rounded-full font-medium"
-                  style={{ background: `${COLUMN_ACCENT[column.id]}18`, color: COLUMN_ACCENT[column.id], border: `1px solid ${COLUMN_ACCENT[column.id]}30` }}>
-                  {getTasksByColumn(column.id).length}
-                </span>
+            <div className="flex items-center justify-between px-1 py-1.5">
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full shrink-0" style={{ background: COLUMN_ACCENT[column.id] }} />
+                <h3 className="font-semibold text-sm">{column.title}</h3>
               </div>
+              <span className="text-xs px-2 py-0.5 rounded-full font-medium tabular-nums"
+                style={{ background: `${COLUMN_ACCENT[column.id]}15`, color: COLUMN_ACCENT[column.id] }}>
+                {getTasksByColumn(column.id).length}
+              </span>
             </div>
 
             <div className="space-y-2 min-h-[200px]">

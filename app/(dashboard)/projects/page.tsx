@@ -119,10 +119,12 @@ export default function ProjectsPage() {
     <div className="space-y-6">
       <BackToHub href="/collaborate" label="Back to Collaborate" />
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold font-heading">My Projects</h1>
-          <p className="text-muted-foreground mt-1">Manage your active research projects</p>
+          <h1 className="text-2xl font-bold font-heading tracking-tight">My Projects</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {projects.length > 0 ? `${projects.length} active project${projects.length === 1 ? '' : 's'}` : 'Manage your active research projects'}
+          </p>
         </div>
         <Button asChild>
           <Link href="/projects/new">

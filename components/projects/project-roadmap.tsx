@@ -267,7 +267,6 @@ export function ProjectRoadmap({ project, currentUserId = null, isOwner = false,
                   <CardHeader className="p-4 pb-2">
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-xs font-mono shrink-0" style={{ color: '#4A3F6B' }}>#{def.number}</span>
                         <CardTitle className="text-sm truncate" style={{ color: '#E2D9F3' }}>{def.name}</CardTitle>
                         {isCompleted && <Badge className="text-xs shrink-0" style={{ background: 'rgba(34,197,94,0.15)', color: '#22C55E', border: '1px solid rgba(34,197,94,0.3)' }}>Complete</Badge>}
                         {isCurrent && <Badge className="text-xs shrink-0" style={{ background: 'rgba(124,58,237,0.15)', color: '#A855F7', border: '1px solid rgba(124,58,237,0.3)' }}>In Progress</Badge>}
@@ -340,8 +339,7 @@ export function ProjectRoadmap({ project, currentUserId = null, isOwner = false,
                               : <p className="text-xs flex-1" style={{ color: '#4A3F6B' }}>No notes yet.</p>
                             }
                             {(isOwner || isMember) && (
-                              <Button size="sm" variant="ghost" className="h-6 text-xs opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-                                className="text-muted-foreground"
+                              <Button size="sm" variant="ghost" className="h-6 text-xs opacity-0 group-hover:opacity-100 transition-opacity shrink-0 text-muted-foreground"
                                 onClick={() => { setEditingNotes(def.number); setNotesText(phase?.notes || "") }}>
                                 Edit
                               </Button>
