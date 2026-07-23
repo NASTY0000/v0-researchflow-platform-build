@@ -104,6 +104,21 @@ function animateCountUp(targetValue: number, elementId: string, duration = 1400)
   }
   requestAnimationFrame(tick)
 }
+
+function animateStatNumber(target: number, id: string, duration = 850) {
+  const el = document.getElementById(id)
+  if (!el) return
+  const start = performance.now()
+  function tick(now: number) {
+    const t = Math.min((now - start) / duration, 1)
+    const ease = 1 - Math.pow(1 - t, 3)
+    el!.textContent = String(Math.round(ease * target))
+    if (t < 1) requestAnimationFrame(tick)
+    else el!.textContent = String(target)
+  }
+  el.textContent = '0'
+  requestAnimationFrame(tick)
+}
 import { ProfileHeaderSkeleton, Skeleton } from '@/components/ui/SkeletonLayouts'
 import { ListPageSkeleton } from '@/components/ui/skeleton-screens'
 
@@ -206,6 +221,18 @@ export default function ProfilePage() {
       return () => clearTimeout(t)
     }
   }, [profile?.akili_score])
+
+  // Animate header stat numbers on profile load
+  useEffect(() => {
+    if (!profile) return
+    if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const timer = setTimeout(() => {
+      animateStatNumber(profile.projects_completed || 0, 'hstat-projects')
+      animateStatNumber(profile.connections_count || 0, 'hstat-connections')
+      animateStatNumber(profile.portfolio_views || 0, 'hstat-views')
+    }, 200)
+    return () => clearTimeout(timer)
+  }, [profile?.id])
 
   // Stats cards IntersectionObserver — only animates when user has no reduced-motion preference
   useEffect(() => {
@@ -630,7 +657,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Portfolio Modal */}
       {showPortfolioModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
@@ -1081,15 +1108,15 @@ export default function ProfilePage() {
                   {profile.bio && <p className="text-sm text-muted-foreground leading-relaxed max-w-prose">{profile.bio}</p>}
 
                   <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                    <span className="flex items-center gap-1">
+                    <span className="flex items-center gap-1 hover:text-foreground transition-colors">
                       <Mail className="w-4 h-4" />{profile.email}
                     </span>
                     {universityName && (
-                      <span className="flex items-center gap-1">
+                      <span className="flex items-center gap-1 hover:text-foreground transition-colors">
                         <Building2 className="w-4 h-4" />{universityName}
                       </span>
                     )}
-                    <span className="flex items-center gap-1">
+                    <span className="flex items-center gap-1 hover:text-foreground transition-colors">
                       <Calendar className="w-4 h-4" />
                       Joined {new Date(profile.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                     </span>
@@ -1127,15 +1154,15 @@ export default function ProfilePage() {
             {!isEditing && (
               <div className="flex md:flex-col gap-4 md:gap-3 text-center md:text-right shrink-0">
                 <div className="stat-card-animate" data-delay="0">
-                  <p className="text-2xl font-heading font-bold tabular-nums text-primary">{profile.projects_completed}</p>
+                  <p className="text-2xl font-heading font-bold tabular-nums text-primary" id="hstat-projects">{profile.projects_completed}</p>
                   <p className="text-xs text-muted-foreground">Projects</p>
                 </div>
                 <div className="stat-card-animate" data-delay="100">
-                  <p className="text-2xl font-heading font-bold tabular-nums text-accent">{profile.connections_count}</p>
+                  <p className="text-2xl font-heading font-bold tabular-nums text-accent" id="hstat-connections">{profile.connections_count}</p>
                   <p className="text-xs text-muted-foreground">Connections</p>
                 </div>
                 <div className="stat-card-animate" data-delay="200">
-                  <p className="text-2xl font-heading font-bold tabular-nums">{profile.portfolio_views}</p>
+                  <p className="text-2xl font-heading font-bold tabular-nums" id="hstat-views">{profile.portfolio_views}</p>
                   <p className="text-xs text-muted-foreground">Profile Views</p>
                 </div>
               </div>
@@ -1156,7 +1183,7 @@ export default function ProfilePage() {
       />
 
       {/* Tabs */}
-      <Tabs defaultValue="skills" className="space-y-4" onValueChange={(v) => {
+      <Tabs defaultValue="skills" className="space-y-6" onValueChange={(v) => {
         if (v === 'analytics' && !analyticsData && profile) loadAnalytics(profile.id)
       }}>
         <div className="overflow-x-auto scrollbar-none">
@@ -1182,7 +1209,7 @@ export default function ProfilePage() {
                 {profile.research_interests && profile.research_interests.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
                     {profile.research_interests.map(interest => (
-                      <span key={interest} className="border border-primary/50 text-primary rounded-full px-3.5 py-1.5 text-xs font-semibold hover:bg-primary/10 transition-colors">
+                      <span key={interest} className="border border-primary/50 text-primary rounded-full px-3.5 py-1.5 text-xs font-semibold hover:bg-primary/10 hover:scale-105 active:scale-95 transition-all duration-150">
                         {interest}
                       </span>
                     ))}
@@ -1202,7 +1229,7 @@ export default function ProfilePage() {
                 {profile.skills && profile.skills.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
                     {profile.skills.map(skill => (
-                      <span key={skill} className="bg-primary/10 text-primary border border-primary/20 rounded-full px-3.5 py-1.5 text-xs font-semibold">
+                      <span key={skill} className="bg-primary/10 text-primary border border-primary/20 rounded-full px-3.5 py-1.5 text-xs font-semibold hover:bg-primary/15 hover:scale-105 active:scale-95 transition-all duration-150">
                         {skill}
                       </span>
                     ))}
@@ -1222,7 +1249,7 @@ export default function ProfilePage() {
                 {profile.looking_for && profile.looking_for.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
                     {profile.looking_for.map(item => (
-                      <span key={item} className="border border-[var(--cyan)]/50 text-[var(--cyan)] rounded-full px-3.5 py-1.5 text-xs font-semibold hover:bg-[var(--cyan)]/10 transition-colors">
+                      <span key={item} className="border border-[var(--cyan)]/50 text-[var(--cyan)] rounded-full px-3.5 py-1.5 text-xs font-semibold hover:bg-[var(--cyan)]/10 hover:scale-105 active:scale-95 transition-all duration-150">
                         {item}
                       </span>
                     ))}
@@ -1241,7 +1268,7 @@ export default function ProfilePage() {
               <CardContent>
                 <div className="flex items-center gap-2">
                   <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                    <span className="text-lg font-bold text-primary">{profile.weekly_hours_available || 0}</span>
+                    <span className="text-lg font-heading font-bold text-primary">{profile.weekly_hours_available || 0}</span>
                   </div>
                   <div>
                     <p className="font-medium">hours per week</p>
@@ -1274,9 +1301,9 @@ export default function ProfilePage() {
               </Button>
             </Card>
           ) : (
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid md:grid-cols-2 gap-6">
               {portfolioItems.map(item => (
-                <Card key={item.id} className="overflow-hidden hover:border-primary/50 transition-colors">
+                <Card key={item.id} className="overflow-hidden hover:border-primary/50 hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200">
                   <CardHeader className="pb-2">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-2">
