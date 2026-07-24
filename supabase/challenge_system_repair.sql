@@ -18,8 +18,29 @@ ALTER TABLE challenges
   ADD COLUMN IF NOT EXISTS winner_team_id UUID,
   ADD COLUMN IF NOT EXISTS featured_in_showcase BOOLEAN DEFAULT false;
 
--- 2. Challenge submissions: add every column the app reads/writes
+-- 2a. The live table may use submitter_id (older schema); the app uses
+--     author_id. Rename if needed, otherwise make sure author_id exists.
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'challenge_submissions' AND column_name = 'submitter_id'
+  ) AND NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'challenge_submissions' AND column_name = 'author_id'
+  ) THEN
+    ALTER TABLE challenge_submissions RENAME COLUMN submitter_id TO author_id;
+  END IF;
+END $$;
+
 ALTER TABLE challenge_submissions
+  ADD COLUMN IF NOT EXISTS author_id UUID REFERENCES auth.users(id);
+
+-- 2b. Challenge submissions: add every column the app reads/writes
+ALTER TABLE challenge_submissions
+  ADD COLUMN IF NOT EXISTS abstract TEXT,
+  ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'submitted',
+  ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT now(),
   ADD COLUMN IF NOT EXISTS title TEXT,
   ADD COLUMN IF NOT EXISTS team_id UUID,
   ADD COLUMN IF NOT EXISTS submission_url TEXT,
