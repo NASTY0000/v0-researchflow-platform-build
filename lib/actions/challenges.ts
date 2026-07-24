@@ -201,64 +201,85 @@ export async function submitToChallenge(data: {
   return { success: true }
 }
 
+// Assemble teams + members + profiles with plain queries. Nested selects
+// (challenge_team_members(..., profiles(...))) depend on FK relationships that
+// are missing in older database schemas and make the whole query fail.
+async function assembleTeams(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  teams: { id: string; challenge_id: string; name: string; description: string | null; leader_id: string; is_open: boolean; created_at: string }[],
+): Promise<ChallengeTeam[]> {
+  if (teams.length === 0) return []
+
+  const { data: members } = await supabase
+    .from('challenge_team_members')
+    .select('team_id, user_id, role')
+    .in('team_id', teams.map(t => t.id))
+
+  const userIds = [...new Set((members || []).map(m => m.user_id))]
+  const { data: profiles } = userIds.length
+    ? await supabase.from('profiles').select('id, full_name, avatar_url').in('id', userIds)
+    : { data: [] }
+
+  const profileById = new Map((profiles || []).map(p => [p.id, p]))
+
+  return teams.map(t => {
+    const teamMembers = (members || []).filter(m => m.team_id === t.id)
+    return {
+      ...t,
+      member_count: teamMembers.length,
+      members: teamMembers.map(m => ({
+        user_id: m.user_id,
+        role: m.role,
+        profile: {
+          full_name: profileById.get(m.user_id)?.full_name ?? null,
+          avatar_url: profileById.get(m.user_id)?.avatar_url ?? null,
+        },
+      })),
+    }
+  })
+}
+
 export async function getChallengeTeams(challengeId: string): Promise<ChallengeTeam[]> {
   const supabase = await createClient()
   const { data } = await supabase
     .from('challenge_teams')
-    .select('id, challenge_id, name, description, leader_id, is_open, created_at, challenge_team_members(user_id, role, profiles(full_name, avatar_url))')
+    .select('id, challenge_id, name, description, leader_id, is_open, created_at')
     .eq('challenge_id', challengeId)
     .order('created_at', { ascending: true })
 
-  if (!data) return []
-
-  type RawMember = { user_id: string; role: string; profiles: { full_name: string | null; avatar_url: string | null } }
-  return data.map(t => ({
-    id: t.id,
-    challenge_id: t.challenge_id,
-    name: t.name,
-    description: t.description,
-    leader_id: t.leader_id,
-    is_open: t.is_open,
-    created_at: t.created_at,
-    member_count: (t.challenge_team_members as unknown as RawMember[]).length,
-    members: (t.challenge_team_members as unknown as RawMember[]).map(m => ({
-      user_id: m.user_id,
-      role: m.role,
-      profile: m.profiles,
-    })),
-  }))
+  return assembleTeams(supabase, data || [])
 }
 
 export async function getChallengeSubmissions(challengeId: string): Promise<ChallengeSubmission[]> {
   const supabase = await createClient()
   const { data } = await supabase
     .from('challenge_submissions')
-    .select('id, challenge_id, author_id, title, abstract, team_id, submission_url, additional_notes, status, innovation_score, feasibility_score, impact_score, total_score, judge_notes, is_winner, created_at, profiles(full_name, avatar_url, university_name), challenge_teams(name)')
+    .select('id, challenge_id, author_id, title, abstract, team_id, submission_url, additional_notes, status, innovation_score, feasibility_score, impact_score, total_score, judge_notes, is_winner, created_at')
     .eq('challenge_id', challengeId)
     .order('is_winner', { ascending: false })
     .order('total_score', { ascending: false, nullsFirst: false })
 
-  if (!data) return []
+  if (!data || data.length === 0) return []
+
+  const authorIds = [...new Set(data.map(s => s.author_id).filter(Boolean))]
+  const teamIds = [...new Set(data.map(s => s.team_id).filter(Boolean))]
+
+  const [profilesRes, teamsRes] = await Promise.all([
+    authorIds.length
+      ? supabase.from('profiles').select('id, full_name, avatar_url, university_name').in('id', authorIds)
+      : Promise.resolve({ data: [] as { id: string; full_name: string | null; avatar_url: string | null; university_name: string | null }[] }),
+    teamIds.length
+      ? supabase.from('challenge_teams').select('id, name').in('id', teamIds)
+      : Promise.resolve({ data: [] as { id: string; name: string }[] }),
+  ])
+
+  const profileById = new Map((profilesRes.data || []).map(p => [p.id, p]))
+  const teamById = new Map((teamsRes.data || []).map(t => [t.id, t]))
 
   return data.map(s => ({
-    id: s.id,
-    challenge_id: s.challenge_id,
-    author_id: s.author_id,
-    title: s.title,
-    abstract: s.abstract,
-    team_id: s.team_id,
-    submission_url: s.submission_url,
-    additional_notes: s.additional_notes,
-    status: s.status,
-    innovation_score: s.innovation_score,
-    feasibility_score: s.feasibility_score,
-    impact_score: s.impact_score,
-    total_score: s.total_score,
-    judge_notes: s.judge_notes,
-    is_winner: s.is_winner,
-    created_at: s.created_at,
-    author: s.profiles as unknown as { full_name: string | null; avatar_url: string | null; university_name: string | null },
-    team: s.challenge_teams as unknown as { name: string } | null,
+    ...s,
+    author: profileById.get(s.author_id) ?? { full_name: null, avatar_url: null, university_name: null },
+    team: s.team_id ? (teamById.get(s.team_id) ?? null) : null,
   }))
 }
 
@@ -276,29 +297,15 @@ export async function getUserTeamForChallenge(challengeId: string): Promise<Chal
 
   const { data: team } = await supabase
     .from('challenge_teams')
-    .select('id, challenge_id, name, description, leader_id, is_open, created_at, challenge_team_members(user_id, role, profiles(full_name, avatar_url))')
+    .select('id, challenge_id, name, description, leader_id, is_open, created_at')
     .eq('challenge_id', challengeId)
     .in('id', teamIds)
     .maybeSingle()
 
   if (!team) return null
 
-  type RawMember = { user_id: string; role: string; profiles: { full_name: string | null; avatar_url: string | null } }
-  return {
-    id: team.id,
-    challenge_id: team.challenge_id,
-    name: team.name,
-    description: team.description,
-    leader_id: team.leader_id,
-    is_open: team.is_open,
-    created_at: team.created_at,
-    member_count: (team.challenge_team_members as unknown as RawMember[]).length,
-    members: (team.challenge_team_members as unknown as RawMember[]).map(m => ({
-      user_id: m.user_id,
-      role: m.role,
-      profile: m.profiles,
-    })),
-  }
+  const assembled = await assembleTeams(supabase, [team])
+  return assembled[0] ?? null
 }
 
 export async function declareChallengeWinner(data: {

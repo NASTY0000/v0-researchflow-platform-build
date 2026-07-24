@@ -258,7 +258,7 @@ export default function ChallengeDetailPage() {
           </span>
           <span className="flex items-center gap-1.5">
             <Users className="w-4 h-4" />
-            {challenge.submission_count} submissions
+            {challenge.submission_count} submission{challenge.submission_count === 1 ? '' : 's'}
           </span>
           {isTeamChallenge && (
             <span className="flex items-center gap-1.5">
