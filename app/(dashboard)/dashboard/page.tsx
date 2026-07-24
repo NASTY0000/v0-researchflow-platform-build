@@ -39,12 +39,8 @@ function getGreeting() {
   return 'Good evening'
 }
 
-const cardStyle = {
-  background: 'rgba(255,255,255,0.03)',
-  border: '1px solid rgba(139,92,246,0.15)',
-  borderRadius: '16px',
-  backdropFilter: 'blur(12px)',
-}
+// Amber is the Akili tier accent — the one color deliberately outside the token set
+const AMBER = '#F59E0B'
 
 export default function DashboardPage() {
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -123,21 +119,21 @@ export default function DashboardPage() {
   const nextTier = getNextTier(akiliScore)
   const pointsLeft = getPointsToNextTier(akiliScore)
   const tierPct = nextTier
-    ? Math.round(((akiliScore - currentTier.min) / (nextTier.min - currentTier.min)) * 100)
+    ? Math.min(100, Math.max(0, Math.round(((akiliScore - currentTier.min) / (nextTier.min - currentTier.min)) * 100)))
     : 100
 
   const statCards = [
-    { title: "Akili Score", value: akiliScore, icon: Zap, href: "/profile", color: '#F59E0B', glow: 'rgba(245,158,11,0.25)', sub: currentTier.name },
-    { title: "Connections", value: stats.connections, icon: Users, href: "/matches", color: '#06B6D4', glow: 'rgba(6,182,212,0.25)' },
-    { title: "Ideas Posted", value: stats.totalIdeas, icon: Lightbulb, href: "/ideas", color: '#A855F7', glow: 'rgba(168,85,247,0.25)' },
-    { title: "New Matches", value: stats.matches, icon: Sparkles, href: "/matches", color: '#EC4899', glow: 'rgba(236,72,153,0.25)' },
+    { title: "Akili Score", value: akiliScore, icon: Zap, href: "/profile", color: AMBER, sub: currentTier.name },
+    { title: "Connections", value: stats.connections, icon: Users, href: "/matches", color: 'var(--cyan)' },
+    { title: "Ideas Posted", value: stats.totalIdeas, icon: Lightbulb, href: "/ideas", color: 'var(--primary)' },
+    { title: "New Matches", value: stats.matches, icon: Sparkles, href: "/matches", color: 'var(--glow)' },
   ]
 
   const quickActions = [
-    { title: "My Research Feed", description: "Personalised opportunities", icon: Sparkles, href: "/feed", color: '#8B5CF6' },
-    { title: "Post Research Idea", description: "Share your research concept", icon: Lightbulb, href: "/ideas/new", color: '#7C3AED' },
-    { title: "Find Collaborators", description: "Connect with researchers", icon: Users, href: "/matches", color: '#06B6D4' },
-    { title: "Browse Mentors", description: "Get expert guidance", icon: BookOpen, href: "/mentors", color: '#A855F7' },
+    { title: "My Research Feed", description: "Personalised opportunities", icon: Sparkles, href: "/feed", color: 'var(--glow)' },
+    { title: "Post Research Idea", description: "Share your research concept", icon: Lightbulb, href: "/ideas/new", color: 'var(--primary)' },
+    { title: "Find Collaborators", description: "Connect with researchers", icon: Users, href: "/matches", color: 'var(--cyan)' },
+    { title: "Browse Mentors", description: "Get expert guidance", icon: BookOpen, href: "/mentors", color: 'var(--chart-5)' },
   ]
 
   const { pullDistance, isRefreshing, threshold } = usePullToRefresh(loadDashboard)
@@ -147,16 +143,12 @@ export default function DashboardPage() {
       <div className="space-y-8">
         {/* Hero banner skeleton */}
         <Skeleton className="h-44 w-full rounded-2xl" />
-        {/* Stat cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-28 rounded-2xl" />
-          ))}
-        </div>
+        {/* Stat strip */}
+        <Skeleton className="h-[76px] w-full rounded-2xl" />
         {/* Quick actions */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid sm:grid-cols-2 gap-3">
           {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-20 rounded-2xl" />
+            <Skeleton key={i} className="h-[74px] rounded-xl" />
           ))}
         </div>
         {/* Content rows */}
@@ -182,8 +174,11 @@ export default function DashboardPage() {
       )}
 
       {/* Hero banner */}
-      <div className="relative rounded-2xl overflow-hidden p-8" style={{ background: 'linear-gradient(135deg,#1E0533 0%,#050118 100%)', border: '1px solid rgba(139,92,246,0.2)' }}>
-        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 20% 50%,rgba(124,58,237,0.2),transparent 60%)' }} />
+      <div
+        className="relative rounded-2xl overflow-hidden p-8 border border-primary/40 bg-card"
+        style={{ boxShadow: '0 0 40px color-mix(in oklch, var(--primary) 16%, transparent)' }}
+      >
+        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 20% 50%, color-mix(in oklch, var(--primary) 14%, transparent), transparent 60%)' }} />
         <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4">
           <motion.div
             initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
@@ -197,7 +192,7 @@ export default function DashboardPage() {
             </h1>
             <p className="text-muted-foreground">Here&apos;s what&apos;s happening with your research journey</p>
           </motion.div>
-          <Button asChild style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', boxShadow: '0 0 20px rgba(124,58,237,0.35)', border: 'none', borderRadius: '8px', flexShrink: 0 }}>
+          <Button asChild className="shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold" style={{ boxShadow: '0 0 20px color-mix(in oklch, var(--primary) 35%, transparent)' }}>
             <Link href="/ideas/new">
               <Lightbulb className="mr-2 h-4 w-4" />
               Post New Idea
@@ -206,51 +201,49 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {statCards.map((stat, i) => (
-          <Link key={stat.title} href={stat.href}>
-            <div
-              className={`stat-card p-5 rounded-2xl cursor-pointer animate-fade-up stagger-${i + 1}`}
-              style={{
-                ...cardStyle,
-                '--card-accent-border': `${stat.color}66`,
-                '--card-accent-glow': `0 0 24px ${stat.glow}`,
-              } as React.CSSProperties}
+      {/* Stats strip */}
+      <div className="rounded-2xl border border-border bg-card overflow-hidden">
+        <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-border">
+          {statCards.map((stat) => (
+            <Link
+              key={stat.title}
+              href={stat.href}
+              className="flex items-center gap-3 p-4 hover:bg-muted/40 transition-colors"
             >
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl flex-shrink-0" style={{ background: `${stat.color}18`, border: `1px solid ${stat.color}30` }}>
-                  <stat.icon className="h-5 w-5" style={{ color: stat.color }} />
-                </div>
-                <div className="min-w-0">
-                  <AnimatedCounter value={stat.value} className="text-2xl font-bold font-heading stat-number" />
-                  <p className="text-xs truncate text-muted-foreground">
-                    {'sub' in stat && stat.sub ? stat.sub : stat.title}
-                  </p>
-                </div>
+              <div
+                className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+                style={{ background: `color-mix(in oklch, ${stat.color} 12%, transparent)` }}
+              >
+                <stat.icon className="h-4 w-4" style={{ color: stat.color }} />
               </div>
-            </div>
-          </Link>
-        ))}
+              <div className="min-w-0">
+                <AnimatedCounter value={stat.value} className="text-xl font-bold font-heading tabular-nums leading-none" />
+                <p className="text-xs truncate text-muted-foreground mt-1">
+                  {'sub' in stat && stat.sub ? `${stat.title} · ${stat.sub}` : stat.title}
+                </p>
+              </div>
+            </Link>
+          ))}
+        </div>
       </div>
 
       {/* Akili tier progress */}
       {profile && nextTier && (
-        <div className="rounded-2xl p-5" style={cardStyle}>
+        <div className="rounded-2xl p-5 border border-border bg-card">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <Zap className="h-4 w-4" style={{ color: '#F59E0B' }} />
+              <Zap className="h-4 w-4" style={{ color: AMBER }} />
               <span className="text-sm font-semibold">{currentTier.name}</span>
-              <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.25)', color: '#F59E0B' }}>{tierPct}%</span>
+              <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: `color-mix(in oklch, ${AMBER} 12%, transparent)`, border: `1px solid color-mix(in oklch, ${AMBER} 25%, transparent)`, color: AMBER }}>{tierPct}%</span>
             </div>
             <span className="text-xs text-muted-foreground">
-              <span className="font-medium" style={{ color: '#F59E0B' }}>{pointsLeft.toLocaleString()}</span> pts to {nextTier.name}
+              <span className="font-medium" style={{ color: AMBER }}>{pointsLeft.toLocaleString()}</span> pts to {nextTier.name}
             </span>
           </div>
-          <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+          <div className="h-2 rounded-full overflow-hidden bg-muted">
             <motion.div
               className="h-full rounded-full"
-              style={{ background: 'linear-gradient(90deg,#D97706,#F59E0B,#FCD34D)' }}
+              style={{ background: `linear-gradient(90deg, color-mix(in oklch, ${AMBER} 85%, black), ${AMBER}, color-mix(in oklch, ${AMBER} 65%, white))` }}
               initial={shouldReduceMotion ? { width: `${tierPct}%` } : { width: 0 }}
               animate={{ width: `${tierPct}%` }}
               transition={shouldReduceMotion ? { duration: 0 } : { duration: 1.2, ease: [0.22, 1, 0.36, 1], delay: 0.3 }}
@@ -261,19 +254,21 @@ export default function DashboardPage() {
 
       {/* Quick Actions */}
       <div>
-        <h2 className="text-sm font-semibold mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <h2 className="text-lg font-heading font-bold mb-4">Quick Actions</h2>
+        <div className="grid sm:grid-cols-2 gap-3">
           {quickActions.map((action, i) => (
             <Link key={action.title} href={action.href}>
               <div
-                className={`action-card p-5 rounded-2xl cursor-pointer text-center animate-fade-up stagger-${i + 1}`}
-                style={cardStyle}
+                className={`action-card flex items-center gap-3.5 p-4 rounded-xl border border-border bg-card cursor-pointer animate-fade-up stagger-${i + 1}`}
               >
-                <div className="w-11 h-11 rounded-xl flex items-center justify-center mx-auto mb-3" style={{ background: `${action.color}20`, border: `1px solid ${action.color}35` }}>
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style={{ background: `color-mix(in oklch, ${action.color} 12%, transparent)` }}>
                   <action.icon className="h-5 w-5" style={{ color: action.color }} />
                 </div>
-                <h3 className="font-medium text-sm">{action.title}</h3>
-                <p className="text-xs mt-1 text-muted-foreground">{action.description}</p>
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-semibold text-sm">{action.title}</h3>
+                  <p className="text-xs mt-0.5 text-muted-foreground truncate">{action.description}</p>
+                </div>
+                <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
               </div>
             </Link>
           ))}
@@ -282,25 +277,24 @@ export default function DashboardPage() {
 
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Recent Ideas */}
-        <div className="rounded-2xl p-6" style={cardStyle}>
+        <div className="rounded-2xl p-6 border border-border bg-card">
           <div className="flex items-center justify-between mb-5">
             <div>
-              <h2 className="font-semibold font-heading">Recent Ideas</h2>
+              <h2 className="text-lg font-bold font-heading">Recent Ideas</h2>
               <p className="text-xs mt-0.5 text-muted-foreground">Latest from the community</p>
             </div>
-            <Button variant="ghost" size="sm" asChild style={{ color: '#A855F7' }}>
+            <Button variant="ghost" size="sm" asChild className="text-[var(--glow)]">
               <Link href="/ideas">View all <ArrowRight className="ml-1 h-3 w-3" /></Link>
             </Button>
           </div>
           <div className="space-y-3">
             {recentIdeas.length > 0 ? recentIdeas.map((idea) => (
               <Link key={idea.id} href={`/ideas/${idea.id}`}>
-                <div className="list-row p-4 rounded-xl cursor-pointer"
-                  style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(139,92,246,0.12)' }}>
+                <div className="list-row p-4 rounded-xl cursor-pointer bg-muted/30 border border-border/60">
                   <h4 className="font-medium text-sm truncate">{idea.title}</h4>
                   <p className="text-xs mt-1 line-clamp-2 text-muted-foreground">{idea.description}</p>
                   <div className="flex items-center gap-2 mt-2">
-                    <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'rgba(168,85,247,0.12)', border: '1px solid rgba(168,85,247,0.25)', color: '#C084FC' }}>{idea.research_area}</span>
+                    <span className="text-xs px-2 py-0.5 rounded-full border border-primary/30 text-[var(--glow)]" style={{ background: 'color-mix(in oklch, var(--glow) 10%, transparent)' }}>{idea.research_area}</span>
                     <span className="text-xs flex items-center gap-1 text-muted-foreground">
                       <TrendingUp className="h-3 w-3" />{idea.upvotes} upvotes
                     </span>
@@ -309,24 +303,24 @@ export default function DashboardPage() {
               </Link>
             )) : (
               <div className="text-center py-10">
-                <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3" style={{ background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(139,92,246,0.2)' }}>
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3 bg-primary/10 border border-primary/20">
                   <Lightbulb className="h-6 w-6 text-muted-foreground" />
                 </div>
                 <p className="text-sm text-muted-foreground">No ideas yet</p>
-                <Button variant="link" asChild style={{ color: '#A855F7' }}><Link href="/ideas/new">Post the first idea</Link></Button>
+                <Button variant="link" asChild className="text-[var(--glow)]"><Link href="/ideas/new">Post the first idea</Link></Button>
               </div>
             )}
           </div>
         </div>
 
         {/* Suggested Matches */}
-        <div className="rounded-2xl p-6" style={cardStyle}>
+        <div className="rounded-2xl p-6 border border-border bg-card">
           <div className="flex items-center justify-between mb-5">
             <div>
-              <h2 className="font-semibold font-heading">Suggested Matches</h2>
+              <h2 className="text-lg font-bold font-heading">Suggested Matches</h2>
               <p className="text-xs mt-0.5 text-muted-foreground">Researchers you might connect with</p>
             </div>
-            <Button variant="ghost" size="sm" asChild style={{ color: '#A855F7' }}>
+            <Button variant="ghost" size="sm" asChild className="text-[var(--glow)]">
               <Link href="/matches">View all <ArrowRight className="ml-1 h-3 w-3" /></Link>
             </Button>
           </div>
@@ -335,12 +329,11 @@ export default function DashboardPage() {
               const score = Math.round(Number(match.match_score))
               const isHighMatch = score > 80
               return (
-                <div key={match.id} className="list-row p-4 rounded-xl"
-                  style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(139,92,246,0.12)' }}>
+                <div key={match.id} className="list-row p-4 rounded-xl bg-muted/30 border border-border/60">
                   <div className="flex items-center gap-3">
                     <Avatar className="h-10 w-10">
                       <AvatarImage src={(match as any).matched_user?.avatar_url} />
-                      <AvatarFallback style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', color: '#F3F0FF', fontSize: '14px' }}>
+                      <AvatarFallback className="bg-primary text-primary-foreground text-sm">
                         {(match as any).matched_user?.full_name?.charAt(0) || "?"}
                       </AvatarFallback>
                     </Avatar>
@@ -348,8 +341,11 @@ export default function DashboardPage() {
                       <h4 className="font-medium text-sm">{(match as any).matched_user?.full_name}</h4>
                       <p className="text-xs truncate text-muted-foreground">{(match as any).matched_user?.department || "Researcher"}</p>
                     </div>
-                    <span className={`text-xs px-2.5 py-1 rounded-full font-bold match-pill ${isHighMatch ? 'match-pill-high' : ''}`}
-                      style={{ background: isHighMatch ? 'rgba(124,58,237,0.2)' : 'rgba(124,58,237,0.1)', color: isHighMatch ? '#C084FC' : '#A855F7' }}>
+                    <span className={`text-xs px-2.5 py-1 rounded-full font-bold tabular-nums match-pill ${isHighMatch ? 'match-pill-high' : ''}`}
+                      style={{
+                        background: `color-mix(in oklch, var(--primary) ${isHighMatch ? 20 : 10}%, transparent)`,
+                        color: isHighMatch ? 'var(--glow)' : 'var(--accent-foreground)',
+                      }}>
                       {score}%
                     </span>
                   </div>
@@ -357,11 +353,11 @@ export default function DashboardPage() {
               )
             }) : (
               <div className="text-center py-10">
-                <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3" style={{ background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(139,92,246,0.2)' }}>
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3 bg-primary/10 border border-primary/20">
                   <Users className="h-6 w-6 text-muted-foreground" />
                 </div>
                 <p className="text-sm text-muted-foreground">Complete your profile to get matches</p>
-                <Button variant="link" asChild style={{ color: '#A855F7' }}><Link href="/settings">Update profile</Link></Button>
+                <Button variant="link" asChild className="text-[var(--glow)]"><Link href="/settings">Update profile</Link></Button>
               </div>
             )}
           </div>
@@ -371,28 +367,28 @@ export default function DashboardPage() {
       {/* Live Activity Feed */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="font-semibold text-sm flex items-center gap-2">
+          <h2 className="text-lg font-bold font-heading flex items-center gap-2">
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75 motion-reduce:animate-none" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
             </span>
             Live Activity
           </h2>
         </div>
-        <div className="rounded-2xl p-2" style={cardStyle}>
+        <div className="rounded-2xl p-2 border border-border bg-card">
           <ActivityFeed />
         </div>
       </div>
 
       {/* Mentor Dashboard Section */}
       {profile?.roles?.includes('mentor') && (
-        <div className="rounded-2xl p-6" style={cardStyle}>
+        <div className="rounded-2xl p-6 border border-border bg-card">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', boxShadow: '0 0 14px rgba(124,58,237,0.3)' }}>
-              <GraduationCap className="h-5 w-5 text-white" />
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-primary" style={{ boxShadow: '0 0 14px color-mix(in oklch, var(--primary) 30%, transparent)' }}>
+              <GraduationCap className="h-5 w-5 text-primary-foreground" />
             </div>
             <div>
-              <h2 className="font-semibold font-heading">Mentor Dashboard</h2>
+              <h2 className="text-lg font-bold font-heading">Mentor Dashboard</h2>
               <p className="text-xs text-muted-foreground">Manage your mentorship activities</p>
             </div>
           </div>
@@ -402,8 +398,8 @@ export default function DashboardPage() {
 
       {/* Research Progress */}
       {profile && (
-        <div className="rounded-2xl p-6" style={cardStyle}>
-          <h2 className="font-semibold font-heading mb-1">Your Research Progress</h2>
+        <div className="rounded-2xl p-6 border border-border bg-card">
+          <h2 className="text-lg font-bold font-heading mb-1">Your Research Progress</h2>
           <p className="text-xs mb-6 text-muted-foreground">Track your research journey milestones</p>
           <div className="grid md:grid-cols-3 gap-6">
             {[
@@ -414,10 +410,10 @@ export default function DashboardPage() {
               <div key={item.label} className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">{item.label}</span>
-                  <span className="font-medium" style={{ color: '#C084FC' }}>{item.display}</span>
+                  <span className="font-medium tabular-nums text-[var(--glow)]">{item.display}</span>
                 </div>
-                <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
-                  <div className="h-full rounded-full transition-all duration-700" style={{ width: `${item.value}%`, background: 'linear-gradient(90deg,#7C3AED,#06B6D4)', boxShadow: '2px 0 8px rgba(124,58,237,0.5)' }} />
+                <div className="h-2 rounded-full overflow-hidden bg-muted">
+                  <div className="h-full rounded-full transition-all duration-700 motion-reduce:transition-none" style={{ width: `${item.value}%`, background: 'linear-gradient(90deg, var(--primary), var(--cyan))', boxShadow: '2px 0 8px color-mix(in oklch, var(--primary) 50%, transparent)' }} />
                 </div>
               </div>
             ))}
