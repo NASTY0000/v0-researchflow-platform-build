@@ -95,7 +95,7 @@ function PodiumCard({
 
   return (
     <div
-      className={`relative rounded-2xl overflow-hidden border-2 ${config.border} ${config.order} ${config.height} ${first ? 'z-10' : 'sm:self-end'}`}
+      className={`relative rounded-2xl overflow-hidden border-2 ${config.border} ${config.order} ${config.height} ${first ? 'z-10' : 'sm:self-end'} transition-transform duration-200 hover:-translate-y-1 motion-reduce:transition-none motion-reduce:hover:translate-y-0`}
       style={{ background: config.gradient, boxShadow: config.glow }}
     >
       {/* Diagonal shine sweep — ambient only, skipped for reduced motion */}
@@ -133,7 +133,7 @@ function PodiumCard({
         {university && (
           <p className={`text-xs ${config.accentText} text-center truncate w-full drop-shadow-sm`}>{university}</p>
         )}
-        <p className={`${first ? 'text-3xl' : 'text-2xl'} font-bold font-heading tabular-nums text-white drop-shadow-lg text-center`}>
+        <p className={`${first ? 'text-4xl' : 'text-2xl'} font-bold font-heading tabular-nums text-white drop-shadow-lg text-center`}>
           {(user.akili_score || 0).toLocaleString()}
         </p>
         <span className={`text-xs ${config.accentText} font-medium drop-shadow-sm`}>{config.label}</span>
@@ -203,11 +203,11 @@ export default function LeaderboardPage() {
       <BackToHub href="/community" label="Back to Community" />
       <div className="flex items-end justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold font-heading">Akili Leaderboard</h1>
-          <p className="text-muted-foreground text-sm mt-1">Top researchers on ResearchFlow</p>
+          <h1 className="text-2xl md:text-3xl font-heading" style={{ fontWeight: 800, letterSpacing: '-0.03em' }}>Akili Leaderboard</h1>
+          <p className="text-muted-foreground text-sm mt-1.5">Top researchers on ResearchFlow</p>
         </div>
         {currentUserRank > 0 && (
-          <span className="text-sm font-semibold text-primary border border-primary/40 bg-primary/10 rounded-full px-3.5 py-1.5">
+          <span className="text-sm font-bold tabular-nums text-primary border border-primary/50 bg-primary/15 rounded-full px-4 py-1.5">
             Your rank: #{currentUserRank}
           </span>
         )}
@@ -216,7 +216,7 @@ export default function LeaderboardPage() {
       {/* Top 3 podium — DOM order 1-2-3 for assistive tech; visual 2-1-3 on
           larger screens via CSS order. Stacks champion-first on mobile. */}
       {top3.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:items-end">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:items-end">
           {top3.map((user, i) => (
             <PodiumCard key={user.id} user={user} config={PODIUM[i]} reduceMotion={reduceMotion} />
           ))}
@@ -246,7 +246,7 @@ export default function LeaderboardPage() {
                   key={user.id}
                   className={`flex items-center gap-4 p-3 rounded-lg transition-colors ${
                     user.id === currentUserId
-                      ? 'bg-primary/10 border border-primary/30'
+                      ? 'bg-primary/10 border border-primary/40'
                       : 'hover:bg-muted/40'
                   }`}
                 >
