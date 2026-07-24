@@ -60,19 +60,35 @@ export default function PostDetailPage() {
         supabase.auth.getUser(),
         supabase
           .from('forum_posts')
-          .select('*, author:profiles(full_name, avatar_url)')
+          .select('*')
           .eq('id', params.postId)
-          .single(),
+          .maybeSingle(),
         supabase
           .from('forum_replies')
-          .select('*, author:profiles(full_name, avatar_url)')
+          .select('*')
           .eq('post_id', params.postId)
           .order('created_at', { ascending: true }),
       ])
 
+      // Resolve author profiles separately: the profiles(...) join syntax
+      // requires FK relationships this database doesn't have.
+      const rawReplies = repliesData || []
+      const authorIds = [...new Set([
+        ...(postData?.author_id ? [postData.author_id] : []),
+        ...rawReplies.map(r => r.author_id).filter(Boolean),
+      ])]
+      let profileById = new Map<string, { id: string; full_name: string | null; avatar_url: string | null }>()
+      if (authorIds.length) {
+        const { data: profs } = await supabase
+          .from('profiles')
+          .select('id, full_name, avatar_url')
+          .in('id', authorIds)
+        profileById = new Map((profs || []).map(p => [p.id, p]))
+      }
+
       setCurrentUserId(user?.id || null)
-      setPost(postData as unknown as Post)
-      setReplies((repliesData || []) as unknown as Reply[])
+      setPost(postData ? ({ ...postData, author: profileById.get(postData.author_id) ?? null } as unknown as Post) : null)
+      setReplies(rawReplies.map(r => ({ ...r, author: profileById.get(r.author_id) ?? null })) as unknown as Reply[])
       setLoading(false)
 
       // Check if user upvoted
@@ -127,7 +143,7 @@ export default function PostDetailPage() {
     const { data: newReply, error } = await supabase
       .from('forum_replies')
       .insert({ post_id: post.id, author_id: currentUserId, content: replyContent.trim() })
-      .select('*, author:profiles(full_name, avatar_url)')
+      .select('*')
       .single()
 
     if (error || !newReply) {
@@ -136,12 +152,18 @@ export default function PostDetailPage() {
       return
     }
 
+    const { data: myProfile } = await supabase
+      .from('profiles')
+      .select('full_name, avatar_url')
+      .eq('id', currentUserId)
+      .maybeSingle()
+
     await supabase
       .from('forum_posts')
-      .update({ reply_count: post.reply_count + 1 })
+      .update({ reply_count: (post.reply_count || 0) + 1 })
       .eq('id', post.id)
 
-    setReplies(prev => [...prev, newReply as unknown as Reply])
+    setReplies(prev => [...prev, { ...newReply, author: myProfile ?? null } as unknown as Reply])
     setPost(p => p ? { ...p, reply_count: p.reply_count + 1 } : p)
     setReplyContent('')
     setSubmitting(false)

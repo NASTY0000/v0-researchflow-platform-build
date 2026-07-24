@@ -54,11 +54,11 @@ export default function ForumDetailPage() {
 
       const forumRes = await supabase
         .from('forums')
-        .select('id, name, description, icon, category, post_count')
+        .select('*')
         .eq('id', forumId)
-        .single()
+        .maybeSingle()
 
-      if (forumRes.error) {
+      if (forumRes.error || !forumRes.data) {
         console.error('Forum error:', forumRes.error)
         setLoadError('Forum not found')
         setLoading(false)
@@ -69,21 +69,7 @@ export default function ForumDetailPage() {
 
       const postsRes = await supabase
         .from('forum_posts')
-        .select(`
-          id,
-          title,
-          content,
-          created_at,
-          updated_at,
-          author_id,
-          forum_id,
-          profiles (
-            id,
-            full_name,
-            avatar_url,
-            department
-          )
-        `)
+        .select('*')
         .eq('forum_id', forumId)
         .order('created_at', { ascending: false })
 
@@ -91,7 +77,18 @@ export default function ForumDetailPage() {
         console.error('Posts error:', postsRes.error)
       }
 
-      setPosts((postsRes.data || []) as unknown as Post[])
+      const rawPosts = postsRes.data || []
+      const authorIds = [...new Set(rawPosts.map(p => p.author_id).filter(Boolean))]
+      let profileById = new Map<string, { id: string; full_name: string | null; avatar_url: string | null; department: string | null }>()
+      if (authorIds.length) {
+        const { data: profs } = await supabase
+          .from('profiles')
+          .select('id, full_name, avatar_url, department')
+          .in('id', authorIds)
+        profileById = new Map((profs || []).map(p => [p.id, p]))
+      }
+
+      setPosts(rawPosts.map(p => ({ ...p, profiles: profileById.get(p.author_id) ?? null })) as unknown as Post[])
       setLoading(false)
     } catch (err: unknown) {
       console.error('Load error:', err)
