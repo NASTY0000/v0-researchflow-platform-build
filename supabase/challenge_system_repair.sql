@@ -18,18 +18,24 @@ ALTER TABLE challenges
   ADD COLUMN IF NOT EXISTS winner_team_id UUID,
   ADD COLUMN IF NOT EXISTS featured_in_showcase BOOLEAN DEFAULT false;
 
--- 2a. The live table may use submitter_id (older schema); the app uses
---     author_id. Rename if needed, otherwise make sure author_id exists.
+-- 2a. The live table may name the author column submitter_id or user_id
+--     (older schemas); the app uses author_id. Rename whichever exists.
 DO $$
+DECLARE
+  legacy TEXT;
 BEGIN
-  IF EXISTS (
-    SELECT 1 FROM information_schema.columns
-    WHERE table_schema = 'public' AND table_name = 'challenge_submissions' AND column_name = 'submitter_id'
-  ) AND NOT EXISTS (
+  IF NOT EXISTS (
     SELECT 1 FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'challenge_submissions' AND column_name = 'author_id'
   ) THEN
-    ALTER TABLE challenge_submissions RENAME COLUMN submitter_id TO author_id;
+    SELECT column_name INTO legacy
+    FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'challenge_submissions'
+      AND column_name IN ('submitter_id', 'user_id')
+    LIMIT 1;
+    IF legacy IS NOT NULL THEN
+      EXECUTE format('ALTER TABLE challenge_submissions RENAME COLUMN %I TO author_id', legacy);
+    END IF;
   END IF;
 END $$;
 
