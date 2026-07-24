@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useRouter } from 'next/navigation'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { formatDistanceToNow } from 'date-fns'
@@ -64,6 +65,8 @@ export function ActivityFeed() {
   const [activities, setActivities] = useState<ActivityItem[]>([])
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
+  const router = useRouter()
+  const shouldReduceMotion = useReducedMotion()
 
   useEffect(() => {
     loadActivities()
@@ -195,11 +198,11 @@ export function ActivityFeed() {
           return (
             <motion.div
               key={activity.id}
-              layout
-              initial={{ opacity: 0, x: -20, height: 0 }}
-              animate={{ opacity: 1, x: 0, height: 'auto' }}
-              exit={{ opacity: 0, x: 20, height: 0 }}
-              transition={{ duration: 0.35, delay: i * 0.05, ease: [0.22, 1, 0.36, 1] }}
+              layout={!shouldReduceMotion}
+              initial={shouldReduceMotion ? false : { opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, x: 20 }}
+              transition={{ duration: shouldReduceMotion ? 0 : 0.35, delay: shouldReduceMotion ? 0 : i * 0.05, ease: [0.22, 1, 0.36, 1] }}
             >
               <Link href={activity.link}>
                 <div className="flex items-start gap-3 p-3 rounded-xl hover:bg-muted/50 transition-colors group">
@@ -209,13 +212,25 @@ export function ActivityFeed() {
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <Link
-                        href={`/profile/${activity.user.id}`}
-                        onClick={e => e.stopPropagation()}
-                        className="font-medium text-sm hover:text-primary transition-colors shrink-0"
+                      <span
+                        role="link"
+                        tabIndex={0}
+                        onClick={e => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          router.push(`/profile/${activity.user.id}`)
+                        }}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            router.push(`/profile/${activity.user.id}`)
+                          }
+                        }}
+                        className="font-medium text-sm hover:text-primary transition-colors shrink-0 cursor-pointer"
                       >
                         {activity.user.name?.split(' ')[0]}
-                      </Link>
+                      </span>
                       <span className="text-xs text-muted-foreground">
                         {config.label}
                       </span>
