@@ -175,10 +175,10 @@ export default function DashboardPage() {
 
       {/* Hero banner */}
       <div
-        className="relative rounded-2xl overflow-hidden p-8 border border-primary/40 bg-card"
-        style={{ boxShadow: '0 0 40px color-mix(in oklch, var(--primary) 16%, transparent)' }}
+        className="relative rounded-2xl overflow-hidden p-8 border border-primary/50 bg-card"
+        style={{ boxShadow: '0 0 40px color-mix(in oklch, var(--primary) 22%, transparent), 0 0 80px color-mix(in oklch, var(--primary) 9%, transparent)' }}
       >
-        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 20% 50%, color-mix(in oklch, var(--primary) 14%, transparent), transparent 60%)' }} />
+        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 20% 50%, color-mix(in oklch, var(--primary) 20%, transparent), transparent 60%)' }} />
         <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4">
           <motion.div
             initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
@@ -187,7 +187,7 @@ export default function DashboardPage() {
             className="space-y-1"
           >
             <p className="text-xs text-muted-foreground mb-1">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
-            <h1 className="text-3xl font-bold font-heading" style={{ letterSpacing: '-0.03em' }}>
+            <h1 className="text-3xl md:text-4xl font-heading" style={{ letterSpacing: '-0.03em', fontWeight: 800, textWrap: 'balance' }}>
               {getGreeting()}, {profile?.full_name?.split(' ')[0] || 'Researcher'}
             </h1>
             <p className="text-muted-foreground">Here&apos;s what&apos;s happening with your research journey</p>
@@ -208,16 +208,16 @@ export default function DashboardPage() {
             <Link
               key={stat.title}
               href={stat.href}
-              className="flex items-center gap-3 p-4 hover:bg-muted/40 transition-colors"
+              className="flex items-center gap-3 p-4 hover:bg-muted/50 transition-colors"
             >
               <div
-                className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
-                style={{ background: `color-mix(in oklch, ${stat.color} 12%, transparent)` }}
+                className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
+                style={{ background: `color-mix(in oklch, ${stat.color} 16%, transparent)`, border: `1px solid color-mix(in oklch, ${stat.color} 30%, transparent)` }}
               >
-                <stat.icon className="h-4 w-4" style={{ color: stat.color }} />
+                <stat.icon className="h-[18px] w-[18px]" style={{ color: stat.color }} />
               </div>
               <div className="min-w-0">
-                <AnimatedCounter value={stat.value} className="text-xl font-bold font-heading tabular-nums leading-none" />
+                <AnimatedCounter value={stat.value} className="text-2xl font-bold font-heading tabular-nums leading-none" />
                 <p className="text-xs truncate text-muted-foreground mt-1">
                   {'sub' in stat && stat.sub ? `${stat.title} · ${stat.sub}` : stat.title}
                 </p>
@@ -234,13 +234,13 @@ export default function DashboardPage() {
             <div className="flex items-center gap-2">
               <Zap className="h-4 w-4" style={{ color: AMBER }} />
               <span className="text-sm font-semibold">{currentTier.name}</span>
-              <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: `color-mix(in oklch, ${AMBER} 12%, transparent)`, border: `1px solid color-mix(in oklch, ${AMBER} 25%, transparent)`, color: AMBER }}>{tierPct}%</span>
+              <span className="text-xs px-2.5 py-0.5 rounded-full font-semibold tabular-nums" style={{ background: `color-mix(in oklch, ${AMBER} 14%, transparent)`, border: `1px solid color-mix(in oklch, ${AMBER} 35%, transparent)`, color: AMBER }}>{tierPct}%</span>
             </div>
             <span className="text-xs text-muted-foreground">
               <span className="font-medium" style={{ color: AMBER }}>{pointsLeft.toLocaleString()}</span> pts to {nextTier.name}
             </span>
           </div>
-          <div className="h-2 rounded-full overflow-hidden bg-muted">
+          <div className="h-2.5 rounded-full overflow-hidden bg-muted">
             <motion.div
               className="h-full rounded-full"
               style={{ background: `linear-gradient(90deg, color-mix(in oklch, ${AMBER} 85%, black), ${AMBER}, color-mix(in oklch, ${AMBER} 65%, white))` }}
@@ -259,16 +259,16 @@ export default function DashboardPage() {
           {quickActions.map((action, i) => (
             <Link key={action.title} href={action.href}>
               <div
-                className={`action-card flex items-center gap-3.5 p-4 rounded-xl border border-border bg-card cursor-pointer animate-fade-up stagger-${i + 1}`}
+                className={`action-card group flex items-center gap-3.5 p-4 rounded-xl border border-border bg-card cursor-pointer hover:border-primary/50 transition-colors animate-fade-up stagger-${i + 1}`}
               >
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style={{ background: `color-mix(in oklch, ${action.color} 12%, transparent)` }}>
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style={{ background: `color-mix(in oklch, ${action.color} 16%, transparent)`, border: `1px solid color-mix(in oklch, ${action.color} 30%, transparent)` }}>
                   <action.icon className="h-5 w-5" style={{ color: action.color }} />
                 </div>
                 <div className="min-w-0 flex-1">
                   <h3 className="font-semibold text-sm">{action.title}</h3>
                   <p className="text-xs mt-0.5 text-muted-foreground truncate">{action.description}</p>
                 </div>
-                <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-foreground motion-reduce:transition-none motion-reduce:group-hover:translate-x-0" />
               </div>
             </Link>
           ))}
@@ -283,18 +283,18 @@ export default function DashboardPage() {
               <h2 className="text-lg font-bold font-heading">Recent Ideas</h2>
               <p className="text-xs mt-0.5 text-muted-foreground">Latest from the community</p>
             </div>
-            <Button variant="ghost" size="sm" asChild className="text-[var(--glow)]">
+            <Button variant="ghost" size="sm" asChild className="text-[var(--glow)] font-semibold hover:bg-primary/10">
               <Link href="/ideas">View all <ArrowRight className="ml-1 h-3 w-3" /></Link>
             </Button>
           </div>
           <div className="space-y-3">
             {recentIdeas.length > 0 ? recentIdeas.map((idea) => (
               <Link key={idea.id} href={`/ideas/${idea.id}`}>
-                <div className="list-row p-4 rounded-xl cursor-pointer bg-muted/30 border border-border/60">
+                <div className="list-row p-4 rounded-xl cursor-pointer bg-muted/30 border border-border/60 hover:border-primary/40 transition-colors">
                   <h4 className="font-medium text-sm truncate">{idea.title}</h4>
                   <p className="text-xs mt-1 line-clamp-2 text-muted-foreground">{idea.description}</p>
                   <div className="flex items-center gap-2 mt-2">
-                    <span className="text-xs px-2 py-0.5 rounded-full border border-primary/30 text-[var(--glow)]" style={{ background: 'color-mix(in oklch, var(--glow) 10%, transparent)' }}>{idea.research_area}</span>
+                    <span className="text-xs px-2.5 py-0.5 rounded-full font-semibold border border-primary/40 text-[var(--glow)]" style={{ background: 'color-mix(in oklch, var(--glow) 12%, transparent)' }}>{idea.research_area}</span>
                     <span className="text-xs flex items-center gap-1 text-muted-foreground">
                       <TrendingUp className="h-3 w-3" />{idea.upvotes} upvotes
                     </span>
@@ -320,7 +320,7 @@ export default function DashboardPage() {
               <h2 className="text-lg font-bold font-heading">Suggested Matches</h2>
               <p className="text-xs mt-0.5 text-muted-foreground">Researchers you might connect with</p>
             </div>
-            <Button variant="ghost" size="sm" asChild className="text-[var(--glow)]">
+            <Button variant="ghost" size="sm" asChild className="text-[var(--glow)] font-semibold hover:bg-primary/10">
               <Link href="/matches">View all <ArrowRight className="ml-1 h-3 w-3" /></Link>
             </Button>
           </div>
@@ -329,7 +329,7 @@ export default function DashboardPage() {
               const score = Math.round(Number(match.match_score))
               const isHighMatch = score > 80
               return (
-                <div key={match.id} className="list-row p-4 rounded-xl bg-muted/30 border border-border/60">
+                <div key={match.id} className="list-row p-4 rounded-xl bg-muted/30 border border-border/60 hover:border-primary/40 transition-colors">
                   <div className="flex items-center gap-3">
                     <Avatar className="h-10 w-10">
                       <AvatarImage src={(match as any).matched_user?.avatar_url} />
@@ -343,7 +343,8 @@ export default function DashboardPage() {
                     </div>
                     <span className={`text-xs px-2.5 py-1 rounded-full font-bold tabular-nums match-pill ${isHighMatch ? 'match-pill-high' : ''}`}
                       style={{
-                        background: `color-mix(in oklch, var(--primary) ${isHighMatch ? 20 : 10}%, transparent)`,
+                        background: `color-mix(in oklch, var(--primary) ${isHighMatch ? 25 : 12}%, transparent)`,
+                        border: isHighMatch ? '1px solid color-mix(in oklch, var(--primary) 50%, transparent)' : '1px solid transparent',
                         color: isHighMatch ? 'var(--glow)' : 'var(--accent-foreground)',
                       }}>
                       {score}%
@@ -412,7 +413,7 @@ export default function DashboardPage() {
                   <span className="text-muted-foreground">{item.label}</span>
                   <span className="font-medium tabular-nums text-[var(--glow)]">{item.display}</span>
                 </div>
-                <div className="h-2 rounded-full overflow-hidden bg-muted">
+                <div className="h-2.5 rounded-full overflow-hidden bg-muted">
                   <div className="h-full rounded-full transition-all duration-700 motion-reduce:transition-none" style={{ width: `${item.value}%`, background: 'linear-gradient(90deg, var(--primary), var(--cyan))', boxShadow: '2px 0 8px color-mix(in oklch, var(--primary) 50%, transparent)' }} />
                 </div>
               </div>
