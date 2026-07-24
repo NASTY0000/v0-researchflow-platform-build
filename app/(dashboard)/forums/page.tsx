@@ -33,9 +33,8 @@ const CATEGORY_COLORS: Record<string, string> = {
   funding: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
   careers: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
   discipline: 'bg-teal-500/10 text-teal-400 border-teal-500/20',
+  collaboration: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
 }
-
-const CATEGORIES = ['all', 'general', 'methodology', 'tools', 'funding', 'careers', 'discipline']
 
 export default function ForumsPage() {
   const [forums, setForums] = useState<Forum[]>([])
@@ -57,8 +56,9 @@ export default function ForumsPage() {
     load()
   }, [])
 
-  // Forums without a category (older database rows) count as 'general'
-  const categoryOf = (f: Forum) => f.category || 'general'
+  // Categories are stored with varying casing ('General', 'Collaboration');
+  // normalize for comparison, fall back to 'general' when absent.
+  const categoryOf = (f: Forum) => (f.category || 'general').toLowerCase()
 
   const filtered = forums.filter(f => {
     if (category !== 'all' && categoryOf(f) !== category) return false
@@ -67,13 +67,14 @@ export default function ForumsPage() {
     return (
       f.name?.toLowerCase().includes(q) ||
       f.description?.toLowerCase().includes(q) ||
-      categoryOf(f).toLowerCase().includes(q)
+      categoryOf(f).includes(q)
     )
   })
 
-  // Only offer category filters that match at least one forum
-  const presentCategories = new Set(forums.map(categoryOf))
-  const visibleCategories = CATEGORIES.filter(c => c === 'all' || presentCategories.has(c))
+  // Offer every category present in the data, plus the standard set that has
+  // matches - so each chip filters to at least one forum.
+  const presentCategories = [...new Set(forums.map(categoryOf))].sort()
+  const visibleCategories = ['all', ...presentCategories]
 
   if (loading) {
     return (
