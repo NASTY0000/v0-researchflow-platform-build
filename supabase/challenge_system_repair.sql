@@ -102,9 +102,16 @@ CREATE POLICY "Admins can judge submissions" ON challenge_submissions FOR UPDATE
 );
 
 -- 6. Backfill submission counts from actual submissions
-UPDATE challenges
-SET submission_count = (
-  SELECT COUNT(*)
+-- (written without qualified column comparisons; some editors mangle
+--  "= table.column" during paste)
+WITH counts AS (
+  SELECT challenge_id, COUNT(*) AS cnt
   FROM challenge_submissions
-  WHERE challenge_submissions.challenge_id = challenges.id
-);
+  GROUP BY challenge_id
+)
+UPDATE challenges
+SET submission_count = cnt
+FROM counts
+WHERE id = challenge_id;
+
+UPDATE challenges SET submission_count = 0 WHERE submission_count IS NULL;
