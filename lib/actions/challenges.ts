@@ -45,11 +45,12 @@ export async function createChallengeTeam(data: {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { success: false, error: 'Not authenticated' }
 
-  const { data: challenge } = await supabase
+  const { data: challenge, error: challengeError } = await supabase
     .from('challenges')
-    .select('id, status')
+    .select('*')
     .eq('id', data.challengeId)
-    .single()
+    .maybeSingle()
+  if (challengeError) return { success: false, error: `Could not load challenge: ${challengeError.message}` }
   if (!challenge || challenge.status !== 'open') return { success: false, error: 'Challenge is not open' }
 
   // Check existing membership in this challenge
@@ -94,11 +95,12 @@ export async function joinChallengeTeam(teamId: string): Promise<{ success: bool
   if (!team) return { success: false, error: 'Team not found' }
   if (!team.is_open) return { success: false, error: 'This team is not accepting members' }
 
-  const { data: challenge } = await supabase
+  const { data: challenge, error: challengeError } = await supabase
     .from('challenges')
-    .select('status, max_team_size')
+    .select('*')
     .eq('id', team.challenge_id)
-    .single()
+    .maybeSingle()
+  if (challengeError) return { success: false, error: `Could not load challenge: ${challengeError.message}` }
   if (!challenge || challenge.status !== 'open') return { success: false, error: 'Challenge is closed' }
 
   // Check existing membership in this challenge
@@ -144,11 +146,12 @@ export async function submitToChallenge(data: {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { success: false, error: 'Not authenticated' }
 
-  const { data: challenge } = await supabase
+  const { data: challenge, error: challengeError } = await supabase
     .from('challenges')
-    .select('id, title, status, submission_deadline, akili_reward, submission_count')
+    .select('*')
     .eq('id', data.challengeId)
-    .single()
+    .maybeSingle()
+  if (challengeError) return { success: false, error: `Could not load challenge: ${challengeError.message}` }
   if (!challenge) return { success: false, error: 'Challenge not found' }
   if (challenge.status && challenge.status !== 'open') return { success: false, error: 'Challenge is not accepting submissions' }
   if (challenge.submission_deadline && new Date(challenge.submission_deadline) < new Date()) {
@@ -175,10 +178,17 @@ export async function submitToChallenge(data: {
   })
   if (insertError) return { success: false, error: insertError.message }
 
-  await supabase
-    .from('challenges')
-    .update({ submission_count: (challenge.submission_count || 0) + 1 })
-    .eq('id', data.challengeId)
+  // Keep the denormalized counter in sync; never fail the submission over it
+  // (older deployments may lack the submission_count column entirely).
+  try {
+    const { count } = await supabase
+      .from('challenge_submissions')
+      .select('id', { count: 'exact', head: true })
+      .eq('challenge_id', data.challengeId)
+    if (count !== null) {
+      await supabase.from('challenges').update({ submission_count: count }).eq('id', data.challengeId)
+    }
+  } catch {}
 
   await awardAkiliPoints({
     userId: user.id,
@@ -304,11 +314,12 @@ export async function declareChallengeWinner(data: {
   const { data: profile } = await supabase.from('profiles').select('is_admin').eq('id', user.id).single()
   if (!profile?.is_admin) return { success: false, error: 'Admin only' }
 
-  const { data: challenge } = await supabase
+  const { data: challenge, error: challengeError } = await supabase
     .from('challenges')
-    .select('title, akili_reward')
+    .select('*')
     .eq('id', data.challengeId)
-    .single()
+    .maybeSingle()
+  if (challengeError) return { success: false, error: `Could not load challenge: ${challengeError.message}` }
   if (!challenge) return { success: false, error: 'Challenge not found' }
 
   await supabase
