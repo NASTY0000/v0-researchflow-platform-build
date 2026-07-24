@@ -57,16 +57,23 @@ export default function ForumsPage() {
     load()
   }, [])
 
+  // Forums without a category (older database rows) count as 'general'
+  const categoryOf = (f: Forum) => f.category || 'general'
+
   const filtered = forums.filter(f => {
-    if (category !== 'all' && f.category !== category) return false
+    if (category !== 'all' && categoryOf(f) !== category) return false
     if (!search.trim()) return true
     const q = search.toLowerCase()
     return (
       f.name?.toLowerCase().includes(q) ||
       f.description?.toLowerCase().includes(q) ||
-      f.category?.toLowerCase().includes(q)
+      categoryOf(f).toLowerCase().includes(q)
     )
   })
+
+  // Only offer category filters that match at least one forum
+  const presentCategories = new Set(forums.map(categoryOf))
+  const visibleCategories = CATEGORIES.filter(c => c === 'all' || presentCategories.has(c))
 
   if (loading) {
     return (
@@ -99,7 +106,7 @@ export default function ForumsPage() {
 
       {/* Category tabs */}
       <div className="flex gap-2 flex-wrap">
-        {CATEGORIES.map(cat => (
+        {visibleCategories.map(cat => (
           <button
             key={cat}
             onClick={() => setCategory(cat)}
@@ -138,9 +145,9 @@ export default function ForumsPage() {
                       <h2 className="font-semibold truncate">{forum.name}</h2>
                       <Badge
                         variant="outline"
-                        className={`text-xs capitalize ${CATEGORY_COLORS[forum.category] || 'bg-muted/50 text-muted-foreground'}`}
+                        className={`text-xs capitalize ${CATEGORY_COLORS[categoryOf(forum)] || 'bg-muted/50 text-muted-foreground'}`}
                       >
-                        {forum.category}
+                        {categoryOf(forum)}
                       </Badge>
                     </div>
                     {forum.description && (
