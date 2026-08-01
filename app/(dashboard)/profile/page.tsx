@@ -911,7 +911,7 @@ export default function ProfilePage() {
                   }}
                 >
                   <AvatarImage src={profile.avatar_url || undefined} />
-                  <AvatarFallback className="text-3xl font-black text-amber-400">
+                  <AvatarFallback className="text-3xl font-black text-gold-foreground">
                     {profile.full_name?.charAt(0) || 'U'}
                   </AvatarFallback>
                 </Avatar>
@@ -1064,10 +1064,10 @@ export default function ProfilePage() {
                           className="relative flex items-center gap-1.5 px-3 py-1.5 rounded-full cursor-pointer select-none bg-primary/15 border border-primary/35"
                           onClick={() => triggerSparkleBurst('akili-hero-badge')}
                         >
-                          <span className="text-amber-400 text-sm">⚡</span>
+                          <span className="text-gold-foreground text-sm">⚡</span>
                           <span
                             id="akili-count"
-                            className="text-amber-400 font-black text-lg tracking-tight"
+                            className="text-gold-foreground font-black text-lg tracking-tight"
                           >
                             {akiliState?.total ?? profile.akili_score ?? 0}
                           </span>

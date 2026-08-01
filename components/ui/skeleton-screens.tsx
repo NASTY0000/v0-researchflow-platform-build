@@ -2,21 +2,8 @@
 
 function Shimmer({ className = '' }: { className?: string }) {
   return (
-    <div className={`relative overflow-hidden rounded-lg bg-white/5 ${className}`}>
-      <div
-        className="absolute inset-0"
-        style={{
-          background: 'linear-gradient(90deg, transparent 0%, rgba(124,58,237,0.08) 50%, transparent 100%)',
-          animation: 'shimmer 1.8s infinite',
-          backgroundSize: '200% 100%',
-        }}
-      />
-      <style>{`
-        @keyframes shimmer {
-          0% { background-position: -200% 0 }
-          100% { background-position: 200% 0 }
-        }
-      `}</style>
+    <div data-slot="skeleton" className={`relative overflow-hidden rounded-lg ${className}`}>
+      <div className="absolute inset-0 skeleton-sweep" />
     </div>
   )
 }

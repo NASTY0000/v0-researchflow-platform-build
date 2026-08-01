@@ -1,13 +1,8 @@
 function SkeletonBlock({ className = '' }: { className?: string }) {
   return (
-    <div
-      className={`rounded-lg ${className}`}
-      style={{
-        background: 'linear-gradient(90deg, rgba(124,58,237,0.06) 0%, rgba(124,58,237,0.12) 50%, rgba(124,58,237,0.06) 100%)',
-        backgroundSize: '200% 100%',
-        animation: 'shimmer 1.8s ease-in-out infinite',
-      }}
-    />
+    <div data-slot="skeleton" className={`relative overflow-hidden rounded-lg ${className}`}>
+      <div className="absolute inset-0 skeleton-sweep" />
+    </div>
   )
 }
 
@@ -16,7 +11,7 @@ export { SkeletonBlock as Skeleton }
 
 export function ResearcherCardSkeleton() {
   return (
-    <div className="rounded-2xl p-5 space-y-3" style={{ border: '1px solid rgba(255,255,255,0.05)', background: '#0F0A1E' }}>
+    <div className="rounded-2xl p-5 space-y-3 border border-border bg-card">
       <div className="flex gap-3">
         <SkeletonBlock className="w-12 h-12 rounded-full flex-shrink-0" />
         <div className="flex-1 space-y-2">
@@ -36,7 +31,7 @@ export function ResearcherCardSkeleton() {
 
 export function IdeaCardSkeleton() {
   return (
-    <div className="rounded-2xl p-5 space-y-3" style={{ border: '1px solid rgba(255,255,255,0.05)', background: '#0F0A1E' }}>
+    <div className="rounded-2xl p-5 space-y-3 border border-border bg-card">
       <div className="flex justify-between">
         <SkeletonBlock className="h-4 w-1/2" />
         <SkeletonBlock className="h-6 w-16 rounded-full" />
@@ -54,7 +49,7 @@ export function IdeaCardSkeleton() {
 
 export function ProfileHeaderSkeleton() {
   return (
-    <div className="rounded-2xl overflow-hidden mb-4" style={{ border: '1px solid rgba(255,255,255,0.05)', background: '#0F0A1E' }}>
+    <div className="rounded-2xl overflow-hidden mb-4 border border-border bg-card">
       <SkeletonBlock className="h-52 w-full rounded-none" />
       <div className="px-5 pb-6">
         <div className="flex items-end justify-between -mt-12 mb-4">
@@ -75,7 +70,7 @@ export function ProfileHeaderSkeleton() {
 
 export function NotificationSkeleton() {
   return (
-    <div className="p-4 rounded-2xl space-y-2" style={{ border: '1px solid rgba(255,255,255,0.05)', background: '#0F0A1E' }}>
+    <div className="p-4 rounded-2xl space-y-2 border border-border bg-card">
       <div className="flex gap-3">
         <SkeletonBlock className="w-9 h-9 rounded-xl flex-shrink-0" />
         <div className="flex-1 space-y-2">
@@ -90,7 +85,7 @@ export function NotificationSkeleton() {
 
 export function MatchCardSkeleton() {
   return (
-    <div className="rounded-2xl p-5 space-y-4" style={{ border: '1px solid rgba(255,255,255,0.05)', background: '#0F0A1E' }}>
+    <div className="rounded-2xl p-5 space-y-4 border border-border bg-card">
       <div className="flex gap-3">
         <SkeletonBlock className="w-14 h-14 rounded-full flex-shrink-0" />
         <div className="flex-1 space-y-2">

@@ -39,8 +39,10 @@ function getGreeting() {
   return 'Good evening'
 }
 
-// Amber is the Akili tier accent — the one color deliberately outside the token set
-const AMBER = '#F59E0B'
+// Akili tier accent. --gold is fill-only; --gold-foreground is the
+// contrast-safe variant for text and icons (raw gold is 1.8:1 on white).
+const GOLD = 'var(--gold)'
+const GOLD_INK = 'var(--gold-foreground)'
 
 export default function DashboardPage() {
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -123,7 +125,7 @@ export default function DashboardPage() {
     : 100
 
   const statCards = [
-    { title: "Akili Score", value: akiliScore, icon: Zap, href: "/profile", color: AMBER, sub: currentTier.name },
+    { title: "Akili Score", value: akiliScore, icon: Zap, href: "/profile", color: GOLD_INK, sub: currentTier.name },
     { title: "Connections", value: stats.connections, icon: Users, href: "/matches", color: 'var(--cyan)' },
     { title: "Ideas Posted", value: stats.totalIdeas, icon: Lightbulb, href: "/ideas", color: 'var(--primary)' },
     { title: "New Matches", value: stats.matches, icon: Sparkles, href: "/matches", color: 'var(--glow)' },
@@ -232,18 +234,18 @@ export default function DashboardPage() {
         <div className="rounded-2xl p-5 border border-border bg-card">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <Zap className="h-4 w-4" style={{ color: AMBER }} />
+              <Zap className="h-4 w-4" style={{ color: GOLD_INK }} />
               <span className="text-sm font-semibold">{currentTier.name}</span>
-              <span className="text-xs px-2.5 py-0.5 rounded-full font-semibold tabular-nums" style={{ background: `color-mix(in oklch, ${AMBER} 14%, transparent)`, border: `1px solid color-mix(in oklch, ${AMBER} 35%, transparent)`, color: AMBER }}>{tierPct}%</span>
+              <span className="text-xs px-2.5 py-0.5 rounded-full font-semibold tabular-nums" style={{ background: 'color-mix(in oklch, var(--gold) 14%, transparent)', border: '1px solid color-mix(in oklch, var(--gold) 35%, transparent)', color: GOLD_INK }}>{tierPct}%</span>
             </div>
             <span className="text-xs text-muted-foreground">
-              <span className="font-medium" style={{ color: AMBER }}>{pointsLeft.toLocaleString()}</span> pts to {nextTier.name}
+              <span className="font-medium" style={{ color: GOLD_INK }}>{pointsLeft.toLocaleString()}</span> pts to {nextTier.name}
             </span>
           </div>
           <div className="h-2.5 rounded-full overflow-hidden bg-muted">
             <motion.div
               className="h-full rounded-full"
-              style={{ background: `linear-gradient(90deg, color-mix(in oklch, ${AMBER} 85%, black), ${AMBER}, color-mix(in oklch, ${AMBER} 65%, white))` }}
+              style={{ background: GOLD }}
               initial={shouldReduceMotion ? { width: `${tierPct}%` } : { width: 0 }}
               animate={{ width: `${tierPct}%` }}
               transition={shouldReduceMotion ? { duration: 0 } : { duration: 1.2, ease: [0.22, 1, 0.36, 1], delay: 0.3 }}

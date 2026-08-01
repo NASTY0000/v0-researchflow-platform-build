@@ -35,7 +35,7 @@ export function AkiliProgressCard({ score, dimensions }: AkiliProgressCardProps)
     { key: 'knowledge',     label: 'Knowledge',     icon: <Brain    size={18} className="text-purple-400" />, score: dimensions.knowledge,     barColor: '#A855F7', max: 500 },
     { key: 'collaboration', label: 'Collaboration', icon: <Users    size={18} className="text-cyan-400"   />, score: dimensions.collaboration, barColor: '#06B6D4', max: 500 },
     { key: 'mentorship',    label: 'Mentorship',    icon: <BookOpen size={18} className="text-emerald-400"/>, score: dimensions.mentorship,    barColor: '#10B981', max: 500 },
-    { key: 'technical',     label: 'Technical',     icon: <Wrench   size={18} className="text-amber-400"  />, score: dimensions.technical,     barColor: '#F59E0B', max: 500 },
+    { key: 'technical',     label: 'Technical',     icon: <Wrench   size={18} className="text-gold-foreground"  />, score: dimensions.technical,     barColor: 'var(--gold)', max: 500 },
   ]
 
   return (
@@ -44,13 +44,8 @@ export function AkiliProgressCard({ score, dimensions }: AkiliProgressCardProps)
       {/* Score + tier */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{
-              background: 'linear-gradient(135deg,rgba(124,58,237,0.5),rgba(168,85,247,0.3))',
-              border: '1px solid rgba(139,92,246,0.4)',
-              boxShadow: '0 0 16px rgba(124,58,237,0.35)',
-            }}>
-            <Zap size={22} className="text-purple-200" fill="currentColor" />
+          <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 bg-primary border border-primary dark:bg-[linear-gradient(135deg,rgba(124,58,237,0.5),rgba(168,85,247,0.3))] dark:border-[rgba(139,92,246,0.4)] dark:shadow-[0_0_16px_rgba(124,58,237,0.35)]">
+            <Zap size={22} className="text-white dark:text-purple-200" fill="currentColor" />
           </div>
           <div>
             <div className="text-[10px] font-bold uppercase tracking-wider mb-0.5 text-banner-muted-foreground">
@@ -85,7 +80,7 @@ export function AkiliProgressCard({ score, dimensions }: AkiliProgressCardProps)
               className="h-full rounded-full transition-all duration-1000"
               style={{
                 width: `${progressPct}%`,
-                background: 'linear-gradient(90deg,#7C3AED,#A855F7)',
+                background: 'var(--gold)',
               }}
             />
           </div>
@@ -156,7 +151,7 @@ export function AkiliProgressCard({ score, dimensions }: AkiliProgressCardProps)
                   </div>
                 </div>
               </div>
-              <div className="text-xs font-black flex-shrink-0" style={{ color: '#FBBF24' }}>
+              <div className="text-xs font-black flex-shrink-0 text-gold-foreground">
                 +{action.points} pts
               </div>
             </Link>

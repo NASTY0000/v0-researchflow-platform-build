@@ -60,9 +60,9 @@ export function EmptyState({
         animate={{ y: [0, -6, 0] }}
         transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
       >
-        {/* Outer glow ring */}
+        {/* Outer glow ring — dark only */}
         <div
-          className="absolute inset-0 rounded-2xl"
+          className="absolute inset-0 rounded-2xl hidden dark:block"
           style={{
             background: 'radial-gradient(circle, rgba(124,58,237,0.25) 0%, transparent 70%)',
             transform: 'scale(1.8)',
@@ -71,16 +71,11 @@ export function EmptyState({
         />
         {/* Inner ring */}
         <div
-          className="absolute -inset-2 rounded-2xl opacity-50"
-          style={{ border: '1px solid rgba(139,92,246,0.3)', borderRadius: '20px' }}
+          className="absolute -inset-2 rounded-2xl opacity-50 border border-border dark:border-[rgba(139,92,246,0.3)]"
+          style={{ borderRadius: '20px' }}
         />
         <div
-          className="relative w-16 h-16 rounded-2xl flex items-center justify-center text-2xl"
-          style={{
-            background: 'rgba(124,58,237,0.12)',
-            border: '1px solid rgba(139,92,246,0.3)',
-            boxShadow: '0 0 24px rgba(124,58,237,0.2)',
-          }}
+          className="relative w-16 h-16 rounded-2xl flex items-center justify-center text-2xl bg-accent border border-border dark:bg-[rgba(124,58,237,0.12)] dark:border-[rgba(139,92,246,0.3)] dark:shadow-[0_0_24px_rgba(124,58,237,0.2)]"
         >
           {icon}
         </div>
@@ -127,11 +122,7 @@ export function EmptyState({
         >
           <Link
             href={ctaHref}
-            className="w-full h-11 rounded-xl text-primary-foreground text-sm font-semibold flex items-center justify-center transition-all mb-3"
-            style={{
-              background: 'linear-gradient(135deg,#7C3AED,#A855F7)',
-              boxShadow: '0 0 20px rgba(124,58,237,0.3)',
-            }}
+            className="w-full h-11 rounded-xl text-primary-foreground text-sm font-semibold flex items-center justify-center transition-all mb-3 bg-primary hover:bg-primary/90 dark:bg-[linear-gradient(135deg,#7C3AED,#A855F7)] dark:shadow-[0_0_20px_rgba(124,58,237,0.3)]"
           >
             {ctaLabel}
           </Link>
@@ -146,11 +137,7 @@ export function EmptyState({
         >
           <button
             onClick={ctaOnClick}
-            className="w-full h-11 rounded-xl text-primary-foreground text-sm font-semibold flex items-center justify-center transition-all mb-3"
-            style={{
-              background: 'linear-gradient(135deg,#7C3AED,#A855F7)',
-              boxShadow: '0 0 20px rgba(124,58,237,0.3)',
-            }}
+            className="w-full h-11 rounded-xl text-primary-foreground text-sm font-semibold flex items-center justify-center transition-all mb-3 bg-primary hover:bg-primary/90 dark:bg-[linear-gradient(135deg,#7C3AED,#A855F7)] dark:shadow-[0_0_20px_rgba(124,58,237,0.3)]"
           >
             {ctaLabel}
           </button>

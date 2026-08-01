@@ -189,8 +189,8 @@ export function DashboardSidebar({ profile, isVerifiedMentor }: DashboardSidebar
             <Logo variant="icon" width={38} />
             <div>
               <div className="text-base font-bold leading-tight">
-                <span className="text-white">Research</span>
-                <span style={{ color: '#FBBF24' }}>Flow</span>
+                <span className="text-foreground">Research</span>
+                <span className="text-gold-foreground">Flow</span>
               </div>
               <div className="text-xs text-muted-foreground">
                 Collaborate &amp; Discover

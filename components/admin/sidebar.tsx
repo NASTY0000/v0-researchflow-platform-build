@@ -54,7 +54,7 @@ export function AdminSidebar({ pendingMentors = 0, pendingShowcase = 0, pendingR
               <Link href="/admin">
                 <Logo variant="icon" width={32} />
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold font-heading" style={{ color: '#A855F7' }}>Admin Panel</span>
+                  <span className="truncate font-semibold font-heading text-primary dark:text-[#A855F7]">Admin Panel</span>
                   <span className="truncate text-xs text-muted-foreground">ResearchFlow</span>
                 </div>
               </Link>

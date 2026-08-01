@@ -9,58 +9,65 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Light mode — professional lavender-white */
-  --background: #FAF8FF;
-  --foreground: #0F051E;
+  /* Light mode — warm neutral paper, purple as accent only */
+  --background: #FAF9F8;
+  --foreground: #1A1714;
   --card: #FFFFFF;
-  --card-foreground: #0F051E;
+  --card-foreground: #1A1714;
   --popover: #FFFFFF;
-  --popover-foreground: #0F051E;
+  --popover-foreground: #1A1714;
   --primary: #6D28D9;
   --primary-foreground: #FFFFFF;
-  --secondary: #EDE9FE;
-  --secondary-foreground: #4C1D95;
-  --muted: #F3F0FF;
-  --muted-foreground: #503278;
-  --accent: #E9D5FF;
+  --secondary: #F5F4F2;
+  --secondary-foreground: #44403C;
+  --muted: #F5F4F2;
+  --muted-foreground: #57534E;
+  --accent: #F5F1FE;
   --accent-foreground: #4C1D95;
   --destructive: #DC2626;
   --destructive-foreground: #FFFFFF;
-  --border: #D1C4E9;
-  --input: #D1C4E9;
+  --border: #E7E4E0;
+  --input: #E7E4E0;
   --ring: #6D28D9;
   --radius: 0.75rem;
 
   /* Sidebar tokens – light */
-  --sidebar: #F5F0FF;
-  --sidebar-foreground: #0F051E;
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #1A1714;
   --sidebar-primary: #6D28D9;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: rgba(109,40,217,0.08);
-  --sidebar-accent-foreground: #4C1D95;
-  --sidebar-border: #D1C4E9;
+  --sidebar-accent: #F5F3F1;
+  --sidebar-accent-foreground: #1A1714;
+  --sidebar-border: #EDEAE6;
   --sidebar-ring: #6D28D9;
 
   /* Extended palette */
   --glow: #A855F7;
-  --cyan: #06B6D4;
+  --cyan: #0891B2;
   --purple-soft: #7C3AED;
-  --text-muted: #503278;
+  --text-muted: #57534E;
   --surface: rgba(0,0,0,0.03);
   --surface-hover: rgba(0,0,0,0.06);
-  --border-bright: rgba(109,40,217,0.5);
+  --border-bright: rgba(109,40,217,0.35);
+
+  /* NEW — gold tokens. The brand's second colour had no token, which is
+     why the Akili progress bar ended up hardcoded orange.
+     --gold is for fills only. --gold-foreground is for text:
+     #FBBF24 measures 1.8:1 on white and must never be used for text. */
+  --gold: #E8A317;
+  --gold-foreground: #B45309;
 
   /* Chart */
   --chart-1: #6D28D9;
-  --chart-2: #A855F7;
-  --chart-3: #06B6D4;
-  --chart-4: #C084FC;
-  --chart-5: #818CF8;
+  --chart-2: #9333EA;
+  --chart-3: #0891B2;
+  --chart-4: #A855F7;
+  --chart-5: #6366F1;
 
-  /* Banner / promo card */
-  --banner: #F3EBFF;
+  /* Banner / promo card — the ONE element allowed a purple wash */
+  --banner: #F5F1FE;
   --banner-foreground: #3B0764;
-  --banner-muted-foreground: #6B4E96;
+  --banner-muted-foreground: #5B4B7A;
 }
 
 .dark {
@@ -97,6 +104,8 @@
 
   /* Extended palette */
   --glow: #C084FC;
+  --gold: #FBBF24;
+  --gold-foreground: #FCD34D;
   --text-muted: #9473B4;
   --surface: rgba(255,255,255,0.03);
   --surface-hover: rgba(255,255,255,0.06);
@@ -132,6 +141,8 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-gold: var(--gold);
+  --color-gold-foreground: var(--gold-foreground);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
@@ -158,6 +169,10 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+  }
+  a, button, input, textarea, select,
+  [data-slot="card"], [data-slot="button"],
+  .stat-card, .action-card, .list-row {
     transition: background-color 0.2s ease, border-color 0.2s ease, color 0.1s ease;
   }
   @media (prefers-reduced-motion: reduce) {
@@ -193,74 +208,104 @@
     background: linear-gradient(135deg, #1E0533 0%, #050118 100%);
   }
 
-  /* Gradient text – purple to cyan */
+  /* Gradient text ------------------------------------------------------
+     The old stops (#C084FC → #818CF8) measure 2.5:1 and 2.9:1 against the
+     light background. This is why the sidebar wordmark is barely legible. */
   .gradient-text {
+    background: linear-gradient(135deg, #6D28D9 0%, #4338CA 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .dark .gradient-text {
     background: linear-gradient(135deg, #C084FC 0%, #818CF8 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
+
   .gradient-text-cyan {
+    background: linear-gradient(135deg, #7C3AED 0%, #0E7490 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .dark .gradient-text-cyan {
     background: linear-gradient(135deg, #A855F7 0%, #06B6D4 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
-  /* Glass card surface */
+  /* Glass ---------------------------------------------------------------
+     rgba(255,255,255,0.03) over a white page is invisible. Glass is a
+     dark-mode construct; in light mode it degrades to an ordinary card. */
   .glass {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+  }
+  .glass:hover { border-color: #DCD8D3; }
+  .dark .glass {
     background: rgba(255,255,255,0.03);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(139,92,246,0.15);
-    border-radius: 16px;
   }
-  .glass:hover {
+  .dark .glass:hover {
     border-color: rgba(168,85,247,0.5);
     box-shadow: 0 0 30px rgba(124,58,237,0.2);
   }
 
-  /* Glow effects */
-  .glow-primary {
-    box-shadow: 0 0 20px rgba(124,58,237,0.4);
-  }
-  .glow-sm {
-    box-shadow: 0 0 12px rgba(124,58,237,0.3);
-  }
+  /* Glows — dark only */
+  .glow-primary, .glow-sm { box-shadow: none; }
+  .dark .glow-primary { box-shadow: 0 0 20px rgba(124,58,237,0.4); }
+  .dark .glow-sm      { box-shadow: 0 0 12px rgba(124,58,237,0.3); }
 
   /* Section label style */
   .label-section {
     text-transform: uppercase;
     letter-spacing: 0.2em;
     font-size: 11px;
-    color: var(--text-muted);
-    font-weight: 500;
+    color: var(--muted-foreground);
+    font-weight: 600;
   }
 
   /* Match score pill */
   .match-pill {
-    background: rgba(124,58,237,0.15);
-    border: 1px solid rgba(168,85,247,0.3);
+    background: var(--accent);
+    border: 1px solid #DDD5F5;
+    color: #4C1D95;
     border-radius: 20px;
     font-weight: 700;
     font-size: 11px;
   }
-  .match-pill-high {
-    animation: pulse-glow 2s ease-in-out infinite;
+  .dark .match-pill {
+    background: rgba(124,58,237,0.15);
+    border: 1px solid rgba(168,85,247,0.3);
+    color: #D8B4FE;
   }
+  .match-pill-high { animation: none; }
+  .dark .match-pill-high { animation: pulse-glow 2s ease-in-out infinite; }
 
-  /* Stat number */
+  /* Stat numbers --------------------------------------------------------
+     Was hardcoded #C084FC — 2.5:1 in light mode, effectively unreadable. */
   .stat-number {
-    color: #C084FC;
+    color: var(--primary);
     font-weight: 800;
     letter-spacing: -0.03em;
   }
+  .dark .stat-number { color: #C084FC; }
 
   /* Interactive card hover — use CSS vars for per-card accent colors */
   .stat-card {
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
   }
   .stat-card:hover {
+    border-color: var(--card-accent-border, #DCD8D3);
+    box-shadow: var(--card-accent-glow, 0 2px 8px rgba(26,23,20,0.06));
+  }
+  .dark .stat-card:hover {
     border-color: var(--card-accent-border, rgba(168,85,247,0.4));
     box-shadow: var(--card-accent-glow, 0 0 24px rgba(124,58,237,0.2));
   }
@@ -268,15 +313,17 @@
     transition: border-color 0.2s ease, transform 0.2s ease;
   }
   .action-card:hover {
-    border-color: rgba(168,85,247,0.4);
+    border-color: #DCD8D3;
     transform: translateY(-2px);
   }
+  .dark .action-card:hover { border-color: rgba(168,85,247,0.4); }
   .list-row {
     transition: border-color 0.15s ease;
   }
   .list-row:hover {
-    border-color: rgba(168,85,247,0.3);
+    border-color: #DCD8D3;
   }
+  .dark .list-row:hover { border-color: rgba(168,85,247,0.3); }
   @media (prefers-reduced-motion: reduce) {
     .stat-card, .action-card, .list-row { transition: none; }
     .action-card:hover { transform: none; }
@@ -398,7 +445,8 @@
               box-shadow 200ms cubic-bezier(0.4,0,0.2,1);
 }
 .card:hover, [data-slot="card"]:hover {
-  box-shadow: 0 0 24px rgba(109,40,217,0.12);
+  box-shadow: 0 2px 8px rgba(26,23,20,0.06);
+  border-color: #DCD8D3 !important;
 }
 .dark .card, .dark [data-slot="card"] {
   backdrop-filter: blur(12px);
@@ -408,18 +456,37 @@
   box-shadow: 0 0 30px rgba(124,58,237,0.15);
 }
 
-/* Buttons – primary */
+/* Buttons – primary ---------------------------------------------------
+   Was an unconditional purple gradient plus a 20px glow. A glowing
+   gradient button on a white page is the strongest visual tell that a
+   UI was generated rather than designed. */
 [data-slot="button"][class*="bg-primary"],
 button.bg-primary {
-  background: linear-gradient(135deg, var(--primary), #A855F7) !important;
-  box-shadow: 0 0 20px rgba(109,40,217,0.3);
+  background: var(--primary) !important;
+  box-shadow: 0 1px 2px rgba(26,23,20,0.08);
   border: none !important;
-  transition: all 200ms cubic-bezier(0.4,0,0.2,1);
+  transition: background-color 200ms cubic-bezier(0.4,0,0.2,1),
+              box-shadow 200ms cubic-bezier(0.4,0,0.2,1);
 }
 [data-slot="button"][class*="bg-primary"]:hover,
 button.bg-primary:hover {
+  background: #5B21B6 !important;
+  box-shadow: 0 2px 6px rgba(26,23,20,0.12);
+}
+.dark [data-slot="button"][class*="bg-primary"],
+.dark button.bg-primary {
+  background: linear-gradient(135deg, var(--primary), #A855F7) !important;
+  box-shadow: 0 0 20px rgba(109,40,217,0.3);
+  transition: all 200ms cubic-bezier(0.4,0,0.2,1);
+}
+.dark [data-slot="button"][class*="bg-primary"]:hover,
+.dark button.bg-primary:hover {
   box-shadow: 0 0 32px rgba(109,40,217,0.5);
   transform: scale(1.02);
+}
+@media (prefers-reduced-motion: reduce) {
+  .dark [data-slot="button"][class*="bg-primary"]:hover,
+  .dark button.bg-primary:hover { transform: none; }
 }
 
 /* Inputs */
@@ -463,12 +530,21 @@ input:focus, textarea:focus {
   background: var(--accent) !important;
 }
 
-/* Progress bar */
+/* Progress ------------------------------------------------------------
+   Akili tier progress is an EARNED signal, so it gets the brand's second
+   colour rather than the purple→cyan gradient. This also removes the
+   reason someone hardcoded orange on the dashboard. */
+[data-slot="progress"] {
+  background: #EDEAE6 !important;
+}
 [data-slot="progress"] > div {
-  background: linear-gradient(90deg, #7C3AED, #06B6D4) !important;
+  background: var(--gold) !important;
 }
 .dark [data-slot="progress"] {
   background: rgba(255,255,255,0.06) !important;
+}
+.dark [data-slot="progress"] > div {
+  background: linear-gradient(90deg, #7C3AED, #06B6D4) !important;
 }
 
 /* Badges */
@@ -484,9 +560,11 @@ input:focus, textarea:focus {
   border: 1px solid rgba(139,92,246,0.15) !important;
 }
 [data-slot="tabs-trigger"][data-state="active"] {
-  background: rgba(124,58,237,0.25) !important;
+  background: var(--accent) !important;
+  color: #4C1D95 !important;
 }
 .dark [data-slot="tabs-trigger"][data-state="active"] {
+  background: rgba(124,58,237,0.25) !important;
   color: #F3F0FF !important;
 }
 
@@ -605,9 +683,31 @@ html {
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: rgba(139,92,246,0.3);
+  background: #D6D2CD;
   border-radius: 3px;
 }
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(168,85,247,0.5);
+::-webkit-scrollbar-thumb:hover { background: #BFBAB4; }
+.dark ::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.3); }
+.dark ::-webkit-scrollbar-thumb:hover { background: rgba(168,85,247,0.5); }
+
+/* Skeletons -----------------------------------------------------------
+   Skeletons must never carry brand colour — the loading state is the
+   first thing every user sees, and it rendered as lavender blocks. */
+[data-slot="skeleton"], .skeleton {
+  background: #EDEAE6 !important;
+}
+.dark [data-slot="skeleton"], .dark .skeleton {
+  background: rgba(255,255,255,0.06) !important;
+}
+
+/* Shimmer sweep for skeleton blocks. Light mode gets a white highlight
+   over the neutral base; dark mode keeps the purple sweep. */
+.skeleton-sweep {
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.7) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+}
+.dark .skeleton-sweep {
+  background: linear-gradient(90deg, transparent 0%, rgba(124,58,237,0.18) 50%, transparent 100%);
+  background-size: 200% 100%;
 }
