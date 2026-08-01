@@ -362,7 +362,7 @@ export default function NetworkPage() {
                           <Button
                             size="sm"
                             className="flex-1 gap-1"
-                            style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}
+                            style={{ background: 'var(--cta-bg)', border: 'none' }}
                             disabled={actionLoading === conn.id}
                             onClick={() => acceptConnection(conn.id, conn.requester_id)}
                           >
@@ -445,7 +445,7 @@ export default function NetworkPage() {
                 <p className="text-sm mt-1 text-muted-foreground">Post a research idea or complete your profile to get matched</p>
                 <div className="flex gap-3 justify-center mt-4">
                   <Link href="/ideas/new">
-                    <Button size="sm" style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}>
+                    <Button size="sm" style={{ background: 'var(--cta-bg)', border: 'none' }}>
                       Post an Idea
                     </Button>
                   </Link>
@@ -495,7 +495,7 @@ export default function NetworkPage() {
                         <Button
                           size="sm"
                           className="flex-1 gap-1"
-                          style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none', fontSize: '12px' }}
+                          style={{ background: 'var(--cta-bg)', border: 'none', fontSize: '12px' }}
                           onClick={() => setConnectTarget(suggestion)}
                         >
                           <UserPlus className="h-3 w-3" />
@@ -611,7 +611,7 @@ export default function NetworkPage() {
             <Button
               onClick={sendConnectionRequest}
               disabled={actionLoading === 'sending'}
-              style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}
+              style={{ background: 'var(--cta-bg)', border: 'none' }}
             >
               {actionLoading === 'sending' ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
               Send Request

@@ -818,7 +818,7 @@ export default function ProfilePage() {
       {/* Header Card */}
       <div
         className="relative rounded-2xl overflow-hidden border border-primary/40"
-        style={{ boxShadow: '0 0 40px color-mix(in oklch, var(--primary) 22%, transparent), 0 0 80px color-mix(in oklch, var(--primary) 9%, transparent)' }}
+        style={{ boxShadow: 'var(--brand-glow)' }}
       >
         {/* Animated canvas banner — first child, flush to top edge */}
         <div className="relative h-52 bg-muted dark:bg-background">
@@ -906,7 +906,7 @@ export default function ProfilePage() {
                   className="w-24 h-24 transition-transform duration-200 group-hover:scale-[1.06]"
                   style={{
                     border: '3px solid var(--primary)',
-                    boxShadow: '0 0 0 5px color-mix(in oklch, var(--primary) 20%, transparent), 0 0 24px color-mix(in oklch, var(--primary) 45%, transparent)',
+                    boxShadow: '0 0 0 5px color-mix(in oklch, var(--primary) 18%, transparent), var(--brand-glow)',
                     transition: 'box-shadow 300ms ease, transform 200ms cubic-bezier(0.34,1.56,0.64,1)',
                   }}
                 >

@@ -47,7 +47,7 @@ export function CursorGlow() {
           height: 8,
           borderRadius: '50%',
           background: 'rgba(124,58,237,0.5)',
-          boxShadow: '0 0 12px rgba(124,58,237,0.6)',
+          boxShadow: 'var(--brand-glow-sm)',
         }}
       />
     </>

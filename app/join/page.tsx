@@ -80,7 +80,7 @@ function JoinPageInner() {
               <p className="text-xs" style={{ color: '#4A3F6B' }}>Redirecting to your project...</p>
               {projectId && (
                 <Link href={`/projects/${projectId}`}>
-                  <Button style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}>
+                  <Button style={{ background: 'var(--cta-bg)', border: 'none' }}>
                     <Users className="h-4 w-4 mr-2" />
                     Go to Project
                   </Button>

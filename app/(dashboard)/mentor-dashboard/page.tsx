@@ -240,7 +240,7 @@ export default function MentorDashboardPage() {
           <Link
             href="/mentor-verification"
             className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-medium"
-            style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', color: '#F3F0FF' }}
+            style={{ background: 'var(--cta-bg)', color: '#F3F0FF' }}
           >
             Complete Application
           </Link>
@@ -591,7 +591,7 @@ export default function MentorDashboardPage() {
                 onClick={addSlot}
                 disabled={isAddingSlot || !slotDate || !slotStart || !slotEnd}
                 size="sm"
-                style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}
+                style={{ background: 'var(--cta-bg)', border: 'none' }}
               >
                 {isAddingSlot ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Adding...</> : <><Plus className="w-4 h-4 mr-1" />Add Slot</>}
               </Button>
@@ -683,7 +683,7 @@ export default function MentorDashboardPage() {
               <Button
                 onClick={postOpenCall}
                 disabled={isPostingCall || !callTitle.trim() || !callDescription.trim() || !callArea}
-                style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}
+                style={{ background: 'var(--cta-bg)', border: 'none' }}
               >
                 {isPostingCall ? (
                   <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Posting...</>

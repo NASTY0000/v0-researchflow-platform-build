@@ -90,8 +90,8 @@ function LoginPageInner() {
     <div className="min-h-screen flex items-center justify-center p-4 bg-background">
       {/* Background glows */}
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-1/4 -left-32 w-80 h-80 rounded-full" style={{ background: 'radial-gradient(ellipse,rgba(109,40,217,0.15),transparent 70%)' }} />
-        <div className="absolute bottom-1/4 -right-32 w-80 h-80 rounded-full" style={{ background: 'radial-gradient(ellipse,rgba(168,85,247,0.10),transparent 70%)' }} />
+        <div className="absolute top-1/4 -left-32 w-80 h-80 rounded-full hidden dark:block" style={{ background: 'radial-gradient(ellipse,rgba(109,40,217,0.15),transparent 70%)' }} />
+        <div className="absolute bottom-1/4 -right-32 w-80 h-80 rounded-full hidden dark:block" style={{ background: 'radial-gradient(ellipse,rgba(168,85,247,0.10),transparent 70%)' }} />
       </div>
 
       <div className="w-full max-w-md relative animate-fade-up">
@@ -156,7 +156,7 @@ function LoginPageInner() {
             </div>
 
             <Button type="submit" className="w-full h-10" disabled={isLoading || isGoogleLoading}
-              style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', boxShadow: '0 0 20px rgba(124,58,237,0.35)', border: 'none', borderRadius: '8px', color: '#fff' }}>
+              style={{ background: 'var(--cta-bg)', boxShadow: 'var(--brand-glow)', border: 'none', borderRadius: '8px', color: '#fff' }}>
               {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Signing in...</> : 'Sign in'}
             </Button>
           </form>

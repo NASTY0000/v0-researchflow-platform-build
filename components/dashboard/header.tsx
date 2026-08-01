@@ -51,7 +51,7 @@ export function DashboardHeader({ profile, unreadCount }: DashboardHeaderProps) 
         {/* Quick actions */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button size="sm" className="gap-1" style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none', boxShadow: '0 0 14px rgba(124,58,237,0.3)', borderRadius: '8px' }}>
+            <Button size="sm" className="gap-1" style={{ background: 'var(--cta-bg)', border: 'none', boxShadow: 'var(--brand-glow-sm)', borderRadius: '8px' }}>
               <Plus className="h-4 w-4" />
               <span className="hidden sm:inline">New</span>
             </Button>

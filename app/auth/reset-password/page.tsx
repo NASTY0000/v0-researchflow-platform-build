@@ -87,7 +87,7 @@ export default function ResetPasswordPage() {
               type="submit"
               disabled={loading}
               className="w-full py-2.5 px-4 rounded-lg font-medium text-white disabled:opacity-50"
-              style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', boxShadow: '0 0 20px rgba(124,58,237,0.35)', border: 'none' }}
+              style={{ background: 'var(--cta-bg)', boxShadow: 'var(--brand-glow)', border: 'none' }}
             >
               {loading ? 'Updating…' : 'Update Password'}
             </button>

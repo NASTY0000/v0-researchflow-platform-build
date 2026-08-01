@@ -216,7 +216,7 @@ export function MobileNav({ initialUnreadCount }: MobileNavProps) {
                       borderRadius: '4px',
                       background: '#A855F7',
                       border: '1.5px solid #07030F',
-                      boxShadow: '0 0 6px rgba(168,85,247,0.7)',
+                      boxShadow: 'var(--brand-glow-sm)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',

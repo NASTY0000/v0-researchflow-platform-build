@@ -180,7 +180,7 @@ export function RequestProgramModal({ mentor, onClose, onSuccess }: RequestProgr
                   onClick={handleSubmit}
                   disabled={loading || !focusArea.trim() || goals.trim().length < 30}
                   className="flex-1"
-                  style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}
+                  style={{ background: 'var(--cta-bg)', border: 'none' }}
                 >
                   {loading ? (
                     <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Sending...</>

@@ -313,11 +313,11 @@ export default function ShowcaseEntryPage({
           <span className="hidden sm:inline text-sm truncate max-w-xs" style={{ color: '#C4B5D8' }}>{entry.title}</span>
         </div>
         {isLoggedIn ? (
-          <Button size="sm" asChild style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}>
+          <Button size="sm" asChild style={{ background: 'var(--cta-bg)', border: 'none' }}>
             <Link href="/dashboard">Dashboard</Link>
           </Button>
         ) : (
-          <Button size="sm" asChild style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}>
+          <Button size="sm" asChild style={{ background: 'var(--cta-bg)', border: 'none' }}>
             <Link href="/auth/signup">Join ResearchFlow</Link>
           </Button>
         )}
@@ -386,7 +386,7 @@ export default function ShowcaseEntryPage({
                 >
                   <Avatar className="h-10 w-10">
                     <AvatarImage src={member.avatar_url || undefined} />
-                    <AvatarFallback className="text-sm" style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', color: '#F3F0FF' }}>
+                    <AvatarFallback className="text-sm" style={{ background: 'var(--cta-bg)', color: '#F3F0FF' }}>
                       {member.full_name?.charAt(0) || "?"}
                     </AvatarFallback>
                   </Avatar>
@@ -537,7 +537,7 @@ export default function ShowcaseEntryPage({
             {entry.document_url && (
               <Button
                 onClick={handleDownload}
-                style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}
+                style={{ background: 'var(--cta-bg)', border: 'none' }}
               >
                 <Download className="h-4 w-4 mr-2" />
                 Download PDF
@@ -634,7 +634,7 @@ export default function ShowcaseEntryPage({
             <div className="flex items-center justify-center gap-3">
               <Button
                 asChild
-                style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}
+                style={{ background: 'var(--cta-bg)', border: 'none' }}
               >
                 <Link href="/auth/signup">Create Free Account</Link>
               </Button>

@@ -78,7 +78,7 @@ export default function ShowcasePage() {
               <Button size="sm" variant="ghost" asChild className="text-muted-foreground">
                 <Link href="/projects">Submit Research</Link>
               </Button>
-              <Button size="sm" asChild style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}>
+              <Button size="sm" asChild style={{ background: 'var(--cta-bg)', border: 'none' }}>
                 <Link href="/dashboard">Dashboard</Link>
               </Button>
             </>
@@ -87,7 +87,7 @@ export default function ShowcasePage() {
               <Button size="sm" variant="ghost" asChild className="text-muted-foreground">
                 <Link href="/auth/login">Sign In</Link>
               </Button>
-              <Button size="sm" asChild style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}>
+              <Button size="sm" asChild style={{ background: 'var(--cta-bg)', border: 'none' }}>
                 <Link href="/auth/signup">Join Free</Link>
               </Button>
             </>
@@ -160,7 +160,7 @@ export default function ShowcasePage() {
             <p className="text-muted-foreground">Be the first to submit your work.</p>
             {isLoggedIn && (
               <Link href="/projects">
-                <Button style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}>
+                <Button style={{ background: 'var(--cta-bg)', border: 'none' }}>
                   Go to My Projects
                 </Button>
               </Link>
@@ -185,7 +185,7 @@ export default function ShowcasePage() {
               Connect with researchers across Africa, share your own work, find collaborators, and grow your academic network — all in one place.
             </p>
             <div className="flex items-center justify-center gap-3 flex-wrap">
-              <Button asChild style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}>
+              <Button asChild style={{ background: 'var(--cta-bg)', border: 'none' }}>
                 <Link href="/auth/signup">Create Free Account</Link>
               </Button>
               <Button variant="outline" asChild>

@@ -9,8 +9,8 @@ type GlowVariant = 'purple' | 'teal' | 'gold' | 'none'
 const glowMap: Record<GlowVariant, { border: string; shadow: string; hover: string }> = {
   purple: {
     border: 'rgba(139,92,246,0.25)',
-    shadow: '0 0 32px rgba(124,58,237,0.15)',
-    hover:  '0 0 48px rgba(124,58,237,0.35)',
+    shadow: 'var(--brand-glow)',
+    hover:  'var(--brand-glow)',
   },
   teal: {
     border: 'rgba(6,182,212,0.25)',

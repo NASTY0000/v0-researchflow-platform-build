@@ -109,7 +109,7 @@ export function GettingStartedChecklist({ userId, akiliScore, joinedAt, hasBio }
           <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(139,92,246,0.2)' }}>
             <div
               className="h-full rounded-full transition-all duration-700"
-              style={{ width: `${(completed / items.length) * 100}%`, background: 'linear-gradient(90deg,#7C3AED,#A855F7)' }}
+              style={{ width: `${(completed / items.length) * 100}%`, background: 'var(--cta-bg-90)' }}
             />
           </div>
           <span className="text-xs font-medium flex-shrink-0 text-banner-muted-foreground">

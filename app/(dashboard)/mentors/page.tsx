@@ -614,7 +614,7 @@ export default function MentorsPage() {
                       <Button
                         size="sm"
                         onClick={() => setProgramModalMentor(match as unknown as MentorWithProfile)}
-                        style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none', flex: 1 }}
+                        style={{ background: 'var(--cta-bg)', border: 'none', flex: 1 }}
                       >
                         Request Program
                       </Button>
@@ -819,7 +819,7 @@ export default function MentorsPage() {
                       <Button
                         size="sm"
                         onClick={() => setProgramModalMentor(mentor)}
-                        style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none', flex: 1 }}
+                        style={{ background: 'var(--cta-bg)', border: 'none', flex: 1 }}
                       >
                         Request Program
                       </Button>
@@ -986,7 +986,7 @@ export default function MentorsPage() {
                 <Button
                   onClick={handleRequestMentorship}
                   disabled={isRequesting || (userProjects.length > 0 && !selectedProjectId)}
-                  style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}
+                  style={{ background: 'var(--cta-bg)', border: 'none' }}
                 >
                   {isRequesting ? (
                     <>

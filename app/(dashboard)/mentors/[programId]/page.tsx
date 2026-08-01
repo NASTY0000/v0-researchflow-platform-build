@@ -195,7 +195,7 @@ export default function ProgramDetailPage() {
           <>
             {/* Progress bar */}
             <div style={{ height: '6px', borderRadius: '100px', background: 'rgba(139,92,246,0.12)', marginBottom: '16px', overflow: 'hidden' }}>
-              <div style={{ height: '100%', width: `${milestones.length > 0 ? Math.round(doneCount / milestones.length * 100) : 0}%`, borderRadius: '100px', background: 'linear-gradient(90deg,#7C3AED,#A855F7)', transition: 'width 0.5s ease' }} />
+              <div style={{ height: '100%', width: `${milestones.length > 0 ? Math.round(doneCount / milestones.length * 100) : 0}%`, borderRadius: '100px', background: 'var(--cta-bg-90)', transition: 'width 0.5s ease' }} />
             </div>
             <MilestoneList
               milestones={milestones}
@@ -256,7 +256,7 @@ export default function ProgramDetailPage() {
           {!showCompleteForm ? (
             <Button
               onClick={() => setShowCompleteForm(true)}
-              style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}
+              style={{ background: 'var(--cta-bg)', border: 'none' }}
             >
               Mark as Complete
             </Button>
@@ -317,7 +317,7 @@ export default function ProgramDetailPage() {
                 <Button
                   onClick={handleComplete}
                   disabled={completing}
-                  style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}
+                  style={{ background: 'var(--cta-bg)', border: 'none' }}
                 >
                   {completing ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Completing...</> : 'Confirm Completion'}
                 </Button>

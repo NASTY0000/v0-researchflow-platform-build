@@ -206,7 +206,7 @@ export function MentorVerification({ userId, onComplete, onSkip }: MentorVerific
                       onClick={() => setSelectedTier(tier.tier)}
                       className="w-full p-5 rounded-xl text-left transition-all duration-200"
                       style={selectedTier === tier.tier
-                        ? { background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(168,85,247,0.5)', boxShadow: '0 0 20px rgba(124,58,237,0.2)' }
+                        ? { background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(168,85,247,0.5)', boxShadow: 'var(--brand-glow)' }
                         : { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(139,92,246,0.2)' }
                       }
                     >
@@ -214,7 +214,7 @@ export function MentorVerification({ userId, onComplete, onSkip }: MentorVerific
                         <div 
                           className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
                           style={selectedTier === tier.tier
-                            ? { background: 'linear-gradient(135deg,#7C3AED,#A855F7)', boxShadow: '0 0 14px rgba(124,58,237,0.4)' }
+                            ? { background: 'var(--cta-bg)', boxShadow: 'var(--brand-glow-sm)' }
                             : { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(139,92,246,0.2)' }
                           }
                         >
@@ -256,7 +256,7 @@ export function MentorVerification({ userId, onComplete, onSkip }: MentorVerific
                   <Button
                     onClick={() => selectedTier && setStep('details')}
                     disabled={!selectedTier}
-                    style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', boxShadow: '0 0 14px rgba(124,58,237,0.3)', border: 'none' }}
+                    style={{ background: 'var(--cta-bg)', boxShadow: 'var(--brand-glow-sm)', border: 'none' }}
                   >
                     Continue
                     <ArrowRight className="ml-2 h-4 w-4" />
@@ -566,7 +566,7 @@ export function MentorVerification({ userId, onComplete, onSkip }: MentorVerific
                     value={availableSlots}
                     onChange={(e) => setAvailableSlots(Number(e.target.value))}
                     className="w-full h-2 rounded-full appearance-none cursor-pointer"
-                    style={{ background: `linear-gradient(to right, #7C3AED 0%, #7C3AED ${(availableSlots / 20) * 100}%, rgba(255,255,255,0.1) ${(availableSlots / 20) * 100}%, rgba(255,255,255,0.1) 100%)` }}
+                    style={{ background: `linear-gradient(to right, #7C3AED 0%, #7C3AED ${(availableSlots / 20) * 100}%, var(--muted) ${(availableSlots / 20) * 100}%, var(--muted) 100%)` }}
                   />
                   <div className="flex justify-between text-xs text-muted-foreground">
                     <span>1 slot</span>
@@ -588,7 +588,7 @@ export function MentorVerification({ userId, onComplete, onSkip }: MentorVerific
                   <Button
                     onClick={handleSubmit}
                     disabled={isLoading}
-                    style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', boxShadow: '0 0 14px rgba(124,58,237,0.3)', border: 'none' }}
+                    style={{ background: 'var(--cta-bg)', boxShadow: 'var(--brand-glow-sm)', border: 'none' }}
                   >
                     {isLoading ? (
                       <>
@@ -630,7 +630,7 @@ export function MentorVerification({ userId, onComplete, onSkip }: MentorVerific
                 <Button
                   onClick={onComplete}
                   className="h-12 px-8 text-base"
-                  style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', boxShadow: '0 0 20px rgba(124,58,237,0.35)', border: 'none' }}
+                  style={{ background: 'var(--cta-bg)', boxShadow: 'var(--brand-glow)', border: 'none' }}
                 >
                   Continue to Dashboard
                   <ArrowRight className="ml-2 h-5 w-5" />

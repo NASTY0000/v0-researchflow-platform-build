@@ -43,8 +43,8 @@ export default function ForgotPasswordPage() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: '#05010F' }}>
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-1/4 -left-32 w-80 h-80 rounded-full" style={{ background: 'radial-gradient(ellipse,rgba(124,58,237,0.18),transparent 70%)' }} />
-        <div className="absolute bottom-1/4 -right-32 w-80 h-80 rounded-full" style={{ background: 'radial-gradient(ellipse,rgba(168,85,247,0.12),transparent 70%)' }} />
+        <div className="absolute top-1/4 -left-32 w-80 h-80 rounded-full hidden dark:block" style={{ background: 'radial-gradient(ellipse,rgba(124,58,237,0.18),transparent 70%)' }} />
+        <div className="absolute bottom-1/4 -right-32 w-80 h-80 rounded-full hidden dark:block" style={{ background: 'radial-gradient(ellipse,rgba(168,85,247,0.12),transparent 70%)' }} />
       </div>
 
       <div className="w-full max-w-md relative">
@@ -98,7 +98,7 @@ export default function ForgotPasswordPage() {
                 </div>
 
                 <Button type="submit" className="w-full h-10" disabled={isLoading}
-                  style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', boxShadow: '0 0 20px rgba(124,58,237,0.35)', border: 'none', borderRadius: '8px', color: '#F3F0FF' }}>
+                  style={{ background: 'var(--cta-bg)', boxShadow: 'var(--brand-glow)', border: 'none', borderRadius: '8px', color: '#F3F0FF' }}>
                   {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Sending...</> : 'Send reset link'}
                 </Button>
               </form>

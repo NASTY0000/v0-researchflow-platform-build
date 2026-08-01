@@ -61,7 +61,7 @@ export function InstallPrompt() {
         size="sm"
         onClick={handleInstall}
         style={{
-          background: 'linear-gradient(135deg,#7C3AED,#A855F7)',
+          background: 'var(--cta-bg)',
           border: 'none',
           flexShrink: 0,
         }}

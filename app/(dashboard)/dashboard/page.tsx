@@ -177,10 +177,10 @@ export default function DashboardPage() {
 
       {/* Hero banner */}
       <div
-        className="relative rounded-2xl overflow-hidden p-8 border border-primary/50 bg-card"
-        style={{ boxShadow: '0 0 40px color-mix(in oklch, var(--primary) 22%, transparent), 0 0 80px color-mix(in oklch, var(--primary) 9%, transparent)' }}
+        className="relative rounded-2xl overflow-hidden p-8 bg-card border border-border dark:border-primary/50"
+        style={{ boxShadow: 'var(--brand-glow)' }}
       >
-        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 20% 50%, color-mix(in oklch, var(--primary) 20%, transparent), transparent 60%)' }} />
+        <div className="absolute inset-0 pointer-events-none" style={{ background: 'var(--brand-wash)' }} />
         <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4">
           <motion.div
             initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
@@ -194,7 +194,7 @@ export default function DashboardPage() {
             </h1>
             <p className="text-muted-foreground">Here&apos;s what&apos;s happening with your research journey</p>
           </motion.div>
-          <Button asChild className="shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold" style={{ boxShadow: '0 0 20px color-mix(in oklch, var(--primary) 35%, transparent)' }}>
+          <Button asChild className="shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold" style={{ boxShadow: 'var(--cta-shadow)' }}>
             <Link href="/ideas/new">
               <Lightbulb className="mr-2 h-4 w-4" />
               Post New Idea
@@ -285,7 +285,7 @@ export default function DashboardPage() {
               <h2 className="text-lg font-bold font-heading">Recent Ideas</h2>
               <p className="text-xs mt-0.5 text-muted-foreground">Latest from the community</p>
             </div>
-            <Button variant="ghost" size="sm" asChild className="text-[var(--glow)] font-semibold hover:bg-primary/10">
+            <Button variant="ghost" size="sm" asChild className="text-primary dark:text-[var(--glow)] font-semibold hover:bg-primary/10">
               <Link href="/ideas">View all <ArrowRight className="ml-1 h-3 w-3" /></Link>
             </Button>
           </div>
@@ -296,7 +296,7 @@ export default function DashboardPage() {
                   <h4 className="font-medium text-sm truncate">{idea.title}</h4>
                   <p className="text-xs mt-1 line-clamp-2 text-muted-foreground">{idea.description}</p>
                   <div className="flex items-center gap-2 mt-2">
-                    <span className="text-xs px-2.5 py-0.5 rounded-full font-semibold border border-primary/40 text-[var(--glow)]" style={{ background: 'color-mix(in oklch, var(--glow) 12%, transparent)' }}>{idea.research_area}</span>
+                    <span className="text-xs px-2.5 py-0.5 rounded-full font-semibold border border-primary/40 text-primary dark:text-[var(--glow)]" style={{ background: 'color-mix(in oklch, var(--glow) 12%, transparent)' }}>{idea.research_area}</span>
                     <span className="text-xs flex items-center gap-1 text-muted-foreground">
                       <TrendingUp className="h-3 w-3" />{idea.upvotes} upvotes
                     </span>
@@ -309,7 +309,7 @@ export default function DashboardPage() {
                   <Lightbulb className="h-6 w-6 text-muted-foreground" />
                 </div>
                 <p className="text-sm text-muted-foreground">No ideas yet</p>
-                <Button variant="link" asChild className="text-[var(--glow)]"><Link href="/ideas/new">Post the first idea</Link></Button>
+                <Button variant="link" asChild className="text-primary dark:text-[var(--glow)]"><Link href="/ideas/new">Post the first idea</Link></Button>
               </div>
             )}
           </div>
@@ -322,7 +322,7 @@ export default function DashboardPage() {
               <h2 className="text-lg font-bold font-heading">Suggested Matches</h2>
               <p className="text-xs mt-0.5 text-muted-foreground">Researchers you might connect with</p>
             </div>
-            <Button variant="ghost" size="sm" asChild className="text-[var(--glow)] font-semibold hover:bg-primary/10">
+            <Button variant="ghost" size="sm" asChild className="text-primary dark:text-[var(--glow)] font-semibold hover:bg-primary/10">
               <Link href="/matches">View all <ArrowRight className="ml-1 h-3 w-3" /></Link>
             </Button>
           </div>
@@ -360,7 +360,7 @@ export default function DashboardPage() {
                   <Users className="h-6 w-6 text-muted-foreground" />
                 </div>
                 <p className="text-sm text-muted-foreground">Complete your profile to get matches</p>
-                <Button variant="link" asChild className="text-[var(--glow)]"><Link href="/settings">Update profile</Link></Button>
+                <Button variant="link" asChild className="text-primary dark:text-[var(--glow)]"><Link href="/settings">Update profile</Link></Button>
               </div>
             )}
           </div>
@@ -387,7 +387,7 @@ export default function DashboardPage() {
       {profile?.roles?.includes('mentor') && (
         <div className="rounded-2xl p-6 border border-border bg-card">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-primary" style={{ boxShadow: '0 0 14px color-mix(in oklch, var(--primary) 30%, transparent)' }}>
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-primary" style={{ boxShadow: 'var(--brand-glow-sm)' }}>
               <GraduationCap className="h-5 w-5 text-primary-foreground" />
             </div>
             <div>
@@ -413,10 +413,10 @@ export default function DashboardPage() {
               <div key={item.label} className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">{item.label}</span>
-                  <span className="font-medium tabular-nums text-[var(--glow)]">{item.display}</span>
+                  <span className="font-medium tabular-nums text-primary dark:text-[var(--glow)]">{item.display}</span>
                 </div>
                 <div className="h-2.5 rounded-full overflow-hidden bg-muted">
-                  <div className="h-full rounded-full transition-all duration-700 motion-reduce:transition-none" style={{ width: `${item.value}%`, background: 'linear-gradient(90deg, var(--primary), var(--cyan))', boxShadow: '2px 0 8px color-mix(in oklch, var(--primary) 50%, transparent)' }} />
+                  <div className="h-full rounded-full transition-all duration-700 motion-reduce:transition-none" style={{ width: `${item.value}%`, background: 'linear-gradient(90deg, var(--primary), var(--cyan))' }} />
                 </div>
               </div>
             ))}

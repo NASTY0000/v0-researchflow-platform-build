@@ -551,7 +551,7 @@ export function ProjectRoadmap({
                             />
                             <div className="flex gap-2">
                               <Button size="sm" disabled={savingNotes} onClick={() => phase && handleSaveNotes(phase)}
-                                style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none', fontSize: '12px' }}>
+                                style={{ background: 'var(--cta-bg)', border: 'none', fontSize: '12px' }}>
                                 {savingNotes ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Save'}
                               </Button>
                               <Button size="sm" variant="outline" onClick={() => setEditingNotes(null)}
@@ -588,7 +588,7 @@ export function ProjectRoadmap({
                             <Button
                               size="sm"
                               onClick={() => phase && setCompletingPhase(phase)}
-                              style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none', fontSize: '12px' }}
+                              style={{ background: 'var(--cta-bg)', border: 'none', fontSize: '12px' }}
                             >
                               <CheckCircle2 className="h-3 w-3 mr-1" />Mark Complete
                             </Button>

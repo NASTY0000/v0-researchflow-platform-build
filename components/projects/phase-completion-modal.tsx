@@ -108,7 +108,7 @@ export function PhaseCompletionModal({
           <Button
             onClick={handleSubmit}
             disabled={!hasMinimumContent || submitting}
-            style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}
+            style={{ background: 'var(--cta-bg)', border: 'none' }}
           >
             {submitting
               ? <><Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />Saving…</>

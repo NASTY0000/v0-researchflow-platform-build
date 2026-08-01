@@ -104,7 +104,7 @@ export function ProgramCard({
             </span>
           </div>
           <div style={{ height: '5px', borderRadius: '100px', background: 'rgba(139,92,246,0.15)', overflow: 'hidden' }}>
-            <div style={{ height: '100%', width: `${pct}%`, borderRadius: '100px', background: 'linear-gradient(90deg, #7C3AED, #A855F7)', transition: 'width 0.5s ease' }} />
+            <div style={{ height: '100%', width: `${pct}%`, borderRadius: '100px', background: 'var(--cta-bg-90)', transition: 'width 0.5s ease' }} />
           </div>
         </div>
       )}
@@ -122,7 +122,7 @@ export function ProgramCard({
           </span>
         )}
         <Link href={`/mentors/${programId}`} style={{ marginLeft: 'auto' }}>
-          <Button size="sm" style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none', fontSize: '12px', height: '30px' }}>
+          <Button size="sm" style={{ background: 'var(--cta-bg)', border: 'none', fontSize: '12px', height: '30px' }}>
             View Program
           </Button>
         </Link>

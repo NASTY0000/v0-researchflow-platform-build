@@ -370,7 +370,7 @@ export function MentorDashboard({ userId }: MentorDashboardProps) {
                     <div className="flex items-start gap-4">
                       <Avatar className="w-12 h-12">
                         <AvatarImage src={req.student?.avatar_url || undefined} />
-                        <AvatarFallback style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', color: '#F3F0FF' }}>
+                        <AvatarFallback style={{ background: 'var(--cta-bg)', color: '#F3F0FF' }}>
                           {req.student?.full_name?.split(' ').map((n) => n[0]).join('') || '?'}
                         </AvatarFallback>
                       </Avatar>
@@ -405,7 +405,7 @@ export function MentorDashboard({ userId }: MentorDashboardProps) {
                             size="sm"
                             disabled={acceptingId === req.id}
                             onClick={() => handleAccept(req.id)}
-                            style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}
+                            style={{ background: 'var(--cta-bg)', border: 'none' }}
                           >
                             {acceptingId === req.id ? (
                               <Loader2 className="w-4 h-4 mr-1 animate-spin" />
@@ -450,7 +450,7 @@ export function MentorDashboard({ userId }: MentorDashboardProps) {
                     <div className="flex items-center gap-4">
                       <Avatar className="w-12 h-12">
                         <AvatarImage src={m.student?.avatar_url || undefined} />
-                        <AvatarFallback style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', color: '#F3F0FF' }}>
+                        <AvatarFallback style={{ background: 'var(--cta-bg)', color: '#F3F0FF' }}>
                           {m.student?.full_name?.split(' ').map((n) => n[0]).join('') || '?'}
                         </AvatarFallback>
                       </Avatar>
@@ -493,7 +493,7 @@ export function MentorDashboard({ userId }: MentorDashboardProps) {
                 <Button
                   size="sm"
                   onClick={() => setShowAddSlot(true)}
-                  style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}
+                  style={{ background: 'var(--cta-bg)', border: 'none' }}
                 >
                   <Plus className="w-4 h-4 mr-1" />
                   Add Slot
@@ -619,7 +619,7 @@ export function MentorDashboard({ userId }: MentorDashboardProps) {
                             size="sm"
                             disabled={savingNotesId === session.id}
                             onClick={() => handleSaveNotes(session.id)}
-                            style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}
+                            style={{ background: 'var(--cta-bg)', border: 'none' }}
                           >
                             {savingNotesId === session.id ? (
                               <><Loader2 className="w-4 h-4 mr-1 animate-spin" />Saving...</>
@@ -701,7 +701,7 @@ export function MentorDashboard({ userId }: MentorDashboardProps) {
             <Button
               disabled={isSavingSlot}
               onClick={handleAddSlot}
-              style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}
+              style={{ background: 'var(--cta-bg)', border: 'none' }}
             >
               {isSavingSlot ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" />Saving...</> : 'Save Slot'}
             </Button>

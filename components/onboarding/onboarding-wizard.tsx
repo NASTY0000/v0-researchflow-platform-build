@@ -412,7 +412,7 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
                 <div
                   className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300"
                   style={step >= s.id
-                    ? { background: 'linear-gradient(135deg,#7C3AED,#A855F7)', color: '#F3F0FF', boxShadow: '0 0 14px rgba(124,58,237,0.4)' }
+                    ? { background: 'var(--cta-bg)', color: '#F3F0FF', boxShadow: 'var(--brand-glow-sm)' }
                     : { background: 'rgba(255,255,255,0.05)', color: 'var(--muted-foreground)', border: '1px solid rgba(139,92,246,0.2)' }
                   }
                 >
@@ -421,14 +421,14 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
                 {index < STEPS.length - 1 && (
                   <div
                     className="hidden sm:block w-16 lg:w-24 h-0.5 mx-2 rounded transition-all duration-300"
-                    style={{ background: step > s.id ? 'linear-gradient(90deg,#7C3AED,#A855F7)' : 'rgba(255,255,255,0.06)' }}
+                    style={{ background: step > s.id ? 'var(--cta-bg-90)' : 'rgba(255,255,255,0.06)' }}
                   />
                 )}
               </div>
             ))}
           </div>
           <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
-            <div className="h-full rounded-full transition-all duration-500" style={{ width: `${progress}%`, background: 'linear-gradient(90deg,#7C3AED,#06B6D4)', boxShadow: '2px 0 8px rgba(124,58,237,0.3)' }} />
+            <div className="h-full rounded-full transition-all duration-500" style={{ width: `${progress}%`, background: 'linear-gradient(90deg,#7C3AED,#06B6D4)' }} />
           </div>
         </div>
       </div>
@@ -553,7 +553,7 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
                         onClick={() => toggleRole(role.value)}
                         className="w-full p-4 rounded-xl text-left transition-all duration-200"
                         style={roles.includes(role.value)
-                          ? { background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(168,85,247,0.5)', boxShadow: '0 0 16px rgba(124,58,237,0.15)' }
+                          ? { background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(168,85,247,0.5)', boxShadow: 'var(--brand-glow)' }
                           : { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(139,92,246,0.2)' }
                         }
                       >
@@ -561,7 +561,7 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
                           <div
                             className="w-5 h-5 rounded border-2 flex items-center justify-center mt-0.5 flex-shrink-0"
                             style={roles.includes(role.value)
-                              ? { background: 'linear-gradient(135deg,#7C3AED,#A855F7)', borderColor: 'transparent' }
+                              ? { background: 'var(--cta-bg)', borderColor: 'transparent' }
                               : { borderColor: 'rgba(139,92,246,0.4)' }
                             }
                           >
@@ -672,7 +672,7 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
                     value={weeklyHours}
                     onChange={(e) => setWeeklyHours(Number(e.target.value))}
                     className="w-full h-2 rounded-full appearance-none cursor-pointer"
-                    style={{ background: `linear-gradient(to right, #7C3AED 0%, #7C3AED ${(weeklyHours / 40) * 100}%, rgba(255,255,255,0.1) ${(weeklyHours / 40) * 100}%, rgba(255,255,255,0.1) 100%)` }}
+                    style={{ background: `linear-gradient(to right, #7C3AED 0%, #7C3AED ${(weeklyHours / 40) * 100}%, var(--muted) ${(weeklyHours / 40) * 100}%, var(--muted) 100%)` }}
                   />
                   <div className="flex justify-between text-xs text-muted-foreground">
                     <span>1 hour</span>
@@ -698,7 +698,7 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
                     onClick={() => setProfileBackground('baobab')}
                     className="p-5 rounded-xl text-left transition-all duration-200 space-y-3"
                     style={profileBackground === 'baobab'
-                      ? { background: 'rgba(124,58,237,0.15)', border: '2px solid rgba(168,85,247,0.7)', boxShadow: '0 0 20px rgba(124,58,237,0.2)' }
+                      ? { background: 'rgba(124,58,237,0.15)', border: '2px solid rgba(168,85,247,0.7)', boxShadow: 'var(--brand-glow)' }
                       : { background: 'rgba(255,255,255,0.03)', border: '2px solid rgba(139,92,246,0.2)' }
                     }
                   >
@@ -746,7 +746,7 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
                     onClick={() => setProfileBackground('constellation')}
                     className="p-5 rounded-xl text-left transition-all duration-200 space-y-3"
                     style={profileBackground === 'constellation'
-                      ? { background: 'rgba(124,58,237,0.15)', border: '2px solid rgba(168,85,247,0.7)', boxShadow: '0 0 20px rgba(124,58,237,0.2)' }
+                      ? { background: 'rgba(124,58,237,0.15)', border: '2px solid rgba(168,85,247,0.7)', boxShadow: 'var(--brand-glow)' }
                       : { background: 'rgba(255,255,255,0.03)', border: '2px solid rgba(139,92,246,0.2)' }
                     }
                   >
@@ -790,7 +790,7 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
               <CardContent className="py-12 text-center">
                 <div
                   className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"
-                  style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', boxShadow: '0 0 30px rgba(124,58,237,0.4)' }}
+                  style={{ background: 'var(--cta-bg)', boxShadow: 'var(--brand-glow)' }}
                 >
                   <CheckCircle className="w-10 h-10 text-white" />
                 </div>
@@ -803,7 +803,7 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
                   onClick={handleComplete}
                   disabled={isLoading}
                   className="h-12 px-8 text-base"
-                  style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', boxShadow: '0 0 20px rgba(124,58,237,0.35)', border: 'none' }}
+                  style={{ background: 'var(--cta-bg)', boxShadow: 'var(--brand-glow)', border: 'none' }}
                 >
                   {isLoading ? (
                     <><Loader2 className="mr-2 h-5 w-5 animate-spin" />Setting up your profile...</>
@@ -830,7 +830,7 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
               <Button
                 onClick={handleNext}
                 disabled={isLoading}
-                style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', boxShadow: '0 0 14px rgba(124,58,237,0.3)', border: 'none' }}
+                style={{ background: 'var(--cta-bg)', boxShadow: 'var(--brand-glow-sm)', border: 'none' }}
               >
                 {isLoading ? (
                   <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Saving...</>

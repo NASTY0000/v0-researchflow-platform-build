@@ -367,7 +367,7 @@ export function MentorSessions({ projectId, currentUserId }: MentorSessionsProps
             <Button
               size="sm"
               onClick={() => setShowBooking(true)}
-              style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}
+              style={{ background: 'var(--cta-bg)', border: 'none' }}
             >
               <Calendar className="h-4 w-4 mr-1" />
               Book a Session
@@ -465,7 +465,7 @@ export function MentorSessions({ projectId, currentUserId }: MentorSessionsProps
                           <Button
                             size="sm"
                             className="gap-1 h-7 text-xs"
-                            style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}
+                            style={{ background: 'var(--cta-bg)', border: 'none' }}
                             onClick={() => window.open((session as SessionWithParticipants & { meeting_link?: string }).meeting_link!, '_blank')}
                           >
                             <Video className="h-3 w-3" />
@@ -552,7 +552,7 @@ export function MentorSessions({ projectId, currentUserId }: MentorSessionsProps
             <Button
               disabled={isSavingSlot}
               onClick={handleAddSlot}
-              style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}
+              style={{ background: 'var(--cta-bg)', border: 'none' }}
             >
               {isSavingSlot ? <><Loader2 className="h-4 w-4 mr-1 animate-spin" />Saving...</> : 'Save Slot'}
             </Button>
@@ -631,7 +631,7 @@ export function MentorSessions({ projectId, currentUserId }: MentorSessionsProps
             <Button
               disabled={!selectedSlot || isBooking}
               onClick={handleBookSession}
-              style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}
+              style={{ background: 'var(--cta-bg)', border: 'none' }}
             >
               {isBooking ? <><Loader2 className="h-4 w-4 mr-1 animate-spin" />Booking...</> : 'Confirm Booking'}
             </Button>
@@ -661,7 +661,7 @@ export function MentorSessions({ projectId, currentUserId }: MentorSessionsProps
             <Button
               disabled={isSavingLink}
               onClick={handleSaveMeetingLink}
-              style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}
+              style={{ background: 'var(--cta-bg)', border: 'none' }}
             >
               {isSavingLink ? <><Loader2 className="h-4 w-4 mr-1 animate-spin" />Saving...</> : 'Save Link'}
             </Button>
@@ -713,7 +713,7 @@ export function MentorSessions({ projectId, currentUserId }: MentorSessionsProps
             <Button
               disabled={ratingValue === 0 || isRating}
               onClick={handleSubmitRating}
-              style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}
+              style={{ background: 'var(--cta-bg)', border: 'none' }}
             >
               {isRating ? <><Loader2 className="h-4 w-4 mr-1 animate-spin" />Submitting...</> : 'Submit Rating'}
             </Button>

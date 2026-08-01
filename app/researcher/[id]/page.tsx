@@ -283,7 +283,7 @@ export default async function PublicResearcherPage({
             display: 'inline-block',
             padding: '12px 32px',
             borderRadius: 10,
-            background: 'linear-gradient(135deg,#7C3AED,#A855F7)',
+            background: 'var(--cta-bg)',
             color: 'white',
             textDecoration: 'none',
             fontWeight: 700,

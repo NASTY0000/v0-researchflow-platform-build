@@ -384,7 +384,7 @@ export default function NewProjectPage() {
           <Button
             onClick={handleSubmit}
             disabled={isSubmitting || !title.trim() || !aim.trim() || !methodology}
-            style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}
+            style={{ background: 'var(--cta-bg)', border: 'none' }}
             className="flex-1"
           >
             {isSubmitting ? (

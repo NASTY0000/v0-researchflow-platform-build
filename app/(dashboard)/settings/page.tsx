@@ -520,7 +520,7 @@ export default function SettingsPage() {
 
         <div className="pt-1">
           <Button onClick={savePrivacy} disabled={isSavingPrivacy}
-            style={{ background: "linear-gradient(135deg,#7C3AED,#A855F7)", border: "none", borderRadius: "8px" }}>
+            style={{ background: "var(--cta-bg)", border: "none", borderRadius: "8px" }}>
             {isSavingPrivacy
               ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Saving…</>
               : <><Save className="mr-2 h-4 w-4" />Save Privacy Settings</>}
@@ -567,7 +567,7 @@ export default function SettingsPage() {
 
         <div className="pt-1">
           <Button onClick={saveNotifs} disabled={isSavingNotifs}
-            style={{ background: "linear-gradient(135deg,#7C3AED,#A855F7)", border: "none", borderRadius: "8px" }}>
+            style={{ background: "var(--cta-bg)", border: "none", borderRadius: "8px" }}>
             {isSavingNotifs
               ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Saving…</>
               : <><Save className="mr-2 h-4 w-4" />Save Preferences</>}
@@ -634,7 +634,7 @@ export default function SettingsPage() {
 
         <Button onClick={changePassword}
           disabled={isSavingPw || !currentPw || !newPw || !confirmPw}
-          style={{ background: "linear-gradient(135deg,#7C3AED,#A855F7)", border: "none", borderRadius: "8px" }}>
+          style={{ background: "var(--cta-bg)", border: "none", borderRadius: "8px" }}>
           {isSavingPw
             ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Changing…</>
             : "Change Password"}

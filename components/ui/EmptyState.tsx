@@ -122,7 +122,7 @@ export function EmptyState({
         >
           <Link
             href={ctaHref}
-            className="w-full h-11 rounded-xl text-primary-foreground text-sm font-semibold flex items-center justify-center transition-all mb-3 bg-primary hover:bg-primary/90 dark:bg-[linear-gradient(135deg,#7C3AED,#A855F7)] dark:shadow-[0_0_20px_rgba(124,58,237,0.3)]"
+            className="w-full h-11 rounded-xl text-primary-foreground text-sm font-semibold flex items-center justify-center transition-all mb-3 bg-primary hover:bg-primary/90 dark:bg-[var(--cta-bg)] dark:shadow-[0_0_20px_rgba(124,58,237,0.3)]"
           >
             {ctaLabel}
           </Link>
@@ -137,7 +137,7 @@ export function EmptyState({
         >
           <button
             onClick={ctaOnClick}
-            className="w-full h-11 rounded-xl text-primary-foreground text-sm font-semibold flex items-center justify-center transition-all mb-3 bg-primary hover:bg-primary/90 dark:bg-[linear-gradient(135deg,#7C3AED,#A855F7)] dark:shadow-[0_0_20px_rgba(124,58,237,0.3)]"
+            className="w-full h-11 rounded-xl text-primary-foreground text-sm font-semibold flex items-center justify-center transition-all mb-3 bg-primary hover:bg-primary/90 dark:bg-[var(--cta-bg)] dark:shadow-[0_0_20px_rgba(124,58,237,0.3)]"
           >
             {ctaLabel}
           </button>

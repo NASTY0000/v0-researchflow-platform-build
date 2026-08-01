@@ -106,8 +106,8 @@ function VerifyPageInner() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: '#05010F' }}>
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-1/4 -left-32 w-80 h-80 rounded-full" style={{ background: 'radial-gradient(ellipse,rgba(124,58,237,0.18),transparent 70%)' }} />
-        <div className="absolute bottom-1/4 -right-32 w-80 h-80 rounded-full" style={{ background: 'radial-gradient(ellipse,rgba(168,85,247,0.12),transparent 70%)' }} />
+        <div className="absolute top-1/4 -left-32 w-80 h-80 rounded-full hidden dark:block" style={{ background: 'radial-gradient(ellipse,rgba(124,58,237,0.18),transparent 70%)' }} />
+        <div className="absolute bottom-1/4 -right-32 w-80 h-80 rounded-full hidden dark:block" style={{ background: 'radial-gradient(ellipse,rgba(168,85,247,0.12),transparent 70%)' }} />
       </div>
 
       <div className="w-full max-w-md relative">
@@ -170,7 +170,7 @@ function VerifyPageInner() {
               onClick={handleVerifyOtp}
               disabled={isVerifying || otpDigits.join('').length !== 6}
               className="w-full gap-2"
-              style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none', color: '#F3F0FF', borderRadius: '8px' }}
+              style={{ background: 'var(--cta-bg)', border: 'none', color: '#F3F0FF', borderRadius: '8px' }}
             >
               {isVerifying
                 ? <><Loader2 className="w-4 h-4 animate-spin" /> Verifying...</>

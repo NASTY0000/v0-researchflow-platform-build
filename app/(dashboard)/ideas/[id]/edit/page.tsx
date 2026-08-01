@@ -172,7 +172,7 @@ export default function EditIdeaPage({ params }: { params: Promise<{ id: string 
           <Button
             onClick={handleSave}
             disabled={isSaving || !title.trim() || !description.trim() || researchArea.length === 0}
-            style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none' }}
+            style={{ background: 'var(--cta-bg)', border: 'none' }}
           >
             {isSaving ? (
               <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</>

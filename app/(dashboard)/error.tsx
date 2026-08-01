@@ -27,7 +27,7 @@ export default function DashboardError({
         </p>
         <Button
           onClick={reset}
-          style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', border: 'none', borderRadius: '8px', color: '#F3F0FF', boxShadow: '0 0 20px rgba(124,58,237,0.3)' }}
+          style={{ background: 'var(--cta-bg)', border: 'none', borderRadius: '8px', color: '#F3F0FF', boxShadow: 'var(--brand-glow)' }}
         >
           Refresh page
         </Button>
