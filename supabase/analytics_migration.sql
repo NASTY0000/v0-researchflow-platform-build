@@ -109,4 +109,4 @@ CREATE POLICY "Anyone can insert idea views"
   WITH CHECK (true);
 
 -- NOTE: akili_score_events already exists and logs all Akili point events.
--- No new history table is needed — analytics queries use akili_score_events directly.
+-- No new history table is needed, analytics queries use akili_score_events directly.

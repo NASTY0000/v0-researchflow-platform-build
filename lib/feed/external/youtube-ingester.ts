@@ -31,7 +31,7 @@ interface YouTubeSearchItem {
 export async function ingestYouTubeScience(supabase: SupabaseClient): Promise<number> {
   const apiKey = process.env.YOUTUBE_API_KEY
   if (!apiKey) {
-    console.warn('YOUTUBE_API_KEY not set — skipping YouTube ingestion')
+    console.warn('YOUTUBE_API_KEY not set, skipping YouTube ingestion')
     return 0
   }
 

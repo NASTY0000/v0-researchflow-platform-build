@@ -76,7 +76,7 @@ export async function cancelReviewRequest(
     if (review.status === 'claimed')
       return {
         success: false,
-        error: 'Cannot cancel — a reviewer has already claimed this. Wait for them to complete it.',
+        error: 'Cannot cancel: a reviewer has already claimed this. Wait for them to complete it.',
       }
 
     await supabase.from('peer_reviews').delete().eq('id', reviewId)
@@ -227,7 +227,7 @@ export async function submitReview(
       .update({ is_open_for_review: false })
       .eq('id', review.idea_id)
 
-    // Award Akili points — reviewer gets Mentorship points
+    // Award Akili points, reviewer gets Mentorship points
     await awardAkiliPoints({
       userId: user.id,
       eventType: 'peer_review_completed',

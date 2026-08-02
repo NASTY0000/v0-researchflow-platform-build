@@ -34,7 +34,7 @@ export function OfflineBanner() {
         style={{ background: 'rgba(34,197,94,0.92)', color: 'white', backdropFilter: 'blur(8px)' }}
       >
         <CheckCircle2 className="h-4 w-4" />
-        Back online — you are reconnected
+        Back online. You are reconnected
       </div>
     )
   }
@@ -46,7 +46,7 @@ export function OfflineBanner() {
         style={{ background: 'rgba(239,68,68,0.92)', color: 'white', backdropFilter: 'blur(8px)' }}
       >
         <WifiOff className="h-4 w-4" />
-        You are offline — showing cached content
+        You are offline. Showing cached content
       </div>
     )
   }

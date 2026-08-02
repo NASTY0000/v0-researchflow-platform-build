@@ -230,7 +230,7 @@ export default function PeerReviewPage() {
                 <div className="text-4xl">🔍</div>
                 <p className="font-semibold">No open reviews right now</p>
                 <p className="text-sm text-muted-foreground">
-                  Check back soon — researchers are always posting new ideas for review.
+                  Check back soon. Researchers are always posting new ideas for review.
                 </p>
               </div>
             ) : (

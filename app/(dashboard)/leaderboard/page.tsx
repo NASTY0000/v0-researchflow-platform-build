@@ -27,8 +27,8 @@ function getUniversity(uid: string | null | undefined): string {
   return uid
 }
 
-// One config per medal. Gold is warm yellow, silver cool gray, bronze copper —
-// three clearly distinct metals (bronze previously shared gold's stops).
+// One config per medal: gold warm yellow, silver cool gray, bronze copper.
+// Three clearly distinct metals (bronze previously shared gold's stops).
 const PODIUM = [
   {
     rank: 1,
@@ -98,7 +98,7 @@ function PodiumCard({
       className={`relative rounded-2xl overflow-hidden border-2 ${config.border} ${config.order} ${config.height} ${first ? 'z-10' : 'sm:self-end'} transition-transform duration-200 hover:-translate-y-1 motion-reduce:transition-none motion-reduce:hover:translate-y-0`}
       style={{ background: config.gradient, boxShadow: config.glow }}
     >
-      {/* Diagonal shine sweep — ambient only, skipped for reduced motion */}
+      {/* Diagonal shine sweep, ambient only, skipped for reduced motion */}
       {!reduceMotion && (
         <div
           className="absolute inset-0 pointer-events-none"
@@ -213,7 +213,7 @@ export default function LeaderboardPage() {
         )}
       </div>
 
-      {/* Top 3 podium — DOM order 1-2-3 for assistive tech; visual 2-1-3 on
+      {/* Top 3 podium, DOM order 1-2-3 for assistive tech; visual 2-1-3 on
           larger screens via CSS order. Stacks champion-first on mobile. */}
       {top3.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:items-end">

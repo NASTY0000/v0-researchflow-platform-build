@@ -80,7 +80,7 @@ export function JoinRequestModal({
             <div className="space-y-2">
               <p className="text-sm font-medium">
                 Skills you bring
-                <span className="text-xs font-normal text-muted-foreground ml-1">(optional — select what's relevant)</span>
+                <span className="text-xs font-normal text-muted-foreground ml-1">(optional: select what's relevant)</span>
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {userSkills.map(skill => {

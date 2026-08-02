@@ -158,7 +158,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
             </Link>
           </Button>
           <div className="flex items-center gap-2">
-            {/* Join button — shown only to non-members on public+open projects */}
+            {/* Join button: shown only to non-members on public+open projects */}
             {!isMember && project.is_public && (
               isOpenToCollaborators ? (
                 joinRequestStatus === 'pending' ? (
@@ -207,7 +207,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
           </div>
         </div>
 
-        {/* Description panel — collapsed by default */}
+        {/* Description panel, collapsed by default */}
         {aim && (
           <div className="border-t border-border pt-3 space-y-3">
             {/* Research Aim */}
@@ -221,7 +221,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
               </p>
             </div>
 
-            {/* Objectives — only when expanded */}
+            {/* Objectives, only when expanded */}
             {objectivesList.length > 0 && descExpanded && (
               <div>
                 <div className="flex items-center gap-1.5 mb-2">
@@ -271,7 +271,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
         )}
       </div>
 
-      {/* Tabs — immediately visible */}
+      {/* Tabs, immediately visible */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="bg-card border">
           <TabsTrigger value="kanban" className="gap-2">

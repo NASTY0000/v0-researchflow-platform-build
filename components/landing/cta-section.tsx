@@ -23,7 +23,7 @@ export function CtaSection() {
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,rgba(255,255,255,0.07),transparent_60%)]" />
 
             <div className="relative z-10">
-              {/* No eyebrow — the aurora speaks for itself */}
+              {/* No eyebrow, the aurora speaks for itself */}
               <h2
                 className="mx-auto mb-6 max-w-2xl font-heading font-extrabold text-white"
                 style={{ fontSize: 'clamp(2.25rem, 5vw, 4rem)', lineHeight: 1.05, letterSpacing: '-0.035em' }}

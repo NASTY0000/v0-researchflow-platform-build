@@ -154,7 +154,7 @@ export default function AdminOverviewPage() {
                 <div className={`w-9 h-9 rounded-lg bg-${card.color}/10 flex items-center justify-center mb-3`}>
                   <card.icon className={`w-4.5 h-4.5 text-${card.color}`} />
                 </div>
-                <p className="text-2xl font-bold">{isLoading ? '—' : card.value}</p>
+                <p className="text-2xl font-bold">{isLoading ? '-' : card.value}</p>
                 <p className="text-xs font-medium mt-0.5">{card.label}</p>
                 <p className="text-xs text-muted-foreground">{card.sub}</p>
               </CardContent>

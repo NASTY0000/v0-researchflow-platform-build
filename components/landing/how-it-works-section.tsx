@@ -97,7 +97,7 @@ export function HowItWorksSection() {
       <div className="pointer-events-none absolute left-1/2 top-0 h-px w-2/3 -translate-x-1/2 bg-gradient-to-r from-transparent via-violet-500/30 to-transparent" />
 
       <div className="mx-auto max-w-5xl">
-        {/* No eyebrow — heading stands on its own weight */}
+        {/* No eyebrow, heading stands on its own weight */}
         <div className="mb-20 text-center">
           <h2
             data-step-head
@@ -144,7 +144,7 @@ export function HowItWorksSection() {
                       >
                         <item.icon className="h-6 w-6" style={{ color: item.color }} />
                       </div>
-                      {/* Step number — visible at 20% opacity, not ghosted to 7% */}
+                      {/* Step number, visible at 20% opacity, not ghosted to 7% */}
                       <span
                         className="font-heading font-extrabold leading-none tracking-tighter"
                         style={{ fontSize: 'clamp(2.5rem, 5vw, 3.5rem)', color: `${item.color}33` }}

@@ -15,7 +15,7 @@ export async function trackProfileView(profileId: string) {
       viewed_at: new Date().toISOString(),
     })
   } catch {
-    // Silently fail — view tracking must never break navigation
+    // Silently fail, view tracking must never break navigation
   }
 }
 

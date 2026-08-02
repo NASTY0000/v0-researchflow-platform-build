@@ -10,7 +10,7 @@ import { gsap } from '@/lib/gsap'
 
 const HeroCanvas = dynamic(() => import('./hero-canvas'), { ssr: false })
 
-// Solid colors — no gradient clip text (banned)
+// Solid colors, no gradient clip text (banned)
 const HEADLINE_WORDS = [
   { text: 'Collaborate.', color: '#F0EAFF' },
   { text: 'Discover.', color: '#D8B4FE' },
@@ -120,7 +120,7 @@ export function HeroSection() {
           </span>
         </div>
 
-        {/* Headline — solid colors per word, not gradient clip (banned) */}
+        {/* Headline, solid colors per word, not gradient clip (banned) */}
         <h1
           className="mb-7 font-heading font-extrabold"
           style={{ fontSize: 'clamp(2.75rem, 10vw, 6rem)', lineHeight: 0.95, letterSpacing: '-0.04em' }}
@@ -174,7 +174,7 @@ export function HeroSection() {
           </MagneticButton>
         </div>
 
-        {/* Stats — no card chrome, typographic row with dividers */}
+        {/* Stats, no card chrome, typographic row with dividers */}
         <div className="mt-20 w-full max-w-3xl">
           <div className="flex flex-wrap items-stretch justify-center">
             {STATS.map((stat, i) => (

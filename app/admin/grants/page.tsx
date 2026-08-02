@@ -203,7 +203,7 @@ export default function AdminGrantsPage() {
                               {format(new Date(grant.deadline), 'MMM d, yyyy')}
                             </span>
                           ) : (
-                            <span className="text-muted-foreground">—</span>
+                            <span className="text-muted-foreground">-</span>
                           )}
                         </td>
                         <td className="p-4 text-center">

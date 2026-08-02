@@ -196,10 +196,10 @@ export default function AnalyticsPage() {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }}
            className="lg:grid-cols-2">
 
-        {/* Chart A — Profile Views */}
+        {/* Chart A, Profile Views */}
         <div style={cardStyle()}>
           <p style={{ fontWeight: 600, color: '#C4B5FD', marginBottom: '16px', fontSize: '14px' }}>
-            Profile Views — last 30 days
+            Profile Views (last 30 days)
           </p>
           {loading ? (
             <Skeleton h={180} rounded="10px" />
@@ -235,10 +235,10 @@ export default function AnalyticsPage() {
           )}
         </div>
 
-        {/* Chart B — Akili Score Growth */}
+        {/* Chart B, Akili Score Growth */}
         <div style={cardStyle()}>
           <p style={{ fontWeight: 600, color: '#FBBF24', marginBottom: '16px', fontSize: '14px' }}>
-            Akili Score Growth — last 60 days
+            Akili Score Growth (last 60 days)
           </p>
           {loading ? (
             <Skeleton h={180} rounded="10px" />

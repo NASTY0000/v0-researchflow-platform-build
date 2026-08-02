@@ -300,7 +300,7 @@ export default function AdminShowcasePage() {
                       <div className="min-w-0">
                         <p className="font-medium text-sm">{sub.title}</p>
                         <p className="text-xs text-muted-foreground mt-0.5">
-                          {sub.submitter?.full_name} · {sub.reviewed_at ? new Date(sub.reviewed_at).toLocaleDateString() : '—'}
+                          {sub.submitter?.full_name} · {sub.reviewed_at ? new Date(sub.reviewed_at).toLocaleDateString() : '-'}
                         </p>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">

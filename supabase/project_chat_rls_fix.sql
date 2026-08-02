@@ -11,7 +11,7 @@
 --
 -- Additive/idempotent: uses IF NOT EXISTS via DO blocks, and these are
 -- permissive policies that OR with any existing policies for direct/team
--- conversations — they won't restrict access that's already granted.
+-- conversations. They won't restrict access that's already granted.
 
 ALTER TABLE conversations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE messages ENABLE ROW LEVEL SECURITY;

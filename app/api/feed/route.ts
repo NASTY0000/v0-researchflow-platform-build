@@ -58,7 +58,7 @@ export async function GET(request: Request) {
       })
     }
 
-    // Cache miss — fetch and score
+    // Cache miss, fetch and score
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
     const externalQuery = userContext.research_interests.length
       ? supabase
@@ -93,7 +93,7 @@ export async function GET(request: Request) {
       },
     }))
 
-    // Score all candidates (synchronous now — no extra DB calls)
+    // Score all candidates (synchronous now, no extra DB calls)
     const scored = candidates.map(item => scoreItem(item, scoringCtx))
     scored.sort((a, b) => b.score - a.score)
 

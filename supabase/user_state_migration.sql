@@ -10,7 +10,7 @@
 -- ============================================================
 
 -- ------------------------------------------------------------
--- STEP 1 — Akili tiers config table
+-- STEP 1: Akili tiers config table
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS akili_tiers (
   id SERIAL PRIMARY KEY,
@@ -36,7 +36,7 @@ VALUES
 ON CONFLICT (slug) DO NOTHING;
 
 -- ------------------------------------------------------------
--- STEP 2/3 — get_user_state RPC
+-- STEP 2/3, get_user_state RPC
 --
 -- Note: the akili dimension columns on `profiles` are named
 --   akili_dimension_knowledge / akili_dimension_collaboration /
@@ -46,7 +46,7 @@ ON CONFLICT (slug) DO NOTHING;
 -- Profile completion is computed from 7 real `profiles` columns:
 --   full_name, bio, avatar_url, research_interests,
 --   university_id, department, academic_level
--- ("faculty" / "level" do not exist on profiles — they are
+-- ("faculty" / "level" do not exist on profiles. They are
 -- `department` and `academic_level`).
 --
 -- "Email verified" maps to profiles.is_verified, which is the

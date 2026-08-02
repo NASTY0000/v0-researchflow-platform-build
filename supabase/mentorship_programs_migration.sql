@@ -1,7 +1,7 @@
 -- ─────────────────────────────────────────────────────────────────────────────
 -- STRUCTURED MENTORSHIP PROGRAMS MIGRATION
 -- Run in Supabase SQL Editor
--- mentor_profiles already exists — this adds columns + new tables
+-- mentor_profiles already exists. This adds columns + new tables
 -- ─────────────────────────────────────────────────────────────────────────────
 
 -- 1A: Extend mentor_profiles with program-management columns

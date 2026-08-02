@@ -155,7 +155,7 @@ export default function IdeasPage() {
       query = query.or(`title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`)
     }
 
-    // DB-level sorting (skip for best_match — we sort client-side)
+    // DB-level sorting (skip for best_match. We sort client-side)
     if (sortBy === "recent") {
       query = query.order("created_at", { ascending: false })
     } else if (sortBy === "popular") {

@@ -19,15 +19,15 @@ export function getUniversityName(
 }
 
 /**
- * Legacy helper — pass the joined name explicitly when available.
- * Returns a fallback string ('—') instead of empty string.
+ * Legacy helper, pass the joined name explicitly when available.
+ * Returns a fallback string ('-') instead of empty string.
  */
 export function resolveUniversityName(
   universityId: string | null | undefined,
   universityName?: string | null
 ): string {
   if (universityName) return universityName
-  if (!universityId) return '—'
+  if (!universityId) return '-'
   if (UUID_RE.test(universityId)) return 'Unknown University'
   return universityId
 }

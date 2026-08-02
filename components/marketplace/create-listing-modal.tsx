@@ -196,7 +196,7 @@ export function CreateListingModal({ open, categories, editListing, onSuccess, o
                 value={toolInput}
                 onChange={e => setToolInput(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addTool() }}}
-                placeholder="e.g. SPSS, R, NVivo — press Enter to add"
+                placeholder="e.g. SPSS, R, NVivo. Press Enter to add"
                 className="flex-1 text-sm"
               />
               <Button type="button" variant="outline" size="sm" onClick={addTool}>Add</Button>

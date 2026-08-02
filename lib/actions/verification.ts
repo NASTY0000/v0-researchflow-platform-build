@@ -79,7 +79,7 @@ export async function sendVerificationOTP(
       }
     }
 
-    // Generate 6-digit OTP and hash it — never store plaintext
+    // Generate 6-digit OTP and hash it, never store plaintext
     const otp = String(Math.floor(100000 + Math.random() * 900000))
     const otpHash = crypto
       .createHash('sha256')
@@ -142,7 +142,7 @@ export async function sendVerificationOTP(
     </p>
   </div>
   <p style="text-align:center;color:#3D2A58;font-size:11px;margin-top:24px;">
-    ResearchFlow Africa — Built for African researchers, by African innovators
+    ResearchFlow Africa · Built for African researchers, by African innovators
   </p>
 </body>
 </html>`,
@@ -206,7 +206,7 @@ export async function verifyOTP(
       }
     }
 
-    // OTP valid — fetch university info and mark profile verified
+    // OTP valid, fetch university info and mark profile verified
     const emailCheck = await checkUniversityEmail(request.university_email)
 
     const { error: updateError } = await supabase
@@ -224,7 +224,7 @@ export async function verifyOTP(
 
     await supabase.from('verification_requests').delete().eq('user_id', user.id)
 
-    // Award 50 Akili knowledge points for verification (silently — never block)
+    // Award 50 Akili knowledge points for verification (silently, never block)
     await awardAkiliPoints({
       userId: user.id,
       eventType: 'institutional_verification',

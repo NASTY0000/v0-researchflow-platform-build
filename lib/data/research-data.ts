@@ -103,22 +103,22 @@ export const USER_ROLES = [
   {
     value: 'student_researcher',
     label: 'Student Researcher',
-    description: 'I have a research idea — looking for collaborators and/or a mentor to develop it.',
+    description: 'I have a research idea, looking for collaborators and/or a mentor to develop it.',
   },
   {
     value: 'collaborator',
     label: 'Collaborator',
-    description: 'I have skills to offer — looking for a research project to join and contribute to.',
+    description: 'I have skills to offer, looking for a research project to join and contribute to.',
   },
   {
     value: 'technical_expert',
     label: 'Technical Expert',
-    description: 'I have specialist technical skills (statistics, bioinformatics, design, programming) — available for the task marketplace.',
+    description: 'I have specialist technical skills (statistics, bioinformatics, design, programming), available for the task marketplace.',
   },
   {
     value: 'mentor',
     label: 'Mentor',
-    description: 'I can offer mentorship — I am a faculty member, postgraduate student, or industry professional.',
+    description: 'I can offer mentorship. I am a faculty member, postgraduate student, or industry professional.',
   },
   {
     value: 'all',

@@ -15,7 +15,7 @@ export async function fetchCandidateContent(
   const items: ContentItem[] = []
 
   const [ideasRes, grantsRes, challengesRes, projectsRes, mentorsRes] = await Promise.all([
-    // research_ideas — research_area is singular string, filter by status not is_public
+    // research_ideas, research_area is singular string, filter by status not is_public
     supabase
       .from('research_ideas')
       .select('id, title, description, research_area, tags, created_at, author_id')
@@ -24,7 +24,7 @@ export async function fetchCandidateContent(
       .order('created_at', { ascending: false })
       .limit(20),
 
-    // grants — research_areas is array, eligibility is array (not eligibility_levels)
+    // grants, research_areas is array, eligibility is array (not eligibility_levels)
     supabase
       .from('grants')
       .select('id, title, description, funder, research_areas, eligibility, deadline, amount_min, amount_max, currency, created_at')
@@ -33,7 +33,7 @@ export async function fetchCandidateContent(
       .order('deadline', { ascending: true, nullsFirst: false })
       .limit(20),
 
-    // challenges — deadline column is submission_deadline
+    // challenges, deadline column is submission_deadline
     supabase
       .from('challenges')
       .select('id, title, description, research_areas, difficulty, submission_deadline, created_at')
@@ -41,7 +41,7 @@ export async function fetchCandidateContent(
       .order('created_at', { ascending: false })
       .limit(15),
 
-    // projects — research_area is singular string, is_public exists
+    // projects, research_area is singular string, is_public exists
     supabase
       .from('projects')
       .select('id, title, description, research_area, status, is_public, created_at, target_end_date, team_id')
@@ -50,7 +50,7 @@ export async function fetchCandidateContent(
       .order('created_at', { ascending: false })
       .limit(15),
 
-    // mentor_profiles — uses is_accepting_mentees filter, expertise_areas column
+    // mentor_profiles, uses is_accepting_mentees filter, expertise_areas column
     supabase
       .from('mentor_profiles')
       .select(`
@@ -94,7 +94,7 @@ export async function fetchCandidateContent(
 
   // Normalise grants (research_areas is array, eligibility for target levels)
   for (const grant of (grantsRes.data ?? [])) {
-    const funderPrefix = grant.funder ? `${grant.funder} — ` : ''
+    const funderPrefix = grant.funder ? `${grant.funder}, ` : ''
     items.push({
       id: grant.id,
       type: 'grant',

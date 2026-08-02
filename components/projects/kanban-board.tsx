@@ -282,7 +282,7 @@ export function KanbanBoard({
         </DialogContent>
       </Dialog>
 
-      {/* Columns — stacked vertically */}
+      {/* Columns, stacked vertically */}
       <div className="space-y-4">
         {COLUMNS.map(column => {
           const colTasks  = getTasksByColumn(column.id)

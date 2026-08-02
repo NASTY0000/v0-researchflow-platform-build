@@ -54,7 +54,7 @@ export async function awardAkiliPoints({
 
     return { success: true }
   } catch (error) {
-    // Silently fail — score errors must never break core functionality
+    // Silently fail, score errors must never break core functionality
     console.error('Akili award error:', error)
     return { error: 'Failed to award points' }
   }

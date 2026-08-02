@@ -15,7 +15,7 @@ const faqs = [
   },
   {
     q: 'Is ResearchFlow free to use?',
-    a: 'Yes! The core platform — including idea posting, collaborator matching, project workspaces, and the mentor directory — is completely free. We believe quality research tools should be accessible to every African researcher regardless of their institution\'s budget.',
+    a: 'Yes! The core platform, including idea posting, collaborator matching, project workspaces, and the mentor directory, is completely free. We believe quality research tools should be accessible to every African researcher regardless of their institution\'s budget.',
   },
   {
     q: 'How does the collaborator matching work?',
@@ -41,7 +41,7 @@ export function FaqSection() {
       <div className="pointer-events-none absolute -left-32 bottom-0 h-80 w-80 rounded-full bg-violet-700/10 blur-[120px]" />
 
       <div className="relative z-10 mx-auto max-w-3xl">
-        {/* No "Got Questions?" eyebrow — heading carries its own weight */}
+        {/* No "Got Questions?" eyebrow, heading carries its own weight */}
         <Reveal className="mb-12 text-center">
           <h2
             data-reveal

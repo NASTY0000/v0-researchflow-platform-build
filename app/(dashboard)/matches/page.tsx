@@ -65,7 +65,7 @@ interface RecruitingProject {
   _score: number
 }
 
-// ── Scoring helper — same weighted approach as computeMentorMatches ────────────
+// ── Scoring helper, same weighted approach as computeMentorMatches ────────────
 // researchScore * 0.60 + skillsScore * 0.30 + recencyScore * 0.10
 function scoreProject(
   project: Omit<RecruitingProject, '_score'>,
@@ -77,7 +77,7 @@ function scoreProject(
   const area = (project.research_area ?? '').toLowerCase()
   const text = `${project.title} ${project.description ?? ''}`.toLowerCase()
 
-  // Research alignment — mirrors the exact/partial logic in computeMentorMatches
+  // Research alignment, mirrors the exact/partial logic in computeMentorMatches
   let researchScore = 0
   for (const interest of viewerInterests) {
     const i = interest.toLowerCase()
@@ -85,14 +85,14 @@ function scoreProject(
     if (area.includes(i) || i.includes(area)) researchScore = Math.max(researchScore, 0.5)
   }
 
-  // Skills relevance — viewer skills that appear in title/description
+  // Skills relevance, viewer skills that appear in title/description
   let skillHits = 0
   for (const skill of viewerSkills) {
     if (text.includes(skill.toLowerCase())) skillHits++
   }
   const skillsScore = viewerSkills.length > 0 ? Math.min(skillHits / viewerSkills.length, 1.0) : 0
 
-  // Recency — normalised within the result window
+  // Recency, normalised within the result window
   const updatedMs = new Date(project.updated_at).getTime()
   const range = newestMs - oldestMs
   const recencyScore = range > 0 ? (updatedMs - oldestMs) / range : 1.0
@@ -354,7 +354,7 @@ export default function MatchesPage() {
         .update({ status: "contacted" })
         .eq("id", selectedMatch.id)
 
-      // Create notification — fetch sender name first
+      // Create notification, fetch sender name first
       const { data: senderProfile } = await supabase.from('profiles').select('full_name').eq('id', user.id).single()
       const senderName = senderProfile?.full_name || 'A researcher'
       const msgPreview = connectionMessage
@@ -554,7 +554,7 @@ export default function MatchesPage() {
                         )}
                       </div>
 
-                      {/* Research aim — 2-line truncation */}
+                      {/* Research aim, 2-line truncation */}
                       {project.description && (
                         <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
                           {project.description}

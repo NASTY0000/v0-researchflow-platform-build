@@ -36,7 +36,7 @@ export default function VerifiedPage() {
         return
       }
 
-      // No session — try refreshing
+      // No session, try refreshing
       setStatus('Completing verification...')
 
       const { data: { session: refreshed } } = await supabase.auth.refreshSession()
@@ -58,7 +58,7 @@ export default function VerifiedPage() {
         return
       }
 
-      // Still no session — in-app browser can't set cookies
+      // Still no session, in-app browser can't set cookies
       setStatus('Please open this link in your browser.')
       setNeedsBrowser(true)
     }

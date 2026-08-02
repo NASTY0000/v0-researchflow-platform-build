@@ -23,7 +23,7 @@ interface HistoryTurn {
 }
 
 export async function POST(request: NextRequest) {
-  // 1. Authenticate first — before touching Gemini — so anonymous traffic
+  // 1. Authenticate first (before touching Gemini) so anonymous traffic
   //    can never run up the API bill.
   const supabase = await createClient()
   const {
@@ -159,7 +159,7 @@ export async function POST(request: NextRequest) {
         ? (error as { status: number }).status
         : undefined
 
-    // Full detail to the server log only — never to the client.
+    // Full detail to the server log only, never to the client.
     console.error('ai-assistant: Gemini call failed', {
       model: MODEL,
       upstreamStatus,

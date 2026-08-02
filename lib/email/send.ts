@@ -13,7 +13,7 @@ function getResend() {
 export async function sendEmail(to: string, subject: string, html: string) {
   const resend = getResend()
   if (!resend) {
-    // Gracefully skip when key not configured — log for visibility
+    // Gracefully skip when key not configured, log for visibility
     console.log(`[email] would send "${subject}" to ${to}`)
     return { skipped: true }
   }

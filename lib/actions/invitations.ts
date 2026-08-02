@@ -20,7 +20,7 @@ export async function inviteByEmail(projectId: string, email: string, role: stri
     .maybeSingle()
 
   if (existingProfile) {
-    // User exists — add to team directly and send notification
+    // User exists, add to team directly and send notification
     const { data: project } = await supabase.from('projects').select('team_id, title').eq('id', projectId).single()
     if (!project) return { error: 'Project not found' }
 
@@ -52,7 +52,7 @@ export async function inviteByEmail(projectId: string, email: string, role: stri
     return { success: true, existing: true, name: existingProfile.full_name }
   }
 
-  // User doesn't exist — create invitation record
+  // User doesn't exist, create invitation record
   const token = randomUUID().replace(/-/g, '')
   const { data: project } = await supabase.from('projects').select('title').eq('id', projectId).single()
 

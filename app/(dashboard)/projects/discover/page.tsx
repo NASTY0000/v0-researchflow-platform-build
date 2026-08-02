@@ -160,7 +160,7 @@ export default function DiscoverProjectsPage() {
           title={query.trim().length >= 2 ? "No matching projects" : "No open projects right now"}
           description={query.trim().length >= 2
             ? "Try a different search term."
-            : "Check back later — teams will post here when they're recruiting collaborators."
+            : "Check back later. Teams will post here when they're recruiting collaborators."
           }
           ctaLabel="Create your own project"
           ctaHref="/projects/new"

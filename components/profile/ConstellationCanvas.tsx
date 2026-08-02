@@ -217,7 +217,7 @@ export function ConstellationCanvas({ interests }: ConstellationCanvasProps) {
         }
         ctx.restore()
 
-        // Label — clamp so it never overflows canvas edges
+        // Label, clamp so it never overflows canvas edges
         ctx.save()
         const fontSize = W < 400 ? 8 : 9
         ctx.font = `bold ${fontSize}px -apple-system, monospace`

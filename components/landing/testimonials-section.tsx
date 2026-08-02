@@ -7,7 +7,7 @@ import { gsap } from '@/lib/gsap'
 const TESTIMONIALS = [
   {
     quote:
-      'Within two weeks of joining ResearchFlow, I had three collaborators for my climate adaptation study. We submitted to a peer-reviewed journal six months later — something I could not have done alone.',
+      'Within two weeks of joining ResearchFlow, I had three collaborators for my climate adaptation study. We submitted to a peer-reviewed journal six months later, something I could not have done alone.',
     author: 'Amara Okafor',
     role: 'PhD Candidate, University of Ibadan',
     initial: 'A',
@@ -54,7 +54,7 @@ export function TestimonialsSection() {
       <div className="pointer-events-none absolute right-0 top-1/3 h-96 w-96 rounded-full bg-fuchsia-700/10 blur-[130px]" />
 
       <div className="relative z-10 mx-auto max-w-7xl">
-        {/* No "Social Proof" eyebrow — heading is the statement */}
+        {/* No "Social Proof" eyebrow, heading is the statement */}
         <Reveal className="mb-16 text-center">
           <h2
             data-reveal
@@ -74,7 +74,7 @@ export function TestimonialsSection() {
               data-testimonial-card
               className="group relative flex flex-col rounded-2xl border border-violet-500/15 bg-white/[0.025] p-7 backdrop-blur-sm transition-[border-color,box-shadow] duration-300 hover:border-violet-400/35 hover:shadow-[0_16px_48px_rgba(124,58,237,0.18)]"
             >
-              {/* Decorative quote mark — visible at 20% opacity, not 10% */}
+              {/* Decorative quote mark, visible at 20% opacity, not 10% */}
               <span
                 aria-hidden="true"
                 className="pointer-events-none absolute right-6 top-3 font-heading font-extrabold leading-none text-violet-500/20 transition-colors duration-300 group-hover:text-violet-500/30"

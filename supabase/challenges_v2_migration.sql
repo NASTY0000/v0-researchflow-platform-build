@@ -1,11 +1,11 @@
 -- ─────────────────────────────────────────────────────────────────────────────
--- CHALLENGES 2.0 — COMPLETE SCHEMA
+-- CHALLENGES 2.0, COMPLETE SCHEMA
 -- Run this ENTIRE file in Supabase SQL Editor.
 -- Safe to run multiple times (IF NOT EXISTS / ADD COLUMN IF NOT EXISTS).
 -- ─────────────────────────────────────────────────────────────────────────────
 
 -- 1. Extend challenges table with new columns
---    (submission_count already exists — do NOT add it again)
+--    (submission_count already exists, do NOT add it again)
 ALTER TABLE challenges
   ADD COLUMN IF NOT EXISTS prize_type            TEXT,
   ADD COLUMN IF NOT EXISTS max_team_size         INTEGER DEFAULT 4,
@@ -64,7 +64,7 @@ CREATE INDEX IF NOT EXISTS idx_cti_team    ON challenge_team_invites(team_id);
 CREATE INDEX IF NOT EXISTS idx_cti_invitee ON challenge_team_invites(invitee_id);
 
 -- 5. Extend challenge_submissions with new columns
---    The table already exists with author_id — we only ADD missing columns.
+--    The table already exists with author_id. We only ADD missing columns.
 ALTER TABLE challenge_submissions
   ADD COLUMN IF NOT EXISTS title            TEXT,
   ADD COLUMN IF NOT EXISTS team_id          UUID REFERENCES challenge_teams(id),

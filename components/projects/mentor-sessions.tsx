@@ -109,7 +109,7 @@ export function MentorSessions({ projectId, currentUserId }: MentorSessionsProps
       .order("scheduled_at", { ascending: false })
     setSessions((sessionsData as SessionWithParticipants[]) || [])
 
-    // Load available (unbooked) slots for this project — min 24h away
+    // Load available (unbooked) slots for this project, min 24h away
     const minBookingTime = new Date(Date.now() + 24 * 3600 * 1000).toISOString()
     const minDate = minBookingTime.slice(0, 10)
     const { data: slotsData } = await supabase

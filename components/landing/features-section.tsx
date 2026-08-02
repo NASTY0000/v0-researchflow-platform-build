@@ -142,7 +142,7 @@ export function FeaturesSection() {
       <div className="pointer-events-none absolute -right-40 bottom-20 h-96 w-96 rounded-full bg-cyan-600/10 blur-[120px]" />
 
       <div className="relative z-10 mx-auto max-w-7xl">
-        {/* No eyebrow — heading stands alone */}
+        {/* No eyebrow, heading stands alone */}
         <Reveal className="mb-16 text-center">
           <h2
             data-reveal
@@ -157,11 +157,11 @@ export function FeaturesSection() {
           </p>
         </Reveal>
 
-        {/* Bento-style layout — featured card + grid breaks the identical-card ban */}
+        {/* Bento-style layout, featured card + grid breaks the identical-card ban */}
         <Reveal>
           {/* Row 1: featured (2/3 width) + two stacked cards (1/3 width) */}
           <div data-reveal className="mb-5 grid gap-5 md:grid-cols-3">
-            {/* Featured card — spans 2 cols, horizontal layout */}
+            {/* Featured card, spans 2 cols, horizontal layout */}
             <div
               onMouseMove={handleMouseMove}
               className="spotlight-card group relative overflow-hidden rounded-2xl border border-violet-500/20 bg-white/[0.025] p-8 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1.5 hover:border-violet-400/50 hover:shadow-[0_16px_56px_rgba(124,58,237,0.3)] md:col-span-2"
@@ -180,7 +180,7 @@ export function FeaturesSection() {
                   </h3>
                   <p className="mb-6 max-w-xs leading-relaxed text-[#9D8BB8]">{featured.description}</p>
                 </div>
-                {/* Mini feature list — makes this card visually distinct */}
+                {/* Mini feature list, makes this card visually distinct */}
                 <ul className="flex shrink-0 flex-col gap-2 sm:mt-1 sm:min-w-[160px]">
                   {featured.bullets?.map((b) => (
                     <li key={b} className="flex items-center gap-2.5 text-sm text-[#B7A8D4]">

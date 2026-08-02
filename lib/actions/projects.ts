@@ -26,7 +26,7 @@ export async function submitPhaseCompletion({
   evidence: EvidenceAnswer[]
   totalCompleted: number
 }) {
-  // 1. Server-side evidence validation — at least one meaningful answer required
+  // 1. Server-side evidence validation, at least one meaningful answer required
   const hasContent = evidence.some(e => e.a.trim().length >= 10)
   if (!hasContent) {
     return { error: 'Please provide a meaningful answer to at least one question (10+ characters).' }
@@ -181,7 +181,7 @@ export async function reopenPhase(
   //
   // We intentionally do NOT deduct or revoke Akili points here. The
   // alreadyAwarded() duplicate-check in phaseCompleted() uses
-  // (user_id, eventType, related_id) — removing the akili_score_events row
+  // (user_id, eventType, related_id), removing the akili_score_events row
   // would break that guard and allow point farming by cycling reopen →
   // re-complete. The points were legitimately earned; the reopen is a
   // quality correction, not a reversal of effort.

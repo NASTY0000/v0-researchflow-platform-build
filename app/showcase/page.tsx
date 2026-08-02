@@ -182,7 +182,7 @@ export default function ShowcasePage() {
             <Sparkles className="w-10 h-10 mx-auto text-primary" />
             <h2 className="text-2xl font-bold font-heading">Join ResearchFlow to Collaborate on Research</h2>
             <p className="max-w-lg mx-auto text-muted-foreground">
-              Connect with researchers across Africa, share your own work, find collaborators, and grow your academic network — all in one place.
+              Connect with researchers across Africa, share your own work, find collaborators, and grow your academic network, all in one place.
             </p>
             <div className="flex items-center justify-center gap-3 flex-wrap">
               <Button asChild style={{ background: 'var(--cta-bg)', border: 'none' }}>

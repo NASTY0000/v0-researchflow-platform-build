@@ -31,7 +31,7 @@ export async function loadAdminUsers({
     if (statusFilter === 'suspended') q = q.eq('is_suspended', true)
     else if (statusFilter === 'active') q = q.eq('is_suspended', false).eq('onboarding_completed', true)
     else if (statusFilter === 'onboarding') q = q.eq('onboarding_completed', false)
-    // 'all' — no extra filter
+    // 'all', no extra filter
     return q
   }
 

@@ -1,5 +1,5 @@
 -- ============================================================
--- CHALLENGE SYSTEM REPAIR — run this whole file once.
+-- CHALLENGE SYSTEM REPAIR, run this whole file once.
 -- Brings the live database up to what the app code expects.
 -- Idempotent: safe to run multiple times.
 -- ============================================================

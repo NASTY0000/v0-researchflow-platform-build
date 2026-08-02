@@ -2,7 +2,7 @@
 -- Idempotent migration (safe to run multiple times)
 
 -- ============================================================
--- feed_content_sources — registry of external feeds to poll
+-- feed_content_sources, registry of external feeds to poll
 -- ============================================================
 CREATE TABLE IF NOT EXISTS feed_content_sources (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -21,7 +21,7 @@ CREATE INDEX IF NOT EXISTS idx_feed_content_sources_active
   ON feed_content_sources (is_active, source_type, last_fetched_at);
 
 -- ============================================================
--- feed_external_content — ingested items surfaced in the feed
+-- feed_external_content, ingested items surfaced in the feed
 -- ============================================================
 CREATE TABLE IF NOT EXISTS feed_external_content (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -52,7 +52,7 @@ CREATE INDEX IF NOT EXISTS idx_feed_external_content_expires
   ON feed_external_content (expires_at);
 
 -- ============================================================
--- RLS — read-only for authenticated users, writes via service role
+-- RLS, read-only for authenticated users, writes via service role
 -- ============================================================
 ALTER TABLE feed_content_sources ENABLE ROW LEVEL SECURITY;
 ALTER TABLE feed_external_content ENABLE ROW LEVEL SECURITY;
@@ -81,7 +81,7 @@ BEGIN
 END $$;
 
 -- ============================================================
--- extract_research_areas_from_text — naive keyword matcher
+-- extract_research_areas_from_text, naive keyword matcher
 -- Maps free text to known research areas via adjacency table
 -- (falls back to an empty array if no matches found)
 -- ============================================================

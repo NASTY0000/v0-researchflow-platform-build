@@ -44,7 +44,7 @@ interface Props {
 }
 
 export function PhaseChartsClient({ byPhase, totalCompletions, totalWithEvidence, keywords, reopenByPhase, totalReopened }: Props) {
-  // Funnel: reachCount is cumulative — how many phases ever reached this phase
+  // Funnel: reachCount is cumulative, how many phases ever reached this phase
   // We approximate by summing completedCount from this phase onward
   const funnelData = byPhase.map(row => ({
     name: `Ph ${row.phase_number}: ${row.phase_name.split(' ')[0]}`,
@@ -95,13 +95,13 @@ export function PhaseChartsClient({ byPhase, totalCompletions, totalWithEvidence
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
-        {/* Phase funnel — drop-off */}
+        {/* Phase funnel, drop-off */}
         <Card>
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <TrendingDown className="w-4 h-4 text-purple-400" />Phase Funnel
             </CardTitle>
-            <CardDescription>Phases reached (completed + in-progress) — reveals where teams stall</CardDescription>
+            <CardDescription>Phases reached (completed + in-progress): reveals where teams stall</CardDescription>
           </CardHeader>
           <CardContent>
             {funnelData.every(d => d.value === 0) ? (
@@ -130,7 +130,7 @@ export function PhaseChartsClient({ byPhase, totalCompletions, totalWithEvidence
             <CardTitle className="text-base flex items-center gap-2">
               <FileCheck2 className="w-4 h-4 text-green-400" />Evidence Coverage
             </CardTitle>
-            <CardDescription>Completions with vs without a submission — legacy phases will show no evidence</CardDescription>
+            <CardDescription>Completions with vs without a submission: legacy phases will show no evidence</CardDescription>
           </CardHeader>
           <CardContent>
             {coverageData.every(d => d.with_evidence === 0 && d.without === 0) ? (
@@ -156,7 +156,7 @@ export function PhaseChartsClient({ byPhase, totalCompletions, totalWithEvidence
             <CardTitle className="text-base flex items-center gap-2">
               <FileCheck2 className="w-4 h-4 text-cyan-400" />Answer Depth
             </CardTitle>
-            <CardDescription>Avg submission length per phase — short bars indicate a poorly-worded question</CardDescription>
+            <CardDescription>Avg submission length per phase: short bars indicate a poorly-worded question</CardDescription>
           </CardHeader>
           <CardContent>
             {depthData.every(d => d.avg_chars === 0) ? (
@@ -181,7 +181,7 @@ export function PhaseChartsClient({ byPhase, totalCompletions, totalWithEvidence
             <CardTitle className="text-base flex items-center gap-2">
               <MessageSquare className="w-4 h-4 text-orange-400" />Common Blockers
             </CardTitle>
-            <CardDescription>Recurring words from challenge & feedback answers — common blockers surface here</CardDescription>
+            <CardDescription>Recurring words from challenge & feedback answers: common blockers surface here</CardDescription>
           </CardHeader>
           <CardContent>
             {topKeywords.length === 0 ? (
@@ -205,14 +205,14 @@ export function PhaseChartsClient({ byPhase, totalCompletions, totalWithEvidence
         </Card>
       </div>
 
-      {/* Reopen frequency — a phase frequently reopened signals a definition problem */}
+      {/* Reopen frequency: a phase frequently reopened signals a definition problem */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <RotateCcw className="w-4 h-4 text-orange-400" />Reopen Frequency
           </CardTitle>
           <CardDescription>
-            Times each phase has been reopened — frequent reopens signal a poorly-defined phase or a genuinely difficult step
+            Times each phase has been reopened: frequent reopens signal a poorly-defined phase or a genuinely difficult step
           </CardDescription>
         </CardHeader>
         <CardContent>

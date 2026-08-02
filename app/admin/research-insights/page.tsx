@@ -47,7 +47,7 @@ export default async function ResearchInsightsPage() {
   const analytics = analyticsRes.data  as AnalyticsResult | null
   const keywords  = (keywordsRes.data  as KeywordRow[]    | null) ?? []
 
-  // Reopen stats — per phase count from history table
+  // Reopen stats, per phase count from history table
   const { data: reopenRaw } = await admin
     .from('phase_submission_history')
     .select('phase_number')
@@ -58,7 +58,7 @@ export default async function ResearchInsightsPage() {
   })
   const totalReopened = Object.values(reopenByPhase).reduce((s, n) => s + n, 0)
 
-  // Individual submissions via service role — bypasses RLS; admin only
+  // Individual submissions via service role, bypasses RLS; admin only
   const { data: submissionsRaw } = await admin
     .from('project_phases')
     .select('id, phase_number, phase_name, completed_at, completion_answers, completion_summary, project:projects(title)')
@@ -92,7 +92,7 @@ export default async function ResearchInsightsPage() {
         totalReopened={totalReopened}
       />
 
-      {/* Individual submissions — admin-only, server-rendered */}
+      {/* Individual submissions, admin-only, server-rendered */}
       <section className="space-y-4">
         {/* Confidentiality notice */}
         <div className="flex items-start gap-3 rounded-xl border border-amber-500/30 bg-amber-500/8 px-4 py-3">
@@ -100,7 +100,7 @@ export default async function ResearchInsightsPage() {
           <div>
             <p className="text-sm font-semibold text-amber-300">Individual research submissions</p>
             <p className="text-xs text-amber-400/80 mt-0.5">
-              Treat as confidential — this is unpublished student work. Do not share, quote, or reference outside of platform review.
+              Treat as confidential. This is unpublished student work. Do not share, quote, or reference outside of platform review.
             </p>
           </div>
         </div>

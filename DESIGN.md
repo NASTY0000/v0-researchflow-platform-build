@@ -1,8 +1,8 @@
-# ResearchFlow — Design System
+# ResearchFlow, Design System
 
 ## Theme
 
-Dark-first. Forced via `defaultTheme="dark"` in `ThemeProvider`. The visual metaphor is deep space: ambient violet glow, near-black surfaces, luminous type. Light mode exists but is secondary — a professional lavender-white for users who prefer it.
+Dark-first. Forced via `defaultTheme="dark"` in `ThemeProvider`. The visual metaphor is deep space: ambient violet glow, near-black surfaces, luminous type. Light mode exists but is secondary, a professional lavender-white for users who prefer it.
 
 A dark/light class toggle is injected synchronously in `<head>` (no flash on load). Theme preference is persisted to localStorage.
 
@@ -11,7 +11,7 @@ A dark/light class toggle is injected synchronously in `<head>` (no flash on loa
 ## Color
 
 ### Strategy
-Committed dark palette: violet as identity, gold as achievement, deep-space backgrounds. The brand color saturates UI elements rather than sitting in the corner — active states, borders, glows, and CTAs all carry violet.
+Committed dark palette: violet as identity, gold as achievement, deep-space backgrounds. The brand color saturates UI elements rather than sitting in the corner, active states, borders, glows, and CTAs all carry violet.
 
 ### CSS Custom Properties (dark / light)
 
@@ -21,7 +21,7 @@ Committed dark palette: violet as identity, gold as achievement, deep-space back
 | `--foreground` | `#F8F5FF` | `#0F051E` | Primary text |
 | `--card` | `#12081F` | `#FFFFFF` | Card surfaces |
 | `--card-foreground` | `#F8F5FF` | `#0F051E` | Text on cards |
-| `--primary` | `#7C3AED` | `#6D28D9` | Brand violet — CTAs, active states, icons |
+| `--primary` | `#7C3AED` | `#6D28D9` | Brand violet, CTAs, active states, icons |
 | `--primary-foreground` | `#FFFFFF` | `#FFFFFF` | Text on primary bg |
 | `--secondary` | `#1E0F32` | `#EDE9FE` | Tinted surface, alt cards |
 | `--secondary-foreground` | `#D8B4FE` | `#4C1D95` | Text on secondary |
@@ -64,7 +64,7 @@ Committed dark palette: violet as identity, gold as achievement, deep-space back
 
 ### Brand-locked inline colors
 
-Some values live outside the token system as inline styles — these are identity-critical and must not be changed:
+Some values live outside the token system as inline styles. These are identity-critical and must not be changed:
 
 - **Gold accent** (Akili/achievement): `#FBBF24` / `#EAB308`
 - **Brand violet CTAs**: `linear-gradient(135deg, #7C3AED, #A855F7)`
@@ -106,7 +106,7 @@ Base radius `0.75rem` (12px). shadcn scale:
 |---|---|
 | `--radius-sm` | `0.5rem` (8px) |
 | `--radius-md` | `0.625rem` (10px) |
-| `--radius-lg` | `0.75rem` (12px) — default |
+| `--radius-lg` | `0.75rem` (12px), default |
 | `--radius-xl` | `1rem` (16px) |
 
 Cards and panels typically use `rounded-2xl` (16px). Badges and pills use `rounded-full`.
@@ -201,7 +201,7 @@ border: 1px solid rgba(234,179,8,0.2)
 ### Navigation
 
 **Sidebar** (`components/dashboard/sidebar.tsx`)
-- `collapsible="icon"` mode — collapses to icon rail
+- `collapsible="icon"` mode, collapses to icon rail
 - Header: Logo icon + "Research**Flow**" wordmark (white + gold `#FBBF24`)
 - Groups: Core (Dashboard, My Feed, Messages) → Hub links (Collaborate, Discover, Community) → conditional Mentoring → conditional Admin
 - Hub links: `ChevronRight` arrow + hover tooltip listing child pages; 150ms delay; `group/hub` named-group pattern
@@ -257,7 +257,7 @@ Shimmer animation (`@keyframes shimmer`) used for loading skeleton states.
 
 ## Tailwind Config
 
-Tailwind CSS v4 — **no `tailwind.config.ts`**. CSS-first via `@theme inline` in `globals.css`. All token mappings (`--color-*`, `--font-*`, `--radius-*`) live there.
+Tailwind CSS v4, **no `tailwind.config.ts`**. CSS-first via `@theme inline` in `globals.css`. All token mappings (`--color-*`, `--font-*`, `--radius-*`) live there.
 
 Custom dark variant:
 ```css

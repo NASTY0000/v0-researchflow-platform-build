@@ -13,7 +13,7 @@ web
 product
 
 ## Audience
-African university students, postgraduate researchers, academics, and research mentors across the continent. Users open the app in study rooms, libraries, on mobile between lectures. The context is focused, curious, ambitious — not casual.
+African university students, postgraduate researchers, academics, and research mentors across the continent. Users open the app in study rooms, libraries, on mobile between lectures. The context is focused, curious, ambitious, not casual.
 
 ## Core Features
 - **Research ideas**: create, share, browse, and get matched on research ideas
@@ -40,7 +40,7 @@ African university students, postgraduate researchers, academics, and research m
 - Supabase (auth, postgres, realtime, storage)
 - Anthropic SDK (Claude AI assistant)
 - Sonner (toasts), lucide-react (icons), date-fns
-- DM Sans (body) + Syne (headings) — loaded via next/font
+- DM Sans (body) + Syne (headings), loaded via next/font
 
 ## Design Intent
-Dark by default (forced via `defaultTheme="dark"`). The theme is focused and ambient — a workspace for serious research, not a social feed. Violet as the primary identity color signals intellectual authority without feeling corporate. Gold accent communicates achievement and premium status (Akili tiers).
+Dark by default (forced via `defaultTheme="dark"`). The theme is focused and ambient, a workspace for serious research, not a social feed. Violet as the primary identity color signals intellectual authority without feeling corporate. Gold accent communicates achievement and premium status (Akili tiers).

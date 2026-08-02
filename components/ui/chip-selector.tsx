@@ -53,7 +53,7 @@ export default function ChipSelector({
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap gap-2">
-        {/* Selected items not in featured list — shown first so user can deselect */}
+        {/* Selected items not in featured list: shown first so user can deselect */}
         {extraSelected.map(item => (
           <button
             key={item}
@@ -90,7 +90,7 @@ export default function ChipSelector({
           )
         })}
 
-        {/* Other — opens search */}
+        {/* Other, opens search */}
         <button
           type="button"
           onClick={() => setShowSearch(true)}

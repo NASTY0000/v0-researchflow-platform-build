@@ -20,7 +20,7 @@ function VerifyPageInner() {
   const [error, setError] = useState('')
   const [resendMsg, setResendMsg] = useState('')
 
-  // Poll for session — covers magic-link clicks in another tab
+  // Poll for session, covers magic-link clicks in another tab
   useEffect(() => {
     const supabase = createClient()
     const interval = setInterval(async () => {

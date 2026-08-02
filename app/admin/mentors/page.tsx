@@ -231,7 +231,7 @@ export default function AdminMentorsPage() {
                     </div>
                     <div className="text-center p-3 rounded-xl bg-muted/50">
                       <p className="text-xl font-bold flex items-center justify-center gap-1">
-                        {selectedMentor.rating > 0 ? selectedMentor.rating.toFixed(1) : '—'}
+                        {selectedMentor.rating > 0 ? selectedMentor.rating.toFixed(1) : '-'}
                         {selectedMentor.rating > 0 && <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />}
                       </p>
                       <p className="text-xs text-muted-foreground">Rating</p>

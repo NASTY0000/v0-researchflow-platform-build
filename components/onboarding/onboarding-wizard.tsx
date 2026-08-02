@@ -358,7 +358,7 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
     }
     if (step === 3 && researchInterests.length === 0) { setError('Please select at least one research interest'); return }
     if (step === 4 && lookingFor.length === 0) { setError('Please select at least one thing you are looking for in collaborators'); return }
-    // step 5 (identity) always valid — has default value
+    // step 5 (identity) always valid, has default value
 
     const saved = await saveProgress()
     if (saved) setStep(step + 1)
@@ -645,7 +645,7 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
                     <Label className="text-lg font-medium" style={{ color: '#F3F0FF' }}>What are you looking for in collaborators? *</Label>
                     <p className="text-sm mt-1" style={{ color: lookingFor.length === 0 ? '#EF4444' : 'var(--muted-foreground)' }}>
                       {lookingFor.length === 0
-                        ? 'At least 1 required — tap any pill to select'
+                        ? 'At least 1 required. Tap any pill to select'
                         : <span style={{ color: '#A855F7' }}>{lookingFor.length} selected</span>
                       }
                     </p>
@@ -735,7 +735,7 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
                         The Baobab
                       </p>
                       <p className="text-xs mt-1 leading-relaxed text-muted-foreground">
-                        Growing from strong roots. Your profile reflects your place in the African research ecosystem — branches represent your fields, nodes your connections.
+                        Growing from strong roots. Your profile reflects your place in the African research ecosystem: branches represent your fields, nodes your connections.
                       </p>
                     </div>
                   </button>
@@ -775,7 +775,7 @@ export function OnboardingWizard({ initialProfile, universities }: OnboardingWiz
                         The Constellation
                       </p>
                       <p className="text-xs mt-1 leading-relaxed text-muted-foreground">
-                        Reaching for new frontiers. Your profile becomes your mark on the research universe — each star a field you&apos;re exploring, each line a connection you&apos;ve forged.
+                        Reaching for new frontiers. Your profile becomes your mark on the research universe: each star a field you&apos;re exploring, each line a connection you&apos;ve forged.
                       </p>
                     </div>
                   </button>

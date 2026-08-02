@@ -85,7 +85,7 @@ export function BaobabCanvas({ interests, akiliScore, dimensions }: BaobabCanvas
       const jx = W * 0.72
       const jy = H * 0.88
 
-      // Ambient aura — drawn BEFORE branches
+      // Ambient aura, drawn BEFORE branches
       const aura = ctx.createRadialGradient(jx, H, 0, jx, H * 0.5, W * 0.7)
       aura.addColorStop(0, 'rgba(245,158,11,0.18)')
       aura.addColorStop(0.4, 'rgba(124,58,237,0.08)')
@@ -110,7 +110,7 @@ export function BaobabCanvas({ interests, akiliScore, dimensions }: BaobabCanvas
       // Branches
       const n = active.length
       const spreadRad = (110 * Math.PI) / 180
-      // Branches point upward — angle 0 = right, so upward is -PI/2
+      // Branches point upward, angle 0 = right, so upward is -PI/2
       // Spread from (−PI/2 − spread/2) to (−PI/2 + spread/2)
       const baseAngle = -Math.PI / 2
       const maxBranchLen = H * 0.82

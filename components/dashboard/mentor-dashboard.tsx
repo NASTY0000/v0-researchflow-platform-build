@@ -87,7 +87,7 @@ export function MentorDashboard({ userId }: MentorDashboardProps) {
   const totalSessions = sessions.length
   const avgRating = sessions.filter(s => s.student_rating).length > 0
     ? (sessions.reduce((sum, s) => sum + (s.student_rating || 0), 0) / sessions.filter(s => s.student_rating).length).toFixed(1)
-    : '—'
+    : '-'
 
   useEffect(() => {
     if (!userId) return

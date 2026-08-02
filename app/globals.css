@@ -9,7 +9,7 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Light mode — warm neutral paper, purple as accent only */
+  /* Light mode, warm neutral paper, purple as accent only */
   --background: #FAF9F8;
   --foreground: #1A1714;
   --card: #FFFFFF;
@@ -31,7 +31,7 @@
   --ring: #6D28D9;
   --radius: 0.75rem;
 
-  /* Sidebar tokens – light */
+  /* Sidebar tokens: light */
   --sidebar: #FFFFFF;
   --sidebar-foreground: #1A1714;
   --sidebar-primary: #6D28D9;
@@ -50,14 +50,14 @@
   --surface-hover: rgba(0,0,0,0.06);
   --border-bright: rgba(109,40,217,0.35);
 
-  /* NEW — gold tokens. The brand's second colour had no token, which is
+  /* NEW, gold tokens. The brand's second colour had no token, which is
      why the Akili progress bar ended up hardcoded orange.
      --gold is for fills only. --gold-foreground is for text:
      #FBBF24 measures 1.8:1 on white and must never be used for text. */
   --gold: #E8A317;
   --gold-foreground: #B45309;
 
-  /* Brand decoration — the single control point for "pop".
+  /* Brand decoration, the single control point for "pop".
      Light mode resolves these to flat colour and real shadows; dark mode
      resolves them to the gradient/glow treatment. Components reference the
      token, so a surface is correct in both themes without dark: variants. */
@@ -69,7 +69,7 @@
   --brand-glow-sm: 0 0 0 0 transparent;
   --brand-wash: none;
 
-  /* Mobile bottom navigation — was hardcoded to the dark palette, which
+  /* Mobile bottom navigation, was hardcoded to the dark palette, which
      left a near-black bar sitting under a white page. */
   --nav-bg: rgba(255,255,255,0.88);
   --nav-border: var(--border);
@@ -88,7 +88,7 @@
   --chart-4: #A855F7;
   --chart-5: #6366F1;
 
-  /* Banner / promo card — the ONE element allowed a purple wash */
+  /* Banner / promo card: the ONE element allowed a purple wash */
   --banner: #F5F1FE;
   --banner-foreground: #3B0764;
   --banner-muted-foreground: #5B4B7A;
@@ -116,7 +116,7 @@
   --input: #371E50;
   --ring: #A78BFA;
 
-  /* Sidebar tokens – dark */
+  /* Sidebar tokens: dark */
   --sidebar: #0A0318;
   --sidebar-foreground: #F8F5FF;
   --sidebar-primary: #7C3AED;
@@ -132,7 +132,7 @@
   --gold-foreground: #FCD34D;
   --text-muted: #9473B4;
 
-  /* Brand decoration — dark mode keeps the gradient + glow treatment */
+  /* Brand decoration, dark mode keeps the gradient + glow treatment */
   --cta-bg: linear-gradient(135deg, #7C3AED, #A855F7);
   --cta-bg-90: linear-gradient(90deg, #7C3AED, #A855F7);
   --cta-shadow: 0 0 20px rgba(124,58,237,0.35);
@@ -141,7 +141,7 @@
   --brand-glow-sm: 0 0 14px rgba(124,58,237,0.30);
   --brand-wash: radial-gradient(ellipse at 20% 50%, rgba(124,58,237,0.20), transparent 60%);
 
-  /* Mobile bottom navigation — the original deep-space treatment */
+  /* Mobile bottom navigation, the original deep-space treatment */
   --nav-bg: rgba(10, 5, 20, 0.80);
   --nav-border: rgba(139,92,246,0.18);
   --nav-shadow: 0 -1px 0 rgba(139,92,246,0.10), inset 0 1px 0 rgba(255,255,255,0.035);
@@ -301,7 +301,7 @@
     box-shadow: 0 0 30px rgba(124,58,237,0.2);
   }
 
-  /* Glows — dark only */
+  /* Glows, dark only */
   .glow-primary, .glow-sm { box-shadow: none; }
   .dark .glow-primary { box-shadow: 0 0 20px rgba(124,58,237,0.4); }
   .dark .glow-sm      { box-shadow: 0 0 12px rgba(124,58,237,0.3); }
@@ -333,7 +333,7 @@
   .dark .match-pill-high { animation: pulse-glow 2s ease-in-out infinite; }
 
   /* Stat numbers --------------------------------------------------------
-     Was hardcoded #C084FC — 2.5:1 in light mode, effectively unreadable. */
+     Was hardcoded #C084FC, 2.5:1 in light mode, effectively unreadable. */
   .stat-number {
     color: var(--primary);
     font-weight: 800;
@@ -341,7 +341,7 @@
   }
   .dark .stat-number { color: #C084FC; }
 
-  /* Interactive card hover — use CSS vars for per-card accent colors */
+  /* Interactive card hover, use CSS vars for per-card accent colors */
   .stat-card {
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
   }
@@ -500,7 +500,7 @@
   box-shadow: 0 0 30px rgba(124,58,237,0.15);
 }
 
-/* Buttons – primary ---------------------------------------------------
+/* Buttons: primary ---------------------------------------------------
    Was an unconditional purple gradient plus a 20px glow. A glowing
    gradient button on a white page is the strongest visual tell that a
    UI was generated rather than designed. */
@@ -612,7 +612,7 @@ input:focus, textarea:focus {
   color: #F3F0FF !important;
 }
 
-/* Dialog – dark only */
+/* Dialog: dark only */
 .dark [data-slot="dialog-content"] {
   background: #0D0720 !important;
   border: 1px solid rgba(139,92,246,0.25) !important;
@@ -648,7 +648,7 @@ html {
   html { scroll-behavior: auto; }
 }
 
-/* Infinite university marquee — content is duplicated, so -50% loops seamlessly.
+/* Infinite university marquee, content is duplicated, so -50% loops seamlessly.
    Duration is set inline, scaled to the number of universities. */
 @keyframes marquee {
   to { transform: translateX(-50%); }
@@ -684,7 +684,7 @@ html {
   animation: aurora-drift 12s ease-in-out infinite;
 }
 
-/* Feature cards — radial spotlight that follows the cursor (set via --mx/--my) */
+/* Feature cards, radial spotlight that follows the cursor (set via --mx/--my) */
 .spotlight-card::before {
   content: '';
   position: absolute;
@@ -704,7 +704,7 @@ html {
   opacity: 1;
 }
 
-/* CTA card — pulsing glow border to draw the eye */
+/* CTA card, pulsing glow border to draw the eye */
 @keyframes cta-border-pulse {
   0%, 100% { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0), inset 0 0 0 1px rgba(124,58,237,0.3); }
   50%       { box-shadow: 0 0 60px 4px rgba(168, 85, 247, 0.18), inset 0 0 0 1px rgba(168,85,247,0.5); }
@@ -735,7 +735,7 @@ html {
 .dark ::-webkit-scrollbar-thumb:hover { background: rgba(168,85,247,0.5); }
 
 /* Skeletons -----------------------------------------------------------
-   Skeletons must never carry brand colour — the loading state is the
+   Skeletons must never carry brand colour, the loading state is the
    first thing every user sees, and it rendered as lavender blocks. */
 [data-slot="skeleton"], .skeleton {
   background: #EDEAE6 !important;

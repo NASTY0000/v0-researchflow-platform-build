@@ -339,13 +339,13 @@ export default function AdminUsersPage() {
                           <AvatarFallback className="text-xs">{user.full_name?.charAt(0) || 'U'}</AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="font-medium text-sm">{user.full_name || '—'}</p>
+                          <p className="font-medium text-sm">{user.full_name || '-'}</p>
                           <p className="text-xs text-muted-foreground">{user.email}</p>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground max-w-36 truncate">
-                      {user.universityName || '—'}
+                      {user.universityName || '-'}
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">

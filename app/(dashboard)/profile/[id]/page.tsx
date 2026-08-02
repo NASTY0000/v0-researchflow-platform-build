@@ -158,7 +158,7 @@ export default function PublicProfilePage() {
 
       {/* Profile Header */}
       <div className="relative rounded-2xl overflow-hidden border border-primary/20 shadow-[0_0_40px_rgba(124,58,237,0.15),0_0_80px_rgba(124,58,237,0.05)]">
-        {/* Animated canvas banner — first child, flush to top edge */}
+        {/* Animated canvas banner, first child, flush to top edge */}
         <div className="relative h-52" style={{ background: '#05010F' }}>
           <ProfileBackground
             backgroundStyle={profile.profile_background ?? 'baobab'}

@@ -351,7 +351,7 @@ export function ProjectTeam({ project, currentUserId }: ProjectTeamProps) {
         </CardContent>
       </Card>
 
-      {/* Join Requests — lead only */}
+      {/* Join Requests, lead only */}
       {isLead && joinRequests.length > 0 && (
         <Card>
           <CardHeader>

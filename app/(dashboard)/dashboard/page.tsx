@@ -165,7 +165,7 @@ export default function DashboardPage() {
     <PullToRefreshIndicator pullDistance={pullDistance} threshold={threshold} isRefreshing={isRefreshing} />
     <div className="space-y-8">
 
-      {/* Getting started checklist — new users only */}
+      {/* Getting started checklist, new users only */}
       {profile && (
         <GettingStartedChecklist
           userId={profile.id}

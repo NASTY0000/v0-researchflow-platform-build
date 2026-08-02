@@ -85,7 +85,7 @@ export default function MentorDashboardPage() {
       .eq('user_id', user.id)
       .single()
 
-    // If no mentor_profile yet, show an empty state — don't redirect away
+    // If no mentor_profile yet, show an empty state, don't redirect away
     if (mp) {
       setMentorProfile(mp)
 
@@ -220,7 +220,7 @@ export default function MentorDashboardPage() {
     return <div className="max-w-4xl mx-auto px-4 py-8"><ListPageSkeleton type="card" count={3} /></div>
   }
 
-  // No mentor_profile row yet — guide user to complete the application
+  // No mentor_profile row yet, guide user to complete the application
   if (!mentorProfile) {
     return (
       <div className="max-w-2xl mx-auto">
@@ -264,12 +264,12 @@ export default function MentorDashboardPage() {
         </p>
       </div>
 
-      {/* SECTION 1 — Verification Status */}
+      {/* SECTION 1: Verification Status */}
       {isVerified ? (
         <Alert style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.3)' }}>
           <CheckCircle2 className="h-4 w-4" style={{ color: '#22C55E' }} />
           <AlertDescription style={{ color: '#22C55E' }}>
-            You are a verified mentor ✓ — your profile is listed in the mentor directory.
+            You are a verified mentor ✓. Your profile is listed in the mentor directory.
           </AlertDescription>
         </Alert>
       ) : (
@@ -303,7 +303,7 @@ export default function MentorDashboardPage() {
 
       {isVerified && (
         <>
-          {/* SECTION 2 — Pending Requests */}
+          {/* SECTION 2: Pending Requests */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -369,7 +369,7 @@ export default function MentorDashboardPage() {
             </CardContent>
           </Card>
 
-          {/* SECTION 3 — Active Mentorships */}
+          {/* SECTION 3: Active Mentorships */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -417,7 +417,7 @@ export default function MentorDashboardPage() {
             </CardContent>
           </Card>
 
-          {/* SECTION 3B — Capacity Status */}
+          {/* SECTION 3B: Capacity Status */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -460,7 +460,7 @@ export default function MentorDashboardPage() {
             </CardContent>
           </Card>
 
-          {/* SECTION 3C — Pending Program Requests */}
+          {/* SECTION 3C: Pending Program Requests */}
           {pendingPrograms.length > 0 && (
             <Card>
               <CardHeader>
@@ -516,7 +516,7 @@ export default function MentorDashboardPage() {
             </Card>
           )}
 
-          {/* SECTION 3D — Active Programs */}
+          {/* SECTION 3D: Active Programs */}
           {activePrograms.length > 0 && (
             <Card>
               <CardHeader>
@@ -547,7 +547,7 @@ export default function MentorDashboardPage() {
             </Card>
           )}
 
-          {/* SECTION 4 — Set Availability */}
+          {/* SECTION 4: Set Availability */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -629,7 +629,7 @@ export default function MentorDashboardPage() {
             </CardContent>
           </Card>
 
-          {/* SECTION 5 — Post an Open Call */}
+          {/* SECTION 5: Post an Open Call */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">

@@ -267,7 +267,7 @@ export default function MessagesPage() {
   return (
     <div className="flex h-[calc(100vh-4rem)] overflow-hidden rounded-xl border border-border">
 
-      {/* LEFT PANEL — Conversation list */}
+      {/* LEFT PANEL: Conversation list */}
       <div className={`${showLeftPanel ? 'flex' : 'hidden'} w-full md:w-80 lg:w-96 flex-col border-r border-border bg-card`}>
         <div className="p-4 border-b border-border">
           <h2 className="font-semibold text-lg mb-3">Messages</h2>
@@ -357,7 +357,7 @@ export default function MessagesPage() {
         </div>
       </div>
 
-      {/* RIGHT PANEL — Active chat */}
+      {/* RIGHT PANEL: Active chat */}
       <div className={`${showRightPanel ? 'flex' : 'hidden'} flex-1 flex-col bg-background`}>
         {selectedUser ? (
           <>
@@ -437,7 +437,7 @@ export default function MessagesPage() {
                   <div className="flex items-center gap-1.5 mb-1">
                     <Sparkles className="w-3 h-3" style={{ color: '#A855F7' }} />
                     <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#A855F7' }}>
-                      Ice-breaker suggestion — click to use
+                      Ice-breaker suggestion (click to use)
                     </span>
                   </div>
                   <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.55)' }}>

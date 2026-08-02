@@ -18,7 +18,7 @@ export default function AboutPage() {
           {[
             {
               title: 'Our Mission',
-              body: 'ResearchFlow exists to break down the barriers that prevent talented researchers across Africa from reaching their full potential. We believe that great research happens when the right people find each other — and we build the tools to make that happen.',
+              body: 'ResearchFlow exists to break down the barriers that prevent talented researchers across Africa from reaching their full potential. We believe that great research happens when the right people find each other, and we build the tools to make that happen.',
             },
             {
               title: 'What We Do',

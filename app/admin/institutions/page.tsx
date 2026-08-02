@@ -227,7 +227,7 @@ export default function AdminInstitutionsPage() {
               <Label>
                 Institution Admin User ID
                 <span className="text-muted-foreground font-normal ml-1">
-                  (optional — paste a user UUID to make them the dashboard admin)
+                  (optional: paste a user UUID to make them the dashboard admin)
                 </span>
               </Label>
               <Input

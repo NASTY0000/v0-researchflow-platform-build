@@ -82,7 +82,7 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // Admin route protection — check admin role in DB
+  // Admin route protection, check admin role in DB
   if (pathname.startsWith('/admin') && user) {
     const { data: adminProfile } = await supabase
       .from('profiles')

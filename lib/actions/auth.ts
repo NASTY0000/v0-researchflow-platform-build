@@ -41,7 +41,7 @@ export async function signUp(formData: FormData) {
     return { error: 'An account with this email already exists. Please sign in instead.' }
   }
 
-  // Email confirmation is OFF — session created immediately
+  // Email confirmation is OFF, session created immediately
   if (data.session) {
     await supabase.from('profiles').upsert({
       id: data.user.id,
@@ -57,7 +57,7 @@ export async function signUp(formData: FormData) {
     return { success: true, redirectTo: '/onboarding' }
   }
 
-  // Email confirmation is ON — tell the user to check their inbox
+  // Email confirmation is ON, tell the user to check their inbox
   return { success: true, requiresVerification: true, email }
 }
 

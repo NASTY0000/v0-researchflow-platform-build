@@ -69,7 +69,7 @@ export const PHASE_QUESTIONS: Record<number, PhaseQuestion[]> = {
     {
       id: "output",
       question: "What written output did you produce?",
-      placeholder: "Paper, report, thesis chapter, article — include the title if you have one...",
+      placeholder: "Paper, report, thesis chapter, article. Include the title if you have one...",
     },
     {
       id: "review",

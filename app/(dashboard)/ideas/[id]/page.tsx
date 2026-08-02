@@ -237,7 +237,7 @@ export default function IdeaDetailPage({ params }: { params: Promise<{ id: strin
   async function handleShare() {
     if (!idea) return
     const result = await shareContent({
-      title: `${idea.title} — ResearchFlow`,
+      title: `${idea.title} - ResearchFlow`,
       text: `Check out this research idea on ResearchFlow: ${idea.title}`,
       url: `https://researchflowafrica.com/ideas/${idea.id}`,
     })

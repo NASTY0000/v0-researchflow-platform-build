@@ -51,7 +51,7 @@ export function UniversityMarquee({ universities }: { universities?: string[] })
 
   return (
     <section className="relative border-y border-violet-500/10 bg-[#080214] py-6">
-      {/* Sentence-case label — not an uppercase eyebrow */}
+      {/* Sentence-case label, not an uppercase eyebrow */}
       <p className="mb-5 text-center text-xs text-[#6B5694]">
         Trusted by researchers at{' '}
         {universities?.length ? `${universities.length}+ universities` : 'universities across Africa'}

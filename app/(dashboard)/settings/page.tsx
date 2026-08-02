@@ -195,7 +195,7 @@ export default function SettingsPage() {
     setIsSavingNotifs(true)
     setNotifMsg(null)
     const supabase = createClient()
-    // Build prefs JSONB — store in_app per type
+    // Build prefs JSONB, store in_app per type
     const prefs: Record<string, { in_app: boolean }> = {}
     for (const k of NOTIF_TYPES.map(t => t.key)) {
       prefs[k] = { in_app: notifEnabled[k] }
@@ -276,7 +276,7 @@ export default function SettingsPage() {
       </div>
 
       {/* ══════════════════════════════════════════
-          SECTION — INSTITUTIONAL VERIFICATION
+          SECTION: INSTITUTIONAL VERIFICATION
       ══════════════════════════════════════════ */}
       <div id="verification" className={card}>
         <VerificationSection
@@ -287,7 +287,7 @@ export default function SettingsPage() {
       </div>
 
       {/* ══════════════════════════════════════════
-          SECTION 0 — APPEARANCE
+          SECTION 0: APPEARANCE
       ══════════════════════════════════════════ */}
       <div className={card}>
         <div className="flex items-center gap-2 mb-1">
@@ -323,7 +323,7 @@ export default function SettingsPage() {
       </div>
 
       {/* ══════════════════════════════════════════
-          SECTION 0B — PROFILE APPEARANCE
+          SECTION 0B: PROFILE APPEARANCE
       ══════════════════════════════════════════ */}
       <div className={card}>
         <div className="flex items-center gap-2 mb-1">
@@ -434,7 +434,7 @@ export default function SettingsPage() {
       </div>
 
       {/* ══════════════════════════════════════════
-          SECTION 1 — PRIVACY SETTINGS
+          SECTION 1: PRIVACY SETTINGS
       ══════════════════════════════════════════ */}
       <div className={card}>
         <div className="flex items-center gap-2 mb-1">
@@ -529,7 +529,7 @@ export default function SettingsPage() {
       </div>
 
       {/* ══════════════════════════════════════════
-          SECTION 2 — NOTIFICATION PREFERENCES
+          SECTION 2: NOTIFICATION PREFERENCES
       ══════════════════════════════════════════ */}
       <div className={card}>
         <div className="flex items-center gap-2 mb-1">
@@ -576,7 +576,7 @@ export default function SettingsPage() {
       </div>
 
       {/* ══════════════════════════════════════════
-          SECTION 3 — ACCOUNT SETTINGS
+          SECTION 3: ACCOUNT SETTINGS
       ══════════════════════════════════════════ */}
       <div className={card}>
         <div className="flex items-center gap-2 mb-1">
@@ -616,7 +616,7 @@ export default function SettingsPage() {
                   ))}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Strength: <span className="font-medium text-foreground">{PW_LEVELS[score] || "—"}</span>
+                  Strength: <span className="font-medium text-foreground">{PW_LEVELS[score] || "-"}</span>
                 </p>
               </div>
             )}
@@ -642,7 +642,7 @@ export default function SettingsPage() {
       </div>
 
       {/* ══════════════════════════════════════════
-          SECTION 4 — DATA MANAGEMENT
+          SECTION 4: DATA MANAGEMENT
       ══════════════════════════════════════════ */}
       <div className="space-y-4">
         {/* Download */}
@@ -693,7 +693,7 @@ export default function SettingsPage() {
       </div>
 
       {/* ══════════════════════════════════════════
-          SECTION 5 — SIGN OUT
+          SECTION 5: SIGN OUT
       ══════════════════════════════════════════ */}
       <div className={card}>
         <div className="flex items-center justify-between">

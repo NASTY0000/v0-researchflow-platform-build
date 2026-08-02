@@ -353,7 +353,7 @@ export default function MentorsPage() {
       return
     }
 
-    // 2. Upsert mentor_profiles — instant approval for admins, pending for everyone else
+    // 2. Upsert mentor_profiles, instant approval for admins, pending for everyone else
     const tierNumber = tierId === "faculty" ? 1 : tierId === "postgraduate" ? 2 : 3
     await supabase.from("mentor_profiles").upsert(
       {
@@ -667,7 +667,7 @@ export default function MentorsPage() {
         </div>
       )}
 
-      {/* Filters — only shown in Mentors tab */}
+      {/* Filters, only shown in Mentors tab */}
       {activeTab === 'mentors' && <>
 
       {/* Filters */}

@@ -102,7 +102,7 @@ function getInitials(name: string | null) {
 }
 
 function fmt(iso: string | null) {
-  if (!iso) return "—"
+  if (!iso) return "-"
   return format(new Date(iso), "d MMM yyyy")
 }
 
@@ -271,7 +271,7 @@ export function ProjectRoadmap({
       )
     )
 
-    toast.success("Phase reopened — the team can now resubmit")
+    toast.success("Phase reopened. The team can now resubmit")
     setReopeningPhase(null)
 
     // Reload history to show the new entry
@@ -392,7 +392,7 @@ export function ProjectRoadmap({
                         {isCurrent  && <Badge className="text-xs shrink-0" style={{ background: 'rgba(124,58,237,0.15)', color: '#A855F7', border: '1px solid rgba(124,58,237,0.3)' }}>In Progress</Badge>}
                       </div>
                       <div className="flex items-center gap-0.5">
-                        {/* Kebab menu — deliberate reopen, visible only to eligible users */}
+                        {/* Kebab menu, deliberate reopen, visible only to eligible users */}
                         {canReopen && (
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>

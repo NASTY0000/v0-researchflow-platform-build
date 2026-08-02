@@ -166,7 +166,7 @@ export default function FeedPage() {
   function handleNotInterested(item: FeedItem) {
     trackEngagement(item, 'not_interested')
     setItems(prev => prev.filter(i => !(i.id === item.id && i._feed_meta.type === item._feed_meta.type)))
-    toast('Got it — we will show you less like this.')
+    toast('Got it. We will show you less like this.')
   }
 
   function handleView(item: FeedItem) {
@@ -277,7 +277,7 @@ export default function FeedPage() {
           <p className="text-sm text-muted-foreground">
             {activeTab === 'for_you'
               ? 'Add research interests in your profile to see relevant opportunities here.'
-              : 'Check back soon — we refresh this stream regularly.'}
+              : 'Check back soon. We refresh this stream regularly.'}
           </p>
         </div>
       ) : activeTab === 'for_you' ? (
@@ -316,7 +316,7 @@ export default function FeedPage() {
         )}
         {!hasMore && currentItems.length > 0 && (
           <p className="text-center text-xs text-muted-foreground py-4">
-            You are all caught up — check back tomorrow for new opportunities.
+            You are all caught up. Check back tomorrow for new opportunities.
           </p>
         )}
       </div>

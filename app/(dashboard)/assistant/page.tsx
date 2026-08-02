@@ -132,7 +132,7 @@ export default function AssistantPage() {
     }
     setLoading(true)
 
-    // Prior turns only — the new message is sent separately.
+    // Prior turns only, the new message is sent separately.
     const history = messages.map(m => ({ role: m.role, content: m.content }))
 
     try {
@@ -237,7 +237,7 @@ export default function AssistantPage() {
           <Badge variant="secondary" className="ml-auto text-xs">Beta</Badge>
         </div>
 
-        {/* Mode selector — sets which capability the assistant answers with */}
+        {/* Mode selector, sets which capability the assistant answers with */}
         <div className="px-4 py-2.5 border-b border-border bg-card shrink-0 overflow-x-auto">
           <div
             role="tablist"

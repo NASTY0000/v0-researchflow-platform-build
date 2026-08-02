@@ -234,7 +234,7 @@ export default function ProfilePage() {
     return () => clearTimeout(timer)
   }, [profile?.id])
 
-  // Stats cards IntersectionObserver — only animates when user has no reduced-motion preference
+  // Stats cards IntersectionObserver, only animates when user has no reduced-motion preference
   useEffect(() => {
     const cards = document.querySelectorAll('.stat-card-animate')
     const prefersMotion = !window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -343,7 +343,7 @@ export default function ProfilePage() {
     const leaderboardRank = rankIdx >= 0 ? rankIdx + 1 : null
 
     setAnalyticsData({
-      profileViews: 0, // placeholder — profile_views from profile itself
+      profileViews: 0, // placeholder, profile_views from profile itself
       ideaViews: 0,
       collaborationRequests: connectionsResult.count || 0,
       leaderboardRank,
@@ -646,7 +646,7 @@ export default function ProfilePage() {
 
     const result = await shareContent({
       title: `${profile?.full_name} on ResearchFlow`,
-      text: `Check out ${profile?.full_name}'s research profile on ResearchFlow — Africa's premier research collaboration platform.`,
+      text: `Check out ${profile?.full_name}'s research profile on ResearchFlow, Africa's premier research collaboration platform.`,
       url: `https://researchflowafrica.com/researcher/${user.id}`,
     })
 
@@ -820,7 +820,7 @@ export default function ProfilePage() {
         className="relative rounded-2xl overflow-hidden border border-primary/40"
         style={{ boxShadow: 'var(--brand-glow)' }}
       >
-        {/* Animated canvas banner — first child, flush to top edge */}
+        {/* Animated canvas banner, first child, flush to top edge */}
         <div className="relative h-52 bg-muted dark:bg-background">
           <ProfileBackground
             backgroundStyle={profile.profile_background ?? 'baobab'}
@@ -1171,7 +1171,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Akili Score — progress card with tier bar + next actions */}
+      {/* Akili Score, progress card with tier bar + next actions */}
       <AkiliProgressCard
         score={akiliState?.total ?? profile.akili_score ?? 0}
         dimensions={akiliState?.dimensions ?? {
@@ -1439,7 +1439,7 @@ export default function ProfilePage() {
                         <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />
                       </>
                     ) : (
-                      <span className="text-xl font-bold tabular-nums">—</span>
+                      <span className="text-xl font-bold tabular-nums">-</span>
                     )}
                     <span className="text-sm text-muted-foreground">Avg Rating</span>
                   </div>
@@ -1555,7 +1555,7 @@ export default function ProfilePage() {
                     </div>
                     <div>
                       <p className="text-xl font-bold tabular-nums leading-none">
-                        {analyticsData.leaderboardRank ? `#${analyticsData.leaderboardRank}` : '—'}
+                        {analyticsData.leaderboardRank ? `#${analyticsData.leaderboardRank}` : '-'}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">Leaderboard Rank</p>
                     </div>

@@ -258,7 +258,7 @@ export async function respondToEnquiry(
   const recipientName = recipient?.full_name ?? 'The provider'
 
   if (action === 'accepted') {
-    // Notify sender — can now message directly
+    // Notify sender, can now message directly
     await supabase.from('notifications').insert({
       user_id: enquiry.sender_id,
       type:    'system',

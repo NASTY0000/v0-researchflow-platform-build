@@ -18,7 +18,7 @@ WHERE name IN (
   'Scholarship Positions'
 );
 
--- 2. Apply known-URL fixes (verify these work after ingestion — not validated from this environment)
+-- 2. Apply known-URL fixes (verify these work after ingestion, not validated from this environment)
 UPDATE feed_content_sources
 SET url = 'https://www.nature.com/news.rss'
 WHERE name = 'Nature News';
@@ -45,7 +45,7 @@ UPDATE feed_content_sources
 SET url = 'https://connect.biorxiv.org/medrxiv_xml.php?subject=all'
 WHERE name = 'medRxiv';
 
--- 3. Still need replacement URLs (no fix applied — research and update manually):
+-- 3. Still need replacement URLs (no fix applied, research and update manually):
 --    African Journals Online
 --    Research Africa
 --    FindAPhD Africa

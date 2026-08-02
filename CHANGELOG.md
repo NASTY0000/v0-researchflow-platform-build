@@ -1,4 +1,4 @@
-# ResearchFlow — Engineering Changelog
+# ResearchFlow, Engineering Changelog
 
 A full record of every feature, fix, and improvement built on this platform.
 Entries are ordered from most recent to earliest.
@@ -8,7 +8,7 @@ Entries are ordered from most recent to earliest.
 ## Branded Icon System
 **Commit:** `652f99c`
 
-Replaced all generic OS emojis used as UI dimension icons with custom SVG components that share the ResearchFlow visual vocabulary — node clusters, branch patterns, connection arcs, convergence marks.
+Replaced all generic OS emojis used as UI dimension icons with custom SVG components that share the ResearchFlow visual vocabulary, node clusters, branch patterns, connection arcs, convergence marks.
 
 ### New file: `components/icons/AkiliIcons.tsx`
 
@@ -17,10 +17,10 @@ Five purpose-built SVG icons, all using the brand purple/gold palette, clean at 
 | Component | Replaces | Design |
 |---|---|---|
 | `AkiliBolt` | ⚡ | Lightning bolt with outer glow ring and white center node |
-| `KnowledgeIcon` | 📚 | Baobab branch — purple trunk, three diverging branches, gold discovery node at apex |
+| `KnowledgeIcon` | 📚 | Baobab branch, purple trunk, three diverging branches, gold discovery node at apex |
 | `CollaborationIcon` | 🤝 | Two purple researcher nodes bridged by a gold arc; gold meeting point at arc apex |
-| `MentorshipIcon` | 🎓 | Mother-node radial — large gold mentor at center, six purple satellite mentees on radial lines (Ubuntu in visual form) |
-| `TechnicalIcon` | ⚙️ | Convergence mark — four bezier paths flowing from corner source nodes into a single gold center point |
+| `MentorshipIcon` | 🎓 | Mother-node radial, large gold mentor at center, six purple satellite mentees on radial lines (Ubuntu in visual form) |
+| `TechnicalIcon` | ⚙️ | Convergence mark, four bezier paths flowing from corner source nodes into a single gold center point |
 
 ### Updated: `components/akili/AkiliProgressCard.tsx`
 - Card header `⚡` emoji → `<AkiliBolt size={22} />` (removed `text-xl` from wrapper)
@@ -29,7 +29,7 @@ Five purpose-built SVG icons, all using the brand purple/gold palette, clean at 
 
 ---
 
-## Feature 7 — Skeleton Loading Screens
+## Feature 7, Skeleton Loading Screens
 **Commit:** `e7650fa`
 
 Every full-page spinner replaced with contextual skeleton layouts that match the shape of the real content, giving users a structural preview while data loads.
@@ -38,14 +38,14 @@ Every full-page spinner replaced with contextual skeleton layouts that match the
 
 Shimmer-animated base block (`SkeletonBlock`, exported as `Skeleton`) plus five layout variants:
 
-- **`IdeaCardSkeleton`** — matches the two-line header + three body lines + tag chips shape of idea cards
-- **`MatchCardSkeleton`** — matches the avatar + name + progress bar + action buttons layout
-- **`ResearcherCardSkeleton`** — matches the avatar + name + two-line bio + tag chips layout
-- **`NotificationSkeleton`** — matches the icon + title + body + timestamp row
-- **`ProfileHeaderSkeleton`** — matches the full banner → avatar overlap → name/bio block structure
+- **`IdeaCardSkeleton`**, matches the two-line header + three body lines + tag chips shape of idea cards
+- **`MatchCardSkeleton`**, matches the avatar + name + progress bar + action buttons layout
+- **`ResearcherCardSkeleton`**, matches the avatar + name + two-line bio + tag chips layout
+- **`NotificationSkeleton`**, matches the icon + title + body + timestamp row
+- **`ProfileHeaderSkeleton`**, matches the full banner → avatar overlap → name/bio block structure
 
 ### New file: `app/globals.css` addition
-`@keyframes shimmer` — 200%-wide gradient that sweeps continuously left-to-right at 1.8s, used by all skeleton blocks.
+`@keyframes shimmer`, 200%-wide gradient that sweeps continuously left-to-right at 1.8s, used by all skeleton blocks.
 
 ### Pages updated
 | Page | Before | After |
@@ -59,7 +59,7 @@ Shimmer-animated base block (`SkeletonBlock`, exported as `Skeleton`) plus five 
 
 ---
 
-## Feature 8 — Pull to Refresh
+## Feature 8, Pull to Refresh
 **Commit:** `e7650fa`
 
 Native-feeling pull-to-refresh on all main data pages. Tracks touch position, applies rubber-band resistance, fires the page's own async data function, then snaps back.
@@ -84,33 +84,33 @@ Note: Dashboard and Notifications required extracting their inner `loadX()` func
 
 ---
 
-## Feature 5 — Ice-Breaker Messages & Collaboration Signals
+## Feature 5, Ice-Breaker Messages & Collaboration Signals
 **Commit:** `05ab076`
 
 Three sub-features that reduce friction between "matched" and "actually collaborating."
 
-### Ice-Breaker Suggestions — `lib/utils/icebreakers.ts`
+### Ice-Breaker Suggestions, `lib/utils/icebreakers.ts`
 `generateIcebreaker(currentUser, match)` inspects both profiles' `research_interests` arrays for shared topics. If overlap is found, it picks from three interest-specific opener templates. If no overlap, it falls back to three generic-but-warm templates. Returns a ready-to-send string.
 
 **Messages page** (`app/(dashboard)/messages/page.tsx`):
 - Fetches current user's full profile on load (new `currentUserProfile` state)
-- When a conversation is opened with zero messages, a clickable purple chip appears above the compose textarea labelled "Ice-breaker suggestion — click to use"
+- When a conversation is opened with zero messages, a clickable purple chip appears above the compose textarea labelled "Ice-breaker suggestion (click to use)"
 - Clicking fills the textarea with the generated message and removes the chip
 - The chip disappears automatically once any message is sent
 
-### "Interested in Collaborating" Button — `app/(dashboard)/matches/page.tsx`
+### "Interested in Collaborating" Button, `app/(dashboard)/matches/page.tsx`
 - New button rendered below the Connect/View row on collaborator cards (not mentor cards)
 - Clicking: inserts a row into `collaboration_interests` (from_user_id, to_user_id), sends a named notification to the matched researcher with a direct link to the current user's profile, shows a green confirmation toast, changes button to "✓ Interest sent" (disabled)
 - State tracked in `collabInterestsSent: Set<string>` so the button stays locked for the session
 
-### Emoji Reactions on Idea Cards — `app/(dashboard)/ideas/page.tsx`
+### Emoji Reactions on Idea Cards, `app/(dashboard)/ideas/page.tsx`
 - 🔥 💡 🤝 reaction buttons rendered on idea cards for non-authors
 - Optimistic toggle: clicking immediately updates local `ideaReactions: Map<ideaId, Set<emoji>>` state, then persists to `idea_reactions` table (or removes row on second click)
 - Reactions are loaded from the DB on page load alongside upvotes
 
 ---
 
-## Feature 6 — Notification Quality
+## Feature 6, Notification Quality
 **Commit:** `05ab076`
 
 All in-app notification inserts updated to be specific, personal, and action-driving.
@@ -123,7 +123,7 @@ All in-app notification inserts updated to be specific, personal, and action-dri
 
 ---
 
-## Feature 4 — Celebration Moments
+## Feature 4, Celebration Moments
 **Commit:** `d5aac32`
 
 Users receive a rich in-app toast the first time they hit any of six platform milestones. Each fires at most once (localStorage-gated).
@@ -146,7 +146,7 @@ Stores `rf_milestone_{key}` in localStorage to prevent repeat fires. Exposes `ac
 - Fixed bottom overlay (`bottom-24`), slides up on mount via `animate-in slide-in-from-bottom-4`
 - Dark purple gradient background with amber border and shimmer line at top
 - Auto-dismisses after 5 s (configurable `duration` prop); X button for manual close
-- On mount, fires DOM-based confetti: 60 particles (mix of rect and circle), random sizes 4–12px, brand colour palette, animated with the Web Animations API, removed from DOM on finish — no library dependency
+- On mount, fires DOM-based confetti: 60 particles (mix of rect and circle), random sizes 4–12px, brand colour palette, animated with the Web Animations API, removed from DOM on finish, no library dependency
 
 ### Wired into
 - `app/(dashboard)/dashboard/page.tsx`
@@ -154,7 +154,7 @@ Stores `rf_milestone_{key}` in localStorage to prevent repeat fires. Exposes `ac
 
 ---
 
-## Feature 3b — Akili Progress Engine
+## Feature 3b, Akili Progress Engine
 **Commit:** `d5aac32`
 
 Replaces the static score display with a full progression system.
@@ -185,7 +185,7 @@ Replaces the former static `AkiliScoreCard` on the profile page.
 
 ---
 
-## Feature 3a — Getting Started Checklist
+## Feature 3a, Getting Started Checklist
 **Commit:** `d5aac32`
 
 Shown to new users (joined < 7 days OR `akili_score < 100`), hidden once all items complete or dismissed.
@@ -201,7 +201,7 @@ Gradient progress bar tracks `completed / 4 * 100%`. When all four are done, sho
 
 ---
 
-## Feature 2 — Contextual Onboarding Hints
+## Feature 2, Contextual Onboarding Hints
 **Commit:** `ef438c6`
 
 One-time dismissable hints that explain each section to first-time visitors.
@@ -224,7 +224,7 @@ One-time dismissable hints that explain each section to first-time visitors.
 
 ---
 
-## Feature 1 — Meaningful Empty States
+## Feature 1: Meaningful Empty States
 **Commit:** `ef438c6`
 
 All generic "No items found" fallbacks replaced with context-aware messaging and actionable CTAs.
@@ -260,7 +260,7 @@ Eliminated a visible gap at the card's top edge between the banner canvas and th
 ## Avatar Overlap Layout
 **Commit:** `89c35f5` / `db05208`
 
-The profile avatar now correctly straddles the banner/content boundary — top half in the banner, bottom half in the content area.
+The profile avatar now correctly straddles the banner/content boundary, top half in the banner, bottom half in the content area.
 
 **Technique:** Avatar wrapper uses `-mt-12 z-20` (negative top margin pulls it 48px upward into the banner while remaining within the content div's stacking context). The outer wrapper's `overflow-hidden` clips the banner canvas corners while the avatar remains unclipped because it is positioned within the content div.
 
@@ -292,7 +292,7 @@ Labels now stay fully within canvas bounds regardless of star position. Font siz
 
 All development happens directly on `main`. Every push automatically triggers a Vercel deployment.
 
-- **`.github/workflows/deploy.yml`** — CI placeholder that confirms Vercel's GitHub integration is the deploy mechanism
+- **`.github/workflows/deploy.yml`**, CI placeholder that confirms Vercel's GitHub integration is the deploy mechanism
 - **`push.default = current`** configured globally so `git push` always targets the current branch by name
 - Feature branches eliminated; no merge overhead
 
@@ -304,7 +304,7 @@ All development happens directly on `main`. Every push automatically triggers a 
 Two animated Canvas2D backgrounds for the profile banner, selectable per-user:
 
 ### `components/profile/BaobabCanvas.tsx`
-Animated growing Baobab tree. Branches extend upward with recursive subdivision. Nodes pulse. Rendered server-side–safe via `next/dynamic` with `ssr: false`.
+Animated growing Baobab tree. Branches extend upward with recursive subdivision. Nodes pulse. Rendered server-side safe via `next/dynamic` with `ssr: false`.
 
 ### `components/profile/ConstellationCanvas.tsx`
 Research interests rendered as a star constellation. Each interest is a labelled node; edges drawn between nearby stars. Stars pulse. Labels clamped within canvas bounds (see fix above).
@@ -324,10 +324,10 @@ Compact inline badge for displaying a user's Akili score anywhere in the UI. Sho
 ## Profile Micro-Interactions
 **Earlier commits**
 
-- **Akili count-up animation** — score number increments from 0 to the actual value over ~1.2 s on profile load
-- **Sparkle burst** — 12 SVG sparkle particles radiate from the avatar on load, fade out over 0.8 s
-- **Stat fade-in** — stats section fades in with a 0.3 s delay after the profile header renders
-- **`RippleButton` component** — `components/ui/RippleButton.tsx`: button that spawns a circular ripple at the click point using a DOM-appended span, removed after the animation completes
+- **Akili count-up animation**, score number increments from 0 to the actual value over ~1.2 s on profile load
+- **Sparkle burst**, 12 SVG sparkle particles radiate from the avatar on load, fade out over 0.8 s
+- **Stat fade-in**, stats section fades in with a 0.3 s delay after the profile header renders
+- **`RippleButton` component**, `components/ui/RippleButton.tsx`: button that spawns a circular ripple at the click point using a DOM-appended span, removed after the animation completes
 
 ---
 

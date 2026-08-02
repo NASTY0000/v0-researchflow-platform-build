@@ -60,7 +60,7 @@ export function EmptyState({
         animate={{ y: [0, -6, 0] }}
         transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
       >
-        {/* Outer glow ring — dark only */}
+        {/* Outer glow ring, dark only */}
         <div
           className="absolute inset-0 rounded-2xl hidden dark:block"
           style={{
