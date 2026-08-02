@@ -32,7 +32,10 @@ export function DashboardHeader({ profile, unreadCount }: DashboardHeaderProps) 
   }
 
   return (
-    <header className="flex h-16 shrink-0 items-center justify-between px-4 gap-4 bg-background/80 backdrop-blur-xl border-b border-border/50">
+    // relative + z-30 keeps the header below the sidebar sheet (z-50). Without
+    // an explicit stacking position, its backdrop-blur creates a stacking
+    // context that paints over fixed overlays on iOS Safari.
+    <header className="relative z-30 flex h-16 shrink-0 items-center justify-between px-4 gap-4 bg-background/80 backdrop-blur-xl border-b border-border/50">
       <div className="flex items-center gap-2">
         <SidebarTrigger className="-ml-1" />
         <Separator orientation="vertical" className="mr-2 h-4" />

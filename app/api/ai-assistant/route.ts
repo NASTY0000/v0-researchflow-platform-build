@@ -12,7 +12,8 @@ import {
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-const MODEL = 'gemini-2.0-flash'
+// Overridable without a code change if a key needs a different model tier.
+const MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash'
 const MAX_MESSAGE_CHARS = 8000
 const MAX_HISTORY_TURNS = 20
 
@@ -151,32 +152,61 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ message: text, mode })
   } catch (error: unknown) {
-    console.error('ai-assistant: Gemini call failed', error)
-
     const raw = error instanceof Error ? error.message : String(error)
-    // Map the failures a user can act on; keep everything else generic so no
-    // provider internals or key material can leak into the client.
-    if (/quota|rate.?limit|429|RESOURCE_EXHAUSTED/i.test(raw)) {
-      return NextResponse.json(
-        { error: 'The assistant is busy right now. Please wait a moment and try again.' },
-        { status: 429 },
+    // The SDK surfaces the upstream HTTP status on the error object.
+    const upstreamStatus =
+      typeof (error as { status?: unknown })?.status === 'number'
+        ? (error as { status: number }).status
+        : undefined
+
+    // Full detail to the server log only — never to the client.
+    console.error('ai-assistant: Gemini call failed', {
+      model: MODEL,
+      upstreamStatus,
+      message: raw,
+    })
+
+    // `code` is a coarse classification, safe to show: it names the failure
+    // class, never key material or provider internals. It exists so a user can
+    // report what actually went wrong instead of a generic message.
+    const fail = (status: number, code: string, message: string) =>
+      NextResponse.json({ error: message, code }, { status })
+
+    if (/not found|NOT_FOUND|is not supported|404/i.test(raw) || upstreamStatus === 404) {
+      return fail(
+        503,
+        'MODEL_NOT_FOUND',
+        `The configured model (${MODEL}) is unavailable for this API key. Set GEMINI_MODEL to a model the key can access.`,
+      )
+    }
+    if (/API_KEY_INVALID|API key not valid|PERMISSION_DENIED/i.test(raw) || upstreamStatus === 403) {
+      return fail(
+        503,
+        'KEY_REJECTED',
+        'The Gemini API key was rejected. Check that GEMINI_API_KEY is valid and that the Generative Language API is enabled for it.',
+      )
+    }
+    if (/quota|RESOURCE_EXHAUSTED/i.test(raw) || upstreamStatus === 429) {
+      return fail(
+        429,
+        'QUOTA_EXCEEDED',
+        'The Gemini quota for this key has been exhausted, or its rate limit was hit. Check the key’s quota in Google AI Studio.',
       )
     }
     if (/SAFETY|blocked/i.test(raw)) {
-      return NextResponse.json(
-        { error: 'That request was blocked by the model’s safety filters. Try rephrasing it.' },
-        { status: 400 },
+      return fail(
+        400,
+        'SAFETY_BLOCK',
+        'That request was blocked by the model’s safety filters. Try rephrasing it.',
       )
     }
-    if (/API key|API_KEY_INVALID|PERMISSION_DENIED|401|403/i.test(raw)) {
-      return NextResponse.json(
-        { error: 'The assistant is not configured correctly. Please contact support.' },
-        { status: 503 },
-      )
+    if (upstreamStatus === 401) {
+      return fail(503, 'UNAUTHENTICATED', 'The assistant is not configured correctly.')
     }
-    return NextResponse.json(
-      { error: 'The assistant could not respond just now. Please try again.' },
-      { status: 500 },
+    return fail(
+      502,
+      'UPSTREAM_ERROR',
+      'The assistant could not respond just now. Please try again.',
     )
   }
 }

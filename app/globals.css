@@ -69,6 +69,18 @@
   --brand-glow-sm: 0 0 0 0 transparent;
   --brand-wash: none;
 
+  /* Mobile bottom navigation — was hardcoded to the dark palette, which
+     left a near-black bar sitting under a white page. */
+  --nav-bg: rgba(255,255,255,0.88);
+  --nav-border: var(--border);
+  --nav-shadow: 0 -1px 3px rgba(26,23,20,0.06);
+  --nav-icon: #78716C;
+  --nav-icon-active: var(--primary);
+  --nav-icon-glow: none;
+  --nav-ring-bg: color-mix(in oklch, var(--primary) 10%, transparent);
+  --nav-ring-shadow: 0 0 0 1px color-mix(in oklch, var(--primary) 25%, transparent);
+  --nav-badge-ring: #FFFFFF;
+
   /* Chart */
   --chart-1: #6D28D9;
   --chart-2: #9333EA;
@@ -128,6 +140,17 @@
   --brand-glow: 0 0 20px rgba(124,58,237,0.30);
   --brand-glow-sm: 0 0 14px rgba(124,58,237,0.30);
   --brand-wash: radial-gradient(ellipse at 20% 50%, rgba(124,58,237,0.20), transparent 60%);
+
+  /* Mobile bottom navigation — the original deep-space treatment */
+  --nav-bg: rgba(10, 5, 20, 0.80);
+  --nav-border: rgba(139,92,246,0.18);
+  --nav-shadow: 0 -1px 0 rgba(139,92,246,0.10), inset 0 1px 0 rgba(255,255,255,0.035);
+  --nav-icon: rgba(139,92,246,0.38);
+  --nav-icon-active: #C4B5FD;
+  --nav-icon-glow: drop-shadow(0 0 5px rgba(167,139,250,0.65));
+  --nav-ring-bg: radial-gradient(ellipse at 50% 60%, rgba(124,58,237,0.22) 0%, rgba(124,58,237,0.07) 55%, transparent 75%);
+  --nav-ring-shadow: 0 0 0 1px rgba(139,92,246,0.50), 0 0 18px rgba(124,58,237,0.38), 0 0 36px rgba(124,58,237,0.14), inset 0 1px 0 rgba(255,255,255,0.07);
+  --nav-badge-ring: #07030F;
   --surface: rgba(255,255,255,0.03);
   --surface-hover: rgba(255,255,255,0.06);
   --border-bright: rgba(167,139,250,0.5);

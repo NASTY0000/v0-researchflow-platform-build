@@ -150,7 +150,10 @@ export default function AssistantPage() {
       const data = await res.json()
 
       if (!res.ok || !data.message) {
-        setError(data.error || 'The assistant could not respond. Please try again.')
+        setError(
+          (data.error || 'The assistant could not respond. Please try again.') +
+            (data.code ? ` (${data.code})` : ''),
+        )
         return
       }
 

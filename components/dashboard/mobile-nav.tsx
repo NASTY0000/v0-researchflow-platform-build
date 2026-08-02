@@ -128,14 +128,14 @@ export function MobileNav({ initialUnreadCount }: MobileNavProps) {
       <div className="h-[88px] w-full md:hidden" />
 
       <nav
-        className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around"
         style={{
           height: '88px',
-          background: 'rgba(10, 5, 20, 0.80)',
+          background: 'var(--nav-bg)',
           backdropFilter: 'blur(28px) saturate(180%)',
           WebkitBackdropFilter: 'blur(28px) saturate(180%)',
-          borderTop: '1px solid rgba(139,92,246,0.18)',
-          boxShadow: '0 -1px 0 rgba(139,92,246,0.10), inset 0 1px 0 rgba(255,255,255,0.035)',
+          borderTop: '1px solid var(--nav-border)',
+          boxShadow: 'var(--nav-shadow)',
           padding: '0 8px 16px',
         }}
       >
@@ -168,8 +168,8 @@ export function MobileNav({ initialUnreadCount }: MobileNavProps) {
                         position: 'absolute',
                         inset: '-9px',
                         borderRadius: '50%',
-                        background: 'radial-gradient(ellipse at 50% 60%, rgba(124,58,237,0.22) 0%, rgba(124,58,237,0.07) 55%, transparent 75%)',
-                        boxShadow: '0 0 0 1px rgba(139,92,246,0.50), 0 0 18px rgba(124,58,237,0.38), 0 0 36px rgba(124,58,237,0.14), inset 0 1px 0 rgba(255,255,255,0.07)',
+                        background: 'var(--nav-ring-bg)',
+                        boxShadow: 'var(--nav-ring-shadow)',
                         animation: 'rfNavRing 2.8s ease-in-out infinite',
                       }}
                     />
@@ -182,10 +182,10 @@ export function MobileNav({ initialUnreadCount }: MobileNavProps) {
                         transform: 'translateX(-50%)',
                         width: '18px',
                         height: '3px',
-                        background: 'linear-gradient(90deg, transparent 0%, rgba(251,191,36,0.75) 50%, transparent 100%)',
+                        background: 'linear-gradient(90deg, transparent 0%, color-mix(in oklch, var(--gold) 75%, transparent) 50%, transparent 100%)',
                         borderRadius: '100px',
                         filter: 'blur(1.5px)',
-                        boxShadow: '0 0 6px rgba(251,191,36,0.5)',
+                        boxShadow: '0 0 6px color-mix(in oklch, var(--gold) 50%, transparent)',
                       }}
                     />
                   </>
@@ -195,8 +195,8 @@ export function MobileNav({ initialUnreadCount }: MobileNavProps) {
                 <Icon
                   size={20}
                   style={{
-                    color: active ? '#C4B5FD' : 'rgba(139,92,246,0.38)',
-                    filter: active ? 'drop-shadow(0 0 5px rgba(167,139,250,0.65))' : 'none',
+                    color: active ? 'var(--nav-icon-active)' : 'var(--nav-icon)',
+                    filter: active ? 'var(--nav-icon-glow)' : 'none',
                     transition: 'all 0.25s ease',
                     position: 'relative',
                     zIndex: 1,
@@ -215,7 +215,7 @@ export function MobileNav({ initialUnreadCount }: MobileNavProps) {
                       height: '8px',
                       borderRadius: '4px',
                       background: '#A855F7',
-                      border: '1.5px solid #07030F',
+                      border: '1.5px solid var(--nav-badge-ring)',
                       boxShadow: 'var(--brand-glow-sm)',
                       display: 'flex',
                       alignItems: 'center',
@@ -235,7 +235,7 @@ export function MobileNav({ initialUnreadCount }: MobileNavProps) {
                 style={{
                   fontSize: '9.5px',
                   fontWeight: active ? 600 : 500,
-                  color: active ? '#C4B5FD' : 'rgba(139,92,246,0.35)',
+                  color: active ? 'var(--nav-icon-active)' : 'var(--nav-icon)',
                   letterSpacing: '0.01em',
                   transition: 'all 0.25s ease',
                   whiteSpace: 'nowrap',
@@ -255,8 +255,8 @@ export function MobileNav({ initialUnreadCount }: MobileNavProps) {
                     width: '3px',
                     height: '3px',
                     borderRadius: '50%',
-                    background: '#FBBF24',
-                    boxShadow: '0 0 5px rgba(251,191,36,0.8)',
+                    background: 'var(--gold)',
+                    boxShadow: '0 0 5px color-mix(in oklch, var(--gold) 80%, transparent)',
                   }}
                 />
               )}
