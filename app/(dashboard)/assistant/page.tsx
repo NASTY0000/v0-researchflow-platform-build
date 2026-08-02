@@ -12,40 +12,13 @@ import {
   Sparkles,
   ChevronRight,
   Loader2,
+  AlertCircle,
 } from 'lucide-react'
-
-const QUICK_PROMPTS = [
-  {
-    icon: '💡',
-    label: 'Refine my idea',
-    prompt: 'Help me refine my research idea and make it more focused and impactful.',
-  },
-  {
-    icon: '📚',
-    label: 'Literature review',
-    prompt: 'Guide me on how to conduct a systematic literature review for my research topic.',
-  },
-  {
-    icon: '🔬',
-    label: 'Research methodology',
-    prompt: 'Help me choose the right research methodology for my study.',
-  },
-  {
-    icon: '✍️',
-    label: 'Write abstract',
-    prompt: 'Help me write a compelling abstract for my research paper.',
-  },
-  {
-    icon: '💰',
-    label: 'Find funding',
-    prompt: 'What grants and funding opportunities are available for African researchers in my field?',
-  },
-  {
-    icon: '📊',
-    label: 'Analyze data',
-    prompt: 'Help me understand how to analyze and interpret my research data.',
-  },
-]
+import {
+  ASSISTANT_MODES,
+  MODE_LABELS,
+  type AssistantMode,
+} from '@/lib/ai/assistant-modes'
 
 interface Message {
   id: string | number
@@ -67,6 +40,8 @@ export default function AssistantPage() {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [loadingConvs, setLoadingConvs] = useState(true)
+  const [mode, setMode] = useState<AssistantMode>('question_development')
+  const [error, setError] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const supabase = createClient()
@@ -120,9 +95,11 @@ export default function AssistantPage() {
     }
   }
 
-  async function sendMessage(content: string) {
+  async function sendMessage(content: string, modeOverride?: AssistantMode) {
     if (!content.trim() || loading) return
 
+    const activeMode = modeOverride ?? mode
+    setError(null)
     let convId = activeConvId
 
     if (!convId) {
@@ -155,42 +132,49 @@ export default function AssistantPage() {
     }
     setLoading(true)
 
-    const history = [...messages, userMsg].map(m => ({
-      role: m.role,
-      content: m.content,
-    }))
+    // Prior turns only — the new message is sent separately.
+    const history = messages.map(m => ({ role: m.role, content: m.content }))
 
     try {
-      const res = await fetch('/api/ai/chat', {
+      const res = await fetch('/api/ai-assistant', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: history, conversationId: convId }),
+        body: JSON.stringify({
+          message: content,
+          mode: activeMode,
+          history,
+          conversationId: convId,
+        }),
       })
 
       const data = await res.json()
 
-      if (data.message) {
-        const assistantMsg: Message = {
-          id: Date.now() + 1,
-          role: 'assistant',
-          content: data.message,
-          created_at: new Date().toISOString(),
-        }
-        setMessages(prev => [...prev, assistantMsg])
-
-        if (messages.length === 0 && convId) {
-          const title = content.slice(0, 50)
-          await supabase
-            .from('ai_conversations')
-            .update({ title })
-            .eq('id', convId)
-          setConversations(prev =>
-            prev.map(c => (c.id === convId ? { ...c, title } : c))
-          )
-        }
+      if (!res.ok || !data.message) {
+        setError(data.error || 'The assistant could not respond. Please try again.')
+        return
       }
-    } catch (error) {
-      console.error('Chat error:', error)
+
+      const assistantMsg: Message = {
+        id: Date.now() + 1,
+        role: 'assistant',
+        content: data.message,
+        created_at: new Date().toISOString(),
+      }
+      setMessages(prev => [...prev, assistantMsg])
+
+      if (messages.length === 0 && convId) {
+        const title = content.slice(0, 50)
+        await supabase
+          .from('ai_conversations')
+          .update({ title })
+          .eq('id', convId)
+        setConversations(prev =>
+          prev.map(c => (c.id === convId ? { ...c, title } : c))
+        )
+      }
+    } catch (err) {
+      console.error('Assistant error:', err)
+      setError('Could not reach the assistant. Check your connection and try again.')
     } finally {
       setLoading(false)
     }
@@ -244,10 +228,41 @@ export default function AssistantPage() {
           <div>
             <h2 className="font-semibold text-sm">AI Research Assistant</h2>
             <p className="text-xs text-muted-foreground">
-              Powered by Claude · Your personal research guide
+              Powered by Gemini · Your personal research guide
             </p>
           </div>
           <Badge variant="secondary" className="ml-auto text-xs">Beta</Badge>
+        </div>
+
+        {/* Mode selector — sets which capability the assistant answers with */}
+        <div className="px-4 py-2.5 border-b border-border bg-card shrink-0 overflow-x-auto">
+          <div
+            role="tablist"
+            aria-label="Assistant capability"
+            className="flex gap-1.5 min-w-max"
+          >
+            {ASSISTANT_MODES.map(m => {
+              const meta = MODE_LABELS[m]
+              const active = mode === m
+              return (
+                <button
+                  key={m}
+                  role="tab"
+                  aria-selected={active}
+                  title={meta.blurb}
+                  onClick={() => setMode(m)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-colors ${
+                    active
+                      ? 'bg-primary text-primary-foreground border-primary'
+                      : 'bg-transparent text-muted-foreground border-border hover:text-foreground hover:border-primary/40'
+                  }`}
+                >
+                  <span aria-hidden="true">{meta.icon}</span>
+                  {meta.label}
+                </button>
+              )
+            })}
+          </div>
         </div>
 
         {/* Messages or welcome */}
@@ -265,22 +280,28 @@ export default function AssistantPage() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {QUICK_PROMPTS.map(qp => (
-                  <button
-                    key={qp.label}
-                    onClick={() => sendMessage(qp.prompt)}
-                    className="flex items-center gap-3 p-4 rounded-xl border border-border hover:border-primary/30 hover:bg-primary/5 transition-all text-left group"
-                  >
-                    <span className="text-2xl">{qp.icon}</span>
-                    <div className="min-w-0">
-                      <p className="font-medium text-sm">{qp.label}</p>
-                      <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
-                        {qp.prompt}
-                      </p>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground ml-auto shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </button>
-                ))}
+                {ASSISTANT_MODES.map(m => {
+                  const meta = MODE_LABELS[m]
+                  return (
+                    <button
+                      key={m}
+                      onClick={() => {
+                        setMode(m)
+                        sendMessage(meta.opener, m)
+                      }}
+                      className="flex items-center gap-3 p-4 rounded-xl border border-border hover:border-primary/30 hover:bg-primary/5 transition-all text-left group"
+                    >
+                      <span className="text-2xl" aria-hidden="true">{meta.icon}</span>
+                      <div className="min-w-0">
+                        <p className="font-medium text-sm">{meta.label}</p>
+                        <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
+                          {meta.blurb}
+                        </p>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-muted-foreground ml-auto shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </button>
+                  )
+                })}
               </div>
             </div>
           ) : (
@@ -334,6 +355,21 @@ export default function AssistantPage() {
         {/* Input */}
         <div className="p-4 border-t border-border bg-card shrink-0">
           <div className="max-w-3xl mx-auto">
+            {error && (
+              <div
+                role="alert"
+                className="flex items-start gap-2 mb-3 px-3 py-2 rounded-lg border border-destructive/30 bg-destructive/10 text-destructive text-xs"
+              >
+                <AlertCircle className="w-4 h-4 shrink-0 mt-px" />
+                <span className="flex-1">{error}</span>
+                <button
+                  onClick={() => setError(null)}
+                  className="font-medium underline underline-offset-2 shrink-0"
+                >
+                  Dismiss
+                </button>
+              </div>
+            )}
             <div className="flex gap-2 items-end">
               <textarea
                 ref={textareaRef}
