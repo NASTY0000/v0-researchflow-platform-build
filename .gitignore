@@ -15,3 +15,7 @@ node_modules
 .DS_Store
 .env
 tsconfig.tsbuildinfo
+
+# This project builds with pnpm (Vercel uses pnpm-lock.yaml).
+# A second npm lockfile silently desyncs and breaks the deploy.
+package-lock.json
