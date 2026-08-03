@@ -12,8 +12,44 @@ import {
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-// Overridable without a code change if a key needs a different model tier.
-const MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash'
+// Each Gemini model has its own quota pool, so a key with no free-tier
+// allocation for one model often still has room on another. Tried in order;
+// a 429 or 404 falls through to the next. Override with a comma-separated
+// GEMINI_MODEL to pin or reorder.
+const MODELS = (process.env.GEMINI_MODEL || 'gemini-2.0-flash,gemini-2.0-flash-lite,gemini-1.5-flash')
+  .split(',')
+  .map(m => m.trim())
+  .filter(Boolean)
+
+/** Pulls the useful bits out of a Google API error for logging and display. */
+function describeGeminiError(error: unknown) {
+  const raw = error instanceof Error ? error.message : String(error)
+  const status =
+    typeof (error as { status?: unknown })?.status === 'number'
+      ? (error as { status: number }).status
+      : undefined
+
+  // Google embeds a JSON body in the message; pull the quota details out of it
+  // so the log says which limit was hit and what its value is. A limit of 0
+  // means the key has no allocation for that model, which reads very
+  // differently from having burned through a real allowance.
+  let quotaMetric: string | undefined
+  let quotaValue: string | undefined
+  let retryDelay: string | undefined
+  const metric = raw.match(/"quotaMetric"\s*:\s*"([^"]+)"/)
+  const value = raw.match(/"quotaValue"\s*:\s*"?(\d+)"?/)
+  const delay = raw.match(/"retryDelay"\s*:\s*"([^"]+)"/)
+  if (metric) quotaMetric = metric[1]
+  if (value) quotaValue = value[1]
+  if (delay) retryDelay = delay[1]
+
+  const retriable =
+    status === 429 ||
+    status === 404 ||
+    /quota|RESOURCE_EXHAUSTED|not found|NOT_FOUND|is not supported/i.test(raw)
+
+  return { raw, status, quotaMetric, quotaValue, retryDelay, retriable }
+}
 const MAX_MESSAGE_CHARS = 8000
 const MAX_HISTORY_TURNS = 20
 
@@ -101,112 +137,123 @@ export async function POST(request: NextRequest) {
     extraContext,
   })
 
-  // 4. Call Gemini.
-  try {
-    const genAI = new GoogleGenerativeAI(apiKey)
-    const model = genAI.getGenerativeModel({
-      model: MODEL,
-      systemInstruction,
-      generationConfig: { temperature: 0.7, maxOutputTokens: 2048 },
-    })
+  // Gemini requires the first turn to be from the user; drop any leading
+  // assistant messages so a resumed conversation cannot break the call.
+  const trimmed = [...history]
+  while (trimmed.length && trimmed[0].role !== 'user') trimmed.shift()
+  const chatHistory = trimmed.map(t => ({
+    role: t.role === 'assistant' ? ('model' as const) : ('user' as const),
+    parts: [{ text: t.content }],
+  }))
 
-    // Gemini requires the first turn to be from the user; drop any leading
-    // assistant messages so a resumed conversation cannot break the call.
-    const trimmed = [...history]
-    while (trimmed.length && trimmed[0].role !== 'user') trimmed.shift()
+  // 4. Call Gemini, falling through the model list on quota / availability
+  //    errors. Anything else (safety, bad key) fails immediately: retrying a
+  //    different model would not help and would waste the caller's time.
+  const genAI = new GoogleGenerativeAI(apiKey)
+  let lastError: ReturnType<typeof describeGeminiError> | null = null
+  let lastModel = MODELS[0]
 
-    const chat = model.startChat({
-      history: trimmed.map(t => ({
-        role: t.role === 'assistant' ? 'model' : 'user',
-        parts: [{ text: t.content }],
-      })),
-    })
+  for (const modelName of MODELS) {
+    lastModel = modelName
+    try {
+      const model = genAI.getGenerativeModel({
+        model: modelName,
+        systemInstruction,
+        generationConfig: { temperature: 0.7, maxOutputTokens: 2048 },
+      })
 
-    const result = await chat.sendMessage(message)
-    const text = result.response.text()
+      const chat = model.startChat({ history: chatHistory })
+      const text = (await chat.sendMessage(message)).response.text()
 
-    if (!text?.trim()) {
-      return NextResponse.json(
-        { error: 'The assistant returned an empty response. Please rephrase and try again.' },
-        { status: 502 },
-      )
-    }
-
-    // 5. Persist the exchange when the client is tracking a conversation.
-    //    Never fail the response over a logging error.
-    const conversationId = typeof body.conversationId === 'string' ? body.conversationId : null
-    if (conversationId) {
-      try {
-        await supabase.from('ai_messages').insert([
-          { conversation_id: conversationId, role: 'user', content: message },
-          { conversation_id: conversationId, role: 'assistant', content: text },
-        ])
-        await supabase
-          .from('ai_conversations')
-          .update({ updated_at: new Date().toISOString() })
-          .eq('id', conversationId)
-      } catch (persistError) {
-        console.error('ai-assistant: failed to persist conversation', persistError)
+      if (!text?.trim()) {
+        return NextResponse.json(
+          { error: 'The assistant returned an empty response. Please rephrase and try again.' },
+          { status: 502 },
+        )
       }
-    }
 
-    return NextResponse.json({ message: text, mode })
-  } catch (error: unknown) {
-    const raw = error instanceof Error ? error.message : String(error)
-    // The SDK surfaces the upstream HTTP status on the error object.
-    const upstreamStatus =
-      typeof (error as { status?: unknown })?.status === 'number'
-        ? (error as { status: number }).status
-        : undefined
+      if (modelName !== MODELS[0]) {
+        console.warn(`ai-assistant: served by fallback model ${modelName}`)
+      }
 
-    // Full detail to the server log only, never to the client.
-    console.error('ai-assistant: Gemini call failed', {
-      model: MODEL,
-      upstreamStatus,
-      message: raw,
-    })
+      // 5. Persist the exchange when the client is tracking a conversation.
+      //    Never fail the response over a logging error.
+      const conversationId = typeof body.conversationId === 'string' ? body.conversationId : null
+      if (conversationId) {
+        try {
+          await supabase.from('ai_messages').insert([
+            { conversation_id: conversationId, role: 'user', content: message },
+            { conversation_id: conversationId, role: 'assistant', content: text },
+          ])
+          await supabase
+            .from('ai_conversations')
+            .update({ updated_at: new Date().toISOString() })
+            .eq('id', conversationId)
+        } catch (persistError) {
+          console.error('ai-assistant: failed to persist conversation', persistError)
+        }
+      }
 
-    // `code` is a coarse classification, safe to show: it names the failure
-    // class, never key material or provider internals. It exists so a user can
-    // report what actually went wrong instead of a generic message.
-    const fail = (status: number, code: string, message: string) =>
-      NextResponse.json({ error: message, code }, { status })
+      return NextResponse.json({ message: text, mode, model: modelName })
+    } catch (error: unknown) {
+      const info = describeGeminiError(error)
+      lastError = info
 
-    if (/not found|NOT_FOUND|is not supported|404/i.test(raw) || upstreamStatus === 404) {
-      return fail(
-        503,
-        'MODEL_NOT_FOUND',
-        `The configured model (${MODEL}) is unavailable for this API key. Set GEMINI_MODEL to a model the key can access.`,
-      )
+      console.error('ai-assistant: Gemini call failed', {
+        model: modelName,
+        status: info.status,
+        quotaMetric: info.quotaMetric,
+        quotaValue: info.quotaValue,
+        retryDelay: info.retryDelay,
+        message: info.raw.slice(0, 600),
+      })
+
+      if (info.retriable && modelName !== MODELS[MODELS.length - 1]) continue
+
+      // `code` is a coarse classification, safe to show: it names the failure
+      // class, never key material or provider internals.
+      const fail = (status: number, code: string, msg: string) =>
+        NextResponse.json({ error: msg, code }, { status })
+
+      if (/API_KEY_INVALID|API key not valid|PERMISSION_DENIED/i.test(info.raw) || info.status === 403) {
+        return fail(
+          503,
+          'KEY_REJECTED',
+          'The Gemini API key was rejected. Check that GEMINI_API_KEY is valid and that the Generative Language API is enabled for its Google Cloud project.',
+        )
+      }
+      if (/SAFETY|blocked/i.test(info.raw)) {
+        return fail(400, 'SAFETY_BLOCK', 'That request was blocked by the model’s safety filters. Try rephrasing it.')
+      }
+      if (info.status === 401) {
+        return fail(503, 'UNAUTHENTICATED', 'The assistant is not configured correctly.')
+      }
+      if (info.status === 429 || /quota|RESOURCE_EXHAUSTED/i.test(info.raw)) {
+        // A limit of 0 is not "used up", it means this key has no allocation
+        // at all, which needs a different fix from waiting.
+        const noAllocation = info.quotaValue === '0'
+        return fail(
+          429,
+          noAllocation ? 'NO_QUOTA_ALLOCATION' : 'QUOTA_EXCEEDED',
+          noAllocation
+            ? `This API key has no quota allocated for Gemini (limit is 0 on ${info.quotaMetric || 'the requested models'}). Free-tier access is not enabled for its Google Cloud project or billing country. Enable billing on the project, or create a key from a project that has free-tier access.`
+            : `Gemini rate limit or quota reached on all configured models${info.retryDelay ? `; retry in ${info.retryDelay}` : ''}. Check the key’s quota in Google AI Studio.`,
+        )
+      }
+      if (info.status === 404 || /not found|NOT_FOUND|is not supported/i.test(info.raw)) {
+        return fail(
+          503,
+          'MODEL_NOT_FOUND',
+          `None of the configured models (${MODELS.join(', ')}) are available to this API key. Set GEMINI_MODEL to one it can access.`,
+        )
+      }
+      return fail(502, 'UPSTREAM_ERROR', 'The assistant could not respond just now. Please try again.')
     }
-    if (/API_KEY_INVALID|API key not valid|PERMISSION_DENIED/i.test(raw) || upstreamStatus === 403) {
-      return fail(
-        503,
-        'KEY_REJECTED',
-        'The Gemini API key was rejected. Check that GEMINI_API_KEY is valid and that the Generative Language API is enabled for it.',
-      )
-    }
-    if (/quota|RESOURCE_EXHAUSTED/i.test(raw) || upstreamStatus === 429) {
-      return fail(
-        429,
-        'QUOTA_EXCEEDED',
-        'The Gemini quota for this key has been exhausted, or its rate limit was hit. Check the key’s quota in Google AI Studio.',
-      )
-    }
-    if (/SAFETY|blocked/i.test(raw)) {
-      return fail(
-        400,
-        'SAFETY_BLOCK',
-        'That request was blocked by the model’s safety filters. Try rephrasing it.',
-      )
-    }
-    if (upstreamStatus === 401) {
-      return fail(503, 'UNAUTHENTICATED', 'The assistant is not configured correctly.')
-    }
-    return fail(
-      502,
-      'UPSTREAM_ERROR',
-      'The assistant could not respond just now. Please try again.',
-    )
   }
+
+  console.error('ai-assistant: exhausted all models', { lastModel, status: lastError?.status })
+  return NextResponse.json(
+    { error: 'The assistant could not respond just now. Please try again.', code: 'UPSTREAM_ERROR' },
+    { status: 502 },
+  )
 }
