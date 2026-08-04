@@ -226,8 +226,17 @@
       transition-duration: 0.01ms !important;
     }
   }
+  html {
+    /* Stop iOS Safari from auto-inflating body text ("zoomed" look on
+       mobile). Text then renders at its true, responsive size per device. */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
   body {
     @apply bg-background text-foreground;
+    /* No page should scroll sideways; a stray wide element must not push the
+       layout out (which also skewed the old JS width check for the nav). */
+    overflow-x: hidden;
   }
   h1, h2, h3 {
     text-wrap: balance;

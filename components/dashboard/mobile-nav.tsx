@@ -62,15 +62,7 @@ export function MobileNav({ initialUnreadCount }: MobileNavProps) {
   const pathname = usePathname()
   const router = useRouter()
   const [unreadCount, setUnreadCount] = useState(initialUnreadCount)
-  const [isMobile, setIsMobile] = useState(false)
   const [exploreOpen, setExploreOpen] = useState(false)
-
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768)
-    check()
-    window.addEventListener('resize', check)
-    return () => window.removeEventListener('resize', check)
-  }, [])
 
   useEffect(() => {
     const supabase = createClient()
@@ -120,8 +112,9 @@ export function MobileNav({ initialUnreadCount }: MobileNavProps) {
     return pathname.startsWith(tab.href)
   }
 
-  if (!isMobile) return null
-
+  // Visibility is handled purely by CSS (`md:hidden` on the nav + spacer), so
+  // it renders identically on the server and on every route — no JS width
+  // gate that can wrongly hide the bar on one page but not another.
   return (
     <>
       {/* Spacer so page content clears the nav */}
