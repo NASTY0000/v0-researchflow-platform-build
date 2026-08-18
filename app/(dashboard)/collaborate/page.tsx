@@ -1,5 +1,6 @@
 import { FolderOpen, Users, GraduationCap, FileText, Network, UserPlus } from 'lucide-react'
 import { HubPageHeader, HubCardGrid, type HubCard } from '@/components/dashboard/hub-page'
+import { isFeatureEnabled } from '@/lib/config/feature-flags'
 
 const cards: HubCard[] = [
   {
@@ -50,7 +51,11 @@ export default function CollaboratePage() {
   return (
     <div>
       <HubPageHeader title="Collaborate" subtitle="Connect, build, and grow your research network" />
-      <HubCardGrid cards={cards} />
+      <HubCardGrid cards={cards.filter((card) =>
+        (card.href !== '/projects' || isFeatureEnabled('myProjects')) &&
+        (card.href !== '/projects/discover' || isFeatureEnabled('openProjects')) &&
+        (card.href !== '/agreements' || isFeatureEnabled('agreements'))
+      )} />
     </div>
   )
 }

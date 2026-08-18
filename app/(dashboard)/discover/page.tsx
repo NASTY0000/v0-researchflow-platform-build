@@ -1,5 +1,6 @@
 import { Lightbulb, Target, BookOpen, Sparkles } from 'lucide-react'
 import { HubPageHeader, HubCardGrid, type HubCard } from '@/components/dashboard/hub-page'
+import { isFeatureEnabled } from '@/lib/config/feature-flags'
 
 const cards: HubCard[] = [
   {
@@ -36,7 +37,9 @@ export default function DiscoverPage() {
   return (
     <div>
       <HubPageHeader title="Discover" subtitle="Explore ideas, funding, and resources for your research" />
-      <HubCardGrid cards={cards} />
+      <HubCardGrid cards={cards.filter((card) =>
+        card.href !== '/publications' || isFeatureEnabled('journalsAndConferences')
+      )} />
     </div>
   )
 }

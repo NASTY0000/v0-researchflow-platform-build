@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { EmptyState } from "@/components/ui/EmptyState"
+import { isFeatureEnabled } from "@/lib/config/feature-flags"
 import {
   ShoppingBag,
   Loader2,
@@ -265,7 +266,7 @@ function AgreementsPrompt({ otherUserId, otherName }: { otherUserId: string; oth
       <FileText className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
       <p className="text-xs text-muted-foreground leading-relaxed">
         Recording what was agreed protects both of you.{" "}
-        <Link href="/agreements" className="text-primary underline underline-offset-2">Create an agreement</Link>{" "}
+        {isFeatureEnabled('agreements') ? <Link href="/agreements" className="text-primary underline underline-offset-2">Create an agreement</Link> : 'Create an agreement'}{" "}
         covering scope, timeline, and how this contribution will be acknowledged.
         You can also{" "}
         <Link href={`/messages?user=${otherUserId}`} className="text-primary underline underline-offset-2">

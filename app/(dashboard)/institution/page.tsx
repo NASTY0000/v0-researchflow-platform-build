@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { ListPageSkeleton } from '@/components/ui/skeleton-screens'
+import { isFeatureEnabled } from '@/lib/config/feature-flags'
 
 export default function InstitutionDashboard() {
   const [institution, setInstitution] = useState<any>(null)
@@ -233,7 +234,7 @@ export default function InstitutionDashboard() {
         <p className="text-muted-foreground">
           Your account is not linked to any university or institution yet.
         </p>
-        {isAdmin && (
+        {isAdmin && isFeatureEnabled('adminInstitution') && (
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
               As a platform admin you can create institutions below.

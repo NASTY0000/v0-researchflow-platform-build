@@ -24,6 +24,7 @@ import { motion, useReducedMotion } from "framer-motion"
 import { PullToRefreshIndicator } from "@/components/ui/PullToRefreshIndicator"
 import { ActivityFeed } from "@/components/dashboard/activity-feed"
 import { useUserState } from "@/hooks/use-user-state"
+import { isFeatureEnabled } from "@/lib/config/feature-flags"
 
 interface DashboardStats {
   totalIdeas: number
@@ -132,7 +133,7 @@ export default function DashboardPage() {
   ]
 
   const quickActions = [
-    { title: "My Research Feed", description: "Personalised opportunities", icon: Sparkles, href: "/feed", color: 'var(--glow)' },
+    ...(isFeatureEnabled('myFeed') ? [{ title: "My Research Feed", description: "Personalised opportunities", icon: Sparkles, href: "/feed", color: 'var(--glow)' }] : []),
     { title: "Post Research Idea", description: "Share your research concept", icon: Lightbulb, href: "/ideas/new", color: 'var(--primary)' },
     { title: "Find Collaborators", description: "Connect with researchers", icon: Users, href: "/matches", color: 'var(--cyan)' },
     { title: "Browse Mentors", description: "Get expert guidance", icon: BookOpen, href: "/mentors", color: 'var(--chart-5)' },

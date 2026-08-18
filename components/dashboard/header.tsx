@@ -17,6 +17,7 @@ import { Separator } from '@/components/ui/separator'
 import { Search, Plus, Sun, Moon } from 'lucide-react'
 import type { Profile } from '@/lib/types/database'
 import { NotificationsDropdown } from '@/components/dashboard/notifications-dropdown'
+import { isFeatureEnabled } from '@/lib/config/feature-flags'
 
 interface DashboardHeaderProps {
   profile: Profile
@@ -65,9 +66,11 @@ export function DashboardHeader({ profile, unreadCount }: DashboardHeaderProps) 
             <DropdownMenuItem asChild>
               <Link href="/ideas/new">Research Idea</Link>
             </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href="/projects/new">Project</Link>
-            </DropdownMenuItem>
+            {isFeatureEnabled('myProjects') && (
+              <DropdownMenuItem asChild>
+                <Link href="/projects/new">Project</Link>
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem asChild>
               <Link href="/marketplace/new">Marketplace Task</Link>
             </DropdownMenuItem>

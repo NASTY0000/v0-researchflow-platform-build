@@ -1,5 +1,6 @@
 import { MessageSquare, CheckCircle, Trophy, Star, BarChart, ShoppingBag } from 'lucide-react'
 import { HubPageHeader, HubCardGrid, type HubCard } from '@/components/dashboard/hub-page'
+import { isFeatureEnabled } from '@/lib/config/feature-flags'
 
 const cards: HubCard[] = [
   {
@@ -50,7 +51,11 @@ export default function CommunityPage() {
   return (
     <div>
       <HubPageHeader title="Community" subtitle="Engage with the ResearchFlow research community" />
-      <HubCardGrid cards={cards} />
+      <HubCardGrid cards={cards.filter((card) =>
+        (card.href !== '/forums' || isFeatureEnabled('forum')) &&
+        (card.href !== '/peer-review' || isFeatureEnabled('peerReview')) &&
+        (card.href !== '/challenges' || isFeatureEnabled('challenges'))
+      )} />
     </div>
   )
 }

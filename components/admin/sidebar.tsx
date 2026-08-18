@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Logo } from '@/components/Logo'
+import { isFeatureEnabled } from '@/lib/config/feature-flags'
 
 const adminNavItems = [
   { title: 'Overview', href: '/admin', icon: LayoutDashboard, exact: true },
@@ -68,7 +69,18 @@ export function AdminSidebar({ pendingMentors = 0, pendingShowcase = 0, pendingR
           <SidebarGroupLabel>Management</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {adminNavItems.map(item => {
+              {adminNavItems.filter((item) => {
+                const featureByHref = {
+                  '/admin/showcase': 'adminShowcaseReview',
+                  '/admin/analytics': 'adminAnalytics',
+                  '/admin/research-insights': 'adminResearchInsights',
+                  '/admin/grants': 'adminGrants',
+                  '/admin/grants/applications': 'adminGrantApplications',
+                  '/admin/institutions': 'adminInstitution',
+                } as const
+                const feature = featureByHref[item.href as keyof typeof featureByHref]
+                return !feature || isFeatureEnabled(feature)
+              }).map(item => {
                 const isActive = item.exact
                   ? pathname === item.href
                   : pathname === item.href || pathname.startsWith(item.href + '/')

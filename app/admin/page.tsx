@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { isFeatureEnabled } from '@/lib/config/feature-flags'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   Users, FolderKanban, Lightbulb, FileText, Shield,
@@ -147,7 +148,10 @@ export default function AdminOverviewPage() {
           { label: 'Pending Review', value: stats.pendingShowcase, icon: FileText, color: 'orange-500', sub: 'Showcase', href: '/admin/showcase' },
           { label: 'Mentor Queue', value: stats.pendingMentors, icon: Shield, color: 'yellow-500', sub: 'Verifications', href: '/admin/mentors' },
           { label: 'Monthly Active', value: stats.monthlyActiveUsers, icon: Activity, color: 'purple-400', sub: 'Last 30 days', href: '/admin/analytics' },
-        ].map(card => (
+        ].filter((card) =>
+          (card.href !== '/admin/analytics' || isFeatureEnabled('adminAnalytics')) &&
+          (card.href !== '/admin/showcase' || isFeatureEnabled('adminShowcaseReview'))
+        ).map(card => (
           <Link key={card.label} href={card.href}>
             <Card className="relative overflow-hidden cursor-pointer hover:border-primary/40 transition-colors">
               <CardContent className="p-4">

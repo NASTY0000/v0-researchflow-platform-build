@@ -37,6 +37,7 @@ import {
   Building2,
 } from 'lucide-react'
 import type { Profile } from '@/lib/types/database'
+import { isFeatureEnabled } from '@/lib/config/feature-flags'
 
 interface NavItem {
   title: string
@@ -51,7 +52,7 @@ import { AkiliScoreBadge } from '@/components/akili/AkiliScoreBadge'
 
 const coreNavItems: NavItem[] = [
   { title: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { title: 'My Feed', href: '/feed', icon: Sparkles },
+  ...(isFeatureEnabled('myFeed') ? [{ title: 'My Feed', href: '/feed', icon: Sparkles }] : []),
   { title: 'Messages', href: '/messages', icon: MessageSquare },
 ]
 
@@ -61,21 +62,39 @@ const hubNavItems: NavItem[] = [
     href: '/collaborate',
     icon: Users,
     activeOn: ['/projects', '/matches', '/mentors', '/agreements', '/network'],
-    children: ['My Projects', 'Find Collaborators', 'Mentor Directory', 'Agreements', 'My Network'],
+    children: [
+      ...(isFeatureEnabled('myProjects') ? ['My Projects'] : []),
+      'Find Collaborators',
+      'Mentor Directory',
+      ...(isFeatureEnabled('agreements') ? ['Agreements'] : []),
+      'My Network',
+    ],
   },
   {
     title: 'Discover',
     href: '/discover',
     icon: Compass,
     activeOn: ['/ideas', '/grants', '/publications', '/assistant'],
-    children: ['Idea Board', 'Grants & Funding', 'Journals & Conferences', 'AI Research Assistant'],
+    children: [
+      'Idea Board',
+      'Grants & Funding',
+      ...(isFeatureEnabled('journalsAndConferences') ? ['Journals & Conferences'] : []),
+      'AI Research Assistant',
+    ],
   },
   {
     title: 'Community',
     href: '/community',
     icon: Users2,
     activeOn: ['/forums', '/peer-review', '/challenges', '/showcase', '/leaderboard', '/marketplace'],
-    children: ['Forums', 'Peer Review', 'Challenges', 'Showcase', 'Leaderboard', 'Marketplace'],
+    children: [
+      ...(isFeatureEnabled('forum') ? ['Forums'] : []),
+      ...(isFeatureEnabled('peerReview') ? ['Peer Review'] : []),
+      ...(isFeatureEnabled('challenges') ? ['Challenges'] : []),
+      'Showcase',
+      'Leaderboard',
+      'Marketplace',
+    ],
   },
 ]
 
